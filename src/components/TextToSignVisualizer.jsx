@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, SkipBack, SkipForward, Mic, MicOff, Send, Sparkles, Info, Check, Layers } from 'lucide-react';
-import Avatar3D from './Avatar3D';
+import RobotSigner3D from './RobotSigner3D';
 import { convertTextToVSL } from '../services/api';
 import { getHandPoseByGloss } from '../utils/handPoses';
 
@@ -331,7 +331,7 @@ export default function TextToSignVisualizer({ ttsEnabled }) {
   const fingerDetails = getFingerStatesDescription(currentGloss);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 1.2fr', gap: '24px', padding: '24px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.25fr) minmax(0, 1.2fr)', gap: '24px', padding: '24px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
       
       {/* CỘT TRÁI: AVATAR 3D VỚI KHỚP TAY GIẢI PHẪU CHI TIẾT */}
       <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -339,10 +339,10 @@ export default function TextToSignVisualizer({ ttsEnabled }) {
           <div>
             <h2 style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Sparkles size={20} style={{ color: 'var(--primary)' }} />
-              Diễn Hoạt Khớp Tay Giải Phẫu 3D (Forward Kinematics)
+              Robot Diễn Hoạt Ký Hiệu VSL 3D
             </h2>
             <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              Mỗi ngón tay gồm 3 khớp đốt riêng biệt (MCP - PIP - DIP) cử động chính xác từng frame
+              Mỗi ngón một màu riêng, lòng bàn tay phát sáng xanh — dễ nhìn ngón nào duỗi/gập và hướng bàn tay
             </p>
           </div>
 
@@ -353,7 +353,7 @@ export default function TextToSignVisualizer({ ttsEnabled }) {
 
         {/* Khung Canvas 3D */}
         <div style={{
-          height: '430px',
+          height: '600px',
           width: '100%',
           background: 'radial-gradient(circle at center, rgba(30, 41, 59, 0.4) 0%, rgba(7, 11, 18, 0.95) 100%)',
           borderRadius: 'var(--radius-md)',
@@ -361,32 +361,13 @@ export default function TextToSignVisualizer({ ttsEnabled }) {
           border: '1px solid var(--border-subtle)',
           position: 'relative'
         }}>
-          <Avatar3D
+          <RobotSigner3D
             currentStep={currentStep}
             isPlaying={isPlaying}
             speed={playbackSpeed}
+            sequence={sequence}
+            currentIndex={currentIndex}
           />
-
-          {/* Badge Ký hiệu hiện tại */}
-          {currentStep && (
-            <div style={{
-              position: 'absolute',
-              top: '16px',
-              left: '16px',
-              background: 'rgba(15, 23, 42, 0.88)',
-              backdropFilter: 'blur(10px)',
-              padding: '10px 16px',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-active)'
-            }}>
-              <span style={{ fontSize: '11px', color: 'var(--primary)', textTransform: 'uppercase', display: 'block', fontWeight: '700' }}>
-                {currentStep.type === 'fingerspelling' ? 'Đánh Vần Ngón Tay (A-Z)' : 'Cử Chỉ Giao Tiếp (VSL)'}
-              </span>
-              <strong style={{ fontSize: '22px', color: '#fff' }}>
-                {currentStep.label}
-              </strong>
-            </div>
-          )}
         </div>
 
         {/* Điều khiển Playback */}
