@@ -9,6 +9,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('camera');
   const [backendStatus, setBackendStatus] = useState('checking');
   const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [requestText, setRequestText] = useState(null);
 
   // Kiểm tra trạng thái Backend FastAPI
   useEffect(() => {
@@ -44,12 +45,14 @@ export default function App() {
         )}
 
         {activeTab === 'text_to_sign' && (
-          <TextToSignVisualizer ttsEnabled={ttsEnabled} />
+          <TextToSignVisualizer ttsEnabled={ttsEnabled} requestText={requestText} />
         )}
 
         {activeTab === 'dictionary' && (
           <VSLDictionaryExplorer
             onSelectSignFor3D={(signItem) => {
+              // Mở tab Văn bản → Ký hiệu và diễn ngay từ vừa chọn
+              setRequestText({ text: signItem.keys?.[0] || signItem.word || signItem.label, nonce: Date.now() });
               setActiveTab('text_to_sign');
             }}
           />

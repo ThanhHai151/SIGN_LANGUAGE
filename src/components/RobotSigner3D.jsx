@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { getHandPoseByGloss, NATURAL_FINGERS_REST } from '../utils/handPoses';
+import { fetchMotion } from '../services/api';
 import { Eye, ZoomIn, RotateCcw, Crosshair } from 'lucide-react';
 
 /**
@@ -26,7 +27,12 @@ export const FINGER_COLORS = {
   pinky: { hex: 0xec4899, css: '#ec4899', name: 'Út' }
 };
 
-const HAND_SCALE = 1.45;
+// Tỉ lệ cơ thể lấy theo người thật trong video QIPEDC (vai 0.40 : cánh tay trên 0.30 : cẳng tay 0.29)
+// để chuyển động học từ video đặt tay đúng chỗ (chạm ngực, chạm trán, hai tay chạm nhau)
+const SHOULDER_HALF = 0.20;
+const UPPER_LEN = 0.30;
+const FORE_LEN = 0.29;
+const HAND_SCALE = 1.3;
 
 // Vẽ nội dung màn hình LED trên ngực robot
 function drawChestScreen(ctx, canvas, text, sub, alpha = 1, offsetY = 0) {
@@ -63,7 +69,52 @@ function drawChestScreen(ctx, canvas, text, sub, alpha = 1, offsetY = 0) {
   ctx.globalAlpha = 1;
 }
 
-export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, sequence = [], currentIndex = 0 }) {
+// ---------- Hoạt ảnh chụp chuyển động (mocap) từ video QIPEDC ----------
+// Nội suy tuyến tính đệ quy giữa 2 keyframe (số, mảng, object lồng nhau)
+function lerpDeep(a, b, u) {
+  if (typeof a === 'number' && typeof b === 'number') return a + (b - a) * u;
+  if (Array.isArray(a) && Array.isArray(b)) return a.map((v, i) => lerpDeep(v, b[i], u));
+  if (a && b && typeof a === 'object') {
+    const o = {};
+    for (const k of Object.keys(a)) o[k] = k in b ? lerpDeep(a[k], b[k], u) : a[k];
+    return o;
+  }
+  return u < 0.5 ? a : b;
+}
+
+// Lấy mẫu hoạt ảnh tại thời điểm tSec (giây)
+export const SPELL_LETTER_MS = 550;
+
+/** Ký hiệu chưa có chuyển động học từ video, chưa có tư thế vẽ tay → robot đánh vần tạm. */
+export function isTempSpell(step) {
+  return !!(step && step.type !== 'fingerspelling' && !step.motion_id && !step.pose_key && step.spell?.length);
+}
+
+export function sampleMotion(motion, tSec) {
+  const kfs = motion.keyframes;
+  if (!kfs || !kfs.length) return null;
+  if (tSec <= kfs[0].t) return kfs[0];
+  for (let i = 0; i < kfs.length - 1; i++) {
+    const a = kfs[i];
+    const b = kfs[i + 1];
+    if (tSec <= b.t) return lerpDeep(a, b, (tSec - a.t) / Math.max(1e-3, b.t - a.t));
+  }
+  return kfs[kfs.length - 1];
+}
+
+function applyKeyframe(cur, kf) {
+  if (!kf) return;
+  cur.body = kf.body || cur.body;
+  ['right', 'left'].forEach((s) => {
+    if (kf[s + 'Arm']) cur[s + 'Arm'] = kf[s + 'Arm'];
+    if (kf[s + 'Forearm']) cur[s + 'Forearm'] = kf[s + 'Forearm'];
+    if (kf[s + 'Wrist']) cur[s + 'Wrist'] = kf[s + 'Wrist'];
+    if (kf[s + 'Fingers']) cur[s + 'Fingers'] = kf[s + 'Fingers'];
+    cur[s + 'Twist'] = typeof kf[s + 'Twist'] === 'number' ? kf[s + 'Twist'] : undefined;
+  });
+}
+
+export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, sequence = [], currentIndex = 0, freezeAt, videoElRef }) {
   const mountRef = useRef(null);
   const rigRef = useRef({});
   const animFrameRef = useRef(null);
@@ -79,6 +130,8 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
 
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
   useEffect(() => { speedRef.current = speed; }, [speed]);
+  const freezeRef = useRef(freezeAt);
+  useEffect(() => { freezeRef.current = freezeAt; }, [freezeAt]);
 
   // ---------- Bàn tay robot (giữ nguyên toạ độ khớp của Avatar3D) ----------
   const createRobotHand = (mats, isLeft = false) => {
@@ -291,7 +344,7 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
 
     // Đầu robot
     const headGroup = new THREE.Group();
-    headGroup.position.set(0, 0.66, 0);
+    headGroup.position.set(0, 0.63, 0);
 
     const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.055, 0.08, 20), mats.dark);
     neck.position.set(0, 0.02, 0);
@@ -341,7 +394,7 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
     const buildArm = (side) => {
       const isLeft = side === 'left';
       const shoulder = new THREE.Group();
-      shoulder.position.set(isLeft ? 0.25 : -0.25, 0.60, 0);
+      shoulder.position.set(isLeft ? SHOULDER_HALF : -SHOULDER_HALF, 0.60, 0);
 
       const pad = new THREE.Mesh(new THREE.SphereGeometry(0.068, 24, 18), mats.armor);
       pad.scale.set(1, 0.85, 1);
@@ -351,24 +404,24 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
       padRing.position.x = isLeft ? 0.03 : -0.03;
       shoulder.add(padRing);
 
-      const upperGeo = new THREE.CapsuleGeometry(0.038, 0.17, 6, 16);
-      upperGeo.translate(0, -0.14, 0);
+      const upperGeo = new THREE.CapsuleGeometry(0.036, UPPER_LEN - 0.10, 6, 16);
+      upperGeo.translate(0, -UPPER_LEN / 2, 0);
       shoulder.add(new THREE.Mesh(upperGeo, mats.dark));
 
       const elbow = new THREE.Group();
-      elbow.position.set(0, -0.28, 0);
+      elbow.position.set(0, -UPPER_LEN, 0);
       elbow.add(new THREE.Mesh(new THREE.SphereGeometry(0.044, 18, 18), mats.joint));
       const elbowRing = new THREE.Mesh(new THREE.TorusGeometry(0.045, 0.005, 8, 28), mats.glow);
       elbowRing.rotation.y = Math.PI / 2;
       elbow.add(elbowRing);
 
-      const foreGeo = new THREE.CapsuleGeometry(0.037, 0.16, 6, 16);
-      foreGeo.translate(0, -0.13, 0);
+      const foreGeo = new THREE.CapsuleGeometry(0.035, FORE_LEN - 0.09, 6, 16);
+      foreGeo.translate(0, -FORE_LEN / 2, 0);
       elbow.add(new THREE.Mesh(foreGeo, mats.armor));
 
       // Khớp xoay cẳng tay (sấp/ngửa): tự quay lòng bàn tay ra phía người xem khi giơ tay
       const twist = new THREE.Group();
-      twist.position.set(0, -0.26, 0);
+      twist.position.set(0, -FORE_LEN, 0);
       elbow.add(twist);
 
       const wrist = new THREE.Group();
@@ -543,8 +596,35 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
 
       const rig = rigRef.current;
       const cur = rig.currentPose;
-      // Thời gian chuyển tiếp: nhanh hơn khi tăng tốc độ phát, ngắn hơn với keyframe động
-      ST = Math.max(0.06, (cur.smoothTime || 0.17) / Math.max(0.25, speedRef.current));
+
+      // Hoạt ảnh mocap: lấy mẫu theo thời gian thực (lặp lại khi đang tạm dừng để xem kỹ)
+      const mo = rig.motion;
+      if (mo) {
+        const frozen = typeof freezeRef.current === 'number';
+        const durS = mo.data.duration_ms / 1000;
+        // Chỉ diễn đoạn có động tác (bỏ khoảng đứng yên đầu/cuối video)
+        const a0 = mo.data.active ? mo.data.active[0] : 0;
+        const a1 = mo.data.active ? Math.min(durS, mo.data.active[1]) : durS;
+        let el;
+        // Đồng bộ với video mẫu: nếu video của đúng ký hiệu này đang phát → lấy thời điểm của video
+        const vid = videoElRef?.current;
+        const vidSynced = vid && !vid.paused && vid.readyState >= 2 && mo.data.id && (vid.currentSrc || vid.src || '').includes('/' + mo.data.id + '.mp4');
+        if (frozen) {
+          el = freezeRef.current;
+        } else if (vidSynced) {
+          el = vid.currentTime;
+          mo.start = time - el / Math.max(0.25, speedRef.current);
+        } else {
+          if (mo.start === undefined) mo.start = time;
+          el = a0 + (time - mo.start) * speedRef.current;
+          if (el > a1 + 0.7 && !isPlayingRef.current) { mo.start = time; el = a0; }
+        }
+        applyKeyframe(cur, sampleMotion(mo.data, Math.min(Math.max(el, a0), a1)));
+        ST = frozen ? 0.01 : Math.max(0.02, 0.035 / Math.max(0.5, speedRef.current)); // bám sát chuyển động học từ video
+      } else {
+        // Thời gian chuyển tiếp: nhanh hơn khi tăng tốc độ phát, ngắn hơn với keyframe động
+        ST = Math.max(0.05, (cur.smoothTime || 0.12) / Math.max(0.25, speedRef.current));
+      }
 
       lerpRot(rig.torsoGroup, cur.body.torso);
       lerpRot(rig.headGroup, cur.body.head);
@@ -561,9 +641,11 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
 
       // Xoay cẳng tay: cẳng tay càng hướng lên → lòng bàn tay càng quay ra trước
       // (dữ liệu tư thế có thể ghi đè bằng palmTwist: số radian, hoặc 0 để tắt)
-      [['right', rig.rightElbow, rig.rightTwist, 1], ['left', rig.leftElbow, rig.leftTwist, -1]].forEach(([, elbow, twist, sign]) => {
+      [['right', rig.rightElbow, rig.rightTwist, 1], ['left', rig.leftElbow, rig.leftTwist, -1]].forEach(([side, elbow, twist, sign]) => {
         let target;
-        if (typeof cur.palmTwist === 'number') {
+        if (typeof cur[side + 'Twist'] === 'number') {
+          target = cur[side + 'Twist'];            // góc xoay cẳng tay đo từ video (mocap)
+        } else if (typeof cur.palmTwist === 'number') {
           target = cur.palmTwist * sign;
         } else {
           elbow.getWorldQuaternion(tmpQuat);
@@ -633,15 +715,61 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
     const scr = screenRef.current;
     if (scr) {
       const isSpell = currentStep?.type === 'fingerspelling';
+      const tempSpell = isTempSpell(currentStep);
       const text = currentStep ? (isSpell ? (currentStep.token || currentStep.label) : currentStep.label) : '';
-      const next = { text, sub: currentStep ? (isSpell ? 'ĐÁNH VẦN' : 'KÝ HIỆU') : 'VSL ROBOT' };
+      const next = { text, sub: currentStep ? (isSpell || tempSpell ? 'ĐÁNH VẦN' : 'KÝ HIỆU') : 'VSL ROBOT' };
       const from = scr.anim ? scr.anim.to : scr.shown;
       if (from.text !== next.text || from.sub !== next.sub) {
         scr.anim = { from, to: next, start: undefined };
       }
     }
 
-    const gloss = currentStep?.gloss || currentStep?.token;
+    // 1) Có hoạt ảnh chụp chuyển động từ video người thật → phát hoạt ảnh
+    rig.motion = null;
+    rig.currentPose.rightTwist = undefined;
+    rig.currentPose.leftTwist = undefined;
+    let cancelled = false;
+    const motionId = currentStep?.motion_id;
+    // (trường "motion" cũ của API là chuỗi 'static'/'dynamic' — chỉ nhận khi là dữ liệu chuyển động thật)
+    if (currentStep?.motion && typeof currentStep.motion === 'object' && currentStep.motion.keyframes?.length) {
+      rig.motion = { data: currentStep.motion, start: undefined };
+      return undefined;
+    }
+    if (motionId) {
+      fetchMotion(motionId).then((data) => {
+        // bỏ qua kết quả về muộn của ký hiệu trước (đã chuyển sang ký hiệu khác)
+        if (!cancelled && data && data.keyframes?.length) rig.motion = { data, start: undefined };
+      });
+    }
+
+    const applyStatic = (pd) => {
+      rig.currentPose.body = pd.body || { torso: [0.02, 0, 0], head: [0.02, 0, 0] };
+      rig.currentPose.rightArm = pd.rightArm || [-1.15, 0.15, -0.08];
+      rig.currentPose.rightForearm = pd.rightForearm || [-1.10, 0.20, 0.08];
+      rig.currentPose.rightWrist = pd.rightWrist || [0.15, 0.10, 0];
+      rig.currentPose.rightFingers = { ...(pd.rightFingers || pd) };
+      rig.currentPose.leftArm = pd.leftArm || [-0.22, -0.08, 0.05];
+      rig.currentPose.leftForearm = pd.leftForearm || [-0.35, -0.08, -0.05];
+      rig.currentPose.leftWrist = pd.leftWrist || [0, 0, 0];
+      rig.currentPose.leftFingers = pd.leftFingers ? { ...pd.leftFingers } : NATURAL_FINGERS_REST;
+      rig.currentPose.palmTwist = pd.palmTwist;
+    };
+
+    // 1b) Từ chưa có chuyển động (đang học từ video) → đánh vần tạm bằng bảng chữ cái ngón tay
+    if (isTempSpell(currentStep)) {
+      const letters = currentStep.spell;
+      let i = 0;
+      rig.currentPose.smoothTime = 0.1;
+      const run = () => { applyStatic(getHandPoseByGloss(letters[i % letters.length])); i += 1; };
+      run();
+      const iv = setInterval(() => { if (!rig.motion) run(); }, SPELL_LETTER_MS / Math.max(0.25, speed));
+      return () => { cancelled = true; clearInterval(iv); };
+    }
+
+    // 2) Tư thế vẽ tay (handPoses.js); từ chưa có tư thế robot → tư thế nghỉ (xem video mẫu)
+    const gloss = currentStep?.has_pose === false
+      ? 'REST'
+      : (currentStep?.pose_key || currentStep?.gloss || currentStep?.token);
     const poseData = getHandPoseByGloss(gloss);
 
     if (poseData.isDynamic && poseData.keyframes && poseData.keyframes.length > 0) {
@@ -666,21 +794,13 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
       // Keyframe nối tiếp nhau: lò xo ngắn hơn để kịp tới từng tư thế nhưng vẫn mượt
       rig.currentPose.smoothTime = Math.min(0.17, (kfMs / 1000) * 0.35);
       run();
-      const interval = setInterval(run, kfMs / speed);
-      return () => clearInterval(interval);
+      const interval = setInterval(() => { if (!rig.motion) run(); }, kfMs / speed);
+      return () => { cancelled = true; clearInterval(interval); };
     }
 
-    rig.currentPose.smoothTime = 0.17;
-    rig.currentPose.body = poseData.body || { torso: [0.02, 0, 0], head: [0.02, 0, 0] };
-    rig.currentPose.rightArm = poseData.rightArm || [-1.15, 0.15, -0.08];
-    rig.currentPose.rightForearm = poseData.rightForearm || [-1.10, 0.20, 0.08];
-    rig.currentPose.rightWrist = poseData.rightWrist || [0.15, 0.10, 0];
-    rig.currentPose.rightFingers = { ...(poseData.rightFingers || poseData) };
-    rig.currentPose.leftArm = poseData.leftArm || [-0.22, -0.08, 0.05];
-    rig.currentPose.leftForearm = poseData.leftForearm || [-0.35, -0.08, -0.05];
-    rig.currentPose.leftWrist = poseData.leftWrist || [0, 0, 0];
-    rig.currentPose.leftFingers = poseData.leftFingers ? { ...poseData.leftFingers } : NATURAL_FINGERS_REST;
-    rig.currentPose.palmTwist = poseData.palmTwist;
+    rig.currentPose.smoothTime = 0.12;
+    applyStatic(poseData);
+    return () => { cancelled = true; };
   }, [currentStep, speed]);
 
   // Tự cuộn phụ đề tới từ đang diễn (chỉ cuộn trong khung phụ đề, không cuộn cả trang)
@@ -708,7 +828,6 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
     rigRef.current?.avatarGroup?.rotation.set(0, 0, 0);
   };
 
-  const isSpelling = currentStep?.type === 'fingerspelling';
   const cameraButtons = [
     { id: 'full', icon: <Eye size={13} />, label: 'Toàn thân', title: 'Toàn cảnh robot' },
     { id: 'hand_both', icon: <Crosshair size={13} />, label: '2 tay', title: 'Cận cảnh cả 2 bàn tay' },
@@ -733,48 +852,6 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
           style={{ position: 'absolute', inset: 0, cursor: 'grab' }}
           title="Kéo chuột để xoay robot 360°"
         />
-
-        {/* Thẻ ký hiệu hiện tại — kích thước cố định, chữ chuyển mờ mượt (không nhảy bố cục) */}
-        {currentStep && (
-          <div style={{
-            position: 'absolute', top: '12px', left: '12px', width: 'min(44%, 260px)',
-            background: 'rgba(8, 15, 28, 0.9)', backdropFilter: 'blur(10px)',
-            padding: '8px 14px 10px', borderRadius: '12px',
-            border: `1px solid ${isSpelling ? 'rgba(251,191,36,0.5)' : 'rgba(34, 211, 238, 0.45)'}`,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.35)', pointerEvents: 'none',
-            transition: 'border-color 0.35s ease'
-          }}>
-            <span style={{
-              fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: isSpelling ? '#fbbf24' : '#22d3ee', display: 'block', whiteSpace: 'nowrap',
-              transition: 'color 0.35s ease'
-            }}>
-              {isSpelling ? 'Đánh vần' : 'Ký hiệu'}
-              {sequence.length > 1 && (
-                <span style={{ color: '#94a3b8', marginLeft: 6, fontVariantNumeric: 'tabular-nums' }}>
-                  {currentIndex + 1}/{sequence.length}
-                </span>
-              )}
-            </span>
-            <div key={`${currentIndex}-${currentStep.gloss || currentStep.label}`} className="rs-swap">
-              <div style={{ height: '46px', display: 'flex', alignItems: 'center' }}>
-                <strong style={{
-                  display: 'block', color: '#fff', lineHeight: 1.1, whiteSpace: 'nowrap',
-                  overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%',
-                  fontSize: isSpelling ? '40px' : '26px', fontFamily: 'Outfit, sans-serif'
-                }}>
-                  {isSpelling ? (currentStep.token || currentStep.label) : currentStep.label}
-                </strong>
-              </div>
-              <span style={{
-                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                fontSize: '11.5px', color: '#cbd5e1', lineHeight: 1.4, height: '32px'
-              }}>
-                {currentStep.description || ''}
-              </span>
-            </div>
-          </div>
-        )}
 
         {/* Thanh góc nhìn (dọc, góc phải) */}
         <div style={{

@@ -38,6 +38,86 @@ export async function fetchVSL102Classes() {
   }
 }
 
+/**
+ * Bộ từ vựng VSL thống nhất (QIPEDC + giáo trình 102 + robot 3D) — dùng chung cho cả 2 chiều dịch
+ */
+let lexiconCache = null;
+export async function fetchLexicon() {
+  if (lexiconCache) return lexiconCache;
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/lexicon`);
+    if (!res.ok) throw new Error('Cannot load lexicon');
+    lexiconCache = await res.json();
+    return lexiconCache;
+  } catch (err) {
+    console.warn('[VSL API] Cannot fetch lexicon:', err);
+    return null;
+  }
+}
+
+/**
+ * Hoạt ảnh chụp chuyển động (mocap) của robot cho 1 mục từ — trích từ video người thật QIPEDC
+ */
+const motionCache = new Map();
+// ---------- Video/ảnh mẫu QIPEDC phát qua bộ đệm của backend (nhanh, mượt, tua được) ----------
+const QIPEDC_ID_RE = /qipedc\.moet\.gov\.vn\/(videos|thumbs)\/([A-Za-z0-9_-]+)\.(mp4|png)/;
+
+/** Link qua backend cho 1 URL QIPEDC (giữ nguyên nếu không phải QIPEDC). */
+export function mediaUrl(url) {
+  const m = QIPEDC_ID_RE.exec(url || '');
+  return m ? `${API_BASE_URL}/api/media/${m[1]}/${m[2]}.${m[3]}` : url;
+}
+
+export function mediaId(url) {
+  const m = QIPEDC_ID_RE.exec(url || '');
+  return m ? m[2] : null;
+}
+
+const warmed = new Set();
+/** Nhờ backend tải trước (ở nền) các video sắp xem. */
+export function prefetchVideos(urls) {
+  const ids = urls.map(mediaId).filter((id) => id && !warmed.has(id));
+  if (!ids.length) return;
+  ids.forEach((id) => warmed.add(id));
+  fetch(`${API_BASE_URL}/api/media/prefetch`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids, kind: 'videos' }),
+  }).catch(() => ids.forEach((id) => warmed.delete(id)));
+}
+
+const browserWarmed = new Set();
+/** Tải sẵn cả file vào bộ nhớ đệm của trình duyệt (khi di chuột tới ô) → bấm xem là phát ngay. */
+export function warmVideo(url) {
+  const u = mediaUrl(url);
+  if (!u || browserWarmed.has(u)) return;
+  browserWarmed.add(u);
+  fetch(u).then((r) => r.blob()).catch(() => browserWarmed.delete(u));
+}
+
+const entryCache = new Map();
+export function fetchLexiconEntry(id) {
+  if (!id) return Promise.resolve(null);
+  if (!entryCache.has(id)) {
+    entryCache.set(id, fetch(`${API_BASE_URL}/api/lexicon/${encodeURIComponent(id)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => (j && j.entry) || null)
+      .catch(() => { entryCache.delete(id); return null; }));
+  }
+  return entryCache.get(id);
+}
+
+export function fetchMotion(id) {
+  if (!id) return Promise.resolve(null);
+  if (!motionCache.has(id)) {
+    motionCache.set(id, fetch(`${API_BASE_URL}/api/motion/${encodeURIComponent(id)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => (j && j.motion) || null)
+      .catch(() => { motionCache.delete(id); return null; }));
+  }
+  return motionCache.get(id);
+}
+
 export async function sendSequenceForRecognition(sequence, threshold = 0.65) {
   try {
     const res = await fetch(`${API_BASE_URL}/api/recognize_sequence`, {
