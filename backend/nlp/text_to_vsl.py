@@ -1,5 +1,7 @@
 """
 Bộ chuyển đổi Ngôn ngữ Tự nhiên Tiếng Việt sang Ngôn ngữ Ký hiệu (Vietnamese Text-to-VSL NLP Engine)
+Tra cứu trên BỘ TỪ VỰNG THỐNG NHẤT (backend/data/vsl_lexicon.json: ~3.300 từ QIPEDC + 102 từ giáo trình
++ từ có tư thế robot), cùng nguồn với mô hình camera — hai chiều dùng chung một bộ từ.
 Quy trình nâng cao:
 1. Chuẩn hóa câu & phân đoạn đoạn văn dài thành các mệnh đề ngữ nghĩa.
 2. Lược bỏ hư từ tiếng Việt không dùng trong VSL (theo chuẩn ngữ pháp VSL: Time - Topic - Comment).
@@ -11,12 +13,20 @@ Quy trình nâng cao:
 import re
 import unicodedata
 from backend.models.vsl_dictionary import VSL_VOCABULARY, VSL_ALPHABET
+from backend.models.lexicon import load_lexicon, gloss_of, display_label, norm_key, motion_id_of, motion_ids, motion_clip, sign_description
 
 # Các hư từ trong ngữ pháp tiếng Việt nói thường được lược bỏ hoặc tinh gọn trong VSL
 STOPWORDS = {
     "là", "thì", "mà", "những", "các", "của", "đang", "đã", "sẽ", "một", "rất",
     "vì", "chúng", "vào", "trong", "cho", "việc", "hoặc", "nhưng", "cũng", "để",
     "mình", "điều", "đó", "khỏi", "có", "thường", "bởi", "tại", "do", "với", "được"
+}
+
+# Hư từ / trợ từ bổ sung: không có ký hiệu riêng trong VSL, bỏ qua thay vì đánh vần
+STOPWORDS |= {
+    "và", "rồi", "với", "này", "ấy", "nhé", "nha", "ạ", "à", "ơi", "nhỉ", "chứ", "vậy",
+    "lại", "nữa", "đều", "sự", "chiếc", "quá", "lắm", "thật", "luôn", "hãy", "từ", "khi",
+    "nên", "nhưng", "thế", "đây", "kia", "hết", "cùng", "bị", "cái",
 }
 
 # Bản đồ ánh xạ từ đồng nghĩa và cụm từ phức tạp trong đời sống sang VSL Gloss
@@ -96,112 +106,169 @@ SEMANTIC_SYNONYM_MAP = {
     "không": "KHONG"
 }
 
+# Từ đồng nghĩa / cách viết khác → từ có trong bộ từ vựng
+SYNONYM_WORDS = {
+    "cám ơn": "cảm ơn", "xin chào": "chào",
+    "má": "mẹ", "mẹ": "mẹ", "ba": "bố", "cha": "bố",
+    "làm ơn": "xin vui lòng", "vui lòng": "xin vui lòng",
+    "học": "học tập", "học bài": "học tập", "nghỉ ngơi": "thư giãn", "bạn thân": "bạn bè",
+    "thường ngày": "hàng ngày", "nấu ăn": "nấu nướng", "dọn dẹp": "lau nhà",
+}
+
+
 def remove_accents(input_str: str) -> str:
     """Loại bỏ dấu tiếng Việt để dùng cho đánh vần chữ cái ngón tay cơ bản"""
     s = input_str.replace('Đ', 'D').replace('đ', 'd')
     nfkd_form = unicodedata.normalize('NFKD', s)
     return "".join([c for c in nfkd_form if not unicodedata.combining(c)])
 
+
+def _resolve(phrase: str, lex: dict):
+    """Tìm mục từ cho một cụm từ: khớp trực tiếp → đồng nghĩa → bản đồ ngữ nghĩa cũ (theo tư thế robot)."""
+    entry = lex["by_key"].get(phrase)
+    if entry:
+        return entry
+    syn = SYNONYM_WORDS.get(phrase)
+    if syn and syn in lex["by_key"]:
+        return lex["by_key"][syn]
+    pose_key = SEMANTIC_SYNONYM_MAP.get(phrase)
+    if pose_key:
+        return lex["by_pose"].get(pose_key)
+    return None
+
+
+_QIPEDC_VIDEO_RE = re.compile(r"qipedc\.moet\.gov\.vn/videos/([A-Za-z0-9_-]+)\.mp4")
+
+
+def _video_id(entry: dict):
+    m = _QIPEDC_VIDEO_RE.search(entry.get("video_url") or "")
+    return m.group(1) if m else None
+
+
+def _vocab_item(token: str, entry: dict, available_motions: set = None) -> dict:
+    gloss = gloss_of(entry)
+    motion_id = motion_id_of(entry, available_motions)
+    legacy = VSL_VOCABULARY.get(entry.get("pose_key") or "", {})
+    return {
+        "token": token,
+        "gloss": gloss,
+        "label": display_label(entry, token),
+        "word": entry["word"],
+        "entry_id": entry["id"],
+        "type": "vocabulary",
+        "duration_ms": 1400,
+        "description": entry.get("how_to") or entry.get("definition") or legacy.get("description", ""),
+        "definition": entry.get("definition", ""),
+        "how_to": entry.get("how_to", ""),
+        "pos": entry.get("pos", ""),
+        "source": entry.get("source", ""),
+        # Chỉ 1 video minh họa: đúng video QIPEDC mà robot đã học chuyển động (không chia vùng miền).
+        # Video giáo trình lưu trên Supabase hay bị chặn/treo → không dùng.
+        "video_url": entry.get("video_url") if "qipedc.moet.gov.vn" in (entry.get("video_url") or "") else None,
+        "thumb_url": entry.get("thumb_url"),
+        "variants": [],
+        "pose_key": entry.get("pose_key"),
+        # Robot diễn được nếu có chuyển động học từ video (motion_id) hoặc tư thế vẽ tay (pose_key)
+        "motion_id": motion_id,
+        # Đoạn có động tác trong video mẫu (bỏ phần đứng yên đầu/cuối) — video & robot chỉ phát đoạn này
+        "clip": list(motion_clip(motion_id)) if motion_id else None,
+        "has_pose": bool(entry.get("pose_key") or motion_id),
+        # Mã video QIPEDC: từ chưa có chuyển động → trình duyệt học từ video này rồi robot diễn
+        "video_id": _video_id(entry),
+        # Chữ cái để robot đánh vần tạm trong lúc chưa có / đang học chuyển động
+        "spell": [c for c in remove_accents(entry["word"]).upper() if c in VSL_ALPHABET][:12],
+        # Diễn tả cụ thể cách làm ký hiệu (phân tích từ video người thật)
+        "sign_description": sign_description(motion_id),
+        "sstcn_index": entry.get("sstcn_index"),
+        "motion_type": legacy.get("motion", "static"),
+        "avatar_pose": legacy.get("avatar_pose", {}),
+        "fingers_state": legacy.get("fingers_state", {}),
+    }
+
+
+def _spell_items(word: str, lex: dict) -> list:
+    items = []
+    for char in remove_accents(word).upper():
+        if char not in VSL_ALPHABET:
+            continue
+        alpha_item = VSL_ALPHABET[char]
+        entry = lex["by_key"].get(char.lower())
+        items.append({
+            "token": char,
+            "gloss": f"ALPHA_{char}",
+            "label": f"Chữ {char}",
+            "word": char,
+            "entry_id": entry["id"] if entry else None,
+            "type": "fingerspelling",
+            "duration_ms": 800,
+            "description": alpha_item["description"],
+            "video_url": None,  # đánh vần: robot diễn tư thế chữ cái, không cần video
+            "variants": [],
+            "pose_key": char,
+            "has_pose": True,
+            "motion_type": "static",
+            "fingers_state": alpha_item.get("fingers_state", {}),
+            "avatar_pose": {"right_arm": [35, 20, 0], "right_wrist": [15, 0, 0]},
+        })
+    return items
+
+
 def text_to_vsl_glosses(text: str):
     """
-    Chuyển đổi câu văn hoặc đoạn văn dài tiếng Việt thành chuỗi ký hiệu VSL liên tục,
-    tối ưu cho ngữ pháp VSL và loại bỏ tình trạng đánh vần từng chữ cái vô nghĩa.
+    Chuyển câu văn / đoạn văn tiếng Việt thành chuỗi ký hiệu VSL liên tục:
+    1. Ghép cụm từ dài nhất có trong bộ từ vựng (tối đa 6 âm tiết).
+    2. Bỏ hư từ không dùng trong VSL (là, thì, mà, của...).
+    3. Từ không có trong từ điển (tên riêng, từ mới) → đánh vần chữ cái ngón tay.
     """
     if not text or not text.strip():
         return []
 
-    cleaned = text.lower().strip()
+    lex = load_lexicon()
+    available = motion_ids()
+    cleaned = norm_key(text)
     cleaned = re.sub(r'[\r\n\t]+', ' ', cleaned)
-    cleaned = re.sub(r'[,;.?!—\-_()"]+', ' ', cleaned)
+    cleaned = re.sub(r'[—_()"\[\]]+', ' ', cleaned)
+    cleaned = re.sub(r'\s-\s|\s-|-\s', ' ', cleaned)
     cleaned = re.sub(r'\s+', ' ', cleaned).strip()
 
-    result_sequence = []
-    
-    # 1. Chuẩn bị danh sách tra cứu ưu tiên từ dài đến ngắn
-    vocab_entries = []
-    for phrase, gloss_key in SEMANTIC_SYNONYM_MAP.items():
-        if gloss_key in VSL_VOCABULARY:
-            vocab_entries.append((phrase, gloss_key, VSL_VOCABULARY[gloss_key]))
-            
-    for gloss_key, item in VSL_VOCABULARY.items():
-        for kw in item.get("keywords", []):
-            vocab_entries.append((kw, gloss_key, item))
-
-    vocab_entries.sort(key=lambda x: len(x[0].split()), reverse=True)
-
     words = cleaned.split()
+    result = []
     i = 0
-    total_words = len(words)
+    n = len(words)
+    max_len = lex["max_phrase_len"]
 
-    while i < total_words:
+    def push(item):
+        if not result or result[-1]["gloss"] != item["gloss"] or item["type"] == "fingerspelling":
+            result.append(item)
+
+    while i < n:
         matched = False
-
-        for length in range(min(5, total_words - i), 0, -1):
-            candidate = " ".join(words[i:i + length])
-            
-            for phrase, gloss_key, item in vocab_entries:
-                if candidate == phrase:
-                    if not result_sequence or result_sequence[-1]["gloss"] != gloss_key:
-                        result_sequence.append({
-                            "token": candidate,
-                            "gloss": gloss_key,
-                            "label": item["label"],
-                            "type": "vocabulary",
-                            "duration_ms": 1400,
-                            "description": item["description"],
-                            "motion": item.get("motion", "static"),
-                            "avatar_pose": item.get("avatar_pose", {}),
-                            "fingers_state": item.get("fingers_state", {})
-                        })
-                    i += length
-                    matched = True
-                    break
-            if matched:
+        # Cụm nhiều âm tiết trước (kể cả cụm chứa hư từ như "có thể", "của tôi")
+        for length in range(min(max_len, n - i), 1, -1):
+            phrase = " ".join(words[i:i + length])
+            entry = _resolve(phrase, lex)
+            if entry:
+                push(_vocab_item(phrase, entry, available))
+                i += length
+                matched = True
                 break
+        if matched:
+            continue
 
-        if not matched:
-            word = words[i]
-            if word in STOPWORDS:
-                i += 1
-                continue
-
-            single_matched = False
-            for phrase, gloss_key, item in vocab_entries:
-                if word == phrase:
-                    if not result_sequence or result_sequence[-1]["gloss"] != gloss_key:
-                        result_sequence.append({
-                            "token": word,
-                            "gloss": gloss_key,
-                            "label": item["label"],
-                            "type": "vocabulary",
-                            "duration_ms": 1400,
-                            "description": item["description"],
-                            "motion": item.get("motion", "static"),
-                            "avatar_pose": item.get("avatar_pose", {}),
-                            "fingers_state": item.get("fingers_state", {})
-                        })
-                    single_matched = True
-                    break
-
-            if not single_matched:
-                unaccented_word = remove_accents(word).upper()
-                if len(unaccented_word) <= 4 and all(c in VSL_ALPHABET for c in unaccented_word):
-                    for char in unaccented_word:
-                        alpha_item = VSL_ALPHABET[char]
-                        result_sequence.append({
-                            "token": char,
-                            "gloss": f"ALPHA_{char}",
-                            "label": f"Chữ {char}",
-                            "type": "fingerspelling",
-                            "duration_ms": 800,
-                            "description": alpha_item["description"],
-                            "motion": "static",
-                            "fingers_state": alpha_item.get("fingers_state", {}),
-                            "avatar_pose": {
-                                "right_arm": [35, 20, 0],
-                                "right_wrist": [15, 0, 0]
-                            }
-                        })
+        word = words[i]
+        if word in STOPWORDS:
             i += 1
+            continue
+        entry = _resolve(word, lex)
+        if entry:
+            push(_vocab_item(word, entry, available))
+        elif re.fullmatch(r"\d+", word):
+            for d in word:
+                e = lex["by_key"].get(d)
+                if e:
+                    push(_vocab_item(d, e, available))
+        else:
+            result.extend(_spell_items(word, lex))
+        i += 1
 
-    return result_sequence
+    return result
