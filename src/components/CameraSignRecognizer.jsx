@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Camera, CameraOff, Volume2, Copy, Trash2, CheckCircle2,
-  AlertCircle, Zap, Film, X, Sparkles, Gauge
+  AlertCircle, Zap, Film, X, Sparkles, Gauge,
+  Layers, Hand, User, Type, BookOpen, MessageSquare, Info
 } from 'lucide-react';
 import {
   sendSequenceForRecognition,
@@ -54,9 +55,15 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
   const [cameraError, setCameraError] = useState(null);
   const [aspectRatio, setAspectRatio] = useState('4/3');
 
-  // Chế độ nhận diện
-  const [recognitionMode, setRecognitionMode] = useState('sequence'); // 'sequence' (102 VSL SSTCN) | 'instant' (Finger-spelling)
-  const [trackerEngine, setTrackerEngine] = useState('hands'); // 'hands' (60 FPS) | 'holistic' (Toàn thân)
+  // TIÊU CHÍ A: Phạm vi nhận diện: 'hands' (Bàn tay - 60 FPS) | 'holistic' (Toàn thân - 75 Khớp)
+  const [recognitionScope, setRecognitionScope] = useState('hands');
+
+  // TIÊU CHÍ B: Chế độ chuyển đổi: 'letters_numbers' (Chữ cái & Số) | 'words' (Từ vựng) | 'sentence' (Ghép câu ngữ cảnh)
+  const [conversionMode, setConversionMode] = useState('letters_numbers');
+
+  // Trạng thái kỹ thuật đồng bộ với backend & pipeline
+  const [recognitionMode, setRecognitionMode] = useState('instant'); // 'instant' | 'sequence'
+  const [trackerEngine, setTrackerEngine] = useState('hands'); // 'hands' | 'holistic'
 
   // Trạng thái nhận diện chuỗi động
   const [topKPredictions, setTopKPredictions] = useState([]);
@@ -339,6 +346,89 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
       setTimeout(() => {
         startCamera(newEngine);
       }, 250);
+    }
+  };
+
+  // Xử lý chuyển đổi độc lập TIÊU CHÍ A: Phạm vi nhận diện
+  const handleScopeChange = (newScope) => {
+    if (newScope === recognitionScope) return;
+    setRecognitionScope(newScope);
+    switchTrackerEngine(newScope);
+  };
+
+  // Xử lý chuyển đổi độc lập TIÊU CHÍ B: Chế độ chuyển đổi
+  const handleModeChange = (newMode) => {
+    if (newMode === conversionMode) return;
+    setConversionMode(newMode);
+    sequenceBufferRef.current = [];
+    updateHUDProgress(0, 0);
+
+    // Reset kết quả cũ để tránh hiển thị nhầm lẫn giữa các chế độ
+    setCurrentResult({
+      sign: 'NEUTRAL',
+      label: newMode === 'letters_numbers' ? 'Chờ cử chỉ chữ cái/số...' : newMode === 'words' ? 'Chờ cử chỉ từ vựng...' : 'Chờ bắt đầu ghép câu...',
+      confidence: 0,
+      type: '',
+      description: '',
+      category: '',
+      video_url: ''
+    });
+    setTopKPredictions([]);
+
+    // Ánh xạ sang pipeline thực tế
+    if (newMode === 'letters_numbers') {
+      setRecognitionMode('instant');
+    } else {
+      setRecognitionMode('sequence');
+    }
+  };
+
+  // Helper đánh giá và hiển thị trạng thái tương thích giữa 2 tiêu chí lựa chọn
+  const getCombinationStatus = () => {
+    if (conversionMode === 'letters_numbers') {
+      if (recognitionScope === 'hands') {
+        return {
+          type: 'optimal',
+          badge: '✅ Hỗ trợ tối ưu',
+          badgeClass: 'badge-emerald',
+          title: 'Bàn tay + Chữ cái & Số (Instant <5ms)',
+          desc: 'MediaPipe Hands 60 FPS kết hợp Geometric Rules & MLP cho bảng chữ cái và số ngón tay.'
+        };
+      } else {
+        return {
+          type: 'suboptimal',
+          badge: '⚠️ Chưa tối ưu',
+          badgeClass: 'badge-cyan',
+          title: 'Toàn thân + Chữ cái & Số',
+          desc: 'Chữ cái ngón tay được trích xuất từ mốc bàn tay của khung xương toàn thân (Khuyên dùng phạm vi Bàn tay để đạt 60 FPS).'
+        };
+      }
+    } else if (conversionMode === 'words') {
+      if (recognitionScope === 'holistic') {
+        return {
+          type: 'optimal',
+          badge: '✅ Hỗ trợ tối ưu',
+          badgeClass: 'badge-emerald',
+          title: 'Toàn thân + 102 Từ vựng VSL (SSTCN 30-Frame)',
+          desc: 'Khung xương 75 khớp (Pose + 2 Bàn tay) kết hợp mô hình SSTCN_Attention nhận diện từ vựng cử chỉ động.'
+        };
+      } else {
+        return {
+          type: 'supported',
+          badge: '⚡ Hỗ trợ tốt',
+          badgeClass: 'badge-indigo',
+          title: 'Bàn tay + 102 Từ vựng VSL',
+          desc: 'Nhận diện 102 từ động qua 2 bàn tay (Khớp Pose thân trên được ước lượng tự động).'
+        };
+      }
+    } else {
+      return {
+        type: 'developing',
+        badge: '💬 Đang phát triển NLP',
+        badgeClass: 'badge-cyan',
+        title: 'Ghép câu theo ngữ cảnh',
+        desc: 'Hỗ trợ ghép chuỗi từ/chữ tự động qua thời gian (Temporal Debounce). Mô hình ngữ pháp ngữ cảnh (Contextual NLP) đang trong quá trình phát triển.'
+      };
     }
   };
 
@@ -747,68 +837,123 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
           </div>
         </div>
 
-        {/* Thanh công cụ: Chọn Chế độ & Động cơ Tracking */}
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          {/* Chế độ nhận diện */}
-          <div style={{
-            flex: 1,
-            display: 'flex',
-            gap: '4px',
-            padding: '3px',
-            background: 'rgba(15, 23, 42, 0.6)',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-subtle)'
-          }}>
-            <button
-              onClick={() => {
-                setRecognitionMode('sequence');
-                sequenceBufferRef.current = [];
-                updateHUDProgress(0, 0);
-              }}
-              className={`btn ${recognitionMode === 'sequence' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ flex: 1, padding: '7px 10px', fontSize: '11px', justifyContent: 'center' }}
-            >
-              <Sparkles size={14} /> Chuỗi 102 Từ (Sliding 300ms)
-            </button>
-            <button
-              onClick={() => {
-                setRecognitionMode('instant');
-                sequenceBufferRef.current = [];
-                updateHUDProgress(0, 0);
-              }}
-              className={`btn ${recognitionMode === 'instant' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ flex: 1, padding: '7px 10px', fontSize: '11px', justifyContent: 'center' }}
-            >
-              <Zap size={14} /> Chữ Cái Tức Thì (&lt;5ms)
-            </button>
+        {/* THANH CÔNG CỤ TÁI CẤU TRÚC: 2 TIÊU CHÍ LỰA CHỌN ĐỘC LẬP */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          
+          {/* Hàng 2 nhóm lựa chọn độc lập */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '12px' }}>
+            
+            {/* TIÊU CHÍ A: PHẠM VI NHẬN DIỆN */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              padding: '10px',
+              background: 'rgba(15, 23, 42, 0.65)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-subtle)'
+            }}>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Layers size={13} style={{ color: 'var(--primary)' }} /> A. Phạm vi nhận diện
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  onClick={() => handleScopeChange('hands')}
+                  className={`btn ${recognitionScope === 'hands' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: 1, padding: '7px 8px', fontSize: '11px', justifyContent: 'center' }}
+                  title="Nhận diện cử chỉ bàn tay siêu tốc 60 FPS"
+                >
+                  <Hand size={14} /> Bàn tay
+                </button>
+                <button
+                  onClick={() => handleScopeChange('holistic')}
+                  className={`btn ${recognitionScope === 'holistic' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: 1, padding: '7px 8px', fontSize: '11px', justifyContent: 'center' }}
+                  title="Nhận diện toàn thân 75 khớp (Pose + 2 Bàn tay)"
+                >
+                  <User size={14} /> Toàn thân
+                </button>
+              </div>
+            </div>
+
+            {/* TIÊU CHÍ B: CHẾ ĐỘ CHUYỂN ĐỔI */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              padding: '10px',
+              background: 'rgba(15, 23, 42, 0.65)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-subtle)'
+            }}>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Sparkles size={13} style={{ color: 'var(--primary)' }} /> B. Chế độ chuyển đổi
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  onClick={() => handleModeChange('letters_numbers')}
+                  className={`btn ${conversionMode === 'letters_numbers' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: 1, padding: '7px 8px', fontSize: '11px', justifyContent: 'center' }}
+                  title="Nhận diện bảng chữ cái và số ngón tay tức thì (<5ms)"
+                >
+                  <Type size={14} /> Chữ cái & Số
+                </button>
+                <button
+                  onClick={() => handleModeChange('words')}
+                  className={`btn ${conversionMode === 'words' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: 1, padding: '7px 8px', fontSize: '11px', justifyContent: 'center' }}
+                  title="Nhận diện 102 từ vựng cử chỉ VSL (SSTCN 30-Frame)"
+                >
+                  <BookOpen size={14} /> Từ (102 Từ)
+                </button>
+                <button
+                  onClick={() => handleModeChange('sentence')}
+                  className={`btn ${conversionMode === 'sentence' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: 1, padding: '7px 8px', fontSize: '11px', justifyContent: 'center' }}
+                  title="Ghép chuỗi từ liên tục thành câu văn bản"
+                >
+                  <MessageSquare size={14} /> Ghép câu ngữ cảnh
+                </button>
+              </div>
+            </div>
+
           </div>
 
-          {/* Động cơ Tracking */}
-          <div style={{
-            display: 'flex',
-            gap: '4px',
-            padding: '3px',
-            background: 'rgba(15, 23, 42, 0.6)',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-subtle)'
-          }}>
-            <button
-              onClick={() => switchTrackerEngine('hands')}
-              className={`btn ${trackerEngine === 'hands' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ padding: '7px 10px', fontSize: '11px' }}
-              title="Động cơ bàn tay siêu tốc 60 FPS, phản hồi tức thì"
-            >
-              <Gauge size={14} /> Bàn Tay 60 FPS
-            </button>
-            <button
-              onClick={() => switchTrackerEngine('holistic')}
-              className={`btn ${trackerEngine === 'holistic' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ padding: '7px 10px', fontSize: '11px' }}
-              title="Toàn thân 75 khớp (Pose + 2 tay)"
-            >
-              Toàn Thân 75 Khớp
-            </button>
-          </div>
+          {/* BANNER THÔNG BÁO TRẠNG THÁI TỔ HỢP ĐỘC LẬP */}
+          {(() => {
+            const status = getCombinationStatus();
+            return (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-sm)',
+                background: status.type === 'optimal' 
+                  ? 'rgba(16, 185, 129, 0.08)' 
+                  : status.type === 'developing' 
+                  ? 'rgba(6, 182, 212, 0.08)' 
+                  : 'rgba(245, 158, 11, 0.08)',
+                border: `1px solid ${
+                  status.type === 'optimal' 
+                    ? 'rgba(16, 185, 129, 0.25)' 
+                    : status.type === 'developing'
+                    ? 'rgba(6, 182, 212, 0.25)'
+                    : 'rgba(245, 158, 11, 0.25)'
+                }`,
+                fontSize: '11px'
+              }}>
+                <span className={`badge ${status.badgeClass}`} style={{ fontSize: '10px', padding: '2px 6px', whiteSpace: 'nowrap' }}>
+                  {status.badge}
+                </span>
+                <span style={{ color: 'var(--text-secondary)', flex: 1, lineHeight: '1.4' }}>
+                  <strong style={{ color: 'var(--text-main)' }}>{status.title}: </strong>
+                  {status.desc}
+                </span>
+              </div>
+            );
+          })()}
+
         </div>
 
         {/* Khung hiển thị Video & Canvas */}
@@ -1015,14 +1160,12 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
         <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>
-              Ký hiệu đang nhận diện
+              {conversionMode === 'letters_numbers' ? '🔤 Chữ cái & Số' : conversionMode === 'words' ? '📖 Từ vựng (102 Từ)' : '💬 Ghép câu liên tục'}
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
-              {activeSignCategory && (
-                <span className="badge badge-indigo" style={{ fontSize: '11px' }}>
-                  {activeSignCategory}
-                </span>
-              )}
+              <span className={`badge ${conversionMode === 'letters_numbers' ? 'badge-emerald' : conversionMode === 'words' ? 'badge-indigo' : 'badge-cyan'}`} style={{ fontSize: '11px' }}>
+                {conversionMode === 'letters_numbers' ? 'Instant (<5ms)' : conversionMode === 'words' ? 'SSTCN (30-Frame)' : 'Temporal Debounce'}
+              </span>
               <span className="badge badge-cyan" style={{ fontSize: '11px' }}>
                 {currentResult.confidence > 0 ? `${Math.round(currentResult.confidence * 100)}% Khớp` : 'Đang chờ...'}
               </span>
@@ -1113,12 +1256,27 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
         </div>
 
         {/* Card Phụ Đề Câu Hoàn Chỉnh */}
-        <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', flex: 1 }}>
+        <div className="glass-panel" style={{
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+          flex: 1,
+          border: conversionMode === 'sentence' ? '1px solid var(--border-active)' : '1px solid var(--border-subtle)',
+          boxShadow: conversionMode === 'sentence' ? '0 0 20px rgba(6, 182, 212, 0.1)' : 'none'
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h3 style={{ fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle2 size={18} style={{ color: 'var(--accent-success)' }} />
-              Phụ Đề Văn Bản Tiếng Việt
-            </h3>
+            <div>
+              <h3 style={{ fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                <CheckCircle2 size={18} style={{ color: 'var(--accent-success)' }} />
+                Phụ Đề Văn Bản Tiếng Việt
+              </h3>
+              {conversionMode === 'sentence' && (
+                <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: '600' }}>
+                  💬 Chế độ Ghép câu liên tục (Ghép chuỗi tự động qua thời gian)
+                </span>
+              )}
+            </div>
 
             <div style={{ display: 'flex', gap: '6px' }}>
               <button
