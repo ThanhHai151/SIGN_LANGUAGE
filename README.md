@@ -113,3 +113,50 @@ Chạy Frontend:
 ```bash
 npm run dev
 ```
+
+---
+
+# 📚 Bộ từ vựng VSL thống nhất
+
+Cả hai chiều **Camera → Văn bản** và **Văn bản → Ký hiệu** dùng chung một bộ từ: `backend/data/vsl_lexicon.json` (3.363 mục từ, 4.464 video).
+
+- **Danh mục NNKH QIPEDC (Bộ GD&ĐT)**: ~3.300 từ, video người Điếc thể hiện, nhiều từ có 3 biến thể **Bắc / Trung / Nam**, kèm từ loại và giải nghĩa.
+- **102 từ giáo trình**: mỗi lớp của mô hình camera SSTCN được gắn vào đúng một mục từ (`sstcn_index`).
+- **Robot 3D**: 50 mục từ có tư thế robot (`pose_key`); từ chưa có tư thế thì hiện video mẫu người thật.
+- **Mức thông dụng**: ~800 từ được đánh dấu `common`, xếp hạng theo tần suất âm tiết trong hội thoại tiếng Việt.
+
+API: `GET /api/lexicon?filter=common|all|camera|robot|alphabet&q=...` · chi tiết nguồn: `backend/data/sources/README.md` · dựng lại: `python -m backend.training.build_lexicon`.
+
+---
+
+### Video mẫu trong Từ điển
+
+Video gốc của QIPEDC đặt chỉ mục ở cuối file và không cho trình duyệt lưu đệm, nên phát trực tiếp hay bị giật.
+Backend tải mỗi video **một lần**, chuyển chỉ mục lên đầu file (không mã hóa lại hình ảnh) và lưu ở
+`backend/data/media_cache/`, rồi phát qua `GET /api/media/videos/{mã}.mp4` (có tua, cache dài hạn).
+Từ điển còn tải trước video của các ô đầu danh sách và của ô đang di chuột tới.
+
+# 🤖 Robot học ký hiệu từ video người thật
+
+Robot 3D không dùng tư thế vẽ tay cho từng từ nữa mà **bắt chước người Điếc trong video QIPEDC**:
+
+1. **Trích chuyển động** — `backend/training/extract_motion_browser.js` chạy MediaPipe Holistic ngay trong trình duyệt trên trang QIPEDC, lấy tọa độ 3D vai/khuỷu/cổ tay và 21 khớp mỗi bàn tay (8 khung/giây).
+2. **Chuyển sang góc khớp robot (retargeting)** — `backend/training/retarget_motion.py`: IK cánh tay 2 đoạn, tách xoay cẳng tay/cổ tay (swing–twist), góc gập từng đốt ngón; tự cắt phần đứng yên đầu/cuối video. Sai lệch hướng cẳng tay so với video ≈ 1,5°.
+3. **Phát lại** — `GET /api/motion/{mã video}`; robot chỉ diễn đoạn có động tác của ký hiệu. Tỉ lệ cơ thể robot (vai : cánh tay : cẳng tay) lấy theo người thật để tay chạm đúng ngực/trán.
+4. **Diễn tả ký hiệu** — `backend/training/describe_signs.py` phân tích cùng dữ liệu video để viết cách làm từng ký hiệu: số tay, hình dạng bàn tay, hướng lòng bàn tay, hướng đầu ngón tay, vị trí và chuyển động (lưu ở `backend/data/sign_descriptions.json`, trả kèm `sign_description` trong `/api/text_to_sign` và `/api/lexicon/{id}`).
+
+**Từ chưa được học** (vd. "làm bài tập"): khi người dùng nhập, trình duyệt tự chạy MediaPipe trên video QIPEDC của từ đó
+(`src/services/motionLearner.js`), gửi điểm khớp lên `POST /api/motion/learn` → backend chuyển sang chuyển động robot,
+lưu vào `backend/data/motions/` và viết phần diễn tả. Trong lúc học (~10 giây), robot đánh vần từ bằng bảng chữ cái
+ngón tay; học xong robot diễn lại đúng ký hiệu. Lần sau từ đó có sẵn. Retargeting chỉ cần numpy (`backend/models/rotation.py`).
+
+Thêm từ mới hàng loạt:
+
+```bash
+# 1) Mở https://qipedc.moet.gov.vn/dictionary → F12 → Console → dán extract_motion_browser.js
+#    await vslExtract(['W00489', 'D0002', ...])   → tải về qipedc_motion_raw.json.gz
+# 2) Chuyển sang góc khớp robot
+python -m backend.training.batch_retarget qipedc_motion_raw.json.gz
+# 3) Viết phần diễn tả ký hiệu
+python -m backend.training.describe_signs qipedc_motion_raw.json.gz
+```

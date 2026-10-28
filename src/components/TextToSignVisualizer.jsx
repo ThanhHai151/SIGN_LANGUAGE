@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, SkipBack, SkipForward, Mic, MicOff, Send, Sparkles, Info, Check, Layers } from 'lucide-react';
-import Avatar3D from './Avatar3D';
-import { convertTextToVSL } from '../services/api';
+import RobotSigner3D, { SPELL_LETTER_MS } from './RobotSigner3D';
+import SignDescription from './SignDescription';
+import { convertTextToVSL, fetchMotion } from '../services/api';
+import { learnMotion } from '../services/motionLearner';
 import { getHandPoseByGloss } from '../utils/handPoses';
 
-export default function TextToSignVisualizer({ ttsEnabled }) {
+export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   const [inputText, setInputText] = useState('Xin chào bạn');
   const [sequence, setSequence] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1.25); // mặc định nhanh hơn một chút cho câu liền mạch
   const [isListening, setIsListening] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [translationId, setTranslationId] = useState(0); // mỗi lần dịch câu mới
 
   const timerRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -23,20 +26,18 @@ export default function TextToSignVisualizer({ ttsEnabled }) {
   ];
 
   const PHRASE_SUGGESTIONS = [
-    'Học bài',
-    'Nấu ăn',
-    'Lau nhà',
-    'Đi ngủ',
-    'Rửa tay',
-    'Đọc sách',
-    'Làm việc',
-    'Khỏe mạnh',
     'Xin chào',
     'Cảm ơn',
-    'Xin vui lòng',
+    'Tôi yêu bạn',
+    'Bạn tên là gì?',
+    'Mẹ tôi là bác sĩ',
+    'Hôm nay tôi đi học',
+    'Gia đình tôi',
+    'Xin lỗi',
+    'Buổi tối ăn cơm',
+    'Bạn khỏe không?',
     'Giúp đỡ',
-    'Gia đình',
-    'Tôi yêu bạn'
+    'Địa chỉ'
   ];
 
   // Chuyển đổi Text sang Ký hiệu
@@ -49,6 +50,7 @@ export default function TextToSignVisualizer({ ttsEnabled }) {
       const resp = await convertTextToVSL(text);
       if (resp && resp.success && resp.sequence) {
         setSequence(resp.sequence);
+        setTranslationId((n) => n + 1);
         setCurrentIndex(0);
         setIsPlaying(true);
       }
@@ -83,7 +85,13 @@ export default function TextToSignVisualizer({ ttsEnabled }) {
     }
 
     const currentStep = sequence[currentIndex];
-    const duration = (currentStep ? currentStep.duration_ms : 1800) / playbackSpeed;
+    // Thời lượng mỗi ký hiệu = đoạn có động tác robot đã học từ video (đánh vần: duration_ms)
+    const clipMs = currentStep?.clip ? Math.round((currentStep.clip[1] - currentStep.clip[0]) * 1000) + 250 : 0;
+    // Chưa có chuyển động (đang học) → robot đánh vần tạm: mỗi chữ cái ~0,55 giây
+    const spellMs = !currentStep?.motion_id && !currentStep?.pose_key && currentStep?.spell?.length
+      ? currentStep.spell.length * SPELL_LETTER_MS + 300 : 0;
+    const baseMs = currentStep ? (clipMs || spellMs || currentStep.duration_ms || 1400) : 1800;
+    const duration = baseMs / playbackSpeed;
 
     timerRef.current = setTimeout(() => {
       if (currentIndex < sequence.length - 1) {
@@ -97,6 +105,50 @@ export default function TextToSignVisualizer({ ttsEnabled }) {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [isPlaying, currentIndex, sequence, playbackSpeed]);
+
+  // Tải trước chuyển động robot của cả câu để robot bắt đầu ngay khi tới lượt
+  useEffect(() => {
+    sequence.forEach((s) => { if (s.motion_id) fetchMotion(s.motion_id); });
+  }, [sequence]);
+
+  // Từ chưa có chuyển động → robot tự HỌC từ video QIPEDC của từ đó (robot đánh vần tạm trong lúc học).
+  // Học xong: cập nhật câu và diễn lại từ ký hiệu vừa học.
+  const seqVersionRef = useRef(0);
+  const [learning, setLearning] = useState({}); // video_id → tiến độ 0..1 | 'done' | 'failed'
+  useEffect(() => {
+    const version = ++seqVersionRef.current;
+    const todo = [...new Set(sequence.filter((s) => s.video_id && !s.motion_id).map((s) => s.video_id))];
+    if (!todo.length) return;
+    let firstLearned = null;
+    Promise.all(todo.map((vid) => learnMotion(vid, (p) => {
+      if (seqVersionRef.current === version) setLearning((m) => ({ ...m, [vid]: p }));
+    }).then((r) => {
+      if (seqVersionRef.current !== version) return;
+      setLearning((m) => ({ ...m, [vid]: r.success ? 'done' : 'failed' }));
+      if (!r.success) return;
+      setSequence((seq) => {
+        const next = seq.map((s) => (s.video_id === vid
+          ? { ...s, motion_id: r.motion_id, clip: r.clip, sign_description: r.sign_description || s.sign_description, has_pose: true }
+          : s));
+        const idx = next.findIndex((s) => s.video_id === vid);
+        if (idx >= 0 && (firstLearned === null || idx < firstLearned)) firstLearned = idx;
+        return next;
+      });
+    }))).then(() => {
+      if (seqVersionRef.current !== version || firstLearned === null) return;
+      // diễn lại từ ký hiệu đầu tiên vừa học được
+      setCurrentIndex(firstLearned);
+      setIsPlaying(true);
+    });
+  }, [translationId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Nhận yêu cầu diễn một từ từ tab Từ điển
+  useEffect(() => {
+    if (requestText?.text) {
+      setInputText(requestText.text);
+      handleTranslate(requestText.text);
+    }
+  }, [requestText]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Micro Web Speech
   const toggleSpeechRecognition = () => {
@@ -132,8 +184,8 @@ export default function TextToSignVisualizer({ ttsEnabled }) {
   };
 
   useEffect(() => {
-    handleTranslate('Xin chào bạn');
-  }, []);
+    if (!requestText?.text) handleTranslate('Xin chào bạn');
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const currentStep = sequence[currentIndex] || null;
   const currentGloss = currentStep?.gloss || currentStep?.token || 'A';
@@ -331,18 +383,18 @@ export default function TextToSignVisualizer({ ttsEnabled }) {
   const fingerDetails = getFingerStatesDescription(currentGloss);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 1.2fr', gap: '24px', padding: '24px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.25fr) minmax(0, 1.2fr)', gap: '24px', padding: '24px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
       
-      {/* CỘT TRÁI: AVATAR 3D VỚI KHỚP TAY GIẢI PHẪU CHI TIẾT */}
-      <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* CỘT TRÁI: ROBOT 3D — dính trên màn hình khi cuộn cột phải */}
+      <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: '16px', alignSelf: 'start' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <h2 style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Sparkles size={20} style={{ color: 'var(--primary)' }} />
-              Diễn Hoạt Khớp Tay Giải Phẫu 3D (Forward Kinematics)
+              Robot Diễn Hoạt Ký Hiệu VSL 3D
             </h2>
             <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              Mỗi ngón tay gồm 3 khớp đốt riêng biệt (MCP - PIP - DIP) cử động chính xác từng frame
+              Mỗi ngón một màu riêng, lòng bàn tay phát sáng xanh — dễ nhìn ngón nào duỗi/gập và hướng bàn tay
             </p>
           </div>
 
@@ -353,7 +405,7 @@ export default function TextToSignVisualizer({ ttsEnabled }) {
 
         {/* Khung Canvas 3D */}
         <div style={{
-          height: '430px',
+          height: '600px',
           width: '100%',
           background: 'radial-gradient(circle at center, rgba(30, 41, 59, 0.4) 0%, rgba(7, 11, 18, 0.95) 100%)',
           borderRadius: 'var(--radius-md)',
@@ -361,32 +413,13 @@ export default function TextToSignVisualizer({ ttsEnabled }) {
           border: '1px solid var(--border-subtle)',
           position: 'relative'
         }}>
-          <Avatar3D
+          <RobotSigner3D
             currentStep={currentStep}
             isPlaying={isPlaying}
             speed={playbackSpeed}
+            sequence={sequence}
+            currentIndex={currentIndex}
           />
-
-          {/* Badge Ký hiệu hiện tại */}
-          {currentStep && (
-            <div style={{
-              position: 'absolute',
-              top: '16px',
-              left: '16px',
-              background: 'rgba(15, 23, 42, 0.88)',
-              backdropFilter: 'blur(10px)',
-              padding: '10px 16px',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-active)'
-            }}>
-              <span style={{ fontSize: '11px', color: 'var(--primary)', textTransform: 'uppercase', display: 'block', fontWeight: '700' }}>
-                {currentStep.type === 'fingerspelling' ? 'Đánh Vần Ngón Tay (A-Z)' : 'Cử Chỉ Giao Tiếp (VSL)'}
-              </span>
-              <strong style={{ fontSize: '22px', color: '#fff' }}>
-                {currentStep.label}
-              </strong>
-            </div>
-          )}
         </div>
 
         {/* Điều khiển Playback */}
@@ -443,7 +476,7 @@ export default function TextToSignVisualizer({ ttsEnabled }) {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
             <span>Tốc độ:</span>
-            {[0.5, 1.0, 1.5].map((spd) => (
+            {[0.75, 1.0, 1.25, 1.5].map((spd) => (
               <button
                 key={spd}
                 onClick={() => setPlaybackSpeed(spd)}
@@ -467,7 +500,44 @@ export default function TextToSignVisualizer({ ttsEnabled }) {
       {/* CỘT PHẢI: BẢNG SOI GIẢI PHẪU CƠ NGÓN TAY VÀ CHỌN CHỮ CÁI A-Z */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
-        {/* Bảng Kiểm tra Chi tiết Trạng thái Đốt Ngón Tay (Finger Anatomical Inspector) */}
+        {/* Diễn tả cụ thể ký hiệu đang diễn */}
+        {currentStep && (
+          <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
+              <strong style={{ fontSize: '20px', fontFamily: 'Outfit, sans-serif' }}>{currentStep.label}</strong>
+              {currentStep.pos && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{currentStep.pos}</span>}
+              <span style={{ flex: 1 }} />
+              <span className="badge badge-emerald" style={{ fontSize: '10.5px' }}>Diễn tả ký hiệu</span>
+            </div>
+            {currentStep.definition && (
+              <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                <strong style={{ color: 'var(--text-main)' }}>Nghĩa: </strong>{currentStep.definition}
+              </p>
+            )}
+            {currentStep.video_id && !currentStep.motion_id && (() => {
+              const st = learning[currentStep.video_id];
+              const pct = typeof st === 'number' ? Math.round(st * 100) : 0;
+              return (
+                <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(34, 211, 238, 0.08)', border: '1px solid rgba(34, 211, 238, 0.3)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 12.5, color: 'var(--text-main)' }}>
+                    {st === 'failed'
+                      ? 'Chưa học được ký hiệu này từ video — robot đánh vần thay thế.'
+                      : `Robot đang học ký hiệu này từ video người thật… ${pct}% (trong lúc chờ, robot đánh vần từ)`}
+                  </span>
+                  {st !== 'failed' && (
+                    <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', background: 'var(--primary)', transition: 'width .2s' }} />
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+            <SignDescription step={currentStep} />
+          </div>
+        )}
+
+        {/* Bảng Kiểm tra Chi tiết Trạng thái Đốt Ngón Tay (Finger Anatomical Inspector) — chỉ khi robot có tư thế */}
+        {(currentStep?.has_pose ?? true) && (
         <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h3 style={{ fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -506,6 +576,8 @@ export default function TextToSignVisualizer({ ttsEnabled }) {
             ))}
           </div>
         </div>
+
+        )}
 
         {/* Thanh chọn nhanh Chữ cái ngón tay chuẩn A - Z theo ảnh mẫu */}
         <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>

@@ -15,6 +15,7 @@ from backend.models.sstcn_model import load_sstcn_model
 from backend.models.vsl_102_dictionary import SIGN_DICT_102, SIGN_METADATA_102, get_sign_info
 from backend.models.sign_model import get_trained_model, CLASSES, CLASS_TO_IDX, IDX_TO_CLASS
 from backend.models.vsl_dictionary import ALL_SIGNS
+from backend.models.lexicon import get_entry_by_sstcn
 from backend.vision.feature_extractor import normalize_hand_landmarks, calculate_distance, calculate_angle
 
 class VSLRecognizer:
@@ -89,7 +90,15 @@ class VSLRecognizer:
 
             # Kiểm tra ngưỡng tin cậy
             if max_prob >= threshold and pred_idx < 102:
-                sign_info = get_sign_info(pred_idx)
+                sign_info = dict(get_sign_info(pred_idx))
+                # Nối với bộ từ vựng thống nhất (cùng mục từ mà chiều Văn bản → Ký hiệu dùng)
+                entry = get_entry_by_sstcn(pred_idx)
+                if entry:
+                    sign_info["entry_id"] = entry["id"]
+                    sign_info["variants"] = entry.get("variants", [])
+                    sign_info["image_url"] = entry.get("image_url") or entry.get("thumb_url") or ""
+                else:
+                    sign_info["image_url"] = ""
                 pred_term = sign_info["term"]
 
                 # Kiểm tra debounce cooldown
@@ -130,6 +139,8 @@ class VSLRecognizer:
                 "description": sign_info.get("description", ""),
                 "video_url": sign_info.get("video_url", ""),
                 "image_url": sign_info.get("image_url", ""),
+                "entry_id": sign_info.get("entry_id"),
+                "variants": sign_info.get("variants", []),
                 "confirmed": confirmed,
                 "new_token": new_token_added,
                 "sentence": " ".join(self.sentence_tokens),

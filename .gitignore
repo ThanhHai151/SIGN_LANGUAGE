@@ -27,3 +27,6 @@ __pycache__/
 *.py[cod]
 .env
 .kilo/
+
+# Bộ đệm video/ảnh mẫu QIPEDC (tự tạo khi chạy backend)
+backend/data/media_cache/
