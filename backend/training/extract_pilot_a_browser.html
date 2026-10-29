@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Pilot Letter A Landmark Extractor - VSL Connect AI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+</head>
+<body>
+  <h2>Pilot Landmark Extractor: Chữ 'A' (D0489.mp4)</h2>
+  <div id="status">INIT</div>
+  <pre id="output"></pre>
+  <img id="worker-img" style="display:none;" />
+
+  <script>
+    const VIDEO_ID = "D0489";
+    const LETTER = "a";
+    const LETTER_UPPER = "A";
+
+    // 8 frame đại diện từ video thật D0489.mp4 (93 frames, FPS 23.976, thời lượng 3.88s)
+    const FRAMES_TO_PROCESS = [
+      { fidx: 10, ts: 0.42, split: "aux_entry", phase: "entry",        file: "D0489_f10.jpg" },
+      { fidx: 20, ts: 0.83, split: "aux_entry", phase: "entry",        file: "D0489_f20.jpg" },
+      { fidx: 30, ts: 1.25, split: "dev",       phase: "stable_pose",  file: "D0489_f30.jpg" },
+      { fidx: 40, ts: 1.67, split: "dev",       phase: "stable_pose",  file: "D0489_f40.jpg" },
+      { fidx: 50, ts: 2.09, split: "eval",      phase: "stable_pose",  file: "D0489_f50.jpg" },
+      { fidx: 60, ts: 2.50, split: "eval",      phase: "stable_pose",  file: "D0489_f60.jpg" },
+      { fidx: 70, ts: 2.92, split: "aux_exit",  phase: "exit",         file: "D0489_f70.jpg" },
+      { fidx: 80, ts: 3.34, split: "aux_exit",  phase: "exit",         file: "D0489_f80.jpg" }
+    ];
+
+    async function processAll() {
+      const statusDiv = document.getElementById('status');
+      const outPre = document.getElementById('output');
+      const img = document.getElementById('worker-img');
+
+      try {
+        statusDiv.innerText = 'INITIALIZING_MEDIAPIPE';
+
+        const hands = new Hands({
+          locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
+        });
+
+        hands.setOptions({
+          maxNumHands: 2,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.5
+        });
+
+        await hands.initialize();
+        statusDiv.innerText = 'MEDIAPIPE_INITIALIZED';
+
+        let lastResult = null;
+        hands.onResults((res) => {
+          lastResult = res;
+        });
+
+        const samples = [];
+
+        for (let i = 0; i < FRAMES_TO_PROCESS.length; i++) {
+          const item = FRAMES_TO_PROCESS[i];
+          statusDiv.innerText = `PROCESSING_${i + 1}_OF_${FRAMES_TO_PROCESS.length}_FRAME_${item.fidx}`;
+
+          lastResult = null;
+          img.src = `/backend/data/media_cache/inspect_frames/${item.file}`;
+
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = () => reject(new Error(`Failed to load frame image: ${item.file}`));
+          });
+
+          await hands.send({ image: img });
+
+          let landmarks = null;
+          let handedness = "Right";
+          let confidence = 0.0;
+          let qualityStatus = "no_hand_detected";
+
+          if (lastResult && lastResult.multiHandLandmarks && lastResult.multiHandLandmarks.length > 0) {
+            let chosenHandIdx = 0;
+
+            if (lastResult.multiHandedness && lastResult.multiHandedness.length > 0) {
+              confidence = lastResult.multiHandedness[0].score || 0.95;
+              handedness = lastResult.multiHandedness[0].label || "Right";
+            }
+
+            const rawLms = lastResult.multiHandLandmarks[chosenHandIdx];
+            if (rawLms && rawLms.length === 21) {
+              // Chuẩn hóa 6 chữ số thập phân
+              landmarks = rawLms.map(p => [
+                Math.round(p.x * 1e6) / 1e6,
+                Math.round(p.y * 1e6) / 1e6,
+                Math.round(p.z * 1e6) / 1e6
+              ]);
+
+              const isValid = landmarks.every(p => 
+                p.length >= 3 && 
+                Number.isFinite(p[0]) && 
+                Number.isFinite(p[1]) && 
+                Number.isFinite(p[2])
+              );
+
+              if (isValid) {
+                qualityStatus = "ok";
+              } else {
+                qualityStatus = "invalid_coordinate_values";
+                landmarks = null;
+              }
+            } else {
+              qualityStatus = "invalid_point_count";
+            }
+          }
+
+          samples.push({
+            letter: LETTER,
+            letter_upper: LETTER_UPPER,
+            digit: null,
+            video_id: VIDEO_ID,
+            source_video_file: `backend/data/media_cache/videos/${VIDEO_ID}.mp4`,
+            split: item.split,
+            frame_idx: item.fidx,
+            timestamp_sec: item.ts,
+            phase: item.phase,
+            handedness: handedness,
+            confidence: Math.round(confidence * 10000) / 10000,
+            coordinate_type: "normalized_mediapipe_hands",
+            quality_status: qualityStatus,
+            landmarks: landmarks
+          });
+        }
+
+        const finalOutput = {
+          schema_version: "1.0",
+          description: "Pilot Ground Truth landmarks 21 điểm trích xuất từ video QIPEDC D0489 cho chữ A",
+          target_domain: "vsl_alphabet",
+          letter: LETTER,
+          source_video_id: VIDEO_ID,
+          source_video_file: `backend/data/media_cache/videos/${VIDEO_ID}.mp4`,
+          total_samples: samples.length,
+          successful_samples: samples.filter(s => s.quality_status === 'ok').length,
+          failed_samples: samples.filter(s => s.quality_status !== 'ok').length,
+          samples: samples
+        };
+
+        statusDiv.innerText = 'PILOT_EXTRACTION_SUCCESS';
+        outPre.innerText = JSON.stringify(finalOutput);
+      } catch (err) {
+        statusDiv.innerText = 'ERROR: ' + err.message;
+        outPre.innerText = JSON.stringify({
+          schema_version: "1.0",
+          error: err.message,
+          samples: []
+        });
+      }
+    }
+
+    window.addEventListener('load', processAll);
+  </script>
+</body>
+</html>

@@ -11,6 +11,36 @@ import {
   speakVietnamese
 } from '../services/api';
 
+// Bảng ánh xạ phát âm TTS chuẩn cho từng chữ số (chỉ đọc tên số, không có tiền tố "số")
+const DIGIT_TTS_MAP = {
+  '0': 'không',
+  '1': 'một',
+  '2': 'hai',
+  '3': 'ba',
+  '4': 'bốn',
+  '5': 'năm',
+  '6': 'sáu',
+  '7': 'bảy',
+  '8': 'tám',
+  '9': 'chín',
+  '10': 'mười'
+};
+
+/**
+ * Định dạng câu văn bản cho TTS: chuyển đổi các chữ số thành tên chữ tiếng Việt tương ứng
+ * (ví dụ: '10 1 1 2' -> 'mười một một hai') và loại bỏ hoàn toàn từ 'Số'/'số'.
+ * Giữ nguyên các chữ cái, từ vựng và câu thông thường.
+ */
+function formatSentenceForTTS(text) {
+  if (!text) return '';
+  // Loại bỏ tiền tố "Số " hoặc "số " nếu có
+  let cleaned = text.replace(/(?:Số|số)\s+(\d+)/g, '$1');
+  // Chuyển đổi các chữ số riêng biệt 0-10 thành tên số tiếng Việt
+  return cleaned.replace(/\b(10|[0-9])\b/g, (match) => {
+    return DIGIT_TTS_MAP[match] || match;
+  });
+}
+
 const SEQ_LEN = 30; // 30 frames cho SSTCN_Attention (~2 giây cử chỉ)
 const FRAME_STEP = 6; // Sliding window: cập nhật mỗi 6 frame (~300ms) để nhận diện tức thì
 
@@ -385,6 +415,15 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
     sequenceBufferRef.current = [];
     updateHUDProgress(0, 0);
 
+    // Nếu chuyển sang chế độ digits, chuẩn hóa phụ đề hiện tại để bỏ từ "Số "
+    if (newMode === 'digits') {
+      setSentence(prev => prev ? prev.replace(/(?:Số|số)\s+(\d+)/g, '$1') : '');
+      setRecognizedTokens(prev => prev.map(item => ({
+        ...item,
+        token: (typeof item.token === 'string') ? item.token.replace(/^Số\s*/, '') : item.token
+      })));
+    }
+
     // Reset kết quả cũ để tránh hiển thị nhầm lẫn giữa các chế độ (bảo tồn sentence đã xác nhận)
     setCurrentResult({
       sign: 'NEUTRAL',
@@ -737,7 +776,17 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
                   }
                 ]);
 
-                if (ttsEnabled) speakVietnamese(data.new_token);
+                if (ttsEnabled) {
+                  let textToSpeak = data.tts_text;
+                  if (!textToSpeak) {
+                    if (data.type === 'digit' || requestMode === 'digits') {
+                      textToSpeak = DIGIT_TTS_MAP[data.sign] || (data.sign ? DIGIT_TTS_MAP[data.sign.replace(/^Số\s*/, '')] : null) || data.sign;
+                    } else {
+                      textToSpeak = data.new_token;
+                    }
+                  }
+                  speakVietnamese(textToSpeak);
+                }
               }
             }
           })
@@ -773,12 +822,12 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
               const data = resp.data;
 
               // Chốt chặn bảo vệ UI:
-              // Nếu đang ở mode 'digits' mà kết quả không phải chữ số (0-9 hoặc NEUTRAL) -> bỏ qua
-              if (requestMode === 'digits' && data.sign !== 'NEUTRAL' && !/^[0-9]$/.test(data.sign)) {
+              // Nếu đang ở mode 'digits' mà kết quả không phải chữ số (0-9, số nhiều chữ số, hoặc NEUTRAL) -> bỏ qua
+              if (requestMode === 'digits' && data.sign !== 'NEUTRAL' && !/^[0-9]+$/.test(data.sign)) {
                 return;
               }
               // Nếu đang ở mode 'letters' mà kết quả là chữ số -> bỏ qua
-              if (requestMode === 'letters' && /^[0-9]$/.test(data.sign)) {
+              if (requestMode === 'letters' && /^[0-9]+$/.test(data.sign)) {
                 return;
               }
 
@@ -788,21 +837,42 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
                 confidence: data.confidence,
                 type: data.type || 'alphabet',
                 description: data.description,
-                category: requestMode === 'digits' ? 'Chữ số VSL (0–9)' : (requestMode === 'letters' ? 'Bảng chữ cái VSL' : (requestMode === 'words' ? 'Từ vựng VSL (102 Từ)' : 'Ghép câu ngữ cảnh')),
+                category: requestMode === 'digits' ? 'Chữ số VSL' : (requestMode === 'letters' ? 'Bảng chữ cái VSL' : (requestMode === 'words' ? 'Từ vựng VSL (102 Từ)' : 'Ghép câu ngữ cảnh')),
                 video_url: ''
               });
 
               if (data.confirmed && data.new_token && data.sign !== 'NEUTRAL') {
-                setSentence(prev => prev ? `${prev} ${data.new_token}` : data.new_token);
+                // Loại bỏ hoàn toàn tiền tố "Số " nếu kết quả là chữ số
+                const cleanToken = (requestMode === 'digits' && typeof data.new_token === 'string')
+                  ? data.new_token.replace(/^Số\s*/, '')
+                  : data.new_token;
+
+                setSentence(prev => {
+                  // Làm sạch tiền tố "Số " trong chuỗi phụ đề phiên hiện tại nếu có
+                  const normalizedPrev = prev ? prev.replace(/(?:Số|số)\s+(\d+)/g, '$1') : '';
+                  return normalizedPrev ? `${normalizedPrev} ${cleanToken}` : cleanToken;
+                });
+
                 setRecognizedTokens(prev => [
                   ...prev.slice(-7),
                   {
-                    token: data.new_token,
+                    token: cleanToken,
                     confidence: data.confidence,
                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
                   }
                 ]);
-                if (ttsEnabled) speakVietnamese(data.new_token);
+
+                if (ttsEnabled) {
+                  let textToSpeak = data.tts_text;
+                  if (!textToSpeak) {
+                    if (data.type === 'digit' || requestMode === 'digits') {
+                      textToSpeak = DIGIT_TTS_MAP[cleanToken] || cleanToken;
+                    } else {
+                      textToSpeak = cleanToken;
+                    }
+                  }
+                  speakVietnamese(textToSpeak);
+                }
               }
             }
           })
@@ -1229,7 +1299,7 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
         <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>
-              {conversionMode === 'letters' ? '🔤 Chữ cái VSL (A–Z)' : conversionMode === 'digits' ? '🔢 Chữ số VSL (0–9)' : conversionMode === 'words' ? '📖 Từ vựng (102 Từ)' : conversionMode === 'sentence' ? '💬 Ghép câu ngữ cảnh' : '🔤 Chữ cái & Số'}
+              {conversionMode === 'letters' ? '🔤 Chữ cái VSL (A–Z)' : conversionMode === 'digits' ? '🔢 Chữ số VSL' : conversionMode === 'words' ? '📖 Từ vựng (102 Từ)' : conversionMode === 'sentence' ? '💬 Ghép câu ngữ cảnh' : '🔤 Chữ cái & Số'}
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
               <span className={`badge ${conversionMode === 'letters' || conversionMode === 'digits' || conversionMode === 'letters_numbers' ? 'badge-emerald' : conversionMode === 'words' ? 'badge-indigo' : 'badge-cyan'}`} style={{ fontSize: '11px' }}>
@@ -1349,7 +1419,7 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
 
             <div style={{ display: 'flex', gap: '6px' }}>
               <button
-                onClick={() => speakVietnamese(sentence)}
+                onClick={() => speakVietnamese(formatSentenceForTTS(sentence))}
                 disabled={!sentence}
                 className="btn btn-secondary"
                 style={{ padding: '6px 10px', fontSize: '12px' }}

@@ -211,7 +211,7 @@ class TestModeSeparation(unittest.TestCase):
         # Bước 3: Đưa thêm khung hình trong mode digits để tích lũy đủ smoothing
         res3 = self.rec.predict_landmarks(lm_digit, mode="digits", session_id="sess_1")
         self.assertTrue(res3["confirmed"])
-        self.assertEqual(res3["sentence"], "D Số 3")
+        self.assertEqual(res3["sentence"], "D 3")
 
     # -------------------------------------------------------------------------
     # 11. Chu kỳ chuyển đổi toàn diện letters -> digits -> words -> sentence -> letters

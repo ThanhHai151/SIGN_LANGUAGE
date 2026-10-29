@@ -1,0 +1,565 @@
+{
+  "schema_version": "1.0",
+  "description": "Pilot Ground Truth landmarks 21 điểm trích xuất từ video QIPEDC D0489 cho chữ A",
+  "target_domain": "vsl_alphabet",
+  "letter": "a",
+  "source_video_id": "D0489",
+  "source_video_file": "backend/data/media_cache/videos/D0489.mp4",
+  "total_samples": 8,
+  "successful_samples": 4,
+  "failed_samples": 4,
+  "samples": [
+    {
+      "letter": "a",
+      "letter_upper": "A",
+      "digit": null,
+      "video_id": "D0489",
+      "source_video_file": "backend/data/media_cache/videos/D0489.mp4",
+      "split": "aux_entry",
+      "frame_idx": 10,
+      "timestamp_sec": 0.42,
+      "phase": "entry",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter": "a",
+      "letter_upper": "A",
+      "digit": null,
+      "video_id": "D0489",
+      "source_video_file": "backend/data/media_cache/videos/D0489.mp4",
+      "split": "aux_entry",
+      "frame_idx": 20,
+      "timestamp_sec": 0.83,
+      "phase": "entry",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter": "a",
+      "letter_upper": "A",
+      "digit": null,
+      "video_id": "D0489",
+      "source_video_file": "backend/data/media_cache/videos/D0489.mp4",
+      "split": "dev",
+      "frame_idx": 30,
+      "timestamp_sec": 1.25,
+      "phase": "stable_pose",
+      "handedness": "Left",
+      "confidence": 0.9438,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.358244,
+          0.456166,
+          0
+        ],
+        [
+          0.378713,
+          0.440634,
+          -0.00421
+        ],
+        [
+          0.392155,
+          0.409782,
+          -0.005918
+        ],
+        [
+          0.401199,
+          0.380545,
+          -0.008384
+        ],
+        [
+          0.411475,
+          0.362691,
+          -0.010183
+        ],
+        [
+          0.389107,
+          0.387174,
+          0.000619
+        ],
+        [
+          0.393066,
+          0.362083,
+          -0.008402
+        ],
+        [
+          0.385936,
+          0.380881,
+          -0.014042
+        ],
+        [
+          0.380063,
+          0.400397,
+          -0.016053
+        ],
+        [
+          0.377927,
+          0.384756,
+          -0.000204
+        ],
+        [
+          0.381275,
+          0.361947,
+          -0.009917
+        ],
+        [
+          0.375531,
+          0.388853,
+          -0.012661
+        ],
+        [
+          0.37239,
+          0.409692,
+          -0.011849
+        ],
+        [
+          0.367025,
+          0.385667,
+          -0.002529
+        ],
+        [
+          0.370293,
+          0.368374,
+          -0.011601
+        ],
+        [
+          0.367522,
+          0.395219,
+          -0.009686
+        ],
+        [
+          0.366261,
+          0.413575,
+          -0.005482
+        ],
+        [
+          0.355908,
+          0.388615,
+          -0.005264
+        ],
+        [
+          0.359714,
+          0.373134,
+          -0.009917
+        ],
+        [
+          0.359182,
+          0.39282,
+          -0.006833
+        ],
+        [
+          0.359049,
+          0.40671,
+          -0.002899
+        ]
+      ]
+    },
+    {
+      "letter": "a",
+      "letter_upper": "A",
+      "digit": null,
+      "video_id": "D0489",
+      "source_video_file": "backend/data/media_cache/videos/D0489.mp4",
+      "split": "dev",
+      "frame_idx": 40,
+      "timestamp_sec": 1.67,
+      "phase": "stable_pose",
+      "handedness": "Left",
+      "confidence": 0.9834,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.372936,
+          0.48887,
+          0
+        ],
+        [
+          0.392415,
+          0.475297,
+          -0.004491
+        ],
+        [
+          0.406757,
+          0.443382,
+          -0.005928
+        ],
+        [
+          0.414257,
+          0.412941,
+          -0.007984
+        ],
+        [
+          0.425556,
+          0.396662,
+          -0.00901
+        ],
+        [
+          0.403231,
+          0.419844,
+          0.000514
+        ],
+        [
+          0.409139,
+          0.397333,
+          -0.008621
+        ],
+        [
+          0.403291,
+          0.417109,
+          -0.013337
+        ],
+        [
+          0.398428,
+          0.434203,
+          -0.014587
+        ],
+        [
+          0.392147,
+          0.417148,
+          -0.000275
+        ],
+        [
+          0.396911,
+          0.395925,
+          -0.010134
+        ],
+        [
+          0.392169,
+          0.42351,
+          -0.012229
+        ],
+        [
+          0.389334,
+          0.443163,
+          -0.010836
+        ],
+        [
+          0.380737,
+          0.417578,
+          -0.002717
+        ],
+        [
+          0.38549,
+          0.400875,
+          -0.012536
+        ],
+        [
+          0.383825,
+          0.428952,
+          -0.01032
+        ],
+        [
+          0.382967,
+          0.447985,
+          -0.005687
+        ],
+        [
+          0.368623,
+          0.420801,
+          -0.005569
+        ],
+        [
+          0.375106,
+          0.406883,
+          -0.011571
+        ],
+        [
+          0.376007,
+          0.427612,
+          -0.009065
+        ],
+        [
+          0.375898,
+          0.44215,
+          -0.005226
+        ]
+      ]
+    },
+    {
+      "letter": "a",
+      "letter_upper": "A",
+      "digit": null,
+      "video_id": "D0489",
+      "source_video_file": "backend/data/media_cache/videos/D0489.mp4",
+      "split": "eval",
+      "frame_idx": 50,
+      "timestamp_sec": 2.09,
+      "phase": "stable_pose",
+      "handedness": "Left",
+      "confidence": 0.9834,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.374283,
+          0.490073,
+          0
+        ],
+        [
+          0.394495,
+          0.47752,
+          -0.004049
+        ],
+        [
+          0.407873,
+          0.445006,
+          -0.004688
+        ],
+        [
+          0.4149,
+          0.414386,
+          -0.006062
+        ],
+        [
+          0.424272,
+          0.395874,
+          -0.006436
+        ],
+        [
+          0.402193,
+          0.422475,
+          0.001767
+        ],
+        [
+          0.407815,
+          0.39906,
+          -0.007004
+        ],
+        [
+          0.402337,
+          0.421369,
+          -0.01127
+        ],
+        [
+          0.397305,
+          0.440029,
+          -0.012006
+        ],
+        [
+          0.391504,
+          0.421083,
+          0.001137
+        ],
+        [
+          0.396174,
+          0.400203,
+          -0.008856
+        ],
+        [
+          0.391112,
+          0.428946,
+          -0.010701
+        ],
+        [
+          0.387682,
+          0.448219,
+          -0.008807
+        ],
+        [
+          0.380605,
+          0.422177,
+          -0.00115
+        ],
+        [
+          0.384931,
+          0.405852,
+          -0.011595
+        ],
+        [
+          0.382327,
+          0.435596,
+          -0.009316
+        ],
+        [
+          0.380668,
+          0.453716,
+          -0.00413
+        ],
+        [
+          0.369042,
+          0.425025,
+          -0.003719
+        ],
+        [
+          0.374837,
+          0.410089,
+          -0.009884
+        ],
+        [
+          0.375079,
+          0.43099,
+          -0.007243
+        ],
+        [
+          0.374359,
+          0.445197,
+          -0.003039
+        ]
+      ]
+    },
+    {
+      "letter": "a",
+      "letter_upper": "A",
+      "digit": null,
+      "video_id": "D0489",
+      "source_video_file": "backend/data/media_cache/videos/D0489.mp4",
+      "split": "eval",
+      "frame_idx": 60,
+      "timestamp_sec": 2.5,
+      "phase": "stable_pose",
+      "handedness": "Left",
+      "confidence": 0.9941,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.358385,
+          0.582411,
+          0
+        ],
+        [
+          0.37309,
+          0.57164,
+          -0.00836
+        ],
+        [
+          0.384358,
+          0.552383,
+          -0.014266
+        ],
+        [
+          0.391294,
+          0.536923,
+          -0.020263
+        ],
+        [
+          0.398125,
+          0.523522,
+          -0.02609
+        ],
+        [
+          0.372397,
+          0.508916,
+          -0.013335
+        ],
+        [
+          0.374808,
+          0.519689,
+          -0.0258
+        ],
+        [
+          0.377456,
+          0.542785,
+          -0.033997
+        ],
+        [
+          0.378585,
+          0.563574,
+          -0.037334
+        ],
+        [
+          0.357356,
+          0.513326,
+          -0.013674
+        ],
+        [
+          0.358461,
+          0.539678,
+          -0.025897
+        ],
+        [
+          0.362722,
+          0.568867,
+          -0.029983
+        ],
+        [
+          0.3664,
+          0.593157,
+          -0.030443
+        ],
+        [
+          0.34566,
+          0.525499,
+          -0.014895
+        ],
+        [
+          0.348195,
+          0.555596,
+          -0.026284
+        ],
+        [
+          0.35387,
+          0.582536,
+          -0.026719
+        ],
+        [
+          0.35878,
+          0.603969,
+          -0.023999
+        ],
+        [
+          0.337238,
+          0.541377,
+          -0.01695
+        ],
+        [
+          0.340745,
+          0.564505,
+          -0.024458
+        ],
+        [
+          0.346987,
+          0.585059,
+          -0.023987
+        ],
+        [
+          0.352394,
+          0.60134,
+          -0.021218
+        ]
+      ]
+    },
+    {
+      "letter": "a",
+      "letter_upper": "A",
+      "digit": null,
+      "video_id": "D0489",
+      "source_video_file": "backend/data/media_cache/videos/D0489.mp4",
+      "split": "aux_exit",
+      "frame_idx": 70,
+      "timestamp_sec": 2.92,
+      "phase": "exit",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter": "a",
+      "letter_upper": "A",
+      "digit": null,
+      "video_id": "D0489",
+      "source_video_file": "backend/data/media_cache/videos/D0489.mp4",
+      "split": "aux_exit",
+      "frame_idx": 80,
+      "timestamp_sec": 3.34,
+      "phase": "exit",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    }
+  ]
+}
