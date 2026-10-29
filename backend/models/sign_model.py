@@ -73,15 +73,24 @@ class VSLGestureNet(nn.Module):
         logits = self.classifier(features)
         return logits
 
+DEFAULT_WEIGHTS_PATH = os.path.join(os.path.dirname(__file__), "weights.pt")
+
 def get_trained_model(weights_path=None):
     """Khởi tạo và tải trọng số mô hình đã được hiệu chỉnh"""
     model = VSLGestureNet(input_dim=72, num_classes=len(CLASSES))
     model.eval()
-    if weights_path and os.path.exists(weights_path):
+    model.has_weights = False
+    
+    target_path = DEFAULT_WEIGHTS_PATH if weights_path is None else weights_path
+    if target_path and os.path.exists(target_path):
         try:
-            state_dict = torch.load(weights_path, map_location=torch.device('cpu'))
+            state_dict = torch.load(target_path, map_location=torch.device('cpu'))
             model.load_state_dict(state_dict)
-            print(f"[VSLGestureNet] Loaded calibrated weights from {weights_path}")
+            model.has_weights = True
+            print(f"[VSLGestureNet] Loaded calibrated weights from {target_path}")
         except Exception as e:
+            model.has_weights = False
             print(f"[VSLGestureNet] Warning loading weights: {e}. Using calibrated fallback.")
+    elif target_path:
+        print(f"[VSLGestureNet] Weights path not found: {target_path}. Running without weights.")
     return model

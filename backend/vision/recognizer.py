@@ -6,7 +6,10 @@ Kết hợp 2 chế độ:
 Hỗ trợ chống rung (temporal smoothing), chống lặp (cooldown debounce) và ghép câu tự động.
 """
 
+import os
+import json
 import time
+import threading
 import collections
 import numpy as np
 import torch
@@ -19,7 +22,7 @@ from backend.models.lexicon import get_entry_by_sstcn
 from backend.vision.feature_extractor import normalize_hand_landmarks, calculate_distance, calculate_angle
 
 class VSLRecognizer:
-    def __init__(self, confidence_threshold=0.70, smoothing_window=10, cooldown_sec=1.2):
+    def __init__(self, confidence_threshold=0.70, smoothing_window=10, cooldown_sec=1.2, weights_path=None):
         self.confidence_threshold = confidence_threshold
         self.smoothing_window = smoothing_window
         self.cooldown_sec = cooldown_sec
@@ -29,7 +32,7 @@ class VSLRecognizer:
         self.sstcn_model = load_sstcn_model(device=self.device)
         
         # 2. Mô hình nơ-ron MLP tĩnh cho cử chỉ đơn lẻ
-        self.model = get_trained_model()
+        self.model = get_trained_model(weights_path=weights_path)
         
         # 3. Bộ đệm thời gian chống rung cho chế độ tĩnh
         self.prediction_history = collections.deque(maxlen=smoothing_window)
@@ -38,6 +41,13 @@ class VSLRecognizer:
         self.last_confirmed_sign = None
         self.last_confirmed_time = 0
         self.sentence_tokens = []
+        
+        # 5. Diagnostic Logging State
+        self.diagnostic_enabled = os.environ.get("VSL_DIAGNOSTIC", "0") == "1"
+        self.diagnostic_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "diagnostics")
+        self._last_diag_log_time = 0.0
+        self._diag_lock = threading.Lock()
+        self._diag_frame_counter = 0
 
     def predict_sequence(self, sequence_data, threshold=None):
         """
@@ -155,83 +165,196 @@ class VSLRecognizer:
 
     def classify_geometry(self, landmarks, finger_states):
         """
-        Kiểm tra ràng buộc hình học ngón tay cho bảng chữ cái tức thì (<5ms)
-        Học hỏi từ module AlphabetRecognition của Look & Tell và chuẩn hóa bàn tay.
+        Kiem tra rang buoc hinh hoc ngon tay cho bang chu cai tuc thi (<5ms).
+
+        Landmark MediaPipe (21 diem, toa do goc chua shift):
+          0=Wrist, 1-4=Thumb(CMC,MCP,IP,TIP), 5-8=Index(MCP,PIP,DIP,TIP),
+          9-12=Middle(MCP,PIP,DIP,TIP), 13-16=Ring(MCP,PIP,DIP,TIP), 17-20=Pinky(MCP,PIP,DIP,TIP)
+
+        He toa do MediaPipe: x tang phai, y tang xuong, z tang ra gan camera.
+        Toa do SHIFTED = tuong doi so voi wrist (landmark 0).
+        Tat ca khoang cach duoc chuan hoa theo palm_scale (wrist->Middle MCP, landmark 9).
+
+        Tra ve: (ten_chu, confidence) hoac ("NEUTRAL", 0.0) neu khong du can cu.
+
+        Thu tu uu tien (dac biet -> chung chung):
+          V/U -> Y/I -> YEU_THUONG -> L -> D -> O -> C -> B -> A/E -> 5-ngon-mo
         """
+        # --- Kiem tra dau vao ---
         if not landmarks or len(landmarks) < 21:
             return "NEUTRAL", 0.0
 
-        p = landmarks
-        thumb = finger_states.get("thumb_extended", False)
-        index = finger_states.get("index_extended", False)
+        p = landmarks  # toa do goc (chua shift)
+
+        # --- Chuan bi toa do shifted va palm_scale ---
+        wrist = p[0]
+        s = [[p[i][0] - wrist[0], p[i][1] - wrist[1], p[i][2] - wrist[2]]
+             for i in range(21)]
+
+        palm_scale = calculate_distance(s[0], s[9])
+        if palm_scale < 1e-5:
+            return "NEUTRAL", 0.0
+
+        # --- Lay trang thai ngon tay tu finger_states ---
+        thumb  = finger_states.get("thumb_extended", False)
+        index  = finger_states.get("index_extended", False)
         middle = finger_states.get("middle_extended", False)
-        ring = finger_states.get("ring_extended", False)
-        pinky = finger_states.get("pinky_extended", False)
+        ring   = finger_states.get("ring_extended", False)
+        pinky  = finger_states.get("pinky_extended", False)
 
-        palm_size = calculate_distance(p[0], p[9]) + 1e-6
-        d_thumb_index = calculate_distance(p[4], p[8]) / palm_size
-        d_index_middle = calculate_distance(p[8], p[12]) / palm_size
+        # Curl ratio: 0.0=duoi thang, 1.0=gap hoan toan
+        thumb_curl  = finger_states.get("thumb_curl",  0.5)
+        index_curl  = finger_states.get("index_curl",  0.5)
+        middle_curl = finger_states.get("middle_curl", 0.5)
+        ring_curl   = finger_states.get("ring_curl",   0.5)
+        pinky_curl  = finger_states.get("pinky_curl",  0.5)
 
-        # 1. Chữ V: Chỉ ngón trỏ và ngón giữa duỗi tách ra, các ngón khác gập
+        # --- Khoang cach chuan hoa theo palm_scale (toa do shifted) ---
+        d_thumb_index  = calculate_distance(s[4], s[8])  / palm_scale
+        d_index_middle = calculate_distance(s[8], s[12]) / palm_scale
+        d_thumb_pinky  = calculate_distance(s[4], s[20]) / palm_scale
+        d_thumb_middle = calculate_distance(s[4], s[12]) / palm_scale
+
+        # --- Nguong trang thai ngon ---
+        # Curl > 0.30 => ngon "gap" (folded), dung cho ngon cai vi extended phuc tap hon
+        CURL_FOLDED = 0.30
+        # Curl > 0.55 => ngon cai "gap hoan toan" (sat long ban tay)
+        THUMB_FIRMLY_FOLDED = 0.55
+
+        index_folded  = not index
+        middle_folded = not middle
+        ring_folded   = not ring
+        pinky_folded  = not pinky
+        thumb_folded  = thumb_curl > CURL_FOLDED
+        thumb_firmly_folded = thumb_curl > THUMB_FIRMLY_FOLDED
+
+        # ================================================================
+        # RULE 1: Chu V va U
+        # Dieu kien: Chi ngon tro (8) VA ngon giua (12) duoi thang,
+        #            ngon ap ut (16) va ut (20) gap chat.
+        # Phan biet V va U bang to hop goc mo va khoang cach:
+        #   - V: Hai ngon xoe hinh chu V ro ret:
+        #        + Ket hop ca khoang cach va goc mo: (d_index_middle > 0.28 va angle_vu > 12 do)
+        #        + Hoac dac trung mo rat rong do goc camera: (angle_vu > 18 do hoac d_index_middle > 0.45)
+        #   - U: Hai ngon song song khap sat nhau, goc mo va khoang cach deu hep.
+        # ================================================================
         if index and middle and not ring and not pinky:
-            if d_index_middle > 0.35:
-                return "V", 0.96
-            else:
-                return "U", 0.93  # Hai ngón khép sát nhau là U
+            if ring_folded and pinky_folded:
+                angle_vu = calculate_angle(s[8], s[0], s[12])
+                is_v_shape = (d_index_middle > 0.28 and angle_vu > 12) or angle_vu > 18 or d_index_middle > 0.45
+                if is_v_shape:
+                    return "V", 0.88
+                else:
+                    return "U", 0.86
 
-        # 2. Chữ L: Ngón cái và trỏ duỗi vuông góc, 3 ngón còn lại gập
-        if thumb and index and not middle and not ring and not pinky:
-            angle_ti = calculate_angle(p[4], p[2], p[8])
-            if angle_ti > 45:
-                return "L", 0.96
-
-        # 3. Chữ I: Chỉ duy nhất ngón út duỗi thẳng
+        # ================================================================
+        # RULE 2: Chu Y va I
+        # Dieu kien: chi ngon ut (20) duoi, 3 ngon giua (8,12,16) gap
+        # Phan biet Y/I: Y co them ngon cai duoi (thumb extended)
+        # ================================================================
         if pinky and not index and not middle and not ring:
-            if thumb:
-                return "Y", 0.95  # Cả ngón cái và út cùng duỗi là Y
-            return "I", 0.96
+            if index_folded and middle_folded and ring_folded:
+                if thumb:
+                    return "Y", 0.90
+                return "I", 0.90
 
-        # 4. Yêu thương (ILY Sign): Ngón cái, trỏ, út cùng duỗi
+        # ================================================================
+        # RULE 3: Chu YEU_THUONG (ILY)
+        # Dieu kien: ngon cai (4) + tro (8) + ut (20) cung duoi,
+        #            ngon giua (12) va ap ut (16) gap
+        # ================================================================
         if thumb and index and not middle and not ring and pinky:
-            return "YEU_THUONG", 0.97
+            if middle_folded and ring_folded:
+                return "YEU_THUONG", 0.92
 
-        # 5. Chữ O: Đầu ngón cái chạm đầu ngón trỏ tạo vòng tròn
-        if d_thumb_index < 0.28 and not middle and not ring:
-            return "O", 0.92
-
-        # 6. Chữ C: Các ngón uốn cong hình chữ C
-        if 0.40 < d_thumb_index < 0.85 and not (index and middle and ring and pinky):
-            if not pinky:
-                return "C", 0.90
-
-        # 7. Chữ A: Nắm đấm, ngón cái áp sát ngoài ngón trỏ
-        if not index and not middle and not ring and not pinky:
-            if p[4][1] < p[3][1]:  # Ngón cái duỗi hướng lên
-                return "A", 0.94
-
-        # 8. Chữ B: Cả 4 ngón trỏ, giữa, áp út, út duỗi thẳng khép sát
-        if index and middle and ring and pinky and not thumb:
-            return "B", 0.95
-
-        # 9. Chữ D: Chỉ duy nhất ngón trỏ chỉ thẳng lên
+        # ================================================================
+        # RULE 4: Chu L va D
+        # Dieu kien chung: Chi ngon tro (8) duoi, 3 ngon con (12,16,20) gap.
+        # Phan biet L va D bang to hop dac trung hinh hoc:
+        #   - L: Ngon cai duoi thang (thumb and not thumb_folded), vuon ngang tao goc lon
+        #        (angle_ti >= 50 do VA do dang ngang thumb_lateral >= 0.35).
+        #   - D: Ngon cai khong vuon ngang (ngon cai gap hoac thu sat vao long ban tay / ngon giua),
+        #        dau ngon tro duoi huong len tren.
+        # ================================================================
         if index and not middle and not ring and not pinky:
-            if p[8][1] < p[6][1]:
-                return "D", 0.92
+            if middle_folded and ring_folded and pinky_folded:
+                angle_ti = calculate_angle(s[4], s[0], s[8])
+                thumb_lateral = abs(s[4][0] - s[0][0]) / palm_scale
 
-        # 10. Chữ E: 4 ngón gập cong vào sát lòng bàn tay
-        if not index and not middle and not ring and not pinky and thumb:
-            if p[4][1] > p[3][1]:
-                return "E", 0.91
+                # L: Ngon cai vuon ngang ro rang tao chu L vuong van
+                if thumb and not thumb_folded and angle_ti >= 50 and thumb_lateral >= 0.35:
+                    return "L", 0.88
 
-        # 11. Cả 5 ngón mở (Xin chào / Cảm ơn theo độ cao)
+                # D: Chi ngon tro duoi thang, ngon cai khong vuon ngang chu L
+                is_index_pointing_up = s[8][1] < s[5][1]
+                thumb_not_L = (not thumb) or thumb_folded or angle_ti < 50 or thumb_lateral < 0.35
+                if is_index_pointing_up and thumb_not_L:
+                    return "D", 0.84
+
+        # ================================================================
+        # RULE 5: Chu O
+        # Dieu kien: Ngon cai va ngon tro tao vong tron nho (d_thumb_index < 0.30),
+        #            ngon cai tiep xuc huong ve dau ngon tro (goc tip-contact >= 80 do),
+        #            cac ngon khong duoi thang toan bo de tao vong tron O.
+        # ================================================================
+        if d_thumb_index < 0.30:
+            angle_tip_contact = calculate_angle(s[3], s[4], s[8])
+            if angle_tip_contact >= 80 and not (index and middle and ring and pinky):
+                return "O", 0.86
+
+        # ================================================================
+        # RULE 6: Chu C va B
+        # C: 4 ngon mo/khum cong, ngon cai arch ra ngoai tao vom C
+        #    (0.30 <= d_thumb_index < 1.25, goc mo ngon cai so voi tro >= 15 do)
+        # B: 4 ngon duoi thang, ngon cai gap sat long ban tay
+        #    (goc mo ngon cai < 15 do hoac d_thumb_index < 0.30)
+        # ================================================================
+        if index and middle and ring and pinky and not thumb:
+            angle_ti_cb = calculate_angle(s[4], s[0], s[8])
+            # Truong hop C: ngon cai arch ra ngoai
+            if not thumb_firmly_folded and 0.30 <= d_thumb_index < 1.25 and angle_ti_cb >= 15:
+                if d_thumb_middle < 1.40:
+                    return "C", 0.83
+
+            # Truong hop B: ngon cai gap sat long ban tay
+            if thumb_firmly_folded or angle_ti_cb < 15 or d_thumb_index < 0.30:
+                if d_index_middle < 0.65:
+                    return "B", 0.86
+
+        # ================================================================
+        # RULE 7: Chu A va E
+        # Dieu kien chung: Ca 4 ngon (tro/giua/ap-ut/ut) deu gap thanh nam dam.
+        # Phan biet A/E:
+        #   E: Ngon cai gap/tuck vao trong long ban tay duoi cac ngon (d_thumb_index < 0.35 hoac thumb_curl > 0.40)
+        #   A: Ngon cai nam doc/canh ngoai nam dam, khong bi ep vao trong (thumb_curl <= 0.40 va d_thumb_index >= 0.35)
+        # ================================================================
+        if not index and not middle and not ring and not pinky:
+            if index_folded and middle_folded and ring_folded and pinky_folded:
+                if thumb_firmly_folded or thumb_curl > 0.40 or d_thumb_index < 0.35:
+                    return "E", 0.84
+                if thumb_curl <= 0.40 and d_thumb_index >= 0.35:
+                    return "A", 0.84
+
+        # ================================================================
+        # RULE 8: Chu B (fallback)
+        # ================================================================
+        if index and middle and ring and pinky and not thumb:
+            if thumb_firmly_folded and d_index_middle < 0.65:
+                return "B", 0.85
+
+        # ================================================================
+        # RULE 9: Ca 5 ngon mo (XIN_CHAO / CAM_ON / XIN_VUI_LONG)
+        # Dung toa do wrist goc (p[0][1]) de xac dinh vi tri tay trong khung hinh.
+        # ================================================================
         if index and middle and ring and pinky and thumb:
-            if p[0][1] < 0.42:
-                return "XIN_CHAO", 0.92
-            elif p[0][1] > 0.65:
-                return "XIN_VUI_LONG", 0.89
-            return "CAM_ON", 0.90
+            wrist_y_norm = p[0][1]  # toa do wrist goc [0,1]
+            if wrist_y_norm < 0.40:
+                return "XIN_CHAO", 0.88
+            elif wrist_y_norm > 0.65:
+                return "XIN_VUI_LONG", 0.85
+            return "CAM_ON", 0.86
 
-        return "NEUTRAL", 0.50
+        return "NEUTRAL", 0.0
 
     def classify_dual_hands(self, dual_meta, p_prim, p_sec):
         """
@@ -276,7 +399,7 @@ class VSLRecognizer:
 
         return None, 0.0
 
-    def predict_landmarks(self, landmarks_list, landmarks_secondary=None, multi_hands=None):
+    def predict_landmarks(self, landmarks_list, landmarks_secondary=None, multi_hands=None, expected_sign=None, session_id=None):
         """
         Nhận diện cử chỉ đơn frame hỗ trợ cả 1 tay và 2 tay
         """
@@ -284,9 +407,11 @@ class VSLRecognizer:
 
         p_prim = None
         p_sec = None
+        handedness = "Right"
 
         if multi_hands and len(multi_hands) > 0:
             p_prim = multi_hands[0].get("landmarks", [])
+            handedness = multi_hands[0].get("handedness", "Right")
             if len(multi_hands) > 1:
                 p_sec = multi_hands[1].get("landmarks", [])
         elif landmarks_list and len(landmarks_list) >= 21:
@@ -314,14 +439,17 @@ class VSLRecognizer:
         # Kiểm tra hình học đơn tay
         geom_sign, geom_conf = self.classify_geometry(p_prim, finger_states)
 
-        # Chạy suy luận qua mạng nơ-ron MLP
-        with torch.no_grad():
-            tensor_in = torch.from_numpy(feature_vector[:72]).unsqueeze(0)
-            logits = self.model(tensor_in)
-            probs = torch.softmax(logits, dim=-1).squeeze(0).numpy()
-            top_idx = int(np.argmax(probs))
-            nn_sign = IDX_TO_CLASS[top_idx] if top_idx < len(IDX_TO_CLASS) else "NEUTRAL"
-            nn_conf = float(probs[top_idx]) if top_idx < len(probs) else 0.0
+        # Chạy suy luận qua mạng nơ-ron MLP nếu đã nạp weights hợp lệ
+        has_mlp = getattr(self.model, "has_weights", False)
+        nn_sign, nn_conf = "NEUTRAL", 0.0
+        if has_mlp:
+            with torch.no_grad():
+                tensor_in = torch.from_numpy(feature_vector[:72]).unsqueeze(0)
+                logits = self.model(tensor_in)
+                probs = torch.softmax(logits, dim=-1).squeeze(0).numpy()
+                top_idx = int(np.argmax(probs))
+                nn_sign = IDX_TO_CLASS[top_idx] if top_idx < len(IDX_TO_CLASS) else "NEUTRAL"
+                nn_conf = float(probs[top_idx]) if top_idx < len(probs) else 0.0
 
         # Ensemble logic
         if dual_sign and dual_conf >= 0.85:
@@ -330,9 +458,12 @@ class VSLRecognizer:
         elif geom_conf >= 0.85:
             final_sign = geom_sign
             final_conf = geom_conf
-        else:
-            final_sign = nn_sign if nn_conf > 0.6 else geom_sign
+        elif has_mlp and nn_conf > 0.6:
+            final_sign = nn_sign
             final_conf = max(nn_conf, geom_conf)
+        else:
+            final_sign = geom_sign
+            final_conf = geom_conf if not has_mlp else max(nn_conf, geom_conf)
 
         self.prediction_history.append((final_sign, final_conf))
 
@@ -358,6 +489,23 @@ class VSLRecognizer:
         sign_meta = ALL_SIGNS.get(final_sign, {})
         display_label = sign_meta.get("label", final_sign if final_sign != "NEUTRAL" else "Đang theo dõi cử chỉ...")
 
+        # Diagnostic logging (chỉ kích hoạt khi VSL_DIAGNOSTIC=1 hoặc rec.diagnostic_enabled=True)
+        self._log_diagnostic(
+            p_prim=p_prim,
+            handedness=handedness,
+            finger_states=finger_states,
+            geom_sign=geom_sign,
+            geom_conf=geom_conf,
+            has_mlp=has_mlp,
+            nn_sign=nn_sign,
+            nn_conf=nn_conf,
+            final_sign=final_sign,
+            final_conf=final_conf,
+            confirmed=confirmed,
+            expected_sign=expected_sign,
+            session_id=session_id
+        )
+
         return {
             "sign": final_sign,
             "label": display_label,
@@ -368,6 +516,70 @@ class VSLRecognizer:
             "sentence": " ".join(self.sentence_tokens),
             "description": sign_meta.get("description", "")
         }
+
+
+    def _log_diagnostic(self, p_prim, handedness, finger_states, geom_sign, geom_conf,
+                        has_mlp, nn_sign, nn_conf, final_sign, final_conf, confirmed,
+                        expected_sign=None, session_id=None):
+        """Ghi nhat ky chan doan JSONL khi duoc bat, gioi han ~2 mau/giay, an toan tuyet doi voi I/O."""
+        is_enabled = os.environ.get("VSL_DIAGNOSTIC", "0") == "1" or getattr(self, "diagnostic_enabled", False)
+        if not is_enabled:
+            return
+
+        now = time.time()
+        with self._diag_lock:
+            if now - self._last_diag_log_time < 0.45:
+                return
+            self._last_diag_log_time = now
+            self._diag_frame_counter += 1
+            frame_idx = self._diag_frame_counter
+
+        try:
+            target_dir = getattr(self, "diagnostic_dir", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "diagnostics"))
+            os.makedirs(target_dir, exist_ok=True)
+            log_date = time.strftime("%Y%m%d")
+            filepath = getattr(self, "diagnostic_filepath", None) or os.path.join(target_dir, f"diagnostic_{log_date}.jsonl")
+
+            from backend.vision.feature_extractor import _shift_and_scale
+            _, palm_scale = _shift_and_scale(p_prim)
+
+            history_snapshot = [s for s, c in self.prediction_history]
+
+            record = {
+                "timestamp": round(now, 3),
+                "session_id": str(session_id) if session_id else "default",
+                "frame_idx": frame_idx,
+                "expected_sign": str(expected_sign) if expected_sign else None,
+                "handedness": handedness or "Right",
+                "raw_landmarks": [[round(float(coord), 6) for coord in pt] for pt in p_prim],
+                "palm_scale": round(float(palm_scale), 6),
+                "finger_states": {
+                    k: (bool(v) if "extended" in k else round(float(v), 4))
+                    for k, v in finger_states.items()
+                },
+                "geometry": {
+                    "sign": geom_sign,
+                    "confidence": round(float(geom_conf), 4)
+                },
+                "mlp": {
+                    "has_weights": bool(has_mlp),
+                    "sign": nn_sign,
+                    "confidence": round(float(nn_conf), 4)
+                },
+                "ensemble": {
+                    "sign": final_sign,
+                    "confidence": round(float(final_conf), 4)
+                },
+                "smoothing": {
+                    "confirmed": bool(confirmed),
+                    "recent_history": history_snapshot
+                }
+            }
+            with self._diag_lock:
+                with open(filepath, "a", encoding="utf-8") as f:
+                    f.write(json.dumps(record, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
 
     def clear_sentence(self):
         """Xóa trắng câu hiện tại"""
