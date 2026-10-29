@@ -59,7 +59,7 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
   const [recognitionScope, setRecognitionScope] = useState('hands');
 
   // TIÊU CHÍ B: Chế độ chuyển đổi: 'letters_numbers' (Chữ cái & Số) | 'words' (Từ vựng) | 'sentence' (Ghép câu ngữ cảnh)
-  const [conversionMode, setConversionMode] = useState('letters_numbers');
+  const [conversionMode, setConversionMode] = useState('letters');
 
   // Trạng thái kỹ thuật đồng bộ với backend & pipeline
   const [recognitionMode, setRecognitionMode] = useState('instant'); // 'instant' | 'sequence'
@@ -363,10 +363,10 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
     sequenceBufferRef.current = [];
     updateHUDProgress(0, 0);
 
-    // Reset kết quả cũ để tránh hiển thị nhầm lẫn giữa các chế độ
+    // Reset kết quả cũ để tránh hiển thị nhầm lẫn giữa các chế độ (bảo tồn sentence đã xác nhận)
     setCurrentResult({
       sign: 'NEUTRAL',
-      label: newMode === 'letters_numbers' ? 'Chờ cử chỉ chữ cái/số...' : newMode === 'words' ? 'Chờ cử chỉ từ vựng...' : 'Chờ bắt đầu ghép câu...',
+      label: newMode === 'letters' ? 'Chờ cử chỉ chữ cái...' : newMode === 'digits' ? 'Chờ cử chỉ chữ số...' : newMode === 'words' ? 'Chờ cử chỉ từ vựng...' : 'Chờ bắt đầu ghép câu...',
       confidence: 0,
       type: '',
       description: '',
@@ -376,7 +376,7 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
     setTopKPredictions([]);
 
     // Ánh xạ sang pipeline thực tế
-    if (newMode === 'letters_numbers') {
+    if (newMode === 'letters' || newMode === 'digits' || newMode === 'letters_numbers') {
       setRecognitionMode('instant');
     } else {
       setRecognitionMode('sequence');
@@ -385,22 +385,40 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
 
   // Helper đánh giá và hiển thị trạng thái tương thích giữa 2 tiêu chí lựa chọn
   const getCombinationStatus = () => {
-    if (conversionMode === 'letters_numbers') {
+    if (conversionMode === 'letters' || conversionMode === 'letters_numbers') {
       if (recognitionScope === 'hands') {
         return {
           type: 'optimal',
           badge: '✅ Hỗ trợ tối ưu',
           badgeClass: 'badge-emerald',
-          title: 'Bàn tay + Chữ cái & Số (Instant <5ms)',
-          desc: 'MediaPipe Hands 60 FPS kết hợp Geometric Rules & MLP cho bảng chữ cái và số ngón tay.'
+          title: 'Bàn tay + Bảng chữ cái VSL (<5ms)',
+          desc: 'MediaPipe Hands 60 FPS kết hợp Geometric Rules & MLP cho 27 chữ cái ngón tay VSL.'
         };
       } else {
         return {
           type: 'suboptimal',
           badge: '⚠️ Chưa tối ưu',
           badgeClass: 'badge-cyan',
-          title: 'Toàn thân + Chữ cái & Số',
+          title: 'Toàn thân + Chữ cái VSL',
           desc: 'Chữ cái ngón tay được trích xuất từ mốc bàn tay của khung xương toàn thân (Khuyên dùng phạm vi Bàn tay để đạt 60 FPS).'
+        };
+      }
+    } else if (conversionMode === 'digits') {
+      if (recognitionScope === 'hands') {
+        return {
+          type: 'optimal',
+          badge: '✅ Hỗ trợ tối ưu',
+          badgeClass: 'badge-emerald',
+          title: 'Bàn tay + Chữ số 1–9 (<5ms)',
+          desc: 'MediaPipe Hands 60 FPS kết hợp VSLDigitClassifier phân loại hình học chính xác cho chữ số 1–9.'
+        };
+      } else {
+        return {
+          type: 'suboptimal',
+          badge: '⚠️ Chưa tối ưu',
+          badgeClass: 'badge-cyan',
+          title: 'Toàn thân + Chữ số 1–9',
+          desc: 'Chữ số ngón tay được trích xuất từ mốc bàn tay của khung xương toàn thân (Khuyên dùng phạm vi Bàn tay để đạt 60 FPS).'
         };
       }
     } else if (conversionMode === 'words') {
@@ -719,7 +737,7 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
         if (rightHand) multiHands.push({ handedness: 'Right', landmarks: rightHand.map(l => [l.x, l.y, l.z]) });
         if (leftHand) multiHands.push({ handedness: 'Left', landmarks: leftHand.map(l => [l.x, l.y, l.z]) });
 
-        sendLandmarksForRecognition(rawPrimary, multiHands)
+        sendLandmarksForRecognition(rawPrimary, multiHands, 'Right', conversionMode)
           .then((resp) => {
             if (resp && resp.success && resp.data) {
               const data = resp.data;
@@ -891,28 +909,36 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
               </span>
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button
-                  onClick={() => handleModeChange('letters_numbers')}
-                  className={`btn ${conversionMode === 'letters_numbers' ? 'btn-primary' : 'btn-secondary'}`}
-                  style={{ flex: 1, padding: '7px 8px', fontSize: '11px', justifyContent: 'center' }}
-                  title="Nhận diện bảng chữ cái và số ngón tay tức thì (<5ms)"
+                  onClick={() => handleModeChange('letters')}
+                  className={`btn ${conversionMode === 'letters' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: 1, padding: '7px 6px', fontSize: '11px', justifyContent: 'center' }}
+                  title="Nhận diện 27 chữ cái VSL tức thì (<5ms)"
                 >
-                  <Type size={14} /> Chữ cái & Số
+                  <Type size={13} /> Chữ cái
+                </button>
+                <button
+                  onClick={() => handleModeChange('digits')}
+                  className={`btn ${conversionMode === 'digits' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: 1, padding: '7px 6px', fontSize: '11px', justifyContent: 'center' }}
+                  title="Nhận diện chữ số VSL từ 1 đến 9 (<5ms)"
+                >
+                  <Zap size={13} /> Chữ số
                 </button>
                 <button
                   onClick={() => handleModeChange('words')}
                   className={`btn ${conversionMode === 'words' ? 'btn-primary' : 'btn-secondary'}`}
-                  style={{ flex: 1, padding: '7px 8px', fontSize: '11px', justifyContent: 'center' }}
+                  style={{ flex: 1, padding: '7px 6px', fontSize: '11px', justifyContent: 'center' }}
                   title="Nhận diện 102 từ vựng cử chỉ VSL (SSTCN 30-Frame)"
                 >
-                  <BookOpen size={14} /> Từ (102 Từ)
+                  <BookOpen size={13} /> Từ (102 Từ)
                 </button>
                 <button
                   onClick={() => handleModeChange('sentence')}
                   className={`btn ${conversionMode === 'sentence' ? 'btn-primary' : 'btn-secondary'}`}
-                  style={{ flex: 1, padding: '7px 8px', fontSize: '11px', justifyContent: 'center' }}
+                  style={{ flex: 1, padding: '7px 6px', fontSize: '11px', justifyContent: 'center' }}
                   title="Ghép chuỗi từ liên tục thành câu văn bản"
                 >
-                  <MessageSquare size={14} /> Ghép câu ngữ cảnh
+                  <MessageSquare size={13} /> Ghép câu
                 </button>
               </div>
             </div>
