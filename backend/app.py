@@ -225,15 +225,19 @@ def get_lexicon_entry(entry_id: str):
     return {"success": True, "entry": ce}
 
 @app.post("/api/recognize_landmarks")
-def recognize_landmarks(req: LandmarkRequest):
+def recognize_landmarks(req: LandmarkRequest, request: Request):
     """
     Nhận diện cử chỉ từ danh sách 21 điểm mốc bàn tay hoặc 2 bàn tay do MediaPipe Web trích xuất
     Đảm bảo độ trễ siêu thấp (<10ms) và tính chính xác cao.
     """
     try:
+        expected_sign = request.headers.get("x-expected-sign")
+        session_id = request.headers.get("x-session-id")
         result = recognizer.predict_landmarks(
             landmarks_list=req.landmarks or [],
-            multi_hands=req.multi_hands
+            multi_hands=req.multi_hands,
+            expected_sign=expected_sign,
+            session_id=session_id
         )
         return {"success": True, "data": result}
     except Exception as e:

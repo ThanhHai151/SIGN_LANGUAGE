@@ -24,9 +24,14 @@ dist-ssr
 *.sw?
 
 __pycache__/
+*.pyc
 *.py[cod]
+.venv/
 .env
 .kilo/
 
 # Bộ đệm video/ảnh mẫu QIPEDC (tự tạo khi chạy backend)
 backend/data/media_cache/
+
+# File nhat ky chan doan (tao khi VSL_DIAGNOSTIC=1)
+backend/data/diagnostics/
