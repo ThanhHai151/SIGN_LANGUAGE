@@ -288,6 +288,72 @@ class TestDiagnosticAudit(unittest.TestCase):
         self.assertEqual(confirmed_tokens[0]["frame_idx"], 5)
         self.assertEqual(confirmed_tokens[1]["frame_idx"], 8)
 
+    def test_diagnostic_safe_when_finger_states_is_none(self):
+        """11. Regression test: Khi finger_states la None, _log_diagnostic khong phat sinh AttributeError va ghi log an toan."""
+        rec = VSLRecognizer()
+        rec.diagnostic_enabled = True
+        rec.diagnostic_dir = self.temp_dir
+        log_file = os.path.join(self.temp_dir, "test_none_states.jsonl")
+        rec.diagnostic_filepath = log_file
+
+        lm = _make_sample_hand()
+        rec._log_diagnostic(
+            p_prim=lm,
+            handedness="Right",
+            finger_states=None,
+            geom_sign="0",
+            geom_conf=0.95,
+            has_mlp=False,
+            nn_sign="NEUTRAL",
+            nn_conf=0.0,
+            final_sign="0",
+            final_conf=0.95,
+            confirmed=False,
+            session_id="sess_none_states",
+            mode="digits"
+        )
+
+        self.assertTrue(os.path.exists(log_file), "File log JSONL phai duoc tao ngay ca khi finger_states la None")
+        records = load_diagnostic_records(log_file)
+        self.assertEqual(len(records), 1)
+        r = records[0]
+        self.assertIn("finger_states", r)
+        self.assertIn("thumb_extended", r["finger_states"])
+        self.assertIn("index_curl", r["finger_states"])
+        self.assertEqual(r["mode"], "digits")
+
+    def test_diagnostic_logging_in_digits_mode(self):
+        """12. Khi bat VSL_DIAGNOSTIC=1 trong mode='digits', log thuc su duoc ghi voi day du dac trung classifier."""
+        rec = VSLRecognizer()
+        rec.diagnostic_enabled = True
+        rec.diagnostic_dir = self.temp_dir
+        log_file = os.path.join(self.temp_dir, "test_digits_mode_diag.jsonl")
+        rec.diagnostic_filepath = log_file
+
+        fixture_path = os.path.join(os.path.dirname(__file__), "fixtures", "real_digit_0_landmarks.json")
+        with open(fixture_path, "r", encoding="utf-8") as f:
+            fixture_data = json.load(f)
+        lm_0 = fixture_data["samples"][0]["landmarks"]
+
+        res = rec.predict_landmarks(lm_0, mode="digits", session_id="sess_digit_0")
+        self.assertEqual(res["sign"], "0")
+
+        self.assertTrue(os.path.exists(log_file), "File log phai duoc tao khi predict_landmarks mode='digits'")
+        records = load_diagnostic_records(log_file)
+        self.assertEqual(len(records), 1)
+        r = records[0]
+
+        self.assertEqual(r["mode"], "digits")
+        self.assertEqual(r["ensemble"]["sign"], "0")
+        self.assertIn("classifier_details", r)
+        clf_det = r["classifier_details"]
+        self.assertEqual(clf_det["status"], "MATCH")
+        self.assertEqual(clf_det["digit"], "0")
+        self.assertIn("features", clf_det)
+        feat = clf_det["features"]
+        for key in ["thumb_ext", "index_ext", "middle_ext", "ring_ext", "pinky_ext", "d_TI", "d_TM", "d_IW", "index_curl"]:
+            self.assertIn(key, feat, f"Khoa {key} phai co trong features duoc ghi log")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
