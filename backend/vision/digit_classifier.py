@@ -9,7 +9,7 @@ Phân loại hình dạng bàn tay cho các chữ số từ 1 đến 9 dựa tr�
 - Minh bạch: Đánh giá độc lập các điều kiện của từng chữ số, không dùng thác lệnh if...elif
   để âm thầm ép nhãn. Phát hiện và báo rõ các trường hợp không khớp (NEUTRAL) hoặc xung đột (CONFLICT).
 - Ngưỡng: Thiết lập dựa trên kết quả khảo sát tập DEV của video QIPEDC thực tế (Giai đoạn 2C.3C).
-- Số 0: Chưa triển khai do chưa có ground truth tin cậy từ video D0529.
+- Số 0: Đã triển khai dựa trên landmark thực tế từ video QIPEDC D0529 (Giai đoạn 2C.8).
 """
 
 import math
@@ -43,6 +43,11 @@ ANGLE_TP_THRESHOLD_8 = 25.0       # Góc Cái–Út: số 2 (<25°) vs số 8 (>
 ANGLE_TP_THRESHOLD_5_6 = 35.0     # Góc Cái–Út: số 4 (<35°) vs số 5 (>=35°), và số 6 (>=35°)
 INDEX_CURL_MIN_9 = 0.08           # Ngưỡng dưới tỷ lệ co gập ngón trỏ số 9 (khum móc)
 INDEX_CURL_MAX_9 = 0.35           # Ngưỡng trên tỷ lệ co gập ngón trỏ số 9
+D_TI_THRESHOLD_0 = 0.20           # Khoảng cách chuẩn hóa Cái–Trỏ cho số 0
+D_TM_THRESHOLD_0 = 0.30           # Khoảng cách chuẩn hóa Cái–Giữa cho số 0
+D_IW_MIN_0 = 0.95                 # Khoảng cách tối thiểu Trỏ–Cổ tay để tránh nắm đấm
+INDEX_CURL_MIN_0 = 0.45           # Ngưỡng co gập tối thiểu cho số 0
+INDEX_CURL_MAX_0 = 0.80           # Ngưỡng co gập tối đa cho số 0
 
 
 def validate_input_landmarks(landmarks: Any) -> Tuple[bool, str]:
@@ -107,6 +112,9 @@ class VSLDigitClassifier:
         ang_ti = float(calculate_angle(sh[4], sh[0], sh[8]))
         ang_tp = float(calculate_angle(sh[4], sh[0], sh[20]))
         thumb_lat = float(abs(sh[4][0] - sh[0][0]) / palm_scale)
+        d_ti = float(calculate_distance(sh[4], sh[8]) / palm_scale)
+        d_tm = float(calculate_distance(sh[4], sh[12]) / palm_scale)
+        d_iw = float(calculate_distance(sh[0], sh[8]) / palm_scale)
 
         return {
             "palm_scale": round(palm_scale, 4),
@@ -118,7 +126,10 @@ class VSLDigitClassifier:
             "index_curl": round(i_curl, 4),
             "ang_TI": round(ang_ti, 2),
             "ang_TP": round(ang_tp, 2),
-            "thumb_lat": round(thumb_lat, 4)
+            "thumb_lat": round(thumb_lat, 4),
+            "d_TI": round(d_ti, 4),
+            "d_TM": round(d_tm, 4),
+            "d_IW": round(d_iw, 4)
         }
 
     def evaluate_rules(self, feat: Dict[str, Any]) -> List[Tuple[str, str, float]]:
@@ -137,6 +148,18 @@ class VSLDigitClassifier:
         ang_ti = feat["ang_TI"]
         ang_tp = feat["ang_TP"]
         thumb_lat = feat["thumb_lat"]
+
+        # --- QUY TẮC SỐ 0 (Vòng khuyên tròn - Zero) ---
+        # Điều kiện: 4 ngón trỏ, giữa, áp út, út đều không duỗi thẳng;
+        # Đầu ngón trỏ và ngón giữa chụm chạm sát đầu ngón cái (d_TI, d_TM);
+        # Lòng bàn tay mở vòm rỗng (d_IW >= D_IW_MIN_0 để phân biệt với nắm đấm).
+        if not i_ext and not m_ext and not r_ext and not p_ext:
+            d_ti = feat.get("d_TI", 1.0)
+            d_tm = feat.get("d_TM", 1.0)
+            d_iw = feat.get("d_IW", 0.0)
+            if d_ti <= D_TI_THRESHOLD_0 and d_tm <= D_TM_THRESHOLD_0 and d_iw >= D_IW_MIN_0:
+                if INDEX_CURL_MIN_0 <= i_curl <= INDEX_CURL_MAX_0:
+                    matches.append(("0", f"Vòng tròn số 0: d_TI={d_ti:.3f}<={D_TI_THRESHOLD_0}, d_TM={d_tm:.3f}<={D_TM_THRESHOLD_0}, d_IW={d_iw:.3f}>={D_IW_MIN_0}", 0.95))
 
         # --- QUY TẮC SỐ 6 (Shaka / Alo) ---
         # Điều kiện: Ngón cái và ngón út duỗi, 3 ngón giữa (trỏ, giữa, áp út) gập

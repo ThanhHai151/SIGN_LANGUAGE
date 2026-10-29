@@ -24,6 +24,7 @@ from backend.vision.feature_extractor import normalize_hand_landmarks, calculate
 # Danh sach 27 chu cai VSL duoc phep trong che do letters_numbers
 ALLOWED_LETTERS = set(CLASSES[:27])
 ALLOWED_DIGITS = {str(i) for i in range(1, 10)}
+DIGITS_MODE_SIGNS = {str(i) for i in range(0, 10)}
 ALLOWED_LETTERS_AND_DIGITS = ALLOWED_LETTERS | ALLOWED_DIGITS
 
 class VSLRecognizer:
@@ -429,6 +430,7 @@ class VSLRecognizer:
             self._session_last_modes = {}
         if self._session_last_modes.get(session_key) != mode:
             self.prediction_history.clear()
+            self.last_confirmed_sign = None
             self._session_last_modes[session_key] = mode
 
         p_prim = None
@@ -486,7 +488,7 @@ class VSLRecognizer:
         if is_digits_mode:
             from backend.vision.digit_classifier import digit_classifier
             digit_res = digit_classifier.classify_detailed(p_prim)
-            if digit_res["status"] == "MATCH" and digit_res["digit"] in ALLOWED_DIGITS:
+            if digit_res["status"] == "MATCH" and digit_res["digit"] in DIGITS_MODE_SIGNS:
                 final_sign = digit_res["digit"]
                 final_conf = digit_res["confidence"]
             else:
@@ -494,7 +496,7 @@ class VSLRecognizer:
                 final_conf = 0.0
 
             # Chặn tuyệt đối: chế độ digits không bao giờ trả về chữ cái hoặc từ vựng
-            if final_sign not in ALLOWED_DIGITS:
+            if final_sign not in DIGITS_MODE_SIGNS:
                 final_sign = "NEUTRAL"
                 final_conf = 0.0
 
@@ -507,7 +509,7 @@ class VSLRecognizer:
 
             if len(recent_signs) >= self.smoothing_window // 2:
                 most_common, count = collections.Counter(recent_signs).most_common(1)[0]
-                if count >= (self.smoothing_window // 2) and most_common in ALLOWED_DIGITS:
+                if count >= (self.smoothing_window // 2) and most_common in DIGITS_MODE_SIGNS:
                     current_time = time.time()
                     if most_common != self.last_confirmed_sign or (current_time - self.last_confirmed_time > self.cooldown_sec):
                         self.last_confirmed_sign = most_common
@@ -518,14 +520,14 @@ class VSLRecognizer:
                         new_token_added = label_text
 
             sign_meta = ALL_SIGNS.get(final_sign, {})
-            display_label = f"Số {final_sign}" if final_sign in ALLOWED_DIGITS else "Đang theo dõi cử chỉ..."
+            display_label = f"Số {final_sign}" if final_sign in DIGITS_MODE_SIGNS else "Đang theo dõi cử chỉ..."
 
             self._log_diagnostic(
                 p_prim=p_prim,
                 handedness=handedness,
                 finger_states=None,
-                geom_sign="NEUTRAL",
-                geom_conf=0.0,
+                geom_sign=digit_res.get("digit", "NEUTRAL"),
+                geom_conf=digit_res.get("confidence", 0.0),
                 has_mlp=False,
                 nn_sign="NEUTRAL",
                 nn_conf=0.0,
@@ -534,18 +536,19 @@ class VSLRecognizer:
                 confirmed=confirmed,
                 expected_sign=expected_sign,
                 session_id=session_id,
-                mode=mode
+                mode=mode,
+                classifier_details=digit_res
             )
 
             return {
                 "sign": final_sign,
                 "label": display_label,
-                "type": "digit" if final_sign in ALLOWED_DIGITS else "unknown",
+                "type": "digit" if final_sign in DIGITS_MODE_SIGNS else "unknown",
                 "confidence": round(float(final_conf), 2),
                 "confirmed": confirmed,
                 "new_token": new_token_added,
                 "sentence": " ".join(self.sentence_tokens),
-                "description": f"Chữ số {final_sign}" if final_sign in ALLOWED_DIGITS else ""
+                "description": f"Chữ số {final_sign}" if final_sign in DIGITS_MODE_SIGNS else ""
             }
 
         # -------------------------------------------------------------
@@ -703,7 +706,8 @@ class VSLRecognizer:
 
     def _log_diagnostic(self, p_prim, handedness, finger_states, geom_sign, geom_conf,
                         has_mlp, nn_sign, nn_conf, final_sign, final_conf, confirmed,
-                        expected_sign=None, session_id=None, mode=None):
+                        expected_sign=None, session_id=None, mode=None,
+                        classifier_details=None):
         """Ghi nhat ky chan doan JSONL khi duoc bat, gioi han ~2 mau/giay, an toan tuyet doi voi I/O."""
         is_enabled = os.environ.get("VSL_DIAGNOSTIC", "0") == "1" or getattr(self, "diagnostic_enabled", False)
         if not is_enabled:
@@ -728,18 +732,52 @@ class VSLRecognizer:
 
             history_snapshot = [s for s, c in self.prediction_history]
 
+            safe_finger_states = {}
+            if isinstance(finger_states, dict):
+                safe_finger_states = {
+                    k: (bool(v) if "extended" in k else round(float(v), 4))
+                    for k, v in finger_states.items()
+                }
+            elif classifier_details and isinstance(classifier_details.get("features"), dict):
+                feat = classifier_details["features"]
+                safe_finger_states = {
+                    "thumb_extended": bool(feat.get("thumb_ext", False)),
+                    "index_extended": bool(feat.get("index_ext", False)),
+                    "middle_extended": bool(feat.get("middle_ext", False)),
+                    "ring_extended": bool(feat.get("ring_ext", False)),
+                    "pinky_extended": bool(feat.get("pinky_ext", False)),
+                    "thumb_curl": 0.0,
+                    "index_curl": round(float(feat.get("index_curl", 0.0)), 4),
+                    "middle_curl": 0.0,
+                    "ring_curl": 0.0,
+                    "pinky_curl": 0.0
+                }
+            else:
+                safe_finger_states = {
+                    "thumb_extended": False,
+                    "index_extended": False,
+                    "middle_extended": False,
+                    "ring_extended": False,
+                    "pinky_extended": False,
+                    "thumb_curl": 0.0,
+                    "index_curl": 0.0,
+                    "middle_curl": 0.0,
+                    "ring_curl": 0.0,
+                    "pinky_curl": 0.0
+                }
+
+            valid_count = len([s for s, c in self.prediction_history if c >= self.confidence_threshold])
+
             record = {
                 "timestamp": round(now, 3),
                 "session_id": str(session_id) if session_id else "default",
                 "frame_idx": frame_idx,
+                "mode": str(mode) if mode else "default",
                 "expected_sign": str(expected_sign) if expected_sign else None,
                 "handedness": handedness or "Right",
                 "raw_landmarks": [[round(float(coord), 6) for coord in pt] for pt in p_prim],
                 "palm_scale": round(float(palm_scale), 6),
-                "finger_states": {
-                    k: (bool(v) if "extended" in k else round(float(v), 4))
-                    for k, v in finger_states.items()
-                },
+                "finger_states": safe_finger_states,
                 "geometry": {
                     "sign": geom_sign,
                     "confidence": round(float(geom_conf), 4)
@@ -755,9 +793,19 @@ class VSLRecognizer:
                 },
                 "smoothing": {
                     "confirmed": bool(confirmed),
-                    "recent_history": history_snapshot
+                    "recent_history": history_snapshot,
+                    "valid_frames_count": valid_count
                 }
             }
+            if classifier_details and isinstance(classifier_details, dict):
+                record["classifier_details"] = {
+                    "status": classifier_details.get("status"),
+                    "digit": classifier_details.get("digit"),
+                    "confidence": round(float(classifier_details.get("confidence", 0.0)), 4),
+                    "reason": classifier_details.get("reason"),
+                    "matched_digits": classifier_details.get("matched_digits", []),
+                    "features": classifier_details.get("features")
+                }
             with self._diag_lock:
                 with open(filepath, "a", encoding="utf-8") as f:
                     f.write(json.dumps(record, ensure_ascii=False) + "\n")
