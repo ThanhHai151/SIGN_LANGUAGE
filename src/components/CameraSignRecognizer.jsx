@@ -94,6 +94,19 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
   const isFrameBusyRef = useRef(false); // Frame-dropping lock chống nghẽn luồng xử lý
   const lastMotionUpdateRef = useRef(0);
 
+  // Đồng bộ mode thời gian thực chống Stale Closure & Out-of-Order In-Flight Requests
+  const conversionModeRef = useRef(conversionMode);
+  const recognitionModeRef = useRef(recognitionMode);
+  const requestGenRef = useRef(0);
+
+  useEffect(() => {
+    conversionModeRef.current = conversionMode;
+  }, [conversionMode]);
+
+  useEffect(() => {
+    recognitionModeRef.current = recognitionMode;
+  }, [recognitionMode]);
+
   // Danh mục cử chỉ mẫu để test nhanh mô phỏng
   const SAMPLE_GESTURES = [
     { name: 'Chào', idx: 52, type: 'XIN_CHAO', desc: 'Bàn tay phải mở ngang thái dương vẫy nhẹ' },
@@ -359,7 +372,16 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
   // Xử lý chuyển đổi độc lập TIÊU CHÍ B: Chế độ chuyển đổi
   const handleModeChange = (newMode) => {
     if (newMode === conversionMode) return;
+    const newRecMode = (newMode === 'letters' || newMode === 'digits' || newMode === 'letters_numbers') ? 'instant' : 'sequence';
+
+    // Đồng bộ lập tức vào refs để callback MediaPipe đọc được ngay trong frame kế tiếp
+    conversionModeRef.current = newMode;
+    recognitionModeRef.current = newRecMode;
+    requestGenRef.current += 1; // Vô hiệu hoá tất cả response đang bay (in-flight) của mode cũ
+    isInferringRef.current = false;
+
     setConversionMode(newMode);
+    setRecognitionMode(newRecMode);
     sequenceBufferRef.current = [];
     updateHUDProgress(0, 0);
 
@@ -374,13 +396,6 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
       video_url: ''
     });
     setTopKPredictions([]);
-
-    // Ánh xạ sang pipeline thực tế
-    if (newMode === 'letters' || newMode === 'digits' || newMode === 'letters_numbers') {
-      setRecognitionMode('instant');
-    } else {
-      setRecognitionMode('sequence');
-    }
   };
 
   // Helper đánh giá và hiển thị trạng thái tương thích giữa 2 tiêu chí lựa chọn
@@ -659,8 +674,11 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
       }
     }
 
+    const currentConversionMode = conversionModeRef.current;
+    const currentRecognitionMode = recognitionModeRef.current;
+
     // 2. CHẾ ĐỘ 1: CHUỖI ĐỘNG VSL (SSTCN-Attention 30-Frame Sliding Window)
-    if (recognitionMode === 'sequence') {
+    if (currentRecognitionMode === 'sequence') {
       if (!hasHands) {
         if (sequenceBufferRef.current.length > 0) {
           sequenceBufferRef.current = [];
@@ -680,6 +698,8 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
       // Khi đã đủ 30 frame và không có suy luận nào đang chạy
       if (currentLen >= SEQ_LEN && !isInferringRef.current) {
         isInferringRef.current = true;
+        const currentGen = requestGenRef.current;
+        const requestMode = currentConversionMode;
         const sequencePayload = sequenceBufferRef.current.slice(-SEQ_LEN);
 
         // SLIDING WINDOW: Loại bỏ 6 frame cũ nhất, giữ lại 24 frame để frame tiếp theo nhanh chóng đầy lại!
@@ -688,6 +708,9 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
         // Gửi suy luận hoàn toàn không chặn luồng (Non-blocking Async)
         sendSequenceForRecognition(sequencePayload, confidenceThreshold)
           .then((resp) => {
+            if (currentGen !== requestGenRef.current || conversionModeRef.current !== requestMode) {
+              return; // Bỏ qua response đến trễ sau khi đổi mode
+            }
             if (resp && resp.success && resp.data) {
               const data = resp.data;
               setCurrentResult({
@@ -720,34 +743,52 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
           })
           .catch((err) => console.warn('Lỗi suy luận chuỗi SSTCN:', err))
           .finally(() => {
-            isInferringRef.current = false;
+            if (currentGen === requestGenRef.current) {
+              isInferringRef.current = false;
+            }
           });
       }
     }
 
     // 3. CHẾ ĐỘ 2: ĐÁNH VẦN CHỮ CÁI TỨC THÌ (<5ms)
-    else if (recognitionMode === 'instant') {
+    else if (currentRecognitionMode === 'instant') {
       if (!hasHands) return;
 
       if (!isInferringRef.current) {
         isInferringRef.current = true;
+        const currentGen = requestGenRef.current;
+        const requestMode = currentConversionMode;
         const primary = rightHand || leftHand;
         const rawPrimary = primary.map(lm => [lm.x, lm.y, lm.z]);
         const multiHands = [];
         if (rightHand) multiHands.push({ handedness: 'Right', landmarks: rightHand.map(l => [l.x, l.y, l.z]) });
         if (leftHand) multiHands.push({ handedness: 'Left', landmarks: leftHand.map(l => [l.x, l.y, l.z]) });
 
-        sendLandmarksForRecognition(rawPrimary, multiHands, 'Right', conversionMode)
+        sendLandmarksForRecognition(rawPrimary, multiHands, 'Right', requestMode)
           .then((resp) => {
+            if (currentGen !== requestGenRef.current || conversionModeRef.current !== requestMode) {
+              return; // Bỏ qua response stale khi mode đã chuyển sang mode khác
+            }
             if (resp && resp.success && resp.data) {
               const data = resp.data;
+
+              // Chốt chặn bảo vệ UI:
+              // Nếu đang ở mode 'digits' mà kết quả không phải chữ số (0-9 hoặc NEUTRAL) -> bỏ qua
+              if (requestMode === 'digits' && data.sign !== 'NEUTRAL' && !/^[0-9]$/.test(data.sign)) {
+                return;
+              }
+              // Nếu đang ở mode 'letters' mà kết quả là chữ số -> bỏ qua
+              if (requestMode === 'letters' && /^[0-9]$/.test(data.sign)) {
+                return;
+              }
+
               setCurrentResult({
                 sign: data.sign,
                 label: data.label,
                 confidence: data.confidence,
                 type: data.type || 'alphabet',
                 description: data.description,
-                category: 'Bảng chữ cái ngón tay',
+                category: requestMode === 'digits' ? 'Chữ số VSL (0–9)' : (requestMode === 'letters' ? 'Bảng chữ cái VSL' : (requestMode === 'words' ? 'Từ vựng VSL (102 Từ)' : 'Ghép câu ngữ cảnh')),
                 video_url: ''
               });
 
@@ -767,7 +808,9 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
           })
           .catch((err) => console.warn('Lỗi suy luận tức thì:', err))
           .finally(() => {
-            isInferringRef.current = false;
+            if (currentGen === requestGenRef.current) {
+              isInferringRef.current = false;
+            }
           });
       }
     }
@@ -1186,11 +1229,11 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
         <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>
-              {conversionMode === 'letters_numbers' ? '🔤 Chữ cái & Số' : conversionMode === 'words' ? '📖 Từ vựng (102 Từ)' : '💬 Ghép câu liên tục'}
+              {conversionMode === 'letters' ? '🔤 Chữ cái VSL (A–Z)' : conversionMode === 'digits' ? '🔢 Chữ số VSL (0–9)' : conversionMode === 'words' ? '📖 Từ vựng (102 Từ)' : conversionMode === 'sentence' ? '💬 Ghép câu ngữ cảnh' : '🔤 Chữ cái & Số'}
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
-              <span className={`badge ${conversionMode === 'letters_numbers' ? 'badge-emerald' : conversionMode === 'words' ? 'badge-indigo' : 'badge-cyan'}`} style={{ fontSize: '11px' }}>
-                {conversionMode === 'letters_numbers' ? 'Instant (<5ms)' : conversionMode === 'words' ? 'SSTCN (30-Frame)' : 'Temporal Debounce'}
+              <span className={`badge ${conversionMode === 'letters' || conversionMode === 'digits' || conversionMode === 'letters_numbers' ? 'badge-emerald' : conversionMode === 'words' ? 'badge-indigo' : 'badge-cyan'}`} style={{ fontSize: '11px' }}>
+                {conversionMode === 'letters' || conversionMode === 'digits' || conversionMode === 'letters_numbers' ? 'Instant (<5ms)' : conversionMode === 'words' ? 'SSTCN (30-Frame)' : 'Temporal Debounce'}
               </span>
               <span className="badge badge-cyan" style={{ fontSize: '11px' }}>
                 {currentResult.confidence > 0 ? `${Math.round(currentResult.confidence * 100)}% Khớp` : 'Đang chờ...'}
