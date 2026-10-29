@@ -55,6 +55,7 @@ class LandmarkRequest(BaseModel):
     multi_hands: Optional[List[dict]] = None
     handedness: Optional[str] = "Right"
     mode: Optional[str] = None
+    timestamp: Optional[float] = None
 
 class FrameRequest(BaseModel):
     image_base64: str
@@ -247,7 +248,8 @@ def recognize_landmarks(req: LandmarkRequest, request: Request):
             multi_hands=req.multi_hands,
             expected_sign=expected_sign,
             session_id=session_id,
-            mode=mode
+            mode=mode,
+            timestamp=req.timestamp
         )
         return {"success": True, "data": result}
     except HTTPException:

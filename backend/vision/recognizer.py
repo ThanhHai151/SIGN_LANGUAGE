@@ -20,12 +20,28 @@ from backend.models.sign_model import get_trained_model, CLASSES, CLASS_TO_IDX, 
 from backend.models.vsl_dictionary import ALL_SIGNS
 from backend.models.lexicon import get_entry_by_sstcn
 from backend.vision.feature_extractor import normalize_hand_landmarks, calculate_distance, calculate_angle
+from backend.vision.alphabet_classifier import alphabet_classifier
 
 # Danh sach 27 chu cai VSL duoc phep trong che do letters_numbers
 ALLOWED_LETTERS = set(CLASSES[:27])
 ALLOWED_DIGITS = {str(i) for i in range(1, 10)}
 DIGITS_MODE_SIGNS = {str(i) for i in range(0, 10)}
 ALLOWED_LETTERS_AND_DIGITS = ALLOWED_LETTERS | ALLOWED_DIGITS
+
+# Bảng ánh xạ phát âm TTS chuẩn cho từng chữ số (chỉ đọc tên số, không có tiền tố "số")
+DIGIT_TTS_MAP = {
+    "0": "không",
+    "1": "một",
+    "2": "hai",
+    "3": "ba",
+    "4": "bốn",
+    "5": "năm",
+    "6": "sáu",
+    "7": "bảy",
+    "8": "tám",
+    "9": "chín",
+    "10": "mười",
+}
 
 class VSLRecognizer:
     def __init__(self, confidence_threshold=0.70, smoothing_window=10, cooldown_sec=1.2, weights_path=None):
@@ -39,6 +55,9 @@ class VSLRecognizer:
         
         # 2. Mô hình nơ-ron MLP tĩnh cho cử chỉ đơn lẻ
         self.model = get_trained_model(weights_path=weights_path)
+        self.alphabet_classifier = alphabet_classifier
+        from backend.vision.digit_10_detector import VSL10GestureDetector
+        self.digit_10_detector = VSL10GestureDetector()
         
         # 3. Bộ đệm thời gian chống rung cho chế độ tĩnh
         self.prediction_history = collections.deque(maxlen=smoothing_window)
@@ -405,7 +424,7 @@ class VSLRecognizer:
 
         return None, 0.0
 
-    def predict_landmarks(self, landmarks_list, landmarks_secondary=None, multi_hands=None, expected_sign=None, session_id=None, mode=None):
+    def predict_landmarks(self, landmarks_list, landmarks_secondary=None, multi_hands=None, expected_sign=None, session_id=None, mode=None, timestamp=None):
         """
         Nhận diện cử chỉ đơn frame hỗ trợ cả 1 tay và 2 tay.
         Khi mode == 'letters_numbers', backend chi tra ve 27 chu cai VSL hoac NEUTRAL.
@@ -428,10 +447,14 @@ class VSLRecognizer:
         session_key = str(session_id) if session_id else "_default_"
         if not hasattr(self, "_session_last_modes"):
             self._session_last_modes = {}
+        current_time = time.time() if timestamp is None else float(timestamp)
+
         if self._session_last_modes.get(session_key) != mode:
             self.prediction_history.clear()
             self.last_confirmed_sign = None
             self._session_last_modes[session_key] = mode
+            if hasattr(self, "digit_10_detector"):
+                self.digit_10_detector.reset()
 
         p_prim = None
         p_sec = None
@@ -448,6 +471,9 @@ class VSLRecognizer:
                 p_sec = landmarks_secondary
 
         if not p_prim or len(p_prim) < 21:
+            self.prediction_history.append(("NEUTRAL", 0.0))
+            if is_digits_mode and hasattr(self, "digit_10_detector"):
+                self.digit_10_detector.reset()
             return {
                 "sign": "NEUTRAL",
                 "label": "Chờ cử chỉ...",
@@ -484,43 +510,109 @@ class VSLRecognizer:
 
         # -------------------------------------------------------------
         # XỬ LÝ CHUYÊN BIỆT CHO CHẾ ĐỘ CHỮ SỐ (digits mode)
+        # Độc lập từng ký hiệu, không ghép chuỗi số liên tiếp
         # -------------------------------------------------------------
         if is_digits_mode:
+            # 1. ƯU TIÊN 1: Nhận diện cử chỉ động riêng cho Số 10 VSL
+            det10_res = self.digit_10_detector.update(p_prim, timestamp=current_time)
+            if det10_res["detected"]:
+                self.prediction_history.clear()
+                label_token = "10"
+                tts_text = DIGIT_TTS_MAP["10"]
+                
+                # Phụ đề trong chế độ chữ số bỏ hoàn toàn từ "Số", chỉ hiển thị số thuần túy ("10")
+                if self.sentence_tokens and (self.sentence_tokens[-1] in ("1", "Số 1")):
+                    self.sentence_tokens[-1] = label_token
+                elif not (self.sentence_tokens and self.sentence_tokens[-1] == label_token):
+                    self.sentence_tokens.append(label_token)
+                    
+                self.last_confirmed_sign = "10"
+                self.last_confirmed_time = current_time
+                
+                self._log_diagnostic(
+                    p_prim=p_prim,
+                    handedness=handedness,
+                    finger_states=None,
+                    geom_sign="10",
+                    geom_conf=det10_res["confidence"],
+                    has_mlp=False,
+                    nn_sign="NEUTRAL",
+                    nn_conf=0.0,
+                    final_sign="10",
+                    final_conf=det10_res["confidence"],
+                    confirmed=True,
+                    expected_sign=expected_sign,
+                    session_id=session_id,
+                    mode=mode,
+                    classifier_details={"detector_10": det10_res}
+                )
+                
+                return {
+                    "sign": "10",
+                    "label": "Số 10",
+                    "tts_text": tts_text,
+                    "type": "digit",
+                    "confidence": round(float(det10_res["confidence"]), 2),
+                    "confirmed": True,
+                    "new_token": label_token,
+                    "sentence": " ".join(self.sentence_tokens),
+                    "description": "Chữ số 10",
+                    "detector_10": det10_res
+                }
+
+            # Kiểm tra thời gian cooldown sau khi vừa chốt Số 10
+            is_in_10_cooldown = (current_time - self.digit_10_detector.last_detected_time < self.digit_10_detector.config.cooldown_sec)
+
+            # 2. Phân loại hình học đơn frame cho chữ số 0-9 độc lập
             from backend.vision.digit_classifier import digit_classifier
             digit_res = digit_classifier.classify_detailed(p_prim)
-            if digit_res["status"] == "MATCH" and digit_res["digit"] in DIGITS_MODE_SIGNS:
-                final_sign = digit_res["digit"]
-                final_conf = digit_res["confidence"]
+            if (not is_in_10_cooldown) and digit_res["status"] == "MATCH" and digit_res["digit"] in DIGITS_MODE_SIGNS:
+                raw_digit = digit_res["digit"]
+                raw_conf = digit_res["confidence"]
             else:
-                final_sign = "NEUTRAL"
-                final_conf = 0.0
+                raw_digit = "NEUTRAL"
+                raw_conf = 0.0
 
-            # Chặn tuyệt đối: chế độ digits không bao giờ trả về chữ cái hoặc từ vựng
-            if final_sign not in DIGITS_MODE_SIGNS:
-                final_sign = "NEUTRAL"
-                final_conf = 0.0
+            # Chặn tuyệt đối: chế độ digits không bao giờ nhận diện chữ cái hoặc từ vựng
+            if raw_digit not in DIGITS_MODE_SIGNS:
+                raw_digit = "NEUTRAL"
+                raw_conf = 0.0
 
-            self.prediction_history.append((final_sign, final_conf))
+            self.prediction_history.append((raw_digit, raw_conf))
 
-            # Smoothing cho chữ số
+            # Smoothing cho chữ số đơn tức thời
             recent_signs = [s for s, c in self.prediction_history if c >= self.confidence_threshold]
             confirmed = False
             new_token_added = None
+            tts_text = None
+
+            # Hoãn chốt số 1 nếu detector đang quan sát chuyển động xoay/nghiêng của Số 10
+            is_observing_10 = det10_res.get("is_observing", False)
 
             if len(recent_signs) >= self.smoothing_window // 2:
-                most_common, count = collections.Counter(recent_signs).most_common(1)[0]
-                if count >= (self.smoothing_window // 2) and most_common in DIGITS_MODE_SIGNS:
-                    current_time = time.time()
-                    if most_common != self.last_confirmed_sign or (current_time - self.last_confirmed_time > self.cooldown_sec):
-                        self.last_confirmed_sign = most_common
-                        self.last_confirmed_time = current_time
-                        confirmed = True
-                        label_text = f"Số {most_common}"
-                        self.sentence_tokens.append(label_text)
-                        new_token_added = label_text
+                smoothed_digit, count = collections.Counter(recent_signs).most_common(1)[0]
+                smoothed_conf = raw_conf if count >= (self.smoothing_window // 2) else 0.0
+                if count >= (self.smoothing_window // 2) and smoothed_digit in DIGITS_MODE_SIGNS:
+                    should_defer_one = (smoothed_digit == "1" and is_observing_10)
+                    if not should_defer_one:
+                        if smoothed_digit != self.last_confirmed_sign or (current_time - self.last_confirmed_time > self.cooldown_sec):
+                            self.last_confirmed_sign = smoothed_digit
+                            self.last_confirmed_time = current_time
+                            confirmed = True
+                            label_token = smoothed_digit
+                            self.sentence_tokens.append(label_token)
+                            new_token_added = label_token
+                            tts_text = DIGIT_TTS_MAP.get(smoothed_digit, smoothed_digit)
+            else:
+                smoothed_digit = raw_digit
+                smoothed_conf = raw_conf
 
-            sign_meta = ALL_SIGNS.get(final_sign, {})
-            display_label = f"Số {final_sign}" if final_sign in DIGITS_MODE_SIGNS else "Đang theo dõi cử chỉ..."
+            display_sign = raw_digit if raw_digit in DIGITS_MODE_SIGNS else "NEUTRAL"
+            is_valid_digit_sign = (display_sign != "NEUTRAL" and display_sign in DIGITS_MODE_SIGNS)
+            display_label = f"Số {display_sign}" if is_valid_digit_sign else "Đang theo dõi cử chỉ..."
+
+            if confirmed and not tts_text and is_valid_digit_sign:
+                tts_text = DIGIT_TTS_MAP.get(display_sign, display_sign)
 
             self._log_diagnostic(
                 p_prim=p_prim,
@@ -531,8 +623,8 @@ class VSLRecognizer:
                 has_mlp=False,
                 nn_sign="NEUTRAL",
                 nn_conf=0.0,
-                final_sign=final_sign,
-                final_conf=final_conf,
+                final_sign=display_sign,
+                final_conf=raw_conf,
                 confirmed=confirmed,
                 expected_sign=expected_sign,
                 session_id=session_id,
@@ -541,14 +633,91 @@ class VSLRecognizer:
             )
 
             return {
+                "sign": display_sign,
+                "label": display_label,
+                "tts_text": tts_text,
+                "type": "digit" if is_valid_digit_sign else "unknown",
+                "confidence": round(float(raw_conf), 2),
+                "confirmed": confirmed,
+                "new_token": new_token_added,
+                "sentence": " ".join(self.sentence_tokens),
+                "description": f"Chữ số {display_sign}" if is_valid_digit_sign else ""
+            }
+
+        # -------------------------------------------------------------
+        # XỬ LÝ CHUYÊN BIỆT CHO CHẾ ĐỘ CHỮ CÁI (letters mode)
+        # -------------------------------------------------------------
+        if is_letters_mode:
+            alpha_res = self.alphabet_classifier.classify_detailed(p_prim)
+            status = alpha_res.get("status")
+
+            # Chỉ chấp nhận khi MATCH và chữ cái thuộc tập hợp cho phép
+            if status == "MATCH" and alpha_res.get("letter") in ALLOWED_LETTERS:
+                final_sign = alpha_res["letter"]
+                final_conf = alpha_res["confidence"]
+            else:
+                # Xử lý an toàn cho NO_MATCH, CONFLICT, INVALID_INPUT:
+                # Bảo lưu NEUTRAL, không để mạng nơ-ron MLP tự ý ép nhãn thiếu căn cứ
+                final_sign = "NEUTRAL"
+                final_conf = 0.0
+
+            # Chặn tuyệt đối: chế độ letters không bao giờ trả về chữ số hoặc từ vựng
+            if final_sign not in ALLOWED_LETTERS:
+                final_sign = "NEUTRAL"
+                final_conf = 0.0
+
+            self.prediction_history.append((final_sign, final_conf))
+
+            # Smoothing cho chữ cái
+            recent_signs = [s for s, c in self.prediction_history if c >= self.confidence_threshold]
+            confirmed = False
+            new_token_added = None
+
+            if len(recent_signs) >= self.smoothing_window // 2:
+                most_common, count = collections.Counter(recent_signs).most_common(1)[0]
+                if count >= (self.smoothing_window // 2) and most_common in ALLOWED_LETTERS:
+                    current_time = time.time()
+                    if most_common != self.last_confirmed_sign or (current_time - self.last_confirmed_time > self.cooldown_sec):
+                        self.last_confirmed_sign = most_common
+                        self.last_confirmed_time = current_time
+                        confirmed = True
+                        sign_info = ALL_SIGNS.get(most_common, {})
+                        label_text = sign_info.get("label", most_common)
+                        self.sentence_tokens.append(label_text)
+                        new_token_added = label_text
+
+            sign_meta = ALL_SIGNS.get(final_sign, {})
+            default_display = final_sign if final_sign != "NEUTRAL" else "Đang theo dõi cử chỉ..."
+            display_label = sign_meta.get("label", default_display)
+            sign_type = "alphabet" if final_sign in ALLOWED_LETTERS else "unknown"
+
+            self._log_diagnostic(
+                p_prim=p_prim,
+                handedness=handedness,
+                finger_states=None,
+                geom_sign=alpha_res.get("letter", "NEUTRAL"),
+                geom_conf=alpha_res.get("confidence", 0.0),
+                has_mlp=False,
+                nn_sign="NEUTRAL",
+                nn_conf=0.0,
+                final_sign=final_sign,
+                final_conf=final_conf,
+                confirmed=confirmed,
+                expected_sign=expected_sign,
+                session_id=session_id,
+                mode=mode,
+                classifier_details=alpha_res
+            )
+
+            return {
                 "sign": final_sign,
                 "label": display_label,
-                "type": "digit" if final_sign in DIGITS_MODE_SIGNS else "unknown",
+                "type": sign_type,
                 "confidence": round(float(final_conf), 2),
                 "confirmed": confirmed,
                 "new_token": new_token_added,
                 "sentence": " ".join(self.sentence_tokens),
-                "description": f"Chữ số {final_sign}" if final_sign in DIGITS_MODE_SIGNS else ""
+                "description": sign_meta.get("description", "")
             }
 
         # -------------------------------------------------------------
@@ -816,4 +985,15 @@ class VSLRecognizer:
         """Xóa trắng câu hiện tại"""
         self.sentence_tokens = []
         self.last_confirmed_sign = None
+        if hasattr(self, "digit_10_detector"):
+            self.digit_10_detector.reset()
         return {"sentence": ""}
+
+    def reset(self):
+        """Reset toàn bộ trạng thái bộ nhận diện"""
+        self.prediction_history.clear()
+        self.last_confirmed_sign = None
+        self.last_confirmed_time = 0
+        self.sentence_tokens = []
+        if hasattr(self, "digit_10_detector"):
+            self.digit_10_detector.reset()
