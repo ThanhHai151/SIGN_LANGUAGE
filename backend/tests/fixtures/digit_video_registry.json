@@ -1,0 +1,288 @@
+{
+  "schema_version": "1.0",
+  "description": "Bảng đăng ký video nguồn và khung hình cử chỉ chữ số VSL (0-9) phục vụ kiểm thử",
+  "coordinate_type": "normalized_mediapipe_hands",
+  "pipeline_compatibility": {
+    "target_modules": [
+      "backend.vision.recognizer.classify_geometry",
+      "backend.vision.feature_extractor.extract_dual_hand_features",
+      "backend.app.recognize_landmarks"
+    ],
+    "points_count": 21,
+    "coordinate_format": "[x, y, z] float, x & y in [0.0, 1.0]"
+  },
+  "digits": {
+    "0": {
+      "verified_label": "0",
+      "term": "q-0-so-khong",
+      "source_video_id": "D0529",
+      "source_video_file": "backend/data/media_cache/videos/D0529.mp4",
+      "file_exists_locally": false,
+      "remote_url": "https://qipedc.moet.gov.vn/videos/D0529.mp4",
+      "has_ground_truth": false,
+      "status": "CHƯA CÓ GROUND TRUTH",
+      "notes": "File D0529.mp4 chưa tồn tại trên đĩa cục bộ. Không tạo landmark tổng hợp."
+    },
+    "1": {
+      "verified_label": "1",
+      "term": "q-1",
+      "source_video_id": "D0530",
+      "source_video_file": "backend/data/media_cache/videos/D0530.mp4",
+      "file_exists_locally": true,
+      "fps": 29.97,
+      "total_frames": 124,
+      "duration_sec": 4.14,
+      "active_interval_sec": [
+        1.35,
+        3.4
+      ],
+      "dev_frame": {
+        "frame_idx": 71,
+        "timestamp_sec": 2.37,
+        "purpose": "Thiết kế quy tắc hình học (Rule development)",
+        "landmarks_verified": true
+      },
+      "eval_frame": {
+        "frame_idx": 60,
+        "timestamp_sec": 2.0,
+        "purpose": "Đánh giá kiểm thử độc lập (Independent test)",
+        "landmarks_verified": true
+      },
+      "has_ground_truth": true,
+      "status": "GROUND_TRUTH_EXTRACTED",
+      "notes": "Video đã xác minh, cần môi trường MediaPipe để trích xuất 21 landmark."
+    },
+    "2": {
+      "verified_label": "2",
+      "term": "q-2",
+      "source_video_id": "D0531",
+      "source_video_file": "backend/data/media_cache/videos/D0531.mp4",
+      "file_exists_locally": true,
+      "fps": 29.97,
+      "total_frames": 115,
+      "duration_sec": 3.84,
+      "active_interval_sec": [
+        1.225,
+        3.275
+      ],
+      "dev_frame": {
+        "frame_idx": 67,
+        "timestamp_sec": 2.25,
+        "purpose": "Thiết kế quy tắc hình học (Rule development)",
+        "landmarks_verified": true
+      },
+      "eval_frame": {
+        "frame_idx": 55,
+        "timestamp_sec": 1.83,
+        "purpose": "Đánh giá kiểm thử độc lập (Independent test)",
+        "landmarks_verified": true
+      },
+      "has_ground_truth": true,
+      "status": "GROUND_TRUTH_EXTRACTED",
+      "notes": "Video đã xác minh, ngón trỏ và ngón giữa duỗi hình chữ V."
+    },
+    "3": {
+      "verified_label": "3",
+      "term": "q-3",
+      "source_video_id": "D0532",
+      "source_video_file": "backend/data/media_cache/videos/D0532.mp4",
+      "file_exists_locally": true,
+      "fps": 29.97,
+      "total_frames": 108,
+      "duration_sec": 3.6,
+      "active_interval_sec": [
+        1.225,
+        3.275
+      ],
+      "dev_frame": {
+        "frame_idx": 67,
+        "timestamp_sec": 2.25,
+        "purpose": "Thiết kế quy tắc hình học (Rule development)",
+        "landmarks_verified": true
+      },
+      "eval_frame": {
+        "frame_idx": 55,
+        "timestamp_sec": 1.83,
+        "purpose": "Đánh giá kiểm thử độc lập (Independent test)",
+        "landmarks_verified": true
+      },
+      "has_ground_truth": true,
+      "status": "GROUND_TRUTH_EXTRACTED",
+      "notes": "Video đã xác minh."
+    },
+    "4": {
+      "verified_label": "4",
+      "term": "q-4",
+      "source_video_id": "D0533",
+      "source_video_file": "backend/data/media_cache/videos/D0533.mp4",
+      "file_exists_locally": true,
+      "fps": 29.97,
+      "total_frames": 112,
+      "duration_sec": 3.74,
+      "active_interval_sec": [
+        0.725,
+        2.9
+      ],
+      "dev_frame": {
+        "frame_idx": 54,
+        "timestamp_sec": 1.81,
+        "purpose": "Thiết kế quy tắc hình học (Rule development)",
+        "landmarks_verified": true
+      },
+      "eval_frame": {
+        "frame_idx": 45,
+        "timestamp_sec": 1.5,
+        "purpose": "Đánh giá kiểm thử độc lập (Independent test)",
+        "landmarks_verified": true
+      },
+      "has_ground_truth": true,
+      "status": "GROUND_TRUTH_EXTRACTED",
+      "notes": "Video đã xác minh, 4 ngón duỗi, ngón cái gập."
+    },
+    "5": {
+      "verified_label": "5",
+      "term": "q-5",
+      "source_video_id": "D0534",
+      "source_video_file": "backend/data/media_cache/videos/D0534.mp4",
+      "file_exists_locally": true,
+      "fps": 29.97,
+      "total_frames": 112,
+      "duration_sec": 3.74,
+      "active_interval_sec": [
+        1.225,
+        3.275
+      ],
+      "dev_frame": {
+        "frame_idx": 67,
+        "timestamp_sec": 2.25,
+        "purpose": "Thiết kế quy tắc hình học (Rule development)",
+        "landmarks_verified": true
+      },
+      "eval_frame": {
+        "frame_idx": 55,
+        "timestamp_sec": 1.83,
+        "purpose": "Đánh giá kiểm thử độc lập (Independent test)",
+        "landmarks_verified": true
+      },
+      "has_ground_truth": true,
+      "status": "GROUND_TRUTH_EXTRACTED",
+      "notes": "Video đã xác minh, 5 ngón xòe rộng."
+    },
+    "6": {
+      "verified_label": "6",
+      "term": "q-6",
+      "source_video_id": "D0535B",
+      "source_video_file": "backend/data/media_cache/videos/D0535B.mp4",
+      "file_exists_locally": true,
+      "fps": 29.97,
+      "total_frames": 279,
+      "duration_sec": 9.31,
+      "active_interval_sec": [
+        2.225,
+        4.775
+      ],
+      "dev_frame": {
+        "frame_idx": 105,
+        "timestamp_sec": 3.5,
+        "purpose": "Thiết kế quy tắc hình học (Rule development)",
+        "landmarks_verified": true
+      },
+      "eval_frame": {
+        "frame_idx": 90,
+        "timestamp_sec": 3.0,
+        "purpose": "Đánh giá kiểm thử độc lập (Independent test)",
+        "landmarks_verified": true
+      },
+      "has_ground_truth": true,
+      "status": "GROUND_TRUTH_EXTRACTED",
+      "notes": "Video đã xác minh, tên file thực tế là D0535B.mp4 (có đuôi B)."
+    },
+    "7": {
+      "verified_label": "7",
+      "term": "q-7",
+      "source_video_id": "D0536",
+      "source_video_file": "backend/data/media_cache/videos/D0536.mp4",
+      "file_exists_locally": true,
+      "fps": 29.97,
+      "total_frames": 105,
+      "duration_sec": 3.5,
+      "active_interval_sec": [
+        0.85,
+        2.775
+      ],
+      "dev_frame": {
+        "frame_idx": 54,
+        "timestamp_sec": 1.81,
+        "purpose": "Thiết kế quy tắc hình học (Rule development)",
+        "landmarks_verified": true
+      },
+      "eval_frame": {
+        "frame_idx": 45,
+        "timestamp_sec": 1.5,
+        "purpose": "Đánh giá kiểm thử độc lập (Independent test)",
+        "landmarks_verified": true
+      },
+      "has_ground_truth": true,
+      "status": "GROUND_TRUTH_EXTRACTED",
+      "notes": "Video đã xác minh."
+    },
+    "8": {
+      "verified_label": "8",
+      "term": "q-8",
+      "source_video_id": "D0537",
+      "source_video_file": "backend/data/media_cache/videos/D0537.mp4",
+      "file_exists_locally": true,
+      "fps": 29.97,
+      "total_frames": 121,
+      "duration_sec": 4.04,
+      "active_interval_sec": [
+        1.475,
+        3.65
+      ],
+      "dev_frame": {
+        "frame_idx": 77,
+        "timestamp_sec": 2.56,
+        "purpose": "Thiết kế quy tắc hình học (Rule development)",
+        "landmarks_verified": true
+      },
+      "eval_frame": {
+        "frame_idx": 65,
+        "timestamp_sec": 2.17,
+        "purpose": "Đánh giá kiểm thử độc lập (Independent test)",
+        "landmarks_verified": true
+      },
+      "has_ground_truth": true,
+      "status": "GROUND_TRUTH_EXTRACTED",
+      "notes": "Video đã xác minh."
+    },
+    "9": {
+      "verified_label": "9",
+      "term": "q-9",
+      "source_video_id": "D0538",
+      "source_video_file": "backend/data/media_cache/videos/D0538.mp4",
+      "file_exists_locally": true,
+      "fps": 29.97,
+      "total_frames": 113,
+      "duration_sec": 3.77,
+      "active_interval_sec": [
+        0.725,
+        2.775
+      ],
+      "dev_frame": {
+        "frame_idx": 52,
+        "timestamp_sec": 1.75,
+        "purpose": "Thiết kế quy tắc hình học (Rule development)",
+        "landmarks_verified": true
+      },
+      "eval_frame": {
+        "frame_idx": 42,
+        "timestamp_sec": 1.4,
+        "purpose": "Đánh giá kiểm thử độc lập (Independent test)",
+        "landmarks_verified": true
+      },
+      "has_ground_truth": true,
+      "status": "GROUND_TRUTH_EXTRACTED",
+      "notes": "Video đã xác minh."
+    }
+  }
+}

@@ -21,6 +21,11 @@ from backend.models.vsl_dictionary import ALL_SIGNS
 from backend.models.lexicon import get_entry_by_sstcn
 from backend.vision.feature_extractor import normalize_hand_landmarks, calculate_distance, calculate_angle
 
+# Danh sach 27 chu cai VSL duoc phep trong che do letters_numbers
+ALLOWED_LETTERS = set(CLASSES[:27])
+ALLOWED_DIGITS = {str(i) for i in range(1, 10)}
+ALLOWED_LETTERS_AND_DIGITS = ALLOWED_LETTERS | ALLOWED_DIGITS
+
 class VSLRecognizer:
     def __init__(self, confidence_threshold=0.70, smoothing_window=10, cooldown_sec=1.2, weights_path=None):
         self.confidence_threshold = confidence_threshold
@@ -282,12 +287,12 @@ class VSLRecognizer:
                 thumb_lateral = abs(s[4][0] - s[0][0]) / palm_scale
 
                 # L: Ngon cai vuon ngang ro rang tao chu L vuong van
-                if thumb and not thumb_folded and angle_ti >= 50 and thumb_lateral >= 0.35:
+                if thumb and not thumb_firmly_folded and angle_ti >= 50 and thumb_lateral >= 0.35:
                     return "L", 0.88
 
                 # D: Chi ngon tro duoi thang, ngon cai khong vuon ngang chu L
                 is_index_pointing_up = s[8][1] < s[5][1]
-                thumb_not_L = (not thumb) or thumb_folded or angle_ti < 50 or thumb_lateral < 0.35
+                thumb_not_L = (not thumb) or thumb_firmly_folded or angle_ti < 50 or thumb_lateral < 0.35
                 if is_index_pointing_up and thumb_not_L:
                     return "D", 0.84
 
@@ -399,11 +404,32 @@ class VSLRecognizer:
 
         return None, 0.0
 
-    def predict_landmarks(self, landmarks_list, landmarks_secondary=None, multi_hands=None, expected_sign=None, session_id=None):
+    def predict_landmarks(self, landmarks_list, landmarks_secondary=None, multi_hands=None, expected_sign=None, session_id=None, mode=None):
         """
-        Nhận diện cử chỉ đơn frame hỗ trợ cả 1 tay và 2 tay
+        Nhận diện cử chỉ đơn frame hỗ trợ cả 1 tay và 2 tay.
+        Khi mode == 'letters_numbers', backend chi tra ve 27 chu cai VSL hoac NEUTRAL.
         """
         from backend.vision.feature_extractor import extract_dual_hand_features
+
+        # Phân tách và nhận biết 4 chế độ độc lập + alias tương thích ngược:
+        # 1. 'letters': Chế độ Chữ cái chuyên biệt (27 chữ cái VSL A-Z, Đ).
+        # 2. 'digits': Chế độ Chữ số chuyên biệt (1-9 qua VSLDigitClassifier).
+        # 3. 'letters_numbers': Chế độ lai tương thích ngược (legacy hybrid alias).
+        # 4. 'words', 'sentence' hoặc None: Chế độ từ vựng / ghép câu / mặc định cũ.
+        is_letters_mode = (mode == "letters")
+        is_digits_mode  = (mode == "digits")
+        is_legacy_mode  = (mode == "letters_numbers")
+        is_letters_filter = (is_letters_mode or is_legacy_mode)
+
+        # Quản lý bộ đệm smoothing khi chuyển chế độ:
+        # Nếu phiên làm việc đổi mode, xóa sạch lịch sử dự đoán của phiên trước đó
+        # để tránh kết quả của chế độ cũ gây nhiễu cho chế độ mới.
+        session_key = str(session_id) if session_id else "_default_"
+        if not hasattr(self, "_session_last_modes"):
+            self._session_last_modes = {}
+        if self._session_last_modes.get(session_key) != mode:
+            self.prediction_history.clear()
+            self._session_last_modes[session_key] = mode
 
         p_prim = None
         p_sec = None
@@ -423,47 +449,193 @@ class VSLRecognizer:
             return {
                 "sign": "NEUTRAL",
                 "label": "Chờ cử chỉ...",
+                "type": "unknown",
                 "confidence": 0.0,
                 "confirmed": False,
+                "new_token": None,
                 "sentence": " ".join(self.sentence_tokens)
             }
 
+        # Kiểm tra tính hợp lệ của tọa độ landmark (tránh NaN, Inf hoặc hình dạng không đúng 21x3)
+        try:
+            arr_check = np.asarray(p_prim, dtype=np.float32)
+            if arr_check.shape != (21, 3) or not np.isfinite(arr_check).all():
+                return {
+                    "sign": "NEUTRAL",
+                    "label": "Chờ cử chỉ...",
+                    "type": "unknown",
+                    "confidence": 0.0,
+                    "confirmed": False,
+                    "new_token": None,
+                    "sentence": " ".join(self.sentence_tokens)
+                }
+        except Exception:
+            return {
+                "sign": "NEUTRAL",
+                "label": "Chờ cử chỉ...",
+                "type": "unknown",
+                "confidence": 0.0,
+                "confirmed": False,
+                "new_token": None,
+                "sentence": " ".join(self.sentence_tokens)
+            }
+
+        # -------------------------------------------------------------
+        # XỬ LÝ CHUYÊN BIỆT CHO CHẾ ĐỘ CHỮ SỐ (digits mode)
+        # -------------------------------------------------------------
+        if is_digits_mode:
+            from backend.vision.digit_classifier import digit_classifier
+            digit_res = digit_classifier.classify_detailed(p_prim)
+            if digit_res["status"] == "MATCH" and digit_res["digit"] in ALLOWED_DIGITS:
+                final_sign = digit_res["digit"]
+                final_conf = digit_res["confidence"]
+            else:
+                final_sign = "NEUTRAL"
+                final_conf = 0.0
+
+            # Chặn tuyệt đối: chế độ digits không bao giờ trả về chữ cái hoặc từ vựng
+            if final_sign not in ALLOWED_DIGITS:
+                final_sign = "NEUTRAL"
+                final_conf = 0.0
+
+            self.prediction_history.append((final_sign, final_conf))
+
+            # Smoothing cho chữ số
+            recent_signs = [s for s, c in self.prediction_history if c >= self.confidence_threshold]
+            confirmed = False
+            new_token_added = None
+
+            if len(recent_signs) >= self.smoothing_window // 2:
+                most_common, count = collections.Counter(recent_signs).most_common(1)[0]
+                if count >= (self.smoothing_window // 2) and most_common in ALLOWED_DIGITS:
+                    current_time = time.time()
+                    if most_common != self.last_confirmed_sign or (current_time - self.last_confirmed_time > self.cooldown_sec):
+                        self.last_confirmed_sign = most_common
+                        self.last_confirmed_time = current_time
+                        confirmed = True
+                        label_text = f"Số {most_common}"
+                        self.sentence_tokens.append(label_text)
+                        new_token_added = label_text
+
+            sign_meta = ALL_SIGNS.get(final_sign, {})
+            display_label = f"Số {final_sign}" if final_sign in ALLOWED_DIGITS else "Đang theo dõi cử chỉ..."
+
+            self._log_diagnostic(
+                p_prim=p_prim,
+                handedness=handedness,
+                finger_states=None,
+                geom_sign="NEUTRAL",
+                geom_conf=0.0,
+                has_mlp=False,
+                nn_sign="NEUTRAL",
+                nn_conf=0.0,
+                final_sign=final_sign,
+                final_conf=final_conf,
+                confirmed=confirmed,
+                expected_sign=expected_sign,
+                session_id=session_id,
+                mode=mode
+            )
+
+            return {
+                "sign": final_sign,
+                "label": display_label,
+                "type": "digit" if final_sign in ALLOWED_DIGITS else "unknown",
+                "confidence": round(float(final_conf), 2),
+                "confirmed": confirmed,
+                "new_token": new_token_added,
+                "sentence": " ".join(self.sentence_tokens),
+                "description": f"Chữ số {final_sign}" if final_sign in ALLOWED_DIGITS else ""
+            }
+
+        # -------------------------------------------------------------
+        # XỬ LÝ CHO CÁC CHẾ ĐỘ: letters, letters_numbers (legacy), words, sentence, None
+        # -------------------------------------------------------------
         feature_vector, dual_meta = extract_dual_hand_features(p_prim, p_sec)
         finger_states = dual_meta["primary_states"]
 
         # Kiểm tra hai tay trước
         dual_sign, dual_conf = (None, 0.0)
+        is_blocked_vocab = False
         if dual_meta["is_dual_hand"] and p_sec:
             dual_sign, dual_conf = self.classify_dual_hands(dual_meta, p_prim, p_sec)
+            if is_letters_filter and dual_sign not in ALLOWED_LETTERS:
+                if dual_conf >= 0.85:
+                    is_blocked_vocab = True
+                dual_sign, dual_conf = (None, 0.0)
 
-        # Kiểm tra hình học đơn tay
+        # Kiểm tra hình học đơn tay (cho chữ cái)
         geom_sign, geom_conf = self.classify_geometry(p_prim, finger_states)
+        if is_letters_filter and geom_sign not in ALLOWED_LETTERS:
+            if geom_conf >= 0.85:
+                is_blocked_vocab = True
+            geom_sign, geom_conf = ("NEUTRAL", 0.0)
+
+        # Đánh giá bộ phân loại chữ số (CHỈ CHẠY TRONG CHẾ ĐỘ LAI letters_numbers ĐỂ TƯƠNG THÍCH NGƯỢC)
+        # Trong chế độ 'letters', tuyệt đối KHÔNG gọi digit_classifier
+        digit_sign, digit_conf = ("NEUTRAL", 0.0)
+        if is_legacy_mode:
+            from backend.vision.digit_classifier import digit_classifier
+            digit_res = digit_classifier.classify_detailed(p_prim)
+            if digit_res["status"] == "MATCH" and digit_res["digit"] in ALLOWED_DIGITS:
+                digit_sign = digit_res["digit"]
+                digit_conf = digit_res["confidence"]
+
+        # Phân xử ưu tiên giữa chữ cái và chữ số trong letters_numbers (legacy):
+        selected_geom_sign = geom_sign
+        selected_geom_conf = geom_conf
+
+        if is_legacy_mode and digit_sign in ALLOWED_DIGITS:
+            if digit_sign in {"3", "4", "5", "7", "8", "9"}:
+                selected_geom_sign = digit_sign
+                selected_geom_conf = digit_conf
+            elif digit_sign in {"1", "2", "6"}:
+                if expected_sign == digit_sign or geom_sign == "NEUTRAL":
+                    selected_geom_sign = digit_sign
+                    selected_geom_conf = digit_conf
 
         # Chạy suy luận qua mạng nơ-ron MLP nếu đã nạp weights hợp lệ
-        has_mlp = getattr(self.model, "has_weights", False)
+        has_mlp = getattr(self.model, "has_weights", False) and not is_blocked_vocab
         nn_sign, nn_conf = "NEUTRAL", 0.0
         if has_mlp:
             with torch.no_grad():
                 tensor_in = torch.from_numpy(feature_vector[:72]).unsqueeze(0)
-                logits = self.model(tensor_in)
+                logits = self.model(tensor_in).clone()
+                if is_letters_filter:
+                    # Logit masking: loai bo hoan toan 57 lop tu vung (index >= 27)
+                    logits[:, 27:] = -float('inf')
                 probs = torch.softmax(logits, dim=-1).squeeze(0).numpy()
                 top_idx = int(np.argmax(probs))
                 nn_sign = IDX_TO_CLASS[top_idx] if top_idx < len(IDX_TO_CLASS) else "NEUTRAL"
                 nn_conf = float(probs[top_idx]) if top_idx < len(probs) else 0.0
+                if is_letters_filter and nn_sign not in ALLOWED_LETTERS:
+                    nn_sign, nn_conf = "NEUTRAL", 0.0
 
         # Ensemble logic
         if dual_sign and dual_conf >= 0.85:
             final_sign = dual_sign
             final_conf = dual_conf
-        elif geom_conf >= 0.85:
-            final_sign = geom_sign
-            final_conf = geom_conf
+        elif selected_geom_conf >= 0.85:
+            final_sign = selected_geom_sign
+            final_conf = selected_geom_conf
         elif has_mlp and nn_conf > 0.6:
             final_sign = nn_sign
-            final_conf = max(nn_conf, geom_conf)
+            final_conf = max(nn_conf, selected_geom_conf)
         else:
-            final_sign = geom_sign
-            final_conf = geom_conf if not has_mlp else max(nn_conf, geom_conf)
+            final_sign = selected_geom_sign
+            final_conf = selected_geom_conf if not has_mlp else max(nn_conf, selected_geom_conf)
+
+        # Chặn tầng cuối cùng tùy theo từng chế độ
+        if is_letters_mode:
+            # Chế độ letters: CHỈ cho phép 27 chữ cái VSL
+            if final_sign not in ALLOWED_LETTERS:
+                final_sign = "NEUTRAL"
+                final_conf = 0.0
+        elif is_legacy_mode:
+            # Chế độ letters_numbers: cho phép chữ cái và chữ số
+            if final_sign not in ALLOWED_LETTERS_AND_DIGITS:
+                final_sign = "NEUTRAL"
+                final_conf = 0.0
 
         self.prediction_history.append((final_sign, final_conf))
 
@@ -475,19 +647,29 @@ class VSLRecognizer:
         if len(recent_signs) >= self.smoothing_window // 2:
             most_common, count = collections.Counter(recent_signs).most_common(1)[0]
             if count >= (self.smoothing_window // 2) and most_common != "NEUTRAL":
-                current_time = time.time()
-                if most_common != self.last_confirmed_sign or (current_time - self.last_confirmed_time > self.cooldown_sec):
-                    self.last_confirmed_sign = most_common
-                    self.last_confirmed_time = current_time
-                    confirmed = True
-                    
-                    sign_info = ALL_SIGNS.get(most_common, {})
-                    label_text = sign_info.get("label", most_common)
-                    self.sentence_tokens.append(label_text)
-                    new_token_added = label_text
+                valid_smoothing = True
+                if is_letters_mode:
+                    valid_smoothing = (most_common in ALLOWED_LETTERS)
+                elif is_legacy_mode:
+                    valid_smoothing = (most_common in ALLOWED_LETTERS_AND_DIGITS)
+
+                if valid_smoothing:
+                    current_time = time.time()
+                    if most_common != self.last_confirmed_sign or (current_time - self.last_confirmed_time > self.cooldown_sec):
+                        self.last_confirmed_sign = most_common
+                        self.last_confirmed_time = current_time
+                        confirmed = True
+                        
+                        sign_info = ALL_SIGNS.get(most_common, {})
+                        default_lbl = f"Số {most_common}" if most_common in ALLOWED_DIGITS else most_common
+                        label_text = sign_info.get("label", default_lbl)
+                        self.sentence_tokens.append(label_text)
+                        new_token_added = label_text
 
         sign_meta = ALL_SIGNS.get(final_sign, {})
-        display_label = sign_meta.get("label", final_sign if final_sign != "NEUTRAL" else "Đang theo dõi cử chỉ...")
+        default_display = f"Số {final_sign}" if final_sign in ALLOWED_DIGITS else (final_sign if final_sign != "NEUTRAL" else "Đang theo dõi cử chỉ...")
+        display_label = sign_meta.get("label", default_display)
+        sign_type = "digit" if final_sign in ALLOWED_DIGITS else sign_meta.get("type", "unknown")
 
         # Diagnostic logging (chỉ kích hoạt khi VSL_DIAGNOSTIC=1 hoặc rec.diagnostic_enabled=True)
         self._log_diagnostic(
@@ -503,24 +685,25 @@ class VSLRecognizer:
             final_conf=final_conf,
             confirmed=confirmed,
             expected_sign=expected_sign,
-            session_id=session_id
+            session_id=session_id,
+            mode=mode
         )
 
         return {
             "sign": final_sign,
             "label": display_label,
-            "type": sign_meta.get("type", "unknown"),
+            "type": sign_type,
             "confidence": round(float(final_conf), 2),
             "confirmed": confirmed,
             "new_token": new_token_added,
             "sentence": " ".join(self.sentence_tokens),
-            "description": sign_meta.get("description", "")
+            "description": sign_meta.get("description", f"Chữ số {final_sign}" if final_sign in ALLOWED_DIGITS else "")
         }
 
 
     def _log_diagnostic(self, p_prim, handedness, finger_states, geom_sign, geom_conf,
                         has_mlp, nn_sign, nn_conf, final_sign, final_conf, confirmed,
-                        expected_sign=None, session_id=None):
+                        expected_sign=None, session_id=None, mode=None):
         """Ghi nhat ky chan doan JSONL khi duoc bat, gioi han ~2 mau/giay, an toan tuyet doi voi I/O."""
         is_enabled = os.environ.get("VSL_DIAGNOSTIC", "0") == "1" or getattr(self, "diagnostic_enabled", False)
         if not is_enabled:

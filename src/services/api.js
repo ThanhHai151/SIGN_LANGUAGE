@@ -136,12 +136,15 @@ export async function sendSequenceForRecognition(sequence, threshold = 0.65) {
   }
 }
 
-export async function sendLandmarksForRecognition(landmarks, multi_hands = null, handedness = 'Right') {
+export async function sendLandmarksForRecognition(landmarks, multi_hands = null, handedness = 'Right', mode = null) {
   try {
     const res = await fetch(`${API_BASE_URL}/api/recognize_landmarks`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ landmarks, multi_hands, handedness })
+      headers: {
+        'Content-Type': 'application/json',
+        ...(mode ? { 'X-Conversion-Mode': mode } : {})
+      },
+      body: JSON.stringify({ landmarks, multi_hands, handedness, mode })
     });
     if (!res.ok) throw new Error('Recognition failed');
     return await res.json();

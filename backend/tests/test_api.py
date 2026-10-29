@@ -84,7 +84,7 @@ class TestVSLSystem(unittest.TestCase):
         landmarks = [[0.5, 0.7, 0.0] for _ in range(21)]
         landmarks[0] = [0.5, 0.8, 0.0]  # Cổ tay
         landmarks[9] = [0.5, 0.5, 0.0]  # Gốc ngón giữa
-        landmarks[4] = [0.30, 0.50, 0.0] # Ngón cái vươn ngang sang trái
+        landmarks[4] = [0.20, 0.75, 0.0] # Ngón cái vươn ngang sang trái
         landmarks[2] = [0.42, 0.65, 0.0]
         landmarks[8] = [0.50, 0.25, 0.0] # Ngón trỏ vươn thẳng đứng lên trên
         landmarks[6] = [0.50, 0.45, 0.0]

@@ -54,6 +54,7 @@ class LandmarkRequest(BaseModel):
     landmarks: Optional[List[List[float]]] = None
     multi_hands: Optional[List[dict]] = None
     handedness: Optional[str] = "Right"
+    mode: Optional[str] = None
 
 class FrameRequest(BaseModel):
     image_base64: str
@@ -224,6 +225,8 @@ def get_lexicon_entry(entry_id: str):
     ce["sign_description"] = sign_description(ce.get("motion_id"))
     return {"success": True, "entry": ce}
 
+VALID_CONVERSION_MODES = {"letters", "digits", "words", "sentence", "letters_numbers"}
+
 @app.post("/api/recognize_landmarks")
 def recognize_landmarks(req: LandmarkRequest, request: Request):
     """
@@ -233,13 +236,22 @@ def recognize_landmarks(req: LandmarkRequest, request: Request):
     try:
         expected_sign = request.headers.get("x-expected-sign")
         session_id = request.headers.get("x-session-id")
+        mode = req.mode or request.headers.get("x-conversion-mode")
+        if mode is not None and mode not in VALID_CONVERSION_MODES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Chế độ nhận diện không hợp lệ: '{mode}'. Hỗ trợ: 'letters', 'digits', 'words', 'sentence', 'letters_numbers'."
+            )
         result = recognizer.predict_landmarks(
             landmarks_list=req.landmarks or [],
             multi_hands=req.multi_hands,
             expected_sign=expected_sign,
-            session_id=session_id
+            session_id=session_id,
+            mode=mode
         )
         return {"success": True, "data": result}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
