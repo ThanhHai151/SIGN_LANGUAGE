@@ -30,6 +30,8 @@ Các con số này không chứng minh độc lập theo người thực hiện,
 Từng mẫu và split: [`splits.csv`](../../backend/data/sstcn/splits.csv).
 Thống kê/hash dữ liệu: [`dataset_summary.json`](../../backend/data/sstcn/dataset_summary.json).
 Checksum của đủ 6 archive: [`sources.json`](../../backend/data/sstcn/sources.json).
+Các archive được phân phối qua [GitHub Release `sstcn-dataset-v1`](https://github.com/ThanhHai151/SIGN_LANGUAGE/releases/tag/sstcn-dataset-v1),
+không đưa thư mục dữ liệu giải nén 5,3 GB vào lịch sử Git.
 
 ## Run train đầy đủ đã hoàn tất
 

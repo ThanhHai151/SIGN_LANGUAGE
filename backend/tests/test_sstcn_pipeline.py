@@ -7,6 +7,8 @@ from pathlib import Path
 import pickle
 import tempfile
 import unittest
+from unittest.mock import patch
+import urllib.error
 import zipfile
 
 import numpy as np
@@ -14,7 +16,7 @@ import torch
 
 from backend.models.sstcn_model import load_sstcn_model
 from backend.training.evaluate_sstcn import SequenceDataset, metrics_from_confusion
-from backend.training.fetch_sstcn_data import safe_extract
+from backend.training.fetch_sstcn_data import fetch, safe_extract
 from backend.training.prepare_sstcn import prepare, reconcile_groups
 from backend.training.sstcn_data import canonical_sequence, grouped_split, load_prepared, load_source
 from backend.training.train_sstcn import train
@@ -169,6 +171,39 @@ class SSTCNTrainingTests(unittest.TestCase):
             self.assertTrue((root / "resumed/learning_curves.png").exists())
             model = load_sstcn_model(root / "resumed/best.pth")
             self.assertTrue(model.has_weights)
+
+
+class SSTCNDownloadTests(unittest.TestCase):
+    def test_github_failure_falls_back_to_drive(self):
+        class Response(io.BytesIO):
+            status = 200
+            headers = {"Content-Type": "application/zip"}
+        data = io.BytesIO()
+        with zipfile.ZipFile(data, "w") as z:
+            z.writestr("sample.txt", "dataset")
+        entry = {"id": "source-id", "name": "data.zip", "github_release_url": "https://github.com/test/data.zip"}
+        failure = urllib.error.HTTPError(entry["github_release_url"], 404, "Not Found", {}, None)
+        with tempfile.TemporaryDirectory() as t, contextlib.redirect_stdout(io.StringIO()):
+            with patch("backend.training.fetch_sstcn_data.urllib.request.urlopen", side_effect=[failure, Response(data.getvalue())]) as request:
+                result, _ = fetch(entry, t)
+            self.assertTrue(zipfile.is_zipfile(result))
+            self.assertEqual(request.call_count, 2)
+            self.assertTrue(request.call_args_list[1].args[0].full_url.startswith("https://drive.usercontent.google.com/"))
+
+    def test_explicit_github_source_does_not_silently_fall_back(self):
+        entry = {"id": "source-id", "name": "data.zip", "github_release_url": "https://github.com/test/data.zip"}
+        with tempfile.TemporaryDirectory() as t, contextlib.redirect_stdout(io.StringIO()):
+            with patch("backend.training.fetch_sstcn_data.urllib.request.urlopen", side_effect=urllib.error.URLError("unavailable")) as request:
+                with self.assertRaises(urllib.error.URLError):
+                    fetch(entry, t, source="github")
+            self.assertEqual(request.call_count, 1)
+
+    def test_cached_archive_checksum_is_enforced(self):
+        with tempfile.TemporaryDirectory() as t:
+            with zipfile.ZipFile(Path(t) / "data.zip", "w") as z:
+                z.writestr("sample.txt", "dataset")
+            with self.assertRaisesRegex(ValueError, "Checksum mismatch"):
+                fetch({"id": "source-id", "name": "data.zip", "sha256": "0" * 64}, t)
 
 
 if __name__ == "__main__":

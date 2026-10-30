@@ -4,6 +4,7 @@
 
 **Huấn luyện SSTCN 102 lớp:** xem [hướng dẫn dữ liệu, preprocessing, train và đánh giá](docs/sstcn/README.md)
 và [kết quả kiểm chứng cùng nguồn gốc dữ liệu](docs/sstcn/STATUS.md).
+Dataset đầy đủ: [GitHub Releases — SSTCN dataset v1](https://github.com/ThanhHai151/SIGN_LANGUAGE/releases/tag/sstcn-dataset-v1).
 
 Từ thư mục gốc repo, chạy `./start.sh` để khởi động frontend và backend.
 

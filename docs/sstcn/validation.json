@@ -22,5 +22,12 @@
     "checked_at": "2026-10-30T12:24:50.977108+00:00"
   },
   "training_source_hashes_match": true,
-  "documentation_links_checked": true
+  "documentation_links_checked": true,
+  "github_distribution_tests": {
+    "passed": 61,
+    "failed": 0,
+    "new_download_tests": 3,
+    "checked_at": "2026-10-30T12:36:52.734308+00:00",
+    "evidence": "/tmp/sstcn_github_release_tests.txt"
+  }
 }

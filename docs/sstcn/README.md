@@ -26,7 +26,12 @@ Chạy các lệnh từ thư mục gốc repo:
 python -m backend.training.fetch_sstcn_data --extract
 ```
 
-Nguồn: [vsl_skeleton_data trên Google Drive](https://drive.google.com/drive/folders/132sA_E7PMwnuC_WZpFi50I--Ncbo9LwX).
+Script mặc định ưu tiên [GitHub Releases — SSTCN dataset v1](https://github.com/ThanhHai151/SIGN_LANGUAGE/releases/tag/sstcn-dataset-v1),
+rồi thử nguồn Drive gốc nếu GitHub không truy cập được. Release chứa đủ 6 ZIP gốc
+(tổng 1.793.877.824 byte, khoảng 1,67 GiB), kèm `SHA256SUMS.txt` và `sources.json`.
+Chỉ tải từ GitHub: thêm `--source github`; chỉ tải từ Drive: thêm `--source drive`.
+
+Nguồn khôi phục ban đầu: [vsl_skeleton_data trên Google Drive](https://drive.google.com/drive/folders/132sA_E7PMwnuC_WZpFi50I--Ncbo9LwX).
 Link được tìm trong báo cáo cũ [test_set_result_report_nhom3.docx](legacy/test_set_result_report_nhom3.docx).
 Danh sách ID và checksum nằm trong [`sources.json`](../../backend/data/sstcn/sources.json).
 Script kiểm tra checksum, chặn đường dẫn ZIP không hợp lệ và ghi `download_receipt.json`.
@@ -41,8 +46,9 @@ python -m backend.training.fetch_sstcn_data --only test_set.zip --extract
 ```
 
 Archive và dữ liệu giải nén ở `backend/data/sstcn/archives/` và `raw/`, được bỏ qua bởi git.
-Nguồn chưa công bố giấy phép dataset; repo lưu link/checksum thay vì đóng gói dataset.
-Không cần tài khoản Drive hoặc credentials khi nguồn vẫn được chia sẻ công khai.
+Git lưu code, mapping, split, checkpoint và báo cáo; các ZIP lớn nằm trong Releases.
+Metadata giữ nguyên nguồn gốc và thông tin giấy phép chưa được nguồn gốc chỉ định.
+Không cần credentials khi tải các asset công khai.
 
 ## 2. Chuẩn bị train/validation/test
 
