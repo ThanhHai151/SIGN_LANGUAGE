@@ -46,7 +46,16 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
     poseAnimationRef.current = animation
       ? { ...animation, startedAt: performance.now() }
       : null;
-    if (modelLoaded && letter) handGUIRef.current?.setLetter(letter);
+    if (modelLoaded && hasActiveLetter) {
+      handGUIRef.current?.setLetter(letter);
+    } else if (modelLoaded) {
+      for (const target of poseTargetsRef.current) {
+        if (!/^RightHand(?:Thumb|Index|Middle|Ring|Pinky)\d+$/.test(target.bone)) continue;
+        const bone = bonesMapRef.current.get(target.bone)
+          || bonesMapRef.current.get(`mixamorig${target.bone}`);
+        bone?.rotation?.set(target.rot[0], target.rot[1], target.rot[2]);
+      }
+    }
   }, [activeLetter, currentSign, currentStep, isPlaying, modelLoaded]);
 
   useEffect(() => {

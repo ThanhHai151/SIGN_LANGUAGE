@@ -66,57 +66,31 @@ export const MIXAMO_TEST_POSES = {
 };
 
 export const MIXAMO_ALPHABET = {
-  // A: fist, thumb beside the fingers.
   A: createLetterPose({ index: 1.57, middle: 1.57, ring: 1.57, pinky: 1.57, thumb: { abduction: 0.3, extension: 0, pitch: 0.1 } }),
-  // B: four fingers straight together; thumb folds across the palm.
   B: createLetterPose({ index: { bend: [0, 0, 0], splay: -0.025 }, middle: { bend: [0, 0, 0], splay: 0 }, ring: { bend: [0, 0, 0], splay: 0.025 }, pinky: { bend: [0, 0, 0], splay: 0.05 }, thumb: { abduction: -0.4, extension: 0.2, pitch: 0.05 } }),
-  // C: all fingers and thumb form a curved C-shaped opening.
   C: createLetterPose({ index: [0.55, 0.85, 0.8], middle: [0.6, 0.9, 0.85], ring: [0.65, 0.9, 0.85], pinky: [0.7, 0.9, 0.85], thumb: { abduction: 0.75, extension: 0.35, pitch: 0.25 } }),
-  // D: index points up; remaining fingers curve toward the thumb.
   D: createLetterPose({ index: [0, 0, 0], middle: [1.0, 1.35, 1.25], ring: [1.05, 1.4, 1.3], pinky: [1.1, 1.4, 1.3], thumb: { abduction: 0.55, extension: 0.35, pitch: 0.45 } }),
-  // E: fingertips curl toward the thumb.
   E: createLetterPose({ index: [0.55, 1.1, 1.45], middle: [0.55, 1.1, 1.45], ring: [0.55, 1.1, 1.45], pinky: [0.55, 1.1, 1.45], thumb: { abduction: 0.05, extension: 0.9, pitch: 0.6 } }),
-  // F: index and thumb make a small circle; the other three fingers extend.
   F: createLetterPose({ index: [0.45, 1.0, 1.2], middle: [0, 0, 0], ring: [0, 0, 0], pinky: [0, 0, 0], thumb: { abduction: 0.55, extension: 0.6, pitch: 0.75 } }),
-  // G: index and thumb extend sideways; remaining fingers fold.
   G: createLetterPose({ index: [0, 0, 0], middle: 1.65, ring: 1.65, pinky: 1.65, thumb: { abduction: 0.8, extension: 0.15, pitch: 0.2 }, wristRot: [0, -0.55, 0.05] }),
-  // H: index and middle extend together sideways.
   H: createLetterPose({ index: { bend: [0, 0, 0], splay: -0.04 }, middle: { bend: [0, 0, 0], splay: 0.04 }, ring: 1.65, pinky: 1.65, thumb: { abduction: 0.75, extension: 0.15, pitch: 0.2 }, wristRot: [0, -0.55, 0.05] }),
-  // I: only the pinky extends.
   I: createLetterPose({ index: 1.5, middle: 1.6, ring: 1.55, pinky: [0, 0, 0], thumb: { abduction: -0.35, extension: 0.6, pitch: 0.2 } }),
-  // J: straight pinky, remaining fingers folded, thumb tucked to the folded fingers.
   J: createLetterPose({ index: 1.57, middle: 1.57, ring: 1.57, pinky: [0, 0, 0], thumb: { abduction: -0.05, extension: 0.85, pitch: 0.8 } }),
-  // K: index and middle extend apart while the other fingers fold.
   K: createLetterPose({ index: [0, 0, 0], middle: { bend: [0, 0, 0], splay: 0.2 }, ring: 1.65, pinky: 1.65, thumb: { abduction: -0.05, extension: 0.1, pitch: 0.55 } }),
-  // L: index up and thumb extended at a right angle.
   L: createLetterPose({ index: [0, 0, 0], middle: 1.65, ring: 1.65, pinky: 1.65, thumb: { abduction: 1.05, extension: 0, pitch: 0.15 } }),
-  // M: first three fingers fold over the tucked thumb.
   M: createLetterPose({ index: [1.05, 1.35, 1.45], middle: [1.05, 1.35, 1.45], ring: [1.05, 1.35, 1.45], pinky: 1.57, thumb: { abduction: 0.05, extension: 0.75, pitch: 0.75 } }),
-  // N: index and middle fold over the tucked thumb.
   N: createLetterPose({ index: [1.05, 1.35, 1.45], middle: [1.05, 1.35, 1.45], ring: 1.57, pinky: 1.57, thumb: { abduction: 0.05, extension: 0.75, pitch: 0.7 } }),
-  // O: fingertips curve toward the thumb to form a small opening.
   O: createLetterPose({ index: [0.65, 0.95, 1.05], middle: [0.7, 1.0, 1.05], ring: [0.75, 1.0, 1.0], pinky: [0.8, 0.95, 0.95], thumb: { abduction: 0.8, extension: 0.35, pitch: 0.55 } }),
-  // P: K-like handshape; the fixed arm frame keeps the hand in signing space.
   P: createLetterPose({ index: [0, 0, 0], middle: { bend: [0, 0.55, 0.4], splay: 0.12 }, ring: 1.65, pinky: 1.65, thumb: { abduction: 0.55, extension: 0.1, pitch: 0.4 }, wristRot: [-0.35, -0.25, 0.55] }),
-  // Q: G-like handshape with the index and thumb extended.
   Q: createLetterPose({ index: [0, 0, 0], middle: 1.65, ring: 1.65, pinky: 1.65, thumb: { abduction: 0.8, extension: 0.15, pitch: 0.2 }, wristRot: [-0.4, -0.25, 0.55] }),
-  // R: crossed index/middle approximation using opposing splay.
   R: createLetterPose({ index: { bend: [0, 0, 0], splay: 0.24 }, middle: { bend: [0, 0, 0], splay: -0.24 }, ring: 1.65, pinky: 1.65, thumb: { abduction: 0.4, extension: 0.1, pitch: 0.25 } }),
-  // S: closed fist with thumb across the front.
   S: createLetterPose({ index: 1.65, middle: 1.65, ring: 1.65, pinky: 1.65, thumb: { abduction: 0.25, extension: 0.15, pitch: 0.25 } }),
-  // T: fist with thumb tucked between index and middle (approximation).
   T: createLetterPose({ index: 1.65, middle: 1.65, ring: 1.65, pinky: 1.65, thumb: { abduction: 0.1, extension: 0.55, pitch: 0.65 } }),
-  // U: index and middle straight and close together.
   U: createLetterPose({ index: { bend: [0, 0, 0], splay: -0.015 }, middle: { bend: [0, 0, 0], splay: 0.015 }, ring: 1.65, pinky: 1.65, thumb: { abduction: 0.1, extension: 0.35, pitch: 0.35 } }),
-  // V: index and middle straight with a visible gap.
   V: createLetterPose({ index: { bend: [0, 0, 0], splay: -0.22 }, middle: { bend: [0, 0, 0], splay: 0.22 }, ring: 1.65, pinky: 1.65, thumb: { abduction: 0.1, extension: 0.35, pitch: 0.35 } }),
-  // W: three extended fingers spread; pinky folds.
   W: createLetterPose({ index: { bend: [0, 0, 0], splay: -0.14 }, middle: [0, 0, 0], ring: { bend: [0, 0, 0], splay: 0.14 }, pinky: 1.65, thumb: { abduction: 0.2, extension: 0.45, pitch: 0.4 } }),
-  // X: index curls into a hook; remaining fingers fold.
   X: createLetterPose({ index: [0.05, 0.75, 1.35], middle: 1.65, ring: 1.65, pinky: 1.65, thumb: { abduction: 0.4, extension: 0.1, pitch: 0.35 } }),
-  // Y: thumb and pinky extend while the middle three fingers fold.
   Y: createLetterPose({ index: 1.65, middle: 1.65, ring: 1.65, pinky: [0, 0, 0], thumb: { abduction: 1.1, extension: 0, pitch: 0.25 } }),
-  // Z: index extends; trace the Z path separately with wrist/arm keyframes.
   Z: createLetterPose({ index: [0, 0, 0], middle: 1.65, ring: 1.65, pinky: 1.65, thumb: { abduction: 0.35, extension: 0, pitch: 0.15 }, wristRot: [0.2, -0.1, 0.25] })
 };
 
@@ -155,7 +129,6 @@ const J_LETTER_HAND = {
   thumb: { abduction: -0.05, extension: 0.6, pitch: -0.3 }
 };
 
-// The extended pinky draws down, curls around, and sweeps back to form J.
 export const MIXAMO_LETTER_ANIMATIONS = {
   J: {
     durationMs: 1050,

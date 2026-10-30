@@ -7,6 +7,15 @@ import { convertTextToVSL, fetchMotion } from '../services/api';
 import { learnMotion } from '../services/motionLearner';
 import { getHandPoseByGloss } from '../utils/handPoses';
 
+const VIETNAMESE_MARKED_LETTERS = {
+  Ă: { base: 'A', mark: 'Dấu breve (˘): bổ sung bằng chuyển động ngắn theo mẫu đánh vần VSL.' },
+  Â: { base: 'A', mark: 'Dấu mũ (^): thêm tư thế dấu mũ tĩnh sau hình tay chữ A.' },
+  Ê: { base: 'E', mark: 'Dấu mũ (^): thêm tư thế dấu mũ tĩnh sau hình tay chữ E.' },
+  Ô: { base: 'O', mark: 'Dấu mũ (^): thêm tư thế dấu mũ tĩnh sau hình tay chữ O.' },
+  Ơ: { base: 'O', mark: 'Dấu râu (’): thêm tư thế dấu râu tĩnh sau hình tay chữ O.' },
+  Ư: { base: 'U', mark: 'Dấu râu (’): thêm tư thế dấu râu tĩnh sau hình tay chữ U.' }
+};
+
 export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   const [inputText, setInputText] = useState('Xin chào bạn');
   const [sequence, setSequence] = useState([]);
@@ -27,7 +36,10 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
     'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
   ];
-
+  const VIETNAMESE_ALPHABET_LIST = [
+    'A', 'Ă', 'Â', 'B', 'C', 'D', 'Đ', 'E', 'Ê', 'G', 'H', 'I', 'K', 'L', 'M',
+    'N', 'O', 'Ô', 'Ơ', 'P', 'Q', 'R', 'S', 'T', 'U', 'Ư', 'V', 'X', 'Y'
+  ];
   const PHRASE_SUGGESTIONS = [
     'Xin chào',
     'Cảm ơn',
@@ -208,6 +220,14 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   // Phân tích trạng thái giải phẫu 5 ngón tay cho bước hiện tại
   const getFingerStatesDescription = (gloss) => {
     const g = gloss.toUpperCase().replace('ALPHA_', '');
+    const markedLetter = VIETNAMESE_MARKED_LETTERS[g];
+    if (markedLetter) {
+      return [
+        ...getFingerStatesDescription(markedLetter.base),
+        { name: 'Dấu chữ', state: markedLetter.mark, color: 'var(--primary)' }
+      ];
+    }
+
     switch (g) {
       case 'A':
         return [
@@ -240,6 +260,14 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
           { name: 'Ngón giữa', state: 'Uốn cong tạo vòng tròn khép kín với ngón cái', color: 'var(--primary)' },
           { name: 'Ngón áp út', state: 'Gập co lại vào lòng bàn tay', color: 'var(--accent-warning)' },
           { name: 'Ngón út', state: 'Gập co lại vào lòng bàn tay', color: 'var(--accent-warning)' }
+        ];
+      case 'Đ':
+        return [
+          { name: 'Ngón cái', state: 'Giữ tư thế như chữ D, khép sát cạnh ngón trỏ', color: 'var(--primary)' },
+          { name: 'Ngón trỏ', state: 'Hơi quặp đầu ngón để phân biệt với chữ D', color: 'var(--accent-success)' },
+          { name: 'Ngón giữa', state: 'Khum cong như chữ D', color: 'var(--primary)' },
+          { name: 'Ngón áp út', state: 'Gập vào lòng bàn tay như chữ D', color: 'var(--accent-warning)' },
+          { name: 'Ngón út', state: 'Gập vào lòng bàn tay như chữ D', color: 'var(--accent-warning)' }
         ];
       case 'E':
         return [
@@ -602,15 +630,15 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
 
         )}
 
-        {/* Thanh chọn nhanh Chữ cái ngón tay chuẩn A - Z theo ảnh mẫu */}
+        {/* Bảng chữ cái riêng theo chế độ avatar/robot */}
         <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
-              🎯 Kiểm tra trực tiếp từng chữ cái A - Z (Theo bảng ảnh mẫu thực tế):
+              {viewModel === 'avatar' ? '🔤 Bảng chữ cái tiếng Việt' : '🎯 Chữ cái tiếng Anh A - Z (Robot)'}
             </span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '6px' }}>
-            {ALPHABET_LIST.map((char) => {
+            {(viewModel === 'avatar' ? VIETNAMESE_ALPHABET_LIST : ALPHABET_LIST).map((char) => {
               const isSelected = currentGloss === char;
               return (
                 <button
@@ -627,7 +655,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
                     cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}
-                  title={`Kiểm tra tư thế ngón tay chữ ${char}`}
+                  title={`Chọn chữ ${char} cho ${viewModel === 'avatar' ? 'avatar' : 'robot'}`}
                 >
                   {char}
                 </button>
