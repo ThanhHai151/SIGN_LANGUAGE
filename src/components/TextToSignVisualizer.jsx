@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, SkipBack, SkipForward, Mic, MicOff, Send, Sparkles, Info, Check, Layers } from 'lucide-react';
 import RobotSigner3D, { SPELL_LETTER_MS } from './RobotSigner3D';
+import MixamoAvatarSigner from './MixamoAvatarSigner';
 import SignDescription from './SignDescription';
 import { convertTextToVSL, fetchMotion } from '../services/api';
 import { learnMotion } from '../services/motionLearner';
@@ -15,6 +16,8 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   const [isListening, setIsListening] = useState(false);
   const [loading, setLoading] = useState(false);
   const [translationId, setTranslationId] = useState(0); // mỗi lần dịch câu mới
+  const [viewModel, setViewModel] = useState('avatar');
+  const [directSelectedLetter, setDirectSelectedLetter] = useState('');
 
   const timerRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -46,6 +49,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     if (!text || !text.trim()) return;
 
     setLoading(true);
+    setDirectSelectedLetter('');
     try {
       const resp = await convertTextToVSL(text);
       if (resp && resp.success && resp.sequence) {
@@ -63,6 +67,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
 
   // Chọn trực tiếp 1 chữ cái để kiểm tra giải phẫu ngón tay
   const handleSelectDirectLetter = (char) => {
+    setDirectSelectedLetter(char);
     setInputText(`Chữ ${char}`);
     setSequence([{
       token: char,
@@ -189,7 +194,16 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
 
   const currentStep = sequence[currentIndex] || null;
   const currentGloss = currentStep?.gloss || currentStep?.token || 'A';
+  const activeLetter = directSelectedLetter || (isPlaying && /^[a-z]$/i.test(currentGloss.trim()) ? currentGloss.trim() : '');
   const poseData = getHandPoseByGloss(currentGloss);
+  const commonProps = {
+    currentStep,
+    isPlaying,
+    speed: playbackSpeed,
+    sequence,
+    currentIndex,
+    activeLetter
+  };
 
   // Phân tích trạng thái giải phẫu 5 ngón tay cho bước hiện tại
   const getFingerStatesDescription = (gloss) => {
@@ -391,10 +405,10 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
           <div>
             <h2 style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Sparkles size={20} style={{ color: 'var(--primary)' }} />
-              Robot Diễn Hoạt Ký Hiệu VSL 3D
+              Mô phỏng Ký hiệu VSL 3D
             </h2>
             <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              Mỗi ngón một màu riêng, lòng bàn tay phát sáng xanh — dễ nhìn ngón nào duỗi/gập và hướng bàn tay
+              Chuyển đổi giữa avatar Mixamo và robot diễn hoạt ký hiệu
             </p>
           </div>
 
@@ -413,13 +427,19 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
           border: '1px solid var(--border-subtle)',
           position: 'relative'
         }}>
-          <RobotSigner3D
-            currentStep={currentStep}
-            isPlaying={isPlaying}
-            speed={playbackSpeed}
-            sequence={sequence}
-            currentIndex={currentIndex}
-          />
+          <div style={{ position: 'absolute', top: '12px', left: '12px', zIndex: 5, display: 'flex', gap: '4px', padding: '4px', borderRadius: '10px', background: 'rgba(8, 15, 28, 0.88)', border: '1px solid var(--border-subtle)', backdropFilter: 'blur(10px)' }}>
+            <button type="button" onClick={() => setViewModel('avatar')} className={`btn ${viewModel === 'avatar' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '7px 10px', fontSize: '12px' }} aria-pressed={viewModel === 'avatar'}>
+              👧 Avatar 3D
+            </button>
+            <button type="button" onClick={() => setViewModel('robot')} className={`btn ${viewModel === 'robot' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '7px 10px', fontSize: '12px' }} aria-pressed={viewModel === 'robot'}>
+              🤖 Robot
+            </button>
+          </div>
+          {viewModel === 'robot' ? (
+            <RobotSigner3D {...commonProps} />
+          ) : (
+            <MixamoAvatarSigner {...commonProps} />
+          )}
         </div>
 
         {/* Điều khiển Playback */}
@@ -446,7 +466,10 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
             </button>
 
             <button
-              onClick={() => setIsPlaying(!isPlaying)}
+              onClick={() => {
+                if (isPlaying) setDirectSelectedLetter('');
+                setIsPlaying(!isPlaying);
+              }}
               className="btn btn-primary"
               style={{ padding: '8px 16px' }}
             >
