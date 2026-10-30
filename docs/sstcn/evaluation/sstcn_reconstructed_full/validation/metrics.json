@@ -1,0 +1,839 @@
+{
+  "samples": 1407,
+  "accuracy": 0.8578535891968728,
+  "macro_precision": 0.872381066809566,
+  "macro_recall": 0.8568029378142171,
+  "macro_f1": 0.85411737844752,
+  "weighted_precision": 0.875613704182522,
+  "weighted_recall": 0.8578535891968728,
+  "weighted_f1": 0.8561374617014242,
+  "represented_classes": 102,
+  "per_class": [
+    {
+      "index": 0,
+      "label": "A",
+      "precision": 0.7692307692307693,
+      "recall": 0.8333333333333334,
+      "f1": 0.8,
+      "support": 12
+    },
+    {
+      "index": 1,
+      "label": "Ă",
+      "precision": 0.8888888888888888,
+      "recall": 0.5714285714285714,
+      "f1": 0.6956521739130435,
+      "support": 14
+    },
+    {
+      "index": 2,
+      "label": "Â",
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6666666666666666,
+      "support": 12
+    },
+    {
+      "index": 3,
+      "label": "B",
+      "precision": 0.55,
+      "recall": 0.9166666666666666,
+      "f1": 0.6874999999999999,
+      "support": 12
+    },
+    {
+      "index": 4,
+      "label": "C",
+      "precision": 0.6666666666666666,
+      "recall": 0.9230769230769231,
+      "f1": 0.7741935483870968,
+      "support": 13
+    },
+    {
+      "index": 5,
+      "label": "D",
+      "precision": 0.6,
+      "recall": 0.9375,
+      "f1": 0.7317073170731707,
+      "support": 16
+    },
+    {
+      "index": 6,
+      "label": "Đ",
+      "precision": 0.8,
+      "recall": 0.5,
+      "f1": 0.6153846153846154,
+      "support": 16
+    },
+    {
+      "index": 7,
+      "label": "E",
+      "precision": 0.9,
+      "recall": 0.9,
+      "f1": 0.9,
+      "support": 10
+    },
+    {
+      "index": 8,
+      "label": "Ê",
+      "precision": 0.5714285714285714,
+      "recall": 0.3076923076923077,
+      "f1": 0.4,
+      "support": 13
+    },
+    {
+      "index": 9,
+      "label": "G",
+      "precision": 0.9333333333333333,
+      "recall": 1.0,
+      "f1": 0.9655172413793104,
+      "support": 14
+    },
+    {
+      "index": 10,
+      "label": "H",
+      "precision": 0.8181818181818182,
+      "recall": 0.9,
+      "f1": 0.8571428571428572,
+      "support": 10
+    },
+    {
+      "index": 11,
+      "label": "I",
+      "precision": 0.9166666666666666,
+      "recall": 0.7857142857142857,
+      "f1": 0.8461538461538461,
+      "support": 14
+    },
+    {
+      "index": 12,
+      "label": "K",
+      "precision": 0.8709677419354839,
+      "recall": 0.9642857142857143,
+      "f1": 0.9152542372881356,
+      "support": 28
+    },
+    {
+      "index": 13,
+      "label": "L",
+      "precision": 1.0,
+      "recall": 0.5714285714285714,
+      "f1": 0.7272727272727273,
+      "support": 14
+    },
+    {
+      "index": 14,
+      "label": "M",
+      "precision": 0.8333333333333334,
+      "recall": 0.8333333333333334,
+      "f1": 0.8333333333333334,
+      "support": 12
+    },
+    {
+      "index": 15,
+      "label": "N",
+      "precision": 0.8125,
+      "recall": 0.52,
+      "f1": 0.6341463414634146,
+      "support": 25
+    },
+    {
+      "index": 16,
+      "label": "O",
+      "precision": 0.78125,
+      "recall": 1.0,
+      "f1": 0.8771929824561403,
+      "support": 25
+    },
+    {
+      "index": 17,
+      "label": "Ô",
+      "precision": 0.6111111111111112,
+      "recall": 0.9166666666666666,
+      "f1": 0.7333333333333334,
+      "support": 12
+    },
+    {
+      "index": 18,
+      "label": "Ơ",
+      "precision": 0.7647058823529411,
+      "recall": 0.9285714285714286,
+      "f1": 0.8387096774193549,
+      "support": 14
+    },
+    {
+      "index": 19,
+      "label": "P",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 15
+    },
+    {
+      "index": 20,
+      "label": "Q",
+      "precision": 0.7272727272727273,
+      "recall": 0.7272727272727273,
+      "f1": 0.7272727272727273,
+      "support": 11
+    },
+    {
+      "index": 21,
+      "label": "R",
+      "precision": 0.65,
+      "recall": 0.8125,
+      "f1": 0.7222222222222223,
+      "support": 16
+    },
+    {
+      "index": 22,
+      "label": "S",
+      "precision": 0.7272727272727273,
+      "recall": 0.7272727272727273,
+      "f1": 0.7272727272727273,
+      "support": 11
+    },
+    {
+      "index": 23,
+      "label": "T",
+      "precision": 0.7692307692307693,
+      "recall": 0.7692307692307693,
+      "f1": 0.7692307692307693,
+      "support": 13
+    },
+    {
+      "index": 24,
+      "label": "U",
+      "precision": 0.8571428571428571,
+      "recall": 0.9,
+      "f1": 0.8780487804878048,
+      "support": 20
+    },
+    {
+      "index": 25,
+      "label": "Ư",
+      "precision": 0.8181818181818182,
+      "recall": 0.75,
+      "f1": 0.7826086956521738,
+      "support": 12
+    },
+    {
+      "index": 26,
+      "label": "V",
+      "precision": 0.6666666666666666,
+      "recall": 0.6666666666666666,
+      "f1": 0.6666666666666666,
+      "support": 9
+    },
+    {
+      "index": 27,
+      "label": "X",
+      "precision": 1.0,
+      "recall": 0.8571428571428571,
+      "f1": 0.923076923076923,
+      "support": 7
+    },
+    {
+      "index": 28,
+      "label": "Y",
+      "precision": 0.9285714285714286,
+      "recall": 0.8666666666666667,
+      "f1": 0.896551724137931,
+      "support": 15
+    },
+    {
+      "index": 29,
+      "label": "Số 1",
+      "precision": 1.0,
+      "recall": 0.8888888888888888,
+      "f1": 0.9411764705882353,
+      "support": 9
+    },
+    {
+      "index": 30,
+      "label": "Số 2",
+      "precision": 0.7272727272727273,
+      "recall": 0.6153846153846154,
+      "f1": 0.6666666666666667,
+      "support": 13
+    },
+    {
+      "index": 31,
+      "label": "Số 3",
+      "precision": 0.9166666666666666,
+      "recall": 0.9565217391304348,
+      "f1": 0.9361702127659574,
+      "support": 23
+    },
+    {
+      "index": 32,
+      "label": "Số 4",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 17
+    },
+    {
+      "index": 33,
+      "label": "Số 5",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 10
+    },
+    {
+      "index": 34,
+      "label": "Số 6",
+      "precision": 1.0,
+      "recall": 0.7333333333333333,
+      "f1": 0.846153846153846,
+      "support": 15
+    },
+    {
+      "index": 35,
+      "label": "Số 7",
+      "precision": 0.7777777777777778,
+      "recall": 1.0,
+      "f1": 0.8750000000000001,
+      "support": 14
+    },
+    {
+      "index": 36,
+      "label": "Số 8",
+      "precision": 1.0,
+      "recall": 0.9090909090909091,
+      "f1": 0.9523809523809523,
+      "support": 11
+    },
+    {
+      "index": 37,
+      "label": "Số 9",
+      "precision": 0.7272727272727273,
+      "recall": 0.5333333333333333,
+      "f1": 0.6153846153846153,
+      "support": 15
+    },
+    {
+      "index": 38,
+      "label": "Số 10",
+      "precision": 0.9333333333333333,
+      "recall": 1.0,
+      "f1": 0.9655172413793104,
+      "support": 14
+    },
+    {
+      "index": 39,
+      "label": "Thời gian",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 9
+    },
+    {
+      "index": 40,
+      "label": "Hỏi giờ",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 14
+    },
+    {
+      "index": 41,
+      "label": "Ngày",
+      "precision": 0.875,
+      "recall": 1.0,
+      "f1": 0.9333333333333333,
+      "support": 14
+    },
+    {
+      "index": 42,
+      "label": "Tháng",
+      "precision": 0.7333333333333333,
+      "recall": 1.0,
+      "f1": 0.846153846153846,
+      "support": 11
+    },
+    {
+      "index": 43,
+      "label": "Năm",
+      "precision": 0.9090909090909091,
+      "recall": 1.0,
+      "f1": 0.9523809523809523,
+      "support": 10
+    },
+    {
+      "index": 44,
+      "label": "Hôm nay",
+      "precision": 1.0,
+      "recall": 0.9375,
+      "f1": 0.967741935483871,
+      "support": 16
+    },
+    {
+      "index": 45,
+      "label": "Hôm qua",
+      "precision": 0.8571428571428571,
+      "recall": 0.9230769230769231,
+      "f1": 0.888888888888889,
+      "support": 13
+    },
+    {
+      "index": 46,
+      "label": "Buổi sáng",
+      "precision": 1.0,
+      "recall": 0.9545454545454546,
+      "f1": 0.9767441860465117,
+      "support": 22
+    },
+    {
+      "index": 47,
+      "label": "Buổi trưa",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 13
+    },
+    {
+      "index": 48,
+      "label": "Buổi chiều",
+      "precision": 0.9230769230769231,
+      "recall": 0.8571428571428571,
+      "f1": 0.888888888888889,
+      "support": 14
+    },
+    {
+      "index": 49,
+      "label": "Buổi tối",
+      "precision": 0.9285714285714286,
+      "recall": 1.0,
+      "f1": 0.962962962962963,
+      "support": 13
+    },
+    {
+      "index": 50,
+      "label": "Đêm",
+      "precision": 0.9,
+      "recall": 0.9,
+      "f1": 0.9,
+      "support": 10
+    },
+    {
+      "index": 51,
+      "label": "Tôi",
+      "precision": 0.7272727272727273,
+      "recall": 0.7272727272727273,
+      "f1": 0.7272727272727273,
+      "support": 11
+    },
+    {
+      "index": 52,
+      "label": "Chào",
+      "precision": 1.0,
+      "recall": 0.625,
+      "f1": 0.7692307692307693,
+      "support": 16
+    },
+    {
+      "index": 53,
+      "label": "Xin lỗi",
+      "precision": 0.9166666666666666,
+      "recall": 0.9166666666666666,
+      "f1": 0.9166666666666666,
+      "support": 12
+    },
+    {
+      "index": 54,
+      "label": "Xin phép",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 12
+    },
+    {
+      "index": 55,
+      "label": "Vui",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 22
+    },
+    {
+      "index": 56,
+      "label": "Buồn",
+      "precision": 0.6923076923076923,
+      "recall": 0.75,
+      "f1": 0.7199999999999999,
+      "support": 12
+    },
+    {
+      "index": 57,
+      "label": "Mệt",
+      "precision": 1.0,
+      "recall": 0.9285714285714286,
+      "f1": 0.962962962962963,
+      "support": 14
+    },
+    {
+      "index": 58,
+      "label": "Khỏe",
+      "precision": 1.0,
+      "recall": 0.9230769230769231,
+      "f1": 0.9600000000000001,
+      "support": 13
+    },
+    {
+      "index": 59,
+      "label": "Yếu",
+      "precision": 1.0,
+      "recall": 0.6363636363636364,
+      "f1": 0.7777777777777778,
+      "support": 11
+    },
+    {
+      "index": 60,
+      "label": "Bạn",
+      "precision": 0.8571428571428571,
+      "recall": 0.6,
+      "f1": 0.7058823529411764,
+      "support": 10
+    },
+    {
+      "index": 61,
+      "label": "Tên là gì",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 13
+    },
+    {
+      "index": 62,
+      "label": "Tuổi",
+      "precision": 0.9166666666666666,
+      "recall": 1.0,
+      "f1": 0.9565217391304348,
+      "support": 11
+    },
+    {
+      "index": 63,
+      "label": "Thế nào",
+      "precision": 0.8,
+      "recall": 1.0,
+      "f1": 0.888888888888889,
+      "support": 12
+    },
+    {
+      "index": 64,
+      "label": "Bao nhiêu",
+      "precision": 1.0,
+      "recall": 0.8571428571428571,
+      "f1": 0.923076923076923,
+      "support": 14
+    },
+    {
+      "index": 65,
+      "label": "Ở đâu",
+      "precision": 1.0,
+      "recall": 0.6875,
+      "f1": 0.8148148148148148,
+      "support": 16
+    },
+    {
+      "index": 66,
+      "label": "Làm gì",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 15
+    },
+    {
+      "index": 67,
+      "label": "Đi",
+      "precision": 0.47368421052631576,
+      "recall": 0.9,
+      "f1": 0.6206896551724138,
+      "support": 10
+    },
+    {
+      "index": 68,
+      "label": "Đứng",
+      "precision": 1.0,
+      "recall": 0.9375,
+      "f1": 0.967741935483871,
+      "support": 16
+    },
+    {
+      "index": 69,
+      "label": "Ngồi",
+      "precision": 0.9375,
+      "recall": 0.9375,
+      "f1": 0.9375,
+      "support": 16
+    },
+    {
+      "index": 70,
+      "label": "Nằm",
+      "precision": 1.0,
+      "recall": 0.5789473684210527,
+      "f1": 0.7333333333333334,
+      "support": 19
+    },
+    {
+      "index": 71,
+      "label": "Chạy",
+      "precision": 1.0,
+      "recall": 0.9090909090909091,
+      "f1": 0.9523809523809523,
+      "support": 11
+    },
+    {
+      "index": 72,
+      "label": "Nhảy",
+      "precision": 0.9166666666666666,
+      "recall": 1.0,
+      "f1": 0.9565217391304348,
+      "support": 11
+    },
+    {
+      "index": 73,
+      "label": "Ngủ",
+      "precision": 0.5625,
+      "recall": 1.0,
+      "f1": 0.72,
+      "support": 9
+    },
+    {
+      "index": 74,
+      "label": "Đi vệ sinh",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 15
+    },
+    {
+      "index": 75,
+      "label": "Ăn",
+      "precision": 0.9166666666666666,
+      "recall": 0.7857142857142857,
+      "f1": 0.8461538461538461,
+      "support": 14
+    },
+    {
+      "index": 76,
+      "label": "Uống",
+      "precision": 1.0,
+      "recall": 0.7857142857142857,
+      "f1": 0.88,
+      "support": 14
+    },
+    {
+      "index": 77,
+      "label": "Tắm",
+      "precision": 0.9333333333333333,
+      "recall": 0.7368421052631579,
+      "f1": 0.8235294117647058,
+      "support": 19
+    },
+    {
+      "index": 78,
+      "label": "Khóc",
+      "precision": 0.9230769230769231,
+      "recall": 1.0,
+      "f1": 0.9600000000000001,
+      "support": 12
+    },
+    {
+      "index": 79,
+      "label": "Cười",
+      "precision": 0.5,
+      "recall": 0.6153846153846154,
+      "f1": 0.5517241379310345,
+      "support": 13
+    },
+    {
+      "index": 80,
+      "label": "Gia đình",
+      "precision": 0.9090909090909091,
+      "recall": 1.0,
+      "f1": 0.9523809523809523,
+      "support": 10
+    },
+    {
+      "index": 81,
+      "label": "Ông",
+      "precision": 1.0,
+      "recall": 0.9230769230769231,
+      "f1": 0.9600000000000001,
+      "support": 13
+    },
+    {
+      "index": 82,
+      "label": "Bà",
+      "precision": 0.9333333333333333,
+      "recall": 0.875,
+      "f1": 0.9032258064516129,
+      "support": 16
+    },
+    {
+      "index": 83,
+      "label": "Bố",
+      "precision": 0.7142857142857143,
+      "recall": 0.8333333333333334,
+      "f1": 0.7692307692307692,
+      "support": 12
+    },
+    {
+      "index": 84,
+      "label": "Mẹ",
+      "precision": 0.8571428571428571,
+      "recall": 1.0,
+      "f1": 0.923076923076923,
+      "support": 12
+    },
+    {
+      "index": 85,
+      "label": "Em trai",
+      "precision": 0.8181818181818182,
+      "recall": 0.9,
+      "f1": 0.8571428571428572,
+      "support": 20
+    },
+    {
+      "index": 86,
+      "label": "Em gái",
+      "precision": 0.9333333333333333,
+      "recall": 0.8235294117647058,
+      "f1": 0.8749999999999999,
+      "support": 17
+    },
+    {
+      "index": 87,
+      "label": "Con trai",
+      "precision": 0.8148148148148148,
+      "recall": 1.0,
+      "f1": 0.8979591836734693,
+      "support": 22
+    },
+    {
+      "index": 88,
+      "label": "Con gái",
+      "precision": 1.0,
+      "recall": 0.7857142857142857,
+      "f1": 0.88,
+      "support": 14
+    },
+    {
+      "index": 89,
+      "label": "Vợ",
+      "precision": 1.0,
+      "recall": 0.8,
+      "f1": 0.888888888888889,
+      "support": 10
+    },
+    {
+      "index": 90,
+      "label": "Chồng",
+      "precision": 0.7619047619047619,
+      "recall": 1.0,
+      "f1": 0.8648648648648648,
+      "support": 16
+    },
+    {
+      "index": 91,
+      "label": "Anh trai",
+      "precision": 0.8666666666666667,
+      "recall": 0.9285714285714286,
+      "f1": 0.896551724137931,
+      "support": 14
+    },
+    {
+      "index": 92,
+      "label": "Chị gái",
+      "precision": 0.9166666666666666,
+      "recall": 0.8461538461538461,
+      "f1": 0.8799999999999999,
+      "support": 13
+    },
+    {
+      "index": 93,
+      "label": "Em út",
+      "precision": 0.875,
+      "recall": 1.0,
+      "f1": 0.9333333333333333,
+      "support": 14
+    },
+    {
+      "index": 94,
+      "label": "Yêu",
+      "precision": 1.0,
+      "recall": 0.9090909090909091,
+      "f1": 0.9523809523809523,
+      "support": 11
+    },
+    {
+      "index": 95,
+      "label": "Cô giáo",
+      "precision": 0.7142857142857143,
+      "recall": 0.625,
+      "f1": 0.6666666666666666,
+      "support": 8
+    },
+    {
+      "index": 96,
+      "label": "Công nhân",
+      "precision": 0.9090909090909091,
+      "recall": 0.8333333333333334,
+      "f1": 0.8695652173913043,
+      "support": 12
+    },
+    {
+      "index": 97,
+      "label": "Nông dân",
+      "precision": 0.6666666666666666,
+      "recall": 0.9411764705882353,
+      "f1": 0.7804878048780487,
+      "support": 17
+    },
+    {
+      "index": 98,
+      "label": "Bác sĩ",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 12
+    },
+    {
+      "index": 99,
+      "label": "Y tá",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 10
+    },
+    {
+      "index": 100,
+      "label": "Công an",
+      "precision": 0.7777777777777778,
+      "recall": 0.6363636363636364,
+      "f1": 0.7000000000000001,
+      "support": 11
+    },
+    {
+      "index": 101,
+      "label": "Bộ đội",
+      "precision": 1.0,
+      "recall": 0.8,
+      "f1": 0.888888888888889,
+      "support": 15
+    }
+  ],
+  "loss": 0.4713317148212685,
+  "top5_accuracy": 0.9864960909737029,
+  "split": "val",
+  "checkpoint": "backend/runs/sstcn_reconstructed_full/best.pth",
+  "checkpoint_sha256": "370c5edcadfbc2b0b2476b6fb7dfe7ca3d53f68f3a2fcb13036e5b7ebabf9fad",
+  "dataset_manifest_sha256": "e3340c0d55b27dce703a1575d721c339c73609dc19ad730d616f027099fb3920",
+  "checkpoint_dataset_manifest_sha256": "e3340c0d55b27dce703a1575d721c339c73609dc19ad730d616f027099fb3920",
+  "historical_checkpoint_training_membership": "recorded_in_checkpoint",
+  "confusion_axes": "rows=true label, columns=predicted label",
+  "macro_average": "all 102 model classes, zero for undefined metrics"
+}

@@ -1,0 +1,42 @@
+{
+  "data": "backend/data/sstcn/prepared",
+  "output": "backend/runs/sstcn_reconstructed_full",
+  "epochs": 12,
+  "batch_size": 32,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "dropout": 0.3,
+  "seed": 42,
+  "patience": 5,
+  "threads": 4,
+  "device": "cuda",
+  "amp": true,
+  "augment": false,
+  "init_from": null,
+  "resume": null,
+  "allow_partial_classes": false,
+  "created_at": "2026-10-30T12:04:13.683780+00:00",
+  "torch_version": "2.12.0+cu130",
+  "numpy_version": "2.2.6",
+  "dataset_manifest_sha256": "e3340c0d55b27dce703a1575d721c339c73609dc19ad730d616f027099fb3920",
+  "python_version": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "cuda_version": "13.0",
+  "gpu": "NVIDIA GeForce RTX 3050 Ti Laptop GPU",
+  "initial_checkpoint_sha256": null,
+  "counts": {
+    "train": 38818,
+    "val": 1407,
+    "test": 1420
+  },
+  "selection": "validation accuracy, then validation loss; test is evaluated only after selection",
+  "historical_initialization_training_membership": "not_applicable",
+  "git_commit": "2543d0b7375d6b650e83186b87b0449d7877308b",
+  "git_dirty": true,
+  "source_sha256": {
+    "training/train_sstcn.py": "b1ba97f7be2ec3c9215c8969d4ade35c0cf85716ee8a3465a2b2fa73e82e5c36",
+    "models/sstcn_model.py": "032d3ae289ac348f38a4274961b94cc4adc39e0117185ac136d7e1dfca1f7931",
+    "training/evaluate_sstcn.py": "8cf58d381f48b7a5fbdc2abb5decc30daaf56df18e762cb92617d4e279dd6c87",
+    "training/sstcn_data.py": "3cff717cb8caafd30dfe5ee9c0a1a62003e209666ae7785eee0e87672d7547c6",
+    "training/prepare_sstcn.py": "38dabe36a0b6c1fb1dc3628002eb667354eeee60b9d7683a4cad7ab089409f1f"
+  }
+}

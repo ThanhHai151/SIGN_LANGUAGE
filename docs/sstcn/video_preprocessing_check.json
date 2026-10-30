@@ -1,0 +1,20 @@
+{
+  "fps": 10.0,
+  "decoded_frames": 44,
+  "sampled_frames": 22,
+  "frame_stride": 2,
+  "extractor": "mediapipe.solutions.holistic",
+  "source": "docs/sstcn/legacy/chao.gif",
+  "video": "backend/data/sstcn/demo_videos/chao.mp4",
+  "mediapipe_version": "0.10.21",
+  "opencv_version": "4.11.0",
+  "numpy_version": "1.26.4",
+  "output_shape": [
+    3,
+    30,
+    75
+  ],
+  "all_finite": true,
+  "nonzero_values": 4482,
+  "purpose": "Video preprocessing execution check; this demo is not a labelled accuracy benchmark."
+}

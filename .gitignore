@@ -35,3 +35,11 @@ backend/data/media_cache/
 
 # File nhat ky chan doan (tao khi VSL_DIAGNOSTIC=1)
 backend/data/diagnostics/
+
+# SSTCN: downloaded data and generated experiment artifacts
+backend/data/sstcn/archives/
+backend/data/sstcn/raw/
+backend/data/sstcn/prepared*/
+backend/data/sstcn/demo_videos/
+backend/runs/
+.venv-sstcn/

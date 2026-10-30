@@ -1,0 +1,26 @@
+{
+  "checked_at": "2026-10-30T12:08:59.321618+00:00",
+  "test_command": "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv-sstcn/bin/python -m pytest backend/tests/test_sstcn_pipeline.py backend/tests/test_api.py backend/tests/test_mode_separation.py backend/tests/test_mode_filtering.py -q",
+  "passed": 58,
+  "failed": 0,
+  "new_pipeline_tests": 12,
+  "evidence": "/tmp/sstcn_final_regression.txt",
+  "video_preprocessing_evidence": "docs/sstcn/video_preprocessing_check.json",
+  "replay_check": {
+    "source": "test_set/sign_000/sign_000_vid_01_00.npy",
+    "expected_label": "A",
+    "predicted_label": "A",
+    "confidence": 0.9618256092071533
+  },
+  "candidate_checkpoint_regression": {
+    "passed": 58,
+    "failed": 0,
+    "checkpoint": "backend/models/weights/sign_sstcn_reconstructed_model.pth",
+    "checkpoint_sha256": "370c5edcadfbc2b0b2476b6fb7dfe7ca3d53f68f3a2fcb13036e5b7ebabf9fad",
+    "environment_variable": "VSL_SSTCN_WEIGHTS",
+    "evidence": "/tmp/sstcn_candidate_regression.txt",
+    "checked_at": "2026-10-30T12:24:50.977108+00:00"
+  },
+  "training_source_hashes_match": true,
+  "documentation_links_checked": true
+}
