@@ -23,13 +23,14 @@ class WordDebugger:
         self._ensure_session()
 
     def _ensure_session(self):
-        if not self.session_dir:
+        if not self.session_dir or not os.path.exists(self.session_dir):
             now_str = datetime.now().strftime("%Y-%m-%d_%H%M%S")
             session_id = f"word_debug_{now_str}"
             self.session_dir = os.path.join(DEBUG_BASE_DIR, session_id)
             self.sequences_dir = os.path.join(self.session_dir, "sequences")
             os.makedirs(self.sequences_dir, exist_ok=True)
             self.events_file = os.path.join(self.session_dir, "events.jsonl")
+            self.seq_counter = 0
             self.log_event({
                 "event": "SESSION_START",
                 "session_id": session_id,
