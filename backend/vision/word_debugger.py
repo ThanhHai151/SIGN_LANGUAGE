@@ -20,23 +20,57 @@ class WordDebugger:
         self.sequences_dir: Optional[str] = None
         self.seq_counter: int = 0
         self.last_top1_label: Optional[str] = None
+        self.target_word: Optional[str] = None
         self._ensure_session()
+
+    def start_session(self, target_word: Optional[str] = None, session_name: Optional[str] = None) -> Dict[str, Any]:
+        self.target_word = target_word
+        now_str = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        prefix = f"{session_name}_" if session_name else ""
+        session_id = f"word_debug_{prefix}{now_str}"
+        self.session_dir = os.path.join(DEBUG_BASE_DIR, session_id)
+        self.sequences_dir = os.path.join(self.session_dir, "sequences")
+        os.makedirs(self.sequences_dir, exist_ok=True)
+        self.events_file = os.path.join(self.session_dir, "events.jsonl")
+        self.seq_counter = 0
+        self.last_top1_label = None
+        start_data = {
+            "event": "SESSION_START",
+            "session_id": session_id,
+            "target_word": target_word,
+            "created_at": datetime.now().isoformat()
+        }
+        self.log_event(start_data)
+        print(f"\n[WordDebugger] Đã tạo phiên debug mới: {self.session_dir}")
+        return {"success": True, "session_id": session_id, "session_dir": self.session_dir}
+
+    def stop_session(self) -> Dict[str, Any]:
+        old_id = os.path.basename(self.session_dir) if self.session_dir else None
+        if self.session_dir and os.path.exists(self.session_dir):
+            self.log_event({
+                "event": "SESSION_STOP",
+                "session_id": old_id,
+                "total_sequences": self.seq_counter,
+                "stopped_at": datetime.now().isoformat()
+            })
+        self.session_dir = None
+        self.sequences_dir = None
+        self.events_file = None
+        self.seq_counter = 0
+        self.last_top1_label = None
+        return {"success": True, "message": "Debug session stopped", "previous_session": old_id}
+
+    def get_status(self) -> Dict[str, Any]:
+        return {
+            "active": bool(self.session_dir and os.path.exists(self.session_dir)),
+            "session_id": os.path.basename(self.session_dir) if self.session_dir else None,
+            "target_word": self.target_word,
+            "seq_count": self.seq_counter
+        }
 
     def _ensure_session(self):
         if not self.session_dir or not os.path.exists(self.session_dir):
-            now_str = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-            session_id = f"word_debug_{now_str}"
-            self.session_dir = os.path.join(DEBUG_BASE_DIR, session_id)
-            self.sequences_dir = os.path.join(self.session_dir, "sequences")
-            os.makedirs(self.sequences_dir, exist_ok=True)
-            self.events_file = os.path.join(self.session_dir, "events.jsonl")
-            self.seq_counter = 0
-            self.log_event({
-                "event": "SESSION_START",
-                "session_id": session_id,
-                "created_at": datetime.now().isoformat()
-            })
-            print(f"\n[WordDebugger] Đã tạo phiên debug mới tại: {self.session_dir}")
+            self.start_session(target_word=self.target_word)
 
     def log_event(self, event_data: Dict[str, Any]):
         self._ensure_session()
@@ -71,11 +105,17 @@ class WordDebugger:
 
             current_label = top1.get("term", "UNKNOWN")
 
+            conf1 = f"{top1.get('confidence'):.3f}" if top1.get('confidence') is not None else "N/A"
+            conf2 = f"{top2.get('confidence'):.3f}" if top2.get('confidence') is not None else "N/A"
+            conf3 = f"{top3.get('confidence'):.3f}" if top3.get('confidence') is not None else "N/A"
+
             # 3. In trực tiếp ra console terminal để xem ngay tức thì
             print(f"\n[WORD PREDICTION #{seq_idx:03d}] {datetime.now().strftime('%H:%M:%S.%f')[:-3]}")
-            print(f"  👉 Top 1: {top1.get('term')} (index: {top1.get('index')}, conf: {top1.get('confidence'):.3f})")
-            print(f"     Top 2: {top2.get('term')} (index: {top2.get('index')}, conf: {top2.get('confidence'):.3f})")
-            print(f"     Top 3: {top3.get('term')} (index: {top3.get('index')}, conf: {top3.get('confidence'):.3f})")
+            print(f"  👉 Top 1: {top1.get('term')} (index: {top1.get('index')}, conf: {conf1})")
+            if top2.get('term'):
+                print(f"     Top 2: {top2.get('term')} (index: {top2.get('index')}, conf: {conf2})")
+            if top3.get('term'):
+                print(f"     Top 3: {top3.get('term')} (index: {top3.get('index')}, conf: {conf3})")
             print(f"  📊 Đã lưu tensor: {filepath}")
 
             # 4. Ghi log sự kiện vào events.jsonl

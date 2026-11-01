@@ -12,7 +12,7 @@ import base64
 import cv2
 import numpy as np
 import torch
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.responses import Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,7 +26,7 @@ from backend.vision.recognizer import VSLRecognizer
 from backend.nlp.text_to_vsl import text_to_vsl_glosses
 from backend.models import video_cache
 from backend.models.lexicon import load_lexicon, compact_entry, get_entry_by_sstcn, norm_key, sign_description
-from fastapi import Query
+
 
 app = FastAPI(
     title="Vietnamese Sign Language (VSL) Communication API",
@@ -425,7 +425,7 @@ def manage_word_debug_session(req: WordDebugSessionRequest):
 @app.post("/api/debug/word/event")
 def log_word_debug_event(req: WordDebugEventRequest):
     from backend.vision.word_debugger import word_debugger
-    data = req.dict(exclude_none=True)
+    data = req.model_dump(exclude_none=True) if hasattr(req, "model_dump") else req.dict(exclude_none=True)
     word_debugger.log_event(data)
     return {"success": True}
 
