@@ -118,12 +118,12 @@ export function fetchMotion(id) {
   return motionCache.get(id);
 }
 
-export async function sendSequenceForRecognition(sequence, threshold = 0.65) {
+export async function sendSequenceForRecognition(sequence, threshold = 0.65, mode = 'words') {
   try {
     const res = await fetch(`${API_BASE_URL}/api/recognize_sequence`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sequence, threshold })
+      body: JSON.stringify({ sequence, threshold, mode })
     });
     if (!res.ok) throw new Error('Sequence recognition failed');
     return await res.json();

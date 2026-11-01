@@ -259,7 +259,7 @@ def recognize_landmarks(req: LandmarkRequest, request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/recognize_sequence")
-def recognize_sequence(req: SequenceRequest):
+def recognize_sequence(req: SequenceRequest, request: Request):
     """
     Nhận diện chuỗi chuyển động ký hiệu VSL qua mô hình SSTCN_Attention (30 frames x 75 joints).
     Độ chính xác cao vượt trội (93.87%) trên 102 lớp từ vựng VSL.
@@ -268,7 +268,7 @@ def recognize_sequence(req: SequenceRequest):
         result = recognizer.predict_sequence(
             sequence_data=req.sequence,
             threshold=req.threshold,
-            mode=req.mode
+            mode=req.mode or request.headers.get("x-conversion-mode") or "words"
         )
         return {"success": True, "data": result}
     except Exception as e:

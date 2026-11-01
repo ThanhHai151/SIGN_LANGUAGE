@@ -745,7 +745,7 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
         sequenceBufferRef.current.splice(0, FRAME_STEP);
 
         // Gửi suy luận hoàn toàn không chặn luồng (Non-blocking Async)
-        sendSequenceForRecognition(sequencePayload, confidenceThreshold)
+        sendSequenceForRecognition(sequencePayload, confidenceThreshold, requestMode)
           .then((resp) => {
             if (currentGen !== requestGenRef.current || conversionModeRef.current !== requestMode) {
               return; // Bỏ qua response đến trễ sau khi đổi mode
