@@ -74,7 +74,7 @@ class VSLRecognizer:
         self._diag_lock = threading.Lock()
         self._diag_frame_counter = 0
 
-    def predict_sequence(self, sequence_data, threshold=None):
+    def predict_sequence(self, sequence_data, threshold=None, mode=None):
         """
         Nhận diện chuỗi chuyển động 30 frames qua SSTCN_Attention.
         sequence_data: List hoặc np.ndarray kích thước (30, 75, 3) hoặc flattened
@@ -109,7 +109,14 @@ class VSLRecognizer:
 
             with torch.no_grad():
                 logits = self.sstcn_model(tensor_input)
-                probs = torch.softmax(logits, dim=1).squeeze(0)
+                if mode == "words":
+                    masked_logits = logits.clone()
+                    masked_logits[:, :39] = -float('inf')
+                    if masked_logits.shape[1] > 102:
+                        masked_logits[:, 102:] = -float('inf')
+                    probs = torch.softmax(masked_logits, dim=1).squeeze(0)
+                else:
+                    probs = torch.softmax(logits, dim=1).squeeze(0)
                 
                 # Lấy Top 1 và Top 5
                 top_k_probs, top_k_indices = torch.topk(probs, k=min(5, len(probs)))
@@ -163,6 +170,10 @@ class VSLRecognizer:
                 }
                 for p, idx in zip(top_k_probs, top_k_indices)
             ]
+
+            from backend.vision.word_debugger import word_debugger
+            if mode == "words":
+                word_debugger.record_prediction(arr, top_k_list, max_prob, sign_info["term"])
 
             return {
                 "success": True,

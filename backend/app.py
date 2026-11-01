@@ -63,6 +63,7 @@ class FrameRequest(BaseModel):
 class SequenceRequest(BaseModel):
     sequence: List[List[List[float]]]  # Chuỗi 30 frames x 75 joints x 3 coords
     threshold: Optional[float] = 0.65
+    mode: Optional[str] = None
 
 class TextToSignRequest(BaseModel):
     text: str
@@ -266,7 +267,8 @@ def recognize_sequence(req: SequenceRequest):
     try:
         result = recognizer.predict_sequence(
             sequence_data=req.sequence,
-            threshold=req.threshold
+            threshold=req.threshold,
+            mode=req.mode
         )
         return {"success": True, "data": result}
     except Exception as e:
@@ -392,3 +394,42 @@ def trigger_training():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
+
+# ==========================================================
+# API DEBUG RIÊNG BIỆT CHO CHẾ ĐỘ WORDS (TỪ VỰNG)
+# ==========================================================
+class WordDebugSessionRequest(BaseModel):
+    action: str  # "start" hoặc "stop"
+    target_word: Optional[str] = None
+    session_name: Optional[str] = None
+
+class WordDebugEventRequest(BaseModel):
+    event: str
+    frame_count: Optional[int] = None
+    reason: Optional[str] = None
+    frames_before_reset: Optional[int] = None
+    left_hand: Optional[bool] = None
+    right_hand: Optional[bool] = None
+    hand: Optional[str] = None
+    extra: Optional[Dict[str, Any]] = None
+
+@app.post("/api/debug/word/session")
+def manage_word_debug_session(req: WordDebugSessionRequest):
+    from backend.vision.word_debugger import word_debugger
+    if req.action == "start":
+        return word_debugger.start_session(target_word=req.target_word, session_name=req.session_name)
+    elif req.action == "stop":
+        return word_debugger.stop_session()
+    return {"success": False, "message": "Invalid action. Use start or stop."}
+
+@app.post("/api/debug/word/event")
+def log_word_debug_event(req: WordDebugEventRequest):
+    from backend.vision.word_debugger import word_debugger
+    data = req.dict(exclude_none=True)
+    word_debugger.log_event(data)
+    return {"success": True}
+
+@app.get("/api/debug/word/status")
+def get_word_debug_status():
+    from backend.vision.word_debugger import word_debugger
+    return word_debugger.get_status()
