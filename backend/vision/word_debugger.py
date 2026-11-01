@@ -15,9 +15,9 @@ DEBUG_BASE_DIR = os.path.join(PROJECT_ROOT, "debug", "word_sessions")
 
 class WordDebugger:
     def __init__(self):
-        self.session_dir: Optional[str] = None
-        self.events_file: Optional[str] = None
-        self.sequences_dir: Optional[str] = None
+        self.session_dir: str = ""
+        self.events_file: str = ""
+        self.sequences_dir: str = ""
         self.seq_counter: int = 0
         self.last_top1_label: Optional[str] = None
         self.target_word: Optional[str] = None
@@ -53,9 +53,9 @@ class WordDebugger:
                 "total_sequences": self.seq_counter,
                 "stopped_at": datetime.now().isoformat()
             })
-        self.session_dir = None
-        self.sequences_dir = None
-        self.events_file = None
+        self.session_dir = ""
+        self.sequences_dir = ""
+        self.events_file = ""
         self.seq_counter = 0
         self.last_top1_label = None
         return {"success": True, "message": "Debug session stopped", "previous_session": old_id}
