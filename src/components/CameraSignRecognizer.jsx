@@ -10,6 +10,8 @@ import {
   clearCurrentSentence,
   speakVietnamese
 } from '../services/api';
+import WordDebugPanel from './WordDebugPanel';
+import { isWordDebugEnabled, logWordDebugReset } from '../services/wordDebugApi';
 
 // Bảng ánh xạ phát âm TTS chuẩn cho từng chữ số (chỉ đọc tên số, không có tiền tố "số")
 const DIGIT_TTS_MAP = {
@@ -720,6 +722,9 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
     if (currentRecognitionMode === 'sequence') {
       if (!hasHands) {
         if (sequenceBufferRef.current.length > 0) {
+          if (currentConversionMode === 'words') {
+            logWordDebugReset(sequenceBufferRef.current.length, 'no_hands_detected');
+          }
           sequenceBufferRef.current = [];
           updateHUDProgress(0, 0);
         }
@@ -1057,6 +1062,8 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
             </div>
 
           </div>
+
+          {conversionMode === 'words' && isWordDebugEnabled() && <WordDebugPanel />}
 
           {/* BANNER THÔNG BÁO TRẠNG THÁI TỔ HỢP ĐỘC LẬP */}
           {(() => {

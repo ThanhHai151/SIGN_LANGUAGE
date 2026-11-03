@@ -268,7 +268,7 @@ def recognize_sequence(req: SequenceRequest, request: Request):
         result = recognizer.predict_sequence(
             sequence_data=req.sequence,
             threshold=req.threshold,
-            mode=req.mode or request.headers.get("x-conversion-mode") or "words"
+            mode=req.mode or request.headers.get("x-conversion-mode")
         )
         return {"success": True, "data": result}
     except Exception as e:
@@ -391,45 +391,60 @@ def trigger_training():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
-
 # ==========================================================
-# API DEBUG RIÊNG BIỆT CHO CHẾ ĐỘ WORDS (TỪ VỰNG)
+# API WORD DEBUG (ch? d?ng ?? test Word Mode, kh?ng ?nh h??ng nh?n di?n)
 # ==========================================================
 class WordDebugSessionRequest(BaseModel):
-    action: str  # "start" hoặc "stop"
+    action: str  # "start" | "stop"
+    target_class: Optional[int] = None
     target_word: Optional[str] = None
-    session_name: Optional[str] = None
+    trial: Optional[int] = 1
+
 
 class WordDebugEventRequest(BaseModel):
-    event: str
+    event_type: str
     frame_count: Optional[int] = None
-    reason: Optional[str] = None
     frames_before_reset: Optional[int] = None
-    left_hand: Optional[bool] = None
-    right_hand: Optional[bool] = None
-    hand: Optional[str] = None
-    extra: Optional[Dict[str, Any]] = None
+    reason: Optional[str] = None
+
+
+@app.get("/api/debug/word/targets")
+def get_word_debug_targets():
+    """63 t? Word Mode (class 39..101) l?y t? SIGN_DICT_102, c?ng ngu?n v?i recognizer."""
+    from backend.vision.word_debugger import get_word_targets
+    targets = get_word_targets()
+    return {"success": True, "total": len(targets), "targets": targets}
+
 
 @app.post("/api/debug/word/session")
 def manage_word_debug_session(req: WordDebugSessionRequest):
     from backend.vision.word_debugger import word_debugger
     if req.action == "start":
-        return word_debugger.start_session(target_word=req.target_word, session_name=req.session_name)
-    elif req.action == "stop":
+        result = word_debugger.start_session(
+            target_class=req.target_class, target_word=req.target_word, trial=req.trial if req.trial is not None else 1
+        )
+        if not result.get("success"):
+            raise HTTPException(status_code=400, detail=result.get("message", "Kh?ng th? b?t ??u phi?n"))
+        return result
+    if req.action == "stop":
         return word_debugger.stop_session()
-    return {"success": False, "message": "Invalid action. Use start or stop."}
+    raise HTTPException(status_code=400, detail="action ph?i l? 'start' ho?c 'stop'")
+
 
 @app.post("/api/debug/word/event")
 def log_word_debug_event(req: WordDebugEventRequest):
     from backend.vision.word_debugger import word_debugger
     data = req.model_dump(exclude_none=True) if hasattr(req, "model_dump") else req.dict(exclude_none=True)
-    word_debugger.log_event(data)
-    return {"success": True}
+    event_type = data.pop("event_type")
+    return {"success": word_debugger.log_frontend_event(event_type, data)}
+
 
 @app.get("/api/debug/word/status")
 def get_word_debug_status():
     from backend.vision.word_debugger import word_debugger
     return word_debugger.get_status()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)

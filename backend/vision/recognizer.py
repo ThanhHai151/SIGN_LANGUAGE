@@ -173,7 +173,7 @@ class VSLRecognizer:
 
             from backend.vision.word_debugger import word_debugger
             if mode == "words":
-                word_debugger.record_prediction(arr, top_k_list, max_prob, sign_info["term"])
+                word_debugger.record_prediction(arr, top_k_list, max_prob, sign_info["term"], threshold=threshold)
 
             return {
                 "success": True,
