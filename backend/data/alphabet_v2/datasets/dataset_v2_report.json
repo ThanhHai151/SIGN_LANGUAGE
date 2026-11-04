@@ -1,0 +1,113 @@
+{
+  "report_title": "Báo cáo đóng gói Dataset V2 cho 29 chữ cái VSL (Task 5B)",
+  "generated_at": "2026-10-30",
+  "summary": {
+    "total_vietnamese_letters": 29,
+    "static_base_handshapes": 22,
+    "dynamic_compound_letters": 7,
+    "total_static_samples_initial": 497,
+    "excluded_entry_frames": 59,
+    "excluded_exit_frames": 17,
+    "excluded_nohand_frames": 448,
+    "retained_pure_stable_static": 421,
+    "added_base_pose_from_dynamic": 130,
+    "total_static_samples_final": 551,
+    "total_motion_sequences": 7,
+    "total_motion_frames": 669,
+    "total_valid_motion_frames": 359
+  },
+  "base_pose_contributions": {
+    "A": 42,
+    "E": 20,
+    "O": 28,
+    "U": 14,
+    "D": 26
+  },
+  "static_samples_per_label": {
+    "A": 64,
+    "B": 22,
+    "C": 20,
+    "D": 46,
+    "E": 35,
+    "G": 29,
+    "H": 18,
+    "I": 18,
+    "K": 17,
+    "L": 16,
+    "M": 19,
+    "N": 21,
+    "O": 48,
+    "P": 20,
+    "Q": 19,
+    "R": 14,
+    "S": 15,
+    "T": 20,
+    "U": 32,
+    "V": 17,
+    "X": 25,
+    "Y": 16
+  },
+  "motion_sequences_summary": {
+    "Ă": {
+      "base_handshape": "A",
+      "video_id": "D0490B",
+      "total_frames": 89,
+      "valid_frames": 53,
+      "diacritic_frames": 23,
+      "base_pose_frames": 19
+    },
+    "Â": {
+      "base_handshape": "A",
+      "video_id": "D0491B",
+      "total_frames": 108,
+      "valid_frames": 57,
+      "diacritic_frames": 25,
+      "base_pose_frames": 23
+    },
+    "Ê": {
+      "base_handshape": "E",
+      "video_id": "D0497B",
+      "total_frames": 76,
+      "valid_frames": 52,
+      "diacritic_frames": 20,
+      "base_pose_frames": 20
+    },
+    "Ô": {
+      "base_handshape": "O",
+      "video_id": "D0507B",
+      "total_frames": 84,
+      "valid_frames": 58,
+      "diacritic_frames": 20,
+      "base_pose_frames": 19
+    },
+    "Ơ": {
+      "base_handshape": "O",
+      "video_id": "D0508N",
+      "total_frames": 89,
+      "valid_frames": 45,
+      "diacritic_frames": 24,
+      "base_pose_frames": 9
+    },
+    "Ư": {
+      "base_handshape": "U",
+      "video_id": "D0515N",
+      "total_frames": 118,
+      "valid_frames": 47,
+      "diacritic_frames": 12,
+      "base_pose_frames": 14
+    },
+    "Đ": {
+      "base_handshape": "D",
+      "video_id": "D0495",
+      "total_frames": 105,
+      "valid_frames": 47,
+      "diacritic_frames": 9,
+      "base_pose_frames": 26
+    }
+  },
+  "data_leakage_assessment": {
+    "risk": "High if randomly splitting frames from same video",
+    "reason": "Currently only 1 video per letter from a single signer. Consecutive frames have small displacement (mean 0.035 - 0.05).",
+    "recommendation": "Do NOT randomly split frames into Train/Val. Keep entire dataset for training and collect independent multi-signer test set before computing generalization accuracy."
+  }
+}

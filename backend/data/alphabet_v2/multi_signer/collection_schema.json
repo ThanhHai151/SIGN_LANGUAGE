@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "VSLMultiSignerDatasetSchema",
+  "description": "Cấu trúc dữ liệu thu thập và kiểm thử độc lập đa người ký cho 22 chữ cái tĩnh VSL (Task 6B.2)",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "dataset_name",
+    "target_classes",
+    "total_signers",
+    "total_samples",
+    "signers_metadata",
+    "samples"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["2.0.0"]
+    },
+    "dataset_name": {
+      "type": "string",
+      "default": "vsl_alphabet_multisigner_benchmark_v2"
+    },
+    "target_classes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 22,
+      "maxItems": 22,
+      "default": [
+        "A", "B", "C", "D", "E", "G", "H", "I", "K", "L",
+        "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "X", "Y"
+      ]
+    },
+    "total_signers": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "total_samples": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "signers_metadata": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["signer_id", "hand_dominance", "lighting_condition", "camera_distance_m"],
+        "properties": {
+          "signer_id": { "type": "string" },
+          "gender": { "type": "string", "enum": ["male", "female", "other", "unspecified"] },
+          "hand_dominance": { "type": "string", "enum": ["Right", "Left", "Ambidextrous"] },
+          "camera_distance_m": { "type": "number", "minimum": 0.3, "maximum": 2.5 },
+          "lighting_condition": { "type": "string", "enum": ["natural_daylight", "indoor_fluorescent", "warm_lamp", "dim_light"] },
+          "background_type": { "type": "string", "enum": ["plain_wall", "home_cluttered", "office", "classroom"] }
+        }
+      }
+    },
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "sample_id",
+          "signer_id",
+          "session_id",
+          "trial_index",
+          "video_id",
+          "letter_label",
+          "frame_index",
+          "timestamp_sec",
+          "raw_landmarks",
+          "feature_vector",
+          "extraction_status"
+        ],
+        "properties": {
+          "sample_id": { "type": "string" },
+          "signer_id": { "type": "string" },
+          "session_id": { "type": "string" },
+          "trial_index": { "type": "integer", "minimum": 1, "description": "Lần quay độc lập thứ mấy (ví dụ lần 1, 2, 3)" },
+          "video_id": { "type": "string" },
+          "video_file_name": { "type": "string" },
+          "letter_label": {
+            "type": "string",
+            "enum": [
+              "A", "B", "C", "D", "E", "G", "H", "I", "K", "L",
+              "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "X", "Y"
+            ]
+          },
+          "frame_index": { "type": "integer", "minimum": 0 },
+          "timestamp_sec": { "type": "number", "minimum": 0.0 },
+          "raw_landmarks": {
+            "type": "array",
+            "minItems": 21,
+            "maxItems": 21,
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": { "type": "number" },
+              "description": "Tọa độ mốc xương MediaPipe [x, y, z]"
+            }
+          },
+          "feature_vector": {
+            "type": "array",
+            "minItems": 72,
+            "maxItems": 72,
+            "items": { "type": "number" },
+            "description": "Vector đặc trưng 72D chuẩn hóa sinh bởi normalize_hand_landmarks"
+          },
+          "extraction_status": {
+            "type": "string",
+            "enum": ["ok", "no_hand", "low_confidence", "corrupted"]
+          },
+          "handedness": {
+            "type": "string",
+            "enum": ["Right", "Left"],
+            "default": "Right"
+          },
+          "hand_tilt_angle_deg": {
+            "type": "number",
+            "description": "Góc nghiêng bàn tay ước tính so với phương thẳng đứng"
+          },
+          "is_representative_sample": {
+            "type": "boolean",
+            "description": "Cờ đánh dấu khung hình tư thế ổn định (không phải chuyển tiếp đưa tay lên/hạ tay)"
+          }
+        }
+      }
+    }
+  }
+}
+

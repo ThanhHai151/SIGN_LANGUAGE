@@ -10,6 +10,7 @@ import {
   clearCurrentSentence,
   speakVietnamese
 } from '../services/api';
+import PilotTestingHUD from './PilotTestingHUD';
 
 // Bảng ánh xạ phát âm TTS chuẩn cho từng chữ số (chỉ đọc tên số, không có tiền tố "số")
 const DIGIT_TTS_MAP = {
@@ -136,6 +137,14 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
   useEffect(() => {
     recognitionModeRef.current = recognitionMode;
   }, [recognitionMode]);
+
+  // Controlled Webcam Pilot State (Task 7F.5B)
+  const [showPilotHUD, setShowPilotHUD] = useState(false);
+  const pilotMetadataProviderRef = useRef(null);
+
+  const handlePilotMetadataUpdate = ({ getFrameMetadata }) => {
+    pilotMetadataProviderRef.current = getFrameMetadata;
+  };
 
   // Danh mục cử chỉ mẫu để test nhanh mô phỏng
   const SAMPLE_GESTURES = [
@@ -813,7 +822,16 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
         if (rightHand) multiHands.push({ handedness: 'Right', landmarks: rightHand.map(l => [l.x, l.y, l.z]) });
         if (leftHand) multiHands.push({ handedness: 'Left', landmarks: leftHand.map(l => [l.x, l.y, l.z]) });
 
-        sendLandmarksForRecognition(rawPrimary, multiHands, 'Right', requestMode)
+        let pilotMeta = null;
+        if (pilotMetadataProviderRef.current) {
+          try {
+            pilotMeta = pilotMetadataProviderRef.current();
+          } catch (e) {
+            pilotMeta = null;
+          }
+        }
+
+        sendLandmarksForRecognition(rawPrimary, multiHands, 'Right', requestMode, pilotMeta)
           .then((resp) => {
             if (currentGen !== requestGenRef.current || conversionModeRef.current !== requestMode) {
               return; // Bỏ qua response stale khi mode đã chuyển sang mode khác
@@ -1094,6 +1112,14 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
           })()}
 
         </div>
+
+        {/* GIAO DIỆN KIỂM THỬ CONTROLLED WEBCAM PILOT HUD (TASK 7F.5B) */}
+        <PilotTestingHUD
+          isActive={showPilotHUD}
+          onToggleActive={() => setShowPilotHUD(prev => !prev)}
+          onMetadataUpdate={handlePilotMetadataUpdate}
+          cameraActive={cameraActive}
+        />
 
         {/* Khung hiển thị Video & Canvas */}
         <div

@@ -136,15 +136,36 @@ export async function sendSequenceForRecognition(sequence, threshold = 0.65) {
   }
 }
 
-export async function sendLandmarksForRecognition(landmarks, multi_hands = null, handedness = 'Right', mode = null) {
+export async function sendLandmarksForRecognition(
+  landmarks,
+  multi_hands = null,
+  handedness = 'Right',
+  mode = null,
+  metadata = null
+) {
   try {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(mode ? { 'X-Conversion-Mode': mode } : {}),
+      ...(metadata?.expected_sign ? { 'X-Expected-Sign': metadata.expected_sign } : {}),
+      ...(metadata?.session_id ? { 'X-Session-Id': metadata.session_id } : {}),
+      ...(metadata?.trial_id ? { 'X-Trial-Id': metadata.trial_id } : {}),
+      ...(metadata?.frame_idx !== undefined && metadata?.frame_idx !== null ? { 'X-Frame-Idx': String(metadata.frame_idx) } : {})
+    };
+    const bodyPayload = {
+      landmarks,
+      multi_hands,
+      handedness,
+      mode,
+      ...(metadata?.expected_sign ? { expected_sign: metadata.expected_sign } : {}),
+      ...(metadata?.session_id ? { session_id: metadata.session_id } : {}),
+      ...(metadata?.trial_id ? { trial_id: metadata.trial_id } : {}),
+      ...(metadata?.frame_idx !== undefined && metadata?.frame_idx !== null ? { frame_idx: Number(metadata.frame_idx) } : {})
+    };
     const res = await fetch(`${API_BASE_URL}/api/recognize_landmarks`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(mode ? { 'X-Conversion-Mode': mode } : {})
-      },
-      body: JSON.stringify({ landmarks, multi_hands, handedness, mode })
+      headers,
+      body: JSON.stringify(bodyPayload)
     });
     if (!res.ok) throw new Error('Recognition failed');
     return await res.json();
@@ -154,6 +175,60 @@ export async function sendLandmarksForRecognition(landmarks, multi_hands = null,
       success: true,
       data: clientSideLocalRecognize(landmarks)
     };
+  }
+}
+
+/**
+ * Điều khiển bật/tắt ghi log chẩn đoán Controlled Webcam Pilot (Task 7F.5B / 7F.5D)
+ * Tuyệt đối không truyền filepath qua HTTP API để bảo vệ an toàn đường dẫn.
+ */
+export async function setPilotLogging(enabled, filepath_or_session_id = null, maybe_session_id = null) {
+  const session_id = maybe_session_id || (typeof filepath_or_session_id === 'string' && !filepath_or_session_id.includes('/') && !filepath_or_session_id.includes('\\') ? filepath_or_session_id : null);
+  try {
+    const payload = { enabled };
+    if (session_id) {
+      payload.session_id = session_id;
+    }
+    const res = await fetch(`${API_BASE_URL}/api/pilot/control`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson.detail || 'Failed to toggle pilot logging');
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn('[VSL API] Pilot control error:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Xả toàn bộ bộ đệm log chẩn đoán pilot xuống đĩa JSONL
+ */
+export async function flushPilotLogs() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/pilot/flush`, { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to flush pilot logs');
+    return await res.json();
+  } catch (err) {
+    console.warn('[VSL API] Pilot flush error:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Lấy số liệu thống kê ghi log pilot (queued, logged, dropped)
+ */
+export async function fetchPilotStats() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/pilot/stats`);
+    if (!res.ok) throw new Error('Failed to fetch pilot stats');
+    return await res.json();
+  } catch (err) {
+    return { success: false, error: err.message };
   }
 }
 

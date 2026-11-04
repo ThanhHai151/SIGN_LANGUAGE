@@ -1,0 +1,167 @@
+{
+  "Ơ": {
+    "video_id": "D0508N",
+    "total_frames": 89,
+    "expected_base": "O",
+    "competing_rule": "I",
+    "rule_competing_matches": 1,
+    "baseline_lost_count": 1,
+    "fsm_resets": 1,
+    "fsm_retained_frames": 3,
+    "diacritic_confirmed_frames": [],
+    "competing_overwritten_frames": [
+      [
+        57,
+        "I"
+      ]
+    ],
+    "confirmed_tokens": [
+      [
+        29,
+        "M"
+      ],
+      [
+        35,
+        "E"
+      ],
+      [
+        36,
+        "O"
+      ],
+      [
+        43,
+        "E"
+      ],
+      [
+        45,
+        "O"
+      ],
+      [
+        57,
+        "I"
+      ]
+    ]
+  },
+  "Ư": {
+    "video_id": "D0515N",
+    "total_frames": 118,
+    "expected_base": "U",
+    "competing_rule": "I",
+    "rule_competing_matches": 4,
+    "baseline_lost_count": 1,
+    "fsm_resets": 1,
+    "fsm_retained_frames": 21,
+    "diacritic_confirmed_frames": [
+      [
+        34,
+        "Ư"
+      ]
+    ],
+    "competing_overwritten_frames": [],
+    "confirmed_tokens": [
+      [
+        17,
+        "U"
+      ],
+      [
+        34,
+        "Ư"
+      ]
+    ]
+  },
+  "Ă": {
+    "video_id": "D0490B",
+    "total_frames": 89,
+    "expected_base": "A",
+    "competing_rule": "V",
+    "rule_competing_matches": 18,
+    "baseline_lost_count": 0,
+    "fsm_resets": 0,
+    "fsm_retained_frames": 0,
+    "diacritic_confirmed_frames": [],
+    "competing_overwritten_frames": [
+      [
+        29,
+        "V"
+      ],
+      [
+        30,
+        "V"
+      ],
+      [
+        31,
+        "V"
+      ],
+      [
+        32,
+        "V"
+      ],
+      [
+        33,
+        "V"
+      ],
+      [
+        34,
+        "V"
+      ],
+      [
+        35,
+        "V"
+      ],
+      [
+        36,
+        "V"
+      ],
+      [
+        37,
+        "V"
+      ],
+      [
+        38,
+        "V"
+      ],
+      [
+        39,
+        "V"
+      ],
+      [
+        40,
+        "V"
+      ],
+      [
+        41,
+        "V"
+      ],
+      [
+        42,
+        "V"
+      ],
+      [
+        43,
+        "V"
+      ],
+      [
+        44,
+        "V"
+      ],
+      [
+        45,
+        "V"
+      ],
+      [
+        47,
+        "V"
+      ]
+    ],
+    "confirmed_tokens": [
+      [
+        27,
+        "D"
+      ],
+      [
+        29,
+        "V"
+      ]
+    ]
+  }
+}

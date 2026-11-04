@@ -1,0 +1,2366 @@
+{
+  "task": "TASK 7F.1 — AUDIT DANH SÁCH 22 CHỮ CÁI TĨNH CHƯA NHẬN DIỆN ĐƯỢC",
+  "timestamp": "2026-11-01T17:50:00+07:00",
+  "dataset": {
+    "name": "vsl_alphabet_static_v2.npz",
+    "total_samples": 551,
+    "total_classes": 22,
+    "classes_list": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "G",
+      "H",
+      "I",
+      "K",
+      "L",
+      "M",
+      "N",
+      "O",
+      "P",
+      "Q",
+      "R",
+      "S",
+      "T",
+      "U",
+      "V",
+      "X",
+      "Y"
+    ],
+    "source": "QIPEDC (Quân / Vietnamese Sign Language Alphabet Dataset)",
+    "signers_count": 1,
+    "video_overlap_leakage_note": "Toàn bộ các video của holdout set nằm trong train set của checkpoint alphabet_static_head_v1.pt (Task 7E.5A)."
+  },
+  "classification_summary": {
+    "offline": {
+      "PASS": [
+        "A",
+        "D",
+        "E",
+        "G",
+        "H",
+        "I",
+        "K",
+        "M",
+        "O",
+        "P",
+        "R",
+        "U",
+        "V"
+      ],
+      "UNSTABLE": [
+        "B",
+        "C",
+        "L",
+        "N",
+        "S",
+        "T",
+        "X",
+        "Y"
+      ],
+      "FAIL": [
+        "Q"
+      ]
+    },
+    "webcam": {
+      "PASS": [],
+      "UNSTABLE": [
+        "A",
+        "D",
+        "E",
+        "I",
+        "V"
+      ],
+      "FAIL": [
+        "Q"
+      ],
+      "NOT_TESTED": [
+        "B",
+        "C",
+        "G",
+        "H",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "R",
+        "S",
+        "T",
+        "U",
+        "X",
+        "Y"
+      ]
+    }
+  },
+  "prioritized_fix_list": [
+    {
+      "letter": "Q",
+      "priority": "P0 (CRITICAL)",
+      "accuracy": "26.32%",
+      "issue": "Ngưỡng 0.85 quá cao làm từ chối 73.7% mẫu thật",
+      "recommended_fix": "Điều chỉnh DEFAULT_SUPPLEMENTAL_THRESHOLDS['Q'] từ 0.85 về 0.70 hoặc 0.75"
+    },
+    {
+      "letter": "T",
+      "priority": "P1 (HIGH)",
+      "accuracy": "55.0%",
+      "issue": "Luật hình học T trượt 45% mẫu thật do kẹp ngón cái khó đo trên 2D; Static Head đoán đúng 90% nhưng bị chặn",
+      "recommended_fix": "Mở rộng Gated Fallback cho T hoặc nới lỏng luật hình học T"
+    },
+    {
+      "letter": "B",
+      "priority": "P1 (HIGH)",
+      "accuracy": "59.09%",
+      "issue": "Luật hình học B ngặt (trượt 40.9%); Static Head đoán đúng 81.8% nhưng bị chặn; 1 frame bị Rule O cướp",
+      "recommended_fix": "Mở rộng Gated Fallback cho B hoặc chỉnh ngưỡng duỗi ngón B"
+    },
+    {
+      "letter": "C",
+      "priority": "P1 (HIGH)",
+      "accuracy": "60.0%",
+      "issue": "Luật hình học C ràng buộc đồng thời 5 cự ly (trượt 40%); Static Head đoán đúng 95% nhưng bị chặn",
+      "recommended_fix": "Mở rộng Gated Fallback cho C hoặc nới lỏng ràng buộc cự ly C"
+    },
+    {
+      "letter": "L",
+      "priority": "P2 (MEDIUM)",
+      "accuracy": "68.75%",
+      "issue": "Luật hình học L yêu cầu góc vuông >= 70 độ (trượt 31.2%); Static Head đoán đúng 93.8% nhưng bị chặn",
+      "recommended_fix": "Mở rộng Gated Fallback cho L hoặc giảm ngưỡng góc vuông L xuống 60 độ"
+    },
+    {
+      "letter": "Y",
+      "priority": "P2 (MEDIUM)",
+      "accuracy": "68.75%",
+      "issue": "Luật hình học Y Shaka ngặt (trượt 31.2%); Static Head đoán đúng 93.8% nhưng bị chặn",
+      "recommended_fix": "Mở rộng Gated Fallback cho Y"
+    },
+    {
+      "letter": "X",
+      "priority": "P2 (MEDIUM)",
+      "accuracy": "68.0%",
+      "issue": "Bị Rule T cướp nhãn 1 frame; Static Head conf dao động quanh 0.75",
+      "recommended_fix": "Chống cướp nhãn giữa T và X; xem xét hạ ngưỡng X từ 0.75 xuống 0.70"
+    },
+    {
+      "letter": "N",
+      "priority": "P2 (MEDIUM)",
+      "accuracy": "71.43%",
+      "issue": "Ngưỡng 0.75 làm trượt 23.8% mẫu; 1 mẫu nhầm sang M",
+      "recommended_fix": "Điều chỉnh ngưỡng N từ 0.75 xuống 0.70"
+    },
+    {
+      "letter": "I & V",
+      "priority": "P2 (MEDIUM - HIJACKING)",
+      "accuracy": "77.78% / 76.47%",
+      "issue": "Rule I và V quá nhạy, cướp nhãn của Ơ, Ư, Ă khi làm cử chỉ tạo dấu",
+      "recommended_fix": "Bảo toàn cơ chế FSM-Aware Suppression đã có từ Task 7E.4A"
+    }
+  ],
+  "priority_letters_deep_dive": {
+    "E": {
+      "q1_has_geom_rule": true,
+      "q2_geom_match_rate": "28.57% (10/35)",
+      "q3_static_head_invoked_on_no_match": true,
+      "q3_invocation_mechanism": "Gated Fallback",
+      "q4_static_head_target_pred_rate": "91.43% (32/35)",
+      "q5_confidence_distribution": {
+        "mean": 0.877,
+        "min": 0.0,
+        "max": 0.972
+      },
+      "q6_geom_hijacked_count": 0,
+      "q6_geom_hijacked_samples": [],
+      "q7_gating_or_threshold_issues": true,
+      "q7_gating_failure_details": [
+        "FALLBACK_HEAD_PREDICTED_I",
+        "FALLBACK_HEAD_PREDICTED_A",
+        "FALLBACK_HEAD_PREDICTED_A"
+      ],
+      "q8_data_limitation": "35 frames từ 2 video, 1 người ký (QIPEDC)",
+      "q8_conclusion_verifiable": "Đủ bằng chứng để kết luận trên dữ liệu offline QIPEDC; Cần kiểm thử webcam thực tế đa người ký để xác nhận khả năng tổng quát hóa."
+    },
+    "G": {
+      "q1_has_geom_rule": false,
+      "q2_geom_match_rate": "0.0% (0/29)",
+      "q3_static_head_invoked_on_no_match": true,
+      "q3_invocation_mechanism": "Supplemental Set",
+      "q4_static_head_target_pred_rate": "96.55% (28/29)",
+      "q5_confidence_distribution": {
+        "mean": 0.875,
+        "min": 0.049,
+        "max": 0.966
+      },
+      "q6_geom_hijacked_count": 0,
+      "q6_geom_hijacked_samples": [],
+      "q7_gating_or_threshold_issues": true,
+      "q7_gating_failure_details": [
+        "HEAD_LOW_CONF_0.68_LT_0.70",
+        "HEAD_LOW_CONF_0.54_LT_0.70",
+        "HEAD_PREDICTED_Q"
+      ],
+      "q8_data_limitation": "29 frames từ 1 video, 1 người ký (QIPEDC)",
+      "q8_conclusion_verifiable": "Đủ bằng chứng để kết luận trên dữ liệu offline QIPEDC; Cần kiểm thử webcam thực tế đa người ký để xác nhận khả năng tổng quát hóa."
+    },
+    "H": {
+      "q1_has_geom_rule": false,
+      "q2_geom_match_rate": "0.0% (0/18)",
+      "q3_static_head_invoked_on_no_match": true,
+      "q3_invocation_mechanism": "Supplemental Set",
+      "q4_static_head_target_pred_rate": "94.44% (17/18)",
+      "q5_confidence_distribution": {
+        "mean": 0.888,
+        "min": 0.178,
+        "max": 0.972
+      },
+      "q6_geom_hijacked_count": 0,
+      "q6_geom_hijacked_samples": [],
+      "q7_gating_or_threshold_issues": true,
+      "q7_gating_failure_details": [
+        "HEAD_PREDICTED_I",
+        "HEAD_LOW_CONF_0.53_LT_0.70"
+      ],
+      "q8_data_limitation": "18 frames từ 1 video, 1 người ký (QIPEDC)",
+      "q8_conclusion_verifiable": "Đủ bằng chứng để kết luận trên dữ liệu offline QIPEDC; Cần kiểm thử webcam thực tế đa người ký để xác nhận khả năng tổng quát hóa."
+    },
+    "I": {
+      "q1_has_geom_rule": true,
+      "q2_geom_match_rate": "77.78% (14/18)",
+      "q3_static_head_invoked_on_no_match": false,
+      "q3_invocation_mechanism": "NONE (Blocked)",
+      "q4_static_head_target_pred_rate": "100.0% (18/18)",
+      "q5_confidence_distribution": {
+        "mean": 0.907,
+        "min": 0.618,
+        "max": 0.964
+      },
+      "q6_geom_hijacked_count": 0,
+      "q6_geom_hijacked_samples": [],
+      "q7_gating_or_threshold_issues": true,
+      "q7_gating_failure_details": [
+        "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK"
+      ],
+      "q8_data_limitation": "18 frames từ 1 video, 1 người ký (QIPEDC)",
+      "q8_conclusion_verifiable": "Đủ bằng chứng để kết luận trên dữ liệu offline QIPEDC; Cần kiểm thử webcam thực tế đa người ký để xác nhận khả năng tổng quát hóa."
+    },
+    "K": {
+      "q1_has_geom_rule": false,
+      "q2_geom_match_rate": "0.0% (0/17)",
+      "q3_static_head_invoked_on_no_match": true,
+      "q3_invocation_mechanism": "Supplemental Set",
+      "q4_static_head_target_pred_rate": "82.35% (14/17)",
+      "q5_confidence_distribution": {
+        "mean": 0.787,
+        "min": 0.0,
+        "max": 0.957
+      },
+      "q6_geom_hijacked_count": 0,
+      "q6_geom_hijacked_samples": [],
+      "q7_gating_or_threshold_issues": true,
+      "q7_gating_failure_details": [
+        "HEAD_PREDICTED_G",
+        "HEAD_PREDICTED_C",
+        "HEAD_PREDICTED_Q"
+      ],
+      "q8_data_limitation": "17 frames từ 1 video, 1 người ký (QIPEDC)",
+      "q8_conclusion_verifiable": "Đủ bằng chứng để kết luận trên dữ liệu offline QIPEDC; Cần kiểm thử webcam thực tế đa người ký để xác nhận khả năng tổng quát hóa."
+    },
+    "M": {
+      "q1_has_geom_rule": false,
+      "q2_geom_match_rate": "0.0% (0/19)",
+      "q3_static_head_invoked_on_no_match": true,
+      "q3_invocation_mechanism": "Supplemental Set",
+      "q4_static_head_target_pred_rate": "100.0% (19/19)",
+      "q5_confidence_distribution": {
+        "mean": 0.852,
+        "min": 0.621,
+        "max": 0.938
+      },
+      "q6_geom_hijacked_count": 0,
+      "q6_geom_hijacked_samples": [],
+      "q7_gating_or_threshold_issues": true,
+      "q7_gating_failure_details": [
+        "HEAD_LOW_CONF_0.67_LT_0.70",
+        "HEAD_LOW_CONF_0.62_LT_0.70"
+      ],
+      "q8_data_limitation": "19 frames từ 1 video, 1 người ký (QIPEDC)",
+      "q8_conclusion_verifiable": "Đủ bằng chứng để kết luận trên dữ liệu offline QIPEDC; Cần kiểm thử webcam thực tế đa người ký để xác nhận khả năng tổng quát hóa."
+    }
+  },
+  "per_letter_audit": {
+    "A": {
+      "letter": "A",
+      "dataset_samples": 64,
+      "video_count": 3,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0489.mp4",
+        "backend/data/media_cache/videos/D0490B.mp4",
+        "backend/data/media_cache/videos/D0491B.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 60,
+      "offline_accuracy": 93.75,
+      "offline_category": "PASS",
+      "live_webcam_status": "UNSTABLE",
+      "live_webcam_evidence": "Luật hình học thất bại 67-73% trên tay thực tế; Fallback phụ thuộc mô hình MLP bị video-overlap bias.",
+      "architecture_tier": "Tier 1 (Geometric Rule) + Tier 2 (Gated Static Fallback)",
+      "has_geom_rule": true,
+      "has_static_fallback": true,
+      "has_supplemental": false,
+      "primary_recognition_source": "static_head_fallback",
+      "sources_breakdown": {
+        "static_head_fallback": 43,
+        "geometric_rule": 18,
+        "none": 3
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 3,
+        "O": 1
+      },
+      "root_cause": "Luật hình học quá ngặt (trượt 67-73%), được cứu bằng Gated Fallback trên offline; tuy nhiên vẫn nhạy cảm góc quay webcam và người ký mới.",
+      "geom_details": {
+        "has_geom_rule": true,
+        "match_count": 17,
+        "match_rate": 26.56,
+        "status_counts": {
+          "NO_MATCH": 46,
+          "MATCH": 18
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 46,
+          "A": 17,
+          "O": 1
+        }
+      },
+      "head_details": {
+        "target_pred_count": 62,
+        "target_pred_rate": 96.88,
+        "all_preds_breakdown": {
+          "A": 62,
+          "L": 1,
+          "V": 1
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.922,
+          "min": 0.138,
+          "max": 0.974
+        }
+      },
+      "geom_hijacked_count": 1,
+      "geom_hijacked_samples": [
+        {
+          "frame_idx": 49,
+          "video": "backend/data/media_cache/videos/D0491B.mp4",
+          "geom_letter": "O",
+          "geom_conf": 0.95,
+          "head_letter": "A",
+          "head_conf": 0.6362
+        }
+      ],
+      "gating_failures_count": 4,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 62,
+          "video": "backend/data/media_cache/videos/D0489.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "FALLBACK_LOW_CONF_0.47_LT_0.70",
+          "h_letter": "A",
+          "h_conf": 0.4672
+        },
+        {
+          "frame_idx": 64,
+          "video": "backend/data/media_cache/videos/D0489.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "FALLBACK_HEAD_PREDICTED_L",
+          "h_letter": "L",
+          "h_conf": 0.2241
+        },
+        {
+          "frame_idx": 66,
+          "video": "backend/data/media_cache/videos/D0489.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "FALLBACK_HEAD_PREDICTED_V",
+          "h_letter": "V",
+          "h_conf": 0.3346
+        },
+        {
+          "frame_idx": 49,
+          "video": "backend/data/media_cache/videos/D0491B.mp4",
+          "final_sign": "O",
+          "reason": "GEOM_HIJACKED_BY_O",
+          "h_letter": "A",
+          "h_conf": 0.6362
+        }
+      ]
+    },
+    "B": {
+      "letter": "B",
+      "dataset_samples": 22,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0492.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 13,
+      "offline_accuracy": 59.09,
+      "offline_category": "UNSTABLE",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; offline dao động 55-73%.",
+      "architecture_tier": "Tier 1 (Geometric Rule only)",
+      "has_geom_rule": true,
+      "has_static_fallback": false,
+      "has_supplemental": false,
+      "primary_recognition_source": "geometric_rule",
+      "sources_breakdown": {
+        "none": 8,
+        "geometric_rule": 14
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 8,
+        "O": 1
+      },
+      "root_cause": "Chỉ dựa vào luật hình học khắt khe (độ chính xác 59.09%), Static Head dự đoán tốt nhưng không được phép phát ra do nằm ngoài danh mục fallback/supplemental.",
+      "geom_details": {
+        "has_geom_rule": true,
+        "match_count": 13,
+        "match_rate": 59.09,
+        "status_counts": {
+          "NO_MATCH": 8,
+          "MATCH": 14
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 8,
+          "B": 13,
+          "O": 1
+        }
+      },
+      "head_details": {
+        "target_pred_count": 18,
+        "target_pred_rate": 81.82,
+        "all_preds_breakdown": {
+          "B": 18,
+          "E": 1,
+          "I": 1,
+          "N": 1,
+          "A": 1
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.749,
+          "min": 0.0,
+          "max": 0.939
+        }
+      },
+      "geom_hijacked_count": 1,
+      "geom_hijacked_samples": [
+        {
+          "frame_idx": 54,
+          "video": "backend/data/media_cache/videos/D0492.mp4",
+          "geom_letter": "O",
+          "geom_conf": 0.95,
+          "head_letter": "E",
+          "head_conf": 0.3074
+        }
+      ],
+      "gating_failures_count": 9,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 20,
+          "video": "backend/data/media_cache/videos/D0492.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "B",
+          "h_conf": 0.7788
+        },
+        {
+          "frame_idx": 22,
+          "video": "backend/data/media_cache/videos/D0492.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "B",
+          "h_conf": 0.7805
+        },
+        {
+          "frame_idx": 28,
+          "video": "backend/data/media_cache/videos/D0492.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "B",
+          "h_conf": 0.939
+        },
+        {
+          "frame_idx": 52,
+          "video": "backend/data/media_cache/videos/D0492.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "B",
+          "h_conf": 0.9029
+        },
+        {
+          "frame_idx": 54,
+          "video": "backend/data/media_cache/videos/D0492.mp4",
+          "final_sign": "O",
+          "reason": "GEOM_HIJACKED_BY_O",
+          "h_letter": "E",
+          "h_conf": 0.3074
+        }
+      ]
+    },
+    "C": {
+      "letter": "C",
+      "dataset_samples": 20,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0493.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 12,
+      "offline_accuracy": 60.0,
+      "offline_category": "UNSTABLE",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; offline dao động 55-73%.",
+      "architecture_tier": "Tier 1 (Geometric Rule only)",
+      "has_geom_rule": true,
+      "has_static_fallback": false,
+      "has_supplemental": false,
+      "primary_recognition_source": "geometric_rule",
+      "sources_breakdown": {
+        "none": 8,
+        "geometric_rule": 12
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 8
+      },
+      "root_cause": "Chỉ dựa vào luật hình học khắt khe (độ chính xác 60.0%), Static Head dự đoán tốt nhưng không được phép phát ra do nằm ngoài danh mục fallback/supplemental.",
+      "geom_details": {
+        "has_geom_rule": true,
+        "match_count": 12,
+        "match_rate": 60.0,
+        "status_counts": {
+          "NO_MATCH": 8,
+          "MATCH": 12
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 8,
+          "C": 12
+        }
+      },
+      "head_details": {
+        "target_pred_count": 19,
+        "target_pred_rate": 95.0,
+        "all_preds_breakdown": {
+          "C": 19,
+          "E": 1
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.77,
+          "min": 0.094,
+          "max": 0.94
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 8,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 18,
+          "video": "backend/data/media_cache/videos/D0493.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "C",
+          "h_conf": 0.5466
+        },
+        {
+          "frame_idx": 20,
+          "video": "backend/data/media_cache/videos/D0493.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "C",
+          "h_conf": 0.6078
+        },
+        {
+          "frame_idx": 22,
+          "video": "backend/data/media_cache/videos/D0493.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "C",
+          "h_conf": 0.8793
+        },
+        {
+          "frame_idx": 26,
+          "video": "backend/data/media_cache/videos/D0493.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "C",
+          "h_conf": 0.9294
+        },
+        {
+          "frame_idx": 50,
+          "video": "backend/data/media_cache/videos/D0493.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "C",
+          "h_conf": 0.6936
+        }
+      ]
+    },
+    "D": {
+      "letter": "D",
+      "dataset_samples": 46,
+      "video_count": 2,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0494.mp4",
+        "backend/data/media_cache/videos/D0495.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 43,
+      "offline_accuracy": 93.48,
+      "offline_category": "PASS",
+      "live_webcam_status": "UNSTABLE",
+      "live_webcam_evidence": "Luật hình học thất bại 67-73% trên tay thực tế; Fallback phụ thuộc mô hình MLP bị video-overlap bias.",
+      "architecture_tier": "Tier 1 (Geometric Rule) + Tier 2 (Gated Static Fallback)",
+      "has_geom_rule": true,
+      "has_static_fallback": true,
+      "has_supplemental": false,
+      "primary_recognition_source": "static_head_fallback",
+      "sources_breakdown": {
+        "geometric_rule": 15,
+        "static_head_fallback": 28,
+        "none": 3
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 3
+      },
+      "root_cause": "Luật hình học quá ngặt (trượt 67-73%), được cứu bằng Gated Fallback trên offline; tuy nhiên vẫn nhạy cảm góc quay webcam và người ký mới.",
+      "geom_details": {
+        "has_geom_rule": true,
+        "match_count": 15,
+        "match_rate": 32.61,
+        "status_counts": {
+          "MATCH": 15,
+          "NO_MATCH": 31
+        },
+        "matches_breakdown": {
+          "D": 15,
+          "NO_MATCH": 31
+        }
+      },
+      "head_details": {
+        "target_pred_count": 44,
+        "target_pred_rate": 95.65,
+        "all_preds_breakdown": {
+          "D": 44,
+          "C": 1,
+          "Q": 1
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.916,
+          "min": 0.0,
+          "max": 0.974
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 3,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 52,
+          "video": "backend/data/media_cache/videos/D0494.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "FALLBACK_LOW_CONF_0.57_LT_0.70",
+          "h_letter": "D",
+          "h_conf": 0.5671
+        },
+        {
+          "frame_idx": 54,
+          "video": "backend/data/media_cache/videos/D0494.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "FALLBACK_HEAD_PREDICTED_C",
+          "h_letter": "C",
+          "h_conf": 0.1907
+        },
+        {
+          "frame_idx": 56,
+          "video": "backend/data/media_cache/videos/D0494.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "FALLBACK_HEAD_PREDICTED_Q",
+          "h_letter": "Q",
+          "h_conf": 0.1729
+        }
+      ]
+    },
+    "E": {
+      "letter": "E",
+      "dataset_samples": 35,
+      "video_count": 2,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0496.mp4",
+        "backend/data/media_cache/videos/D0497B.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 32,
+      "offline_accuracy": 91.43,
+      "offline_category": "PASS",
+      "live_webcam_status": "UNSTABLE",
+      "live_webcam_evidence": "Luật hình học thất bại 67-73% trên tay thực tế; Fallback phụ thuộc mô hình MLP bị video-overlap bias.",
+      "architecture_tier": "Tier 1 (Geometric Rule) + Tier 2 (Gated Static Fallback)",
+      "has_geom_rule": true,
+      "has_static_fallback": true,
+      "has_supplemental": false,
+      "primary_recognition_source": "static_head_fallback",
+      "sources_breakdown": {
+        "geometric_rule": 10,
+        "static_head_fallback": 22,
+        "none": 3
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 3
+      },
+      "root_cause": "Luật hình học quá ngặt (trượt 67-73%), được cứu bằng Gated Fallback trên offline; tuy nhiên vẫn nhạy cảm góc quay webcam và người ký mới.",
+      "geom_details": {
+        "has_geom_rule": true,
+        "match_count": 10,
+        "match_rate": 28.57,
+        "status_counts": {
+          "MATCH": 10,
+          "NO_MATCH": 25
+        },
+        "matches_breakdown": {
+          "E": 10,
+          "NO_MATCH": 25
+        }
+      },
+      "head_details": {
+        "target_pred_count": 32,
+        "target_pred_rate": 91.43,
+        "all_preds_breakdown": {
+          "E": 32,
+          "I": 1,
+          "A": 2
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.877,
+          "min": 0.0,
+          "max": 0.972
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 3,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 42,
+          "video": "backend/data/media_cache/videos/D0496.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "FALLBACK_HEAD_PREDICTED_I",
+          "h_letter": "I",
+          "h_conf": 0.5509
+        },
+        {
+          "frame_idx": 44,
+          "video": "backend/data/media_cache/videos/D0496.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "FALLBACK_HEAD_PREDICTED_A",
+          "h_letter": "A",
+          "h_conf": 0.1939
+        },
+        {
+          "frame_idx": 46,
+          "video": "backend/data/media_cache/videos/D0496.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "FALLBACK_HEAD_PREDICTED_A",
+          "h_letter": "A",
+          "h_conf": 0.2616
+        }
+      ]
+    },
+    "G": {
+      "letter": "G",
+      "dataset_samples": 29,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0498B.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 26,
+      "offline_accuracy": 89.66,
+      "offline_category": "PASS",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; dữ liệu hiện có chỉ từ 1 video/1 người ký bị rò rỉ video.",
+      "architecture_tier": "Tier 2 (Static Head Supplemental only)",
+      "has_geom_rule": false,
+      "has_static_fallback": false,
+      "has_supplemental": true,
+      "primary_recognition_source": "static_head",
+      "sources_breakdown": {
+        "static_head": 26,
+        "none": 3
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 3
+      },
+      "root_cause": "Hoạt động tốt qua Static Head trên tập offline QIPEDC; chưa có kiểm chứng webcam đa người ký.",
+      "geom_details": {
+        "has_geom_rule": false,
+        "match_count": 0,
+        "match_rate": 0.0,
+        "status_counts": {
+          "NO_MATCH": 29
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 29
+        }
+      },
+      "head_details": {
+        "target_pred_count": 28,
+        "target_pred_rate": 96.55,
+        "all_preds_breakdown": {
+          "G": 28,
+          "Q": 1
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.875,
+          "min": 0.049,
+          "max": 0.966
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 3,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 52,
+          "video": "backend/data/media_cache/videos/D0498B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.68_LT_0.70",
+          "h_letter": "G",
+          "h_conf": 0.6818
+        },
+        {
+          "frame_idx": 54,
+          "video": "backend/data/media_cache/videos/D0498B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.54_LT_0.70",
+          "h_letter": "G",
+          "h_conf": 0.536
+        },
+        {
+          "frame_idx": 56,
+          "video": "backend/data/media_cache/videos/D0498B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_Q",
+          "h_letter": "Q",
+          "h_conf": 0.5174
+        }
+      ]
+    },
+    "H": {
+      "letter": "H",
+      "dataset_samples": 18,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0500B.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 16,
+      "offline_accuracy": 88.89,
+      "offline_category": "PASS",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; dữ liệu hiện có chỉ từ 1 video/1 người ký bị rò rỉ video.",
+      "architecture_tier": "Tier 2 (Static Head Supplemental only)",
+      "has_geom_rule": false,
+      "has_static_fallback": false,
+      "has_supplemental": true,
+      "primary_recognition_source": "static_head",
+      "sources_breakdown": {
+        "static_head": 16,
+        "none": 2
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 2
+      },
+      "root_cause": "Hoạt động tốt qua Static Head trên tập offline QIPEDC; chưa có kiểm chứng webcam đa người ký.",
+      "geom_details": {
+        "has_geom_rule": false,
+        "match_count": 0,
+        "match_rate": 0.0,
+        "status_counts": {
+          "NO_MATCH": 18
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 18
+        }
+      },
+      "head_details": {
+        "target_pred_count": 17,
+        "target_pred_rate": 94.44,
+        "all_preds_breakdown": {
+          "H": 17,
+          "I": 1
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.888,
+          "min": 0.178,
+          "max": 0.972
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 2,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 46,
+          "video": "backend/data/media_cache/videos/D0500B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_I",
+          "h_letter": "I",
+          "h_conf": 0.6839
+        },
+        {
+          "frame_idx": 48,
+          "video": "backend/data/media_cache/videos/D0500B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.53_LT_0.70",
+          "h_letter": "H",
+          "h_conf": 0.5277
+        }
+      ]
+    },
+    "I": {
+      "letter": "I",
+      "dataset_samples": 18,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0501.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 14,
+      "offline_accuracy": 77.78,
+      "offline_category": "PASS",
+      "live_webcam_status": "UNSTABLE",
+      "live_webcam_evidence": "Rule I và Rule V quá nhạy, đã xác nhận chiếm nhãn của Ư, Ơ, Ă trong kiểm thử camera Task 7E.3/7E.4A.",
+      "architecture_tier": "Tier 1 (Geometric Rule only)",
+      "has_geom_rule": true,
+      "has_static_fallback": false,
+      "has_supplemental": false,
+      "primary_recognition_source": "geometric_rule",
+      "sources_breakdown": {
+        "none": 4,
+        "geometric_rule": 14
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 4
+      },
+      "root_cause": "Luật hình học hoạt động tốt trên mẫu tĩnh chuẩn, nhưng quá nhạy (aggressive), thường xuyên cướp nhãn của các chữ động có dấu (Ư, Ơ, Ă).",
+      "geom_details": {
+        "has_geom_rule": true,
+        "match_count": 14,
+        "match_rate": 77.78,
+        "status_counts": {
+          "NO_MATCH": 4,
+          "MATCH": 14
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 4,
+          "I": 14
+        }
+      },
+      "head_details": {
+        "target_pred_count": 18,
+        "target_pred_rate": 100.0,
+        "all_preds_breakdown": {
+          "I": 18
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.907,
+          "min": 0.618,
+          "max": 0.964
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 4,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 12,
+          "video": "backend/data/media_cache/videos/D0501.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "I",
+          "h_conf": 0.7967
+        },
+        {
+          "frame_idx": 42,
+          "video": "backend/data/media_cache/videos/D0501.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "I",
+          "h_conf": 0.6179
+        },
+        {
+          "frame_idx": 44,
+          "video": "backend/data/media_cache/videos/D0501.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "I",
+          "h_conf": 0.7245
+        },
+        {
+          "frame_idx": 46,
+          "video": "backend/data/media_cache/videos/D0501.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "I",
+          "h_conf": 0.7181
+        }
+      ]
+    },
+    "K": {
+      "letter": "K",
+      "dataset_samples": 17,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0502.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 14,
+      "offline_accuracy": 82.35,
+      "offline_category": "PASS",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; dữ liệu hiện có chỉ từ 1 video/1 người ký bị rò rỉ video.",
+      "architecture_tier": "Tier 2 (Static Head Supplemental only)",
+      "has_geom_rule": false,
+      "has_static_fallback": false,
+      "has_supplemental": true,
+      "primary_recognition_source": "static_head",
+      "sources_breakdown": {
+        "static_head": 14,
+        "none": 3
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 3
+      },
+      "root_cause": "Hoạt động tốt qua Static Head trên tập offline QIPEDC; chưa có kiểm chứng webcam đa người ký.",
+      "geom_details": {
+        "has_geom_rule": false,
+        "match_count": 0,
+        "match_rate": 0.0,
+        "status_counts": {
+          "NO_MATCH": 17
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 17
+        }
+      },
+      "head_details": {
+        "target_pred_count": 14,
+        "target_pred_rate": 82.35,
+        "all_preds_breakdown": {
+          "K": 14,
+          "G": 1,
+          "C": 1,
+          "Q": 1
+        },
+        "threshold_used": 0.75,
+        "target_confidence": {
+          "mean": 0.787,
+          "min": 0.0,
+          "max": 0.957
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 3,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 44,
+          "video": "backend/data/media_cache/videos/D0502.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_G",
+          "h_letter": "G",
+          "h_conf": 0.6877
+        },
+        {
+          "frame_idx": 46,
+          "video": "backend/data/media_cache/videos/D0502.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_C",
+          "h_letter": "C",
+          "h_conf": 0.1666
+        },
+        {
+          "frame_idx": 48,
+          "video": "backend/data/media_cache/videos/D0502.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_Q",
+          "h_letter": "Q",
+          "h_conf": 0.16
+        }
+      ]
+    },
+    "L": {
+      "letter": "L",
+      "dataset_samples": 16,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0503.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 11,
+      "offline_accuracy": 68.75,
+      "offline_category": "UNSTABLE",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; offline dao động 55-73%.",
+      "architecture_tier": "Tier 1 (Geometric Rule only)",
+      "has_geom_rule": true,
+      "has_static_fallback": false,
+      "has_supplemental": false,
+      "primary_recognition_source": "geometric_rule",
+      "sources_breakdown": {
+        "none": 5,
+        "geometric_rule": 11
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 5
+      },
+      "root_cause": "Chỉ dựa vào luật hình học khắt khe (độ chính xác 68.75%), Static Head dự đoán tốt nhưng không được phép phát ra do nằm ngoài danh mục fallback/supplemental.",
+      "geom_details": {
+        "has_geom_rule": true,
+        "match_count": 11,
+        "match_rate": 68.75,
+        "status_counts": {
+          "NO_MATCH": 5,
+          "MATCH": 11
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 5,
+          "L": 11
+        }
+      },
+      "head_details": {
+        "target_pred_count": 15,
+        "target_pred_rate": 93.75,
+        "all_preds_breakdown": {
+          "L": 15,
+          "A": 1
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.833,
+          "min": 0.153,
+          "max": 0.936
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 5,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 14,
+          "video": "backend/data/media_cache/videos/D0503.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "L",
+          "h_conf": 0.7695
+        },
+        {
+          "frame_idx": 38,
+          "video": "backend/data/media_cache/videos/D0503.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "L",
+          "h_conf": 0.9315
+        },
+        {
+          "frame_idx": 40,
+          "video": "backend/data/media_cache/videos/D0503.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "L",
+          "h_conf": 0.9159
+        },
+        {
+          "frame_idx": 42,
+          "video": "backend/data/media_cache/videos/D0503.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "L",
+          "h_conf": 0.2946
+        },
+        {
+          "frame_idx": 44,
+          "video": "backend/data/media_cache/videos/D0503.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "A",
+          "h_conf": 0.187
+        }
+      ]
+    },
+    "M": {
+      "letter": "M",
+      "dataset_samples": 19,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0504.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 17,
+      "offline_accuracy": 89.47,
+      "offline_category": "PASS",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; dữ liệu hiện có chỉ từ 1 video/1 người ký bị rò rỉ video.",
+      "architecture_tier": "Tier 2 (Static Head Supplemental only)",
+      "has_geom_rule": false,
+      "has_static_fallback": false,
+      "has_supplemental": true,
+      "primary_recognition_source": "static_head",
+      "sources_breakdown": {
+        "static_head": 17,
+        "none": 2
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 2
+      },
+      "root_cause": "Hoạt động tốt qua Static Head trên tập offline QIPEDC; chưa có kiểm chứng webcam đa người ký.",
+      "geom_details": {
+        "has_geom_rule": false,
+        "match_count": 0,
+        "match_rate": 0.0,
+        "status_counts": {
+          "NO_MATCH": 19
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 19
+        }
+      },
+      "head_details": {
+        "target_pred_count": 19,
+        "target_pred_rate": 100.0,
+        "all_preds_breakdown": {
+          "M": 19
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.852,
+          "min": 0.621,
+          "max": 0.938
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 2,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 32,
+          "video": "backend/data/media_cache/videos/D0504.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.67_LT_0.70",
+          "h_letter": "M",
+          "h_conf": 0.672
+        },
+        {
+          "frame_idx": 44,
+          "video": "backend/data/media_cache/videos/D0504.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.62_LT_0.70",
+          "h_letter": "M",
+          "h_conf": 0.6214
+        }
+      ]
+    },
+    "N": {
+      "letter": "N",
+      "dataset_samples": 21,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0505.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 15,
+      "offline_accuracy": 71.43,
+      "offline_category": "UNSTABLE",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; dữ liệu hiện có chỉ từ 1 video/1 người ký bị rò rỉ video.",
+      "architecture_tier": "Tier 2 (Static Head Supplemental only)",
+      "has_geom_rule": false,
+      "has_static_fallback": false,
+      "has_supplemental": true,
+      "primary_recognition_source": "static_head",
+      "sources_breakdown": {
+        "none": 5,
+        "static_head": 16
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 5,
+        "M": 1
+      },
+      "root_cause": "Hình chiếu 2D của N (2 ngón) và M (3 ngón) rất gần nhau; ngưỡng 0.75 khiến một số frame bị trượt hoặc nhầm sang M.",
+      "geom_details": {
+        "has_geom_rule": false,
+        "match_count": 0,
+        "match_rate": 0.0,
+        "status_counts": {
+          "NO_MATCH": 21
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 21
+        }
+      },
+      "head_details": {
+        "target_pred_count": 18,
+        "target_pred_rate": 85.71,
+        "all_preds_breakdown": {
+          "N": 18,
+          "M": 3
+        },
+        "threshold_used": 0.75,
+        "target_confidence": {
+          "mean": 0.729,
+          "min": 0.0,
+          "max": 0.95
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 6,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 16,
+          "video": "backend/data/media_cache/videos/D0505.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.39_LT_0.75",
+          "h_letter": "N",
+          "h_conf": 0.3943
+        },
+        {
+          "frame_idx": 46,
+          "video": "backend/data/media_cache/videos/D0505.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.64_LT_0.75",
+          "h_letter": "N",
+          "h_conf": 0.6397
+        },
+        {
+          "frame_idx": 48,
+          "video": "backend/data/media_cache/videos/D0505.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.69_LT_0.75",
+          "h_letter": "N",
+          "h_conf": 0.6875
+        },
+        {
+          "frame_idx": 52,
+          "video": "backend/data/media_cache/videos/D0505.mp4",
+          "final_sign": "M",
+          "reason": "HEAD_PREDICTED_M",
+          "h_letter": "M",
+          "h_conf": 0.8877
+        },
+        {
+          "frame_idx": 56,
+          "video": "backend/data/media_cache/videos/D0505.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_M",
+          "h_letter": "M",
+          "h_conf": 0.3708
+        }
+      ]
+    },
+    "O": {
+      "letter": "O",
+      "dataset_samples": 48,
+      "video_count": 3,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0506.mp4",
+        "backend/data/media_cache/videos/D0507B.mp4",
+        "backend/data/media_cache/videos/D0508N.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 37,
+      "offline_accuracy": 77.08,
+      "offline_category": "PASS",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; dữ liệu hiện có chỉ từ 1 video/1 người ký bị rò rỉ video.",
+      "architecture_tier": "Tier 1 (Geometric Rule only)",
+      "has_geom_rule": true,
+      "has_static_fallback": false,
+      "has_supplemental": false,
+      "primary_recognition_source": "geometric_rule",
+      "sources_breakdown": {
+        "none": 9,
+        "geometric_rule": 39
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 9,
+        "E": 2
+      },
+      "root_cause": "Luật hình học O hoạt động tốt trên thế tĩnh (77.1%), nhưng dễ bị Rule E cướp nhãn khi ngón cái khép sâu (2 frames).",
+      "geom_details": {
+        "has_geom_rule": true,
+        "match_count": 37,
+        "match_rate": 77.08,
+        "status_counts": {
+          "NO_MATCH": 9,
+          "MATCH": 39
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 9,
+          "O": 37,
+          "E": 2
+        }
+      },
+      "head_details": {
+        "target_pred_count": 45,
+        "target_pred_rate": 93.75,
+        "all_preds_breakdown": {
+          "G": 1,
+          "O": 45,
+          "C": 2
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.902,
+          "min": 0.1,
+          "max": 0.98
+        }
+      },
+      "geom_hijacked_count": 2,
+      "geom_hijacked_samples": [
+        {
+          "frame_idx": 35,
+          "video": "backend/data/media_cache/videos/D0508N.mp4",
+          "geom_letter": "E",
+          "geom_conf": 0.95,
+          "head_letter": "O",
+          "head_conf": 0.9736
+        },
+        {
+          "frame_idx": 43,
+          "video": "backend/data/media_cache/videos/D0508N.mp4",
+          "geom_letter": "E",
+          "geom_conf": 0.95,
+          "head_letter": "O",
+          "head_conf": 0.9487
+        }
+      ],
+      "gating_failures_count": 11,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 16,
+          "video": "backend/data/media_cache/videos/D0506.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "G",
+          "h_conf": 0.2748
+        },
+        {
+          "frame_idx": 18,
+          "video": "backend/data/media_cache/videos/D0506.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "O",
+          "h_conf": 0.6766
+        },
+        {
+          "frame_idx": 20,
+          "video": "backend/data/media_cache/videos/D0506.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "O",
+          "h_conf": 0.9642
+        },
+        {
+          "frame_idx": 24,
+          "video": "backend/data/media_cache/videos/D0506.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "O",
+          "h_conf": 0.9779
+        },
+        {
+          "frame_idx": 48,
+          "video": "backend/data/media_cache/videos/D0506.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "O",
+          "h_conf": 0.9427
+        }
+      ]
+    },
+    "P": {
+      "letter": "P",
+      "dataset_samples": 20,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0509B.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 16,
+      "offline_accuracy": 80.0,
+      "offline_category": "PASS",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; dữ liệu hiện có chỉ từ 1 video/1 người ký bị rò rỉ video.",
+      "architecture_tier": "Tier 2 (Static Head Supplemental only)",
+      "has_geom_rule": false,
+      "has_static_fallback": false,
+      "has_supplemental": true,
+      "primary_recognition_source": "static_head",
+      "sources_breakdown": {
+        "static_head": 16,
+        "none": 4
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 4
+      },
+      "root_cause": "Hoạt động tốt qua Static Head trên tập offline QIPEDC; chưa có kiểm chứng webcam đa người ký.",
+      "geom_details": {
+        "has_geom_rule": false,
+        "match_count": 0,
+        "match_rate": 0.0,
+        "status_counts": {
+          "NO_MATCH": 20
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 20
+        }
+      },
+      "head_details": {
+        "target_pred_count": 18,
+        "target_pred_rate": 90.0,
+        "all_preds_breakdown": {
+          "P": 18,
+          "Q": 2
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.791,
+          "min": 0.0,
+          "max": 0.953
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 4,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 52,
+          "video": "backend/data/media_cache/videos/D0509B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.50_LT_0.70",
+          "h_letter": "P",
+          "h_conf": 0.5033
+        },
+        {
+          "frame_idx": 54,
+          "video": "backend/data/media_cache/videos/D0509B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.53_LT_0.70",
+          "h_letter": "P",
+          "h_conf": 0.5308
+        },
+        {
+          "frame_idx": 58,
+          "video": "backend/data/media_cache/videos/D0509B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_Q",
+          "h_letter": "Q",
+          "h_conf": 0.3141
+        },
+        {
+          "frame_idx": 60,
+          "video": "backend/data/media_cache/videos/D0509B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_Q",
+          "h_letter": "Q",
+          "h_conf": 0.3871
+        }
+      ]
+    },
+    "Q": {
+      "letter": "Q",
+      "dataset_samples": 19,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0510.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 5,
+      "offline_accuracy": 26.32,
+      "offline_category": "FAIL",
+      "live_webcam_status": "FAIL",
+      "live_webcam_evidence": "Ngưỡng 0.85 quá cao làm từ chối 73.7% mẫu thật; người dùng không thể kích hoạt được Q trên thực tế.",
+      "architecture_tier": "Tier 2 (Static Head Supplemental only)",
+      "has_geom_rule": false,
+      "has_static_fallback": false,
+      "has_supplemental": true,
+      "primary_recognition_source": "static_head",
+      "sources_breakdown": {
+        "none": 14,
+        "static_head": 5
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 14
+      },
+      "root_cause": "Ngưỡng tin cậy quy định quá cao (0.85) nhằm phòng nhầm với X, khiến 73.7% mẫu Q thật bị từ chối thành NEUTRAL.",
+      "geom_details": {
+        "has_geom_rule": false,
+        "match_count": 0,
+        "match_rate": 0.0,
+        "status_counts": {
+          "NO_MATCH": 19
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 19
+        }
+      },
+      "head_details": {
+        "target_pred_count": 12,
+        "target_pred_rate": 63.16,
+        "all_preds_breakdown": {
+          "G": 1,
+          "Q": 12,
+          "X": 5,
+          "A": 1
+        },
+        "threshold_used": 0.85,
+        "target_confidence": {
+          "mean": 0.588,
+          "min": 0.057,
+          "max": 0.876
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 14,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 28,
+          "video": "backend/data/media_cache/videos/D0510.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_G",
+          "h_letter": "G",
+          "h_conf": 0.5707
+        },
+        {
+          "frame_idx": 30,
+          "video": "backend/data/media_cache/videos/D0510.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.55_LT_0.85",
+          "h_letter": "Q",
+          "h_conf": 0.5518
+        },
+        {
+          "frame_idx": 32,
+          "video": "backend/data/media_cache/videos/D0510.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_X",
+          "h_letter": "X",
+          "h_conf": 0.481
+        },
+        {
+          "frame_idx": 34,
+          "video": "backend/data/media_cache/videos/D0510.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_X",
+          "h_letter": "X",
+          "h_conf": 0.529
+        },
+        {
+          "frame_idx": 36,
+          "video": "backend/data/media_cache/videos/D0510.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_X",
+          "h_letter": "X",
+          "h_conf": 0.5165
+        }
+      ]
+    },
+    "R": {
+      "letter": "R",
+      "dataset_samples": 14,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0511.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 11,
+      "offline_accuracy": 78.57,
+      "offline_category": "PASS",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; dữ liệu hiện có chỉ từ 1 video/1 người ký bị rò rỉ video.",
+      "architecture_tier": "Tier 2 (Static Head Supplemental only)",
+      "has_geom_rule": false,
+      "has_static_fallback": false,
+      "has_supplemental": true,
+      "primary_recognition_source": "static_head",
+      "sources_breakdown": {
+        "none": 3,
+        "static_head": 11
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 3
+      },
+      "root_cause": "Hoạt động tốt qua Static Head trên tập offline QIPEDC; chưa có kiểm chứng webcam đa người ký.",
+      "geom_details": {
+        "has_geom_rule": false,
+        "match_count": 0,
+        "match_rate": 0.0,
+        "status_counts": {
+          "NO_MATCH": 14
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 14
+        }
+      },
+      "head_details": {
+        "target_pred_count": 12,
+        "target_pred_rate": 85.71,
+        "all_preds_breakdown": {
+          "R": 12,
+          "I": 1,
+          "A": 1
+        },
+        "threshold_used": 0.75,
+        "target_confidence": {
+          "mean": 0.733,
+          "min": 0.0,
+          "max": 0.935
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 3,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 14,
+          "video": "backend/data/media_cache/videos/D0511.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.65_LT_0.75",
+          "h_letter": "R",
+          "h_conf": 0.6465
+        },
+        {
+          "frame_idx": 40,
+          "video": "backend/data/media_cache/videos/D0511.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_I",
+          "h_letter": "I",
+          "h_conf": 0.1633
+        },
+        {
+          "frame_idx": 42,
+          "video": "backend/data/media_cache/videos/D0511.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_A",
+          "h_letter": "A",
+          "h_conf": 0.1787
+        }
+      ]
+    },
+    "S": {
+      "letter": "S",
+      "dataset_samples": 15,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0512.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 11,
+      "offline_accuracy": 73.33,
+      "offline_category": "UNSTABLE",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; offline dao động 55-73%.",
+      "architecture_tier": "Tier 1 (Geometric Rule only)",
+      "has_geom_rule": true,
+      "has_static_fallback": false,
+      "has_supplemental": false,
+      "primary_recognition_source": "geometric_rule",
+      "sources_breakdown": {
+        "none": 4,
+        "geometric_rule": 11
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 4
+      },
+      "root_cause": "Chỉ dựa vào luật hình học khắt khe (độ chính xác 73.33%), Static Head dự đoán tốt nhưng không được phép phát ra do nằm ngoài danh mục fallback/supplemental.",
+      "geom_details": {
+        "has_geom_rule": true,
+        "match_count": 11,
+        "match_rate": 73.33,
+        "status_counts": {
+          "NO_MATCH": 4,
+          "MATCH": 11
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 4,
+          "S": 11
+        }
+      },
+      "head_details": {
+        "target_pred_count": 13,
+        "target_pred_rate": 86.67,
+        "all_preds_breakdown": {
+          "Q": 1,
+          "S": 13,
+          "E": 1
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.77,
+          "min": 0.098,
+          "max": 0.912
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 4,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 16,
+          "video": "backend/data/media_cache/videos/D0512.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "Q",
+          "h_conf": 0.4604
+        },
+        {
+          "frame_idx": 22,
+          "video": "backend/data/media_cache/videos/D0512.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "S",
+          "h_conf": 0.7983
+        },
+        {
+          "frame_idx": 44,
+          "video": "backend/data/media_cache/videos/D0512.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "S",
+          "h_conf": 0.46
+        },
+        {
+          "frame_idx": 46,
+          "video": "backend/data/media_cache/videos/D0512.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "E",
+          "h_conf": 0.1385
+        }
+      ]
+    },
+    "T": {
+      "letter": "T",
+      "dataset_samples": 20,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0513B.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 11,
+      "offline_accuracy": 55.0,
+      "offline_category": "UNSTABLE",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; offline dao động 55-73%.",
+      "architecture_tier": "Tier 1 (Geometric Rule only)",
+      "has_geom_rule": true,
+      "has_static_fallback": false,
+      "has_supplemental": false,
+      "primary_recognition_source": "geometric_rule",
+      "sources_breakdown": {
+        "none": 9,
+        "geometric_rule": 11
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 9
+      },
+      "root_cause": "Chỉ dựa vào luật hình học khắt khe (độ chính xác 55.0%), Static Head dự đoán tốt nhưng không được phép phát ra do nằm ngoài danh mục fallback/supplemental.",
+      "geom_details": {
+        "has_geom_rule": true,
+        "match_count": 11,
+        "match_rate": 55.0,
+        "status_counts": {
+          "NO_MATCH": 9,
+          "MATCH": 11
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 9,
+          "T": 11
+        }
+      },
+      "head_details": {
+        "target_pred_count": 18,
+        "target_pred_rate": 90.0,
+        "all_preds_breakdown": {
+          "T": 18,
+          "C": 2
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.839,
+          "min": 0.0,
+          "max": 0.965
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 9,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 18,
+          "video": "backend/data/media_cache/videos/D0513B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "T",
+          "h_conf": 0.925
+        },
+        {
+          "frame_idx": 20,
+          "video": "backend/data/media_cache/videos/D0513B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "T",
+          "h_conf": 0.9635
+        },
+        {
+          "frame_idx": 44,
+          "video": "backend/data/media_cache/videos/D0513B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "T",
+          "h_conf": 0.965
+        },
+        {
+          "frame_idx": 46,
+          "video": "backend/data/media_cache/videos/D0513B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "T",
+          "h_conf": 0.9621
+        },
+        {
+          "frame_idx": 48,
+          "video": "backend/data/media_cache/videos/D0513B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "T",
+          "h_conf": 0.8532
+        }
+      ]
+    },
+    "U": {
+      "letter": "U",
+      "dataset_samples": 32,
+      "video_count": 2,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0514.mp4",
+        "backend/data/media_cache/videos/D0515N.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 27,
+      "offline_accuracy": 84.38,
+      "offline_category": "PASS",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; dữ liệu hiện có chỉ từ 1 video/1 người ký bị rò rỉ video.",
+      "architecture_tier": "Tier 2 (Static Head Supplemental only)",
+      "has_geom_rule": false,
+      "has_static_fallback": false,
+      "has_supplemental": true,
+      "primary_recognition_source": "static_head",
+      "sources_breakdown": {
+        "static_head": 27,
+        "none": 5
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 5
+      },
+      "root_cause": "Hoạt động tốt qua Static Head trên tập offline QIPEDC; chưa có kiểm chứng webcam đa người ký.",
+      "geom_details": {
+        "has_geom_rule": false,
+        "match_count": 0,
+        "match_rate": 0.0,
+        "status_counts": {
+          "NO_MATCH": 32
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 32
+        }
+      },
+      "head_details": {
+        "target_pred_count": 29,
+        "target_pred_rate": 90.62,
+        "all_preds_breakdown": {
+          "U": 29,
+          "L": 2,
+          "I": 1
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.847,
+          "min": 0.073,
+          "max": 0.971
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 5,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 44,
+          "video": "backend/data/media_cache/videos/D0514.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_L",
+          "h_letter": "L",
+          "h_conf": 0.2933
+        },
+        {
+          "frame_idx": 46,
+          "video": "backend/data/media_cache/videos/D0514.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_I",
+          "h_letter": "I",
+          "h_conf": 0.5067
+        },
+        {
+          "frame_idx": 48,
+          "video": "backend/data/media_cache/videos/D0514.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.47_LT_0.70",
+          "h_letter": "U",
+          "h_conf": 0.4733
+        },
+        {
+          "frame_idx": 50,
+          "video": "backend/data/media_cache/videos/D0514.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_PREDICTED_L",
+          "h_letter": "L",
+          "h_conf": 0.171
+        },
+        {
+          "frame_idx": 33,
+          "video": "backend/data/media_cache/videos/D0515N.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.55_LT_0.70",
+          "h_letter": "U",
+          "h_conf": 0.5451
+        }
+      ]
+    },
+    "V": {
+      "letter": "V",
+      "dataset_samples": 17,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0516.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 13,
+      "offline_accuracy": 76.47,
+      "offline_category": "PASS",
+      "live_webcam_status": "UNSTABLE",
+      "live_webcam_evidence": "Rule I và Rule V quá nhạy, đã xác nhận chiếm nhãn của Ư, Ơ, Ă trong kiểm thử camera Task 7E.3/7E.4A.",
+      "architecture_tier": "Tier 1 (Geometric Rule only)",
+      "has_geom_rule": true,
+      "has_static_fallback": false,
+      "has_supplemental": false,
+      "primary_recognition_source": "geometric_rule",
+      "sources_breakdown": {
+        "geometric_rule": 13,
+        "none": 4
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 4
+      },
+      "root_cause": "Luật hình học hoạt động tốt trên mẫu tĩnh chuẩn, nhưng quá nhạy (aggressive), thường xuyên cướp nhãn của các chữ động có dấu (Ư, Ơ, Ă).",
+      "geom_details": {
+        "has_geom_rule": true,
+        "match_count": 13,
+        "match_rate": 76.47,
+        "status_counts": {
+          "MATCH": 13,
+          "NO_MATCH": 4
+        },
+        "matches_breakdown": {
+          "V": 13,
+          "NO_MATCH": 4
+        }
+      },
+      "head_details": {
+        "target_pred_count": 16,
+        "target_pred_rate": 94.12,
+        "all_preds_breakdown": {
+          "V": 16,
+          "N": 1
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.835,
+          "min": 0.186,
+          "max": 0.93
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 4,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 40,
+          "video": "backend/data/media_cache/videos/D0516.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "V",
+          "h_conf": 0.7963
+        },
+        {
+          "frame_idx": 42,
+          "video": "backend/data/media_cache/videos/D0516.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "V",
+          "h_conf": 0.7978
+        },
+        {
+          "frame_idx": 44,
+          "video": "backend/data/media_cache/videos/D0516.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "V",
+          "h_conf": 0.7953
+        },
+        {
+          "frame_idx": 46,
+          "video": "backend/data/media_cache/videos/D0516.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "N",
+          "h_conf": 0.2689
+        }
+      ]
+    },
+    "X": {
+      "letter": "X",
+      "dataset_samples": 25,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0517B.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 17,
+      "offline_accuracy": 68.0,
+      "offline_category": "UNSTABLE",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; dữ liệu hiện có chỉ từ 1 video/1 người ký bị rò rỉ video.",
+      "architecture_tier": "Tier 2 (Static Head Supplemental only)",
+      "has_geom_rule": false,
+      "has_static_fallback": false,
+      "has_supplemental": true,
+      "primary_recognition_source": "static_head",
+      "sources_breakdown": {
+        "static_head": 17,
+        "geometric_rule": 1,
+        "none": 7
+      },
+      "wrong_predictions": {
+        "T": 1,
+        "NEUTRAL": 7
+      },
+      "root_cause": "Dáng ngón trỏ cong móc câu có thể bị Luật hình học T cướp nhãn (1 frame); conf Static Head dao động quanh ngưỡng 0.75.",
+      "geom_details": {
+        "has_geom_rule": false,
+        "match_count": 0,
+        "match_rate": 0.0,
+        "status_counts": {
+          "NO_MATCH": 24,
+          "MATCH": 1
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 24,
+          "T": 1
+        }
+      },
+      "head_details": {
+        "target_pred_count": 23,
+        "target_pred_rate": 92.0,
+        "all_preds_breakdown": {
+          "X": 23,
+          "Q": 2
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.77,
+          "min": 0.349,
+          "max": 0.91
+        }
+      },
+      "geom_hijacked_count": 1,
+      "geom_hijacked_samples": [
+        {
+          "frame_idx": 40,
+          "video": "backend/data/media_cache/videos/D0517B.mp4",
+          "geom_letter": "T",
+          "geom_conf": 0.95,
+          "head_letter": "X",
+          "head_conf": 0.8927
+        }
+      ],
+      "gating_failures_count": 8,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 40,
+          "video": "backend/data/media_cache/videos/D0517B.mp4",
+          "final_sign": "T",
+          "reason": "GEOM_HIJACKED_BY_T",
+          "h_letter": "X",
+          "h_conf": 0.8927
+        },
+        {
+          "frame_idx": 46,
+          "video": "backend/data/media_cache/videos/D0517B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.50_LT_0.70",
+          "h_letter": "X",
+          "h_conf": 0.5023
+        },
+        {
+          "frame_idx": 48,
+          "video": "backend/data/media_cache/videos/D0517B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.57_LT_0.70",
+          "h_letter": "X",
+          "h_conf": 0.5736
+        },
+        {
+          "frame_idx": 50,
+          "video": "backend/data/media_cache/videos/D0517B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.57_LT_0.70",
+          "h_letter": "X",
+          "h_conf": 0.5743
+        },
+        {
+          "frame_idx": 54,
+          "video": "backend/data/media_cache/videos/D0517B.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "HEAD_LOW_CONF_0.53_LT_0.70",
+          "h_letter": "X",
+          "h_conf": 0.5339
+        }
+      ]
+    },
+    "Y": {
+      "letter": "Y",
+      "dataset_samples": 16,
+      "video_count": 1,
+      "source_videos": [
+        "backend/data/media_cache/videos/D0518N.mp4"
+      ],
+      "signer_count": 1,
+      "offline_correct": 11,
+      "offline_accuracy": 68.75,
+      "offline_category": "UNSTABLE",
+      "live_webcam_status": "NOT_TESTED",
+      "live_webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; offline dao động 55-73%.",
+      "architecture_tier": "Tier 1 (Geometric Rule only)",
+      "has_geom_rule": true,
+      "has_static_fallback": false,
+      "has_supplemental": false,
+      "primary_recognition_source": "geometric_rule",
+      "sources_breakdown": {
+        "none": 5,
+        "geometric_rule": 11
+      },
+      "wrong_predictions": {
+        "NEUTRAL": 5
+      },
+      "root_cause": "Chỉ dựa vào luật hình học khắt khe (độ chính xác 68.75%), Static Head dự đoán tốt nhưng không được phép phát ra do nằm ngoài danh mục fallback/supplemental.",
+      "geom_details": {
+        "has_geom_rule": true,
+        "match_count": 11,
+        "match_rate": 68.75,
+        "status_counts": {
+          "NO_MATCH": 5,
+          "MATCH": 11
+        },
+        "matches_breakdown": {
+          "NO_MATCH": 5,
+          "Y": 11
+        }
+      },
+      "head_details": {
+        "target_pred_count": 15,
+        "target_pred_rate": 93.75,
+        "all_preds_breakdown": {
+          "Y": 15,
+          "E": 1
+        },
+        "threshold_used": 0.7,
+        "target_confidence": {
+          "mean": 0.809,
+          "min": 0.0,
+          "max": 0.941
+        }
+      },
+      "geom_hijacked_count": 0,
+      "geom_hijacked_samples": [],
+      "gating_failures_count": 5,
+      "gating_failures_sample": [
+        {
+          "frame_idx": 14,
+          "video": "backend/data/media_cache/videos/D0518N.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "Y",
+          "h_conf": 0.6877
+        },
+        {
+          "frame_idx": 20,
+          "video": "backend/data/media_cache/videos/D0518N.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "Y",
+          "h_conf": 0.8298
+        },
+        {
+          "frame_idx": 40,
+          "video": "backend/data/media_cache/videos/D0518N.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "Y",
+          "h_conf": 0.9252
+        },
+        {
+          "frame_idx": 44,
+          "video": "backend/data/media_cache/videos/D0518N.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "Y",
+          "h_conf": 0.2201
+        },
+        {
+          "frame_idx": 46,
+          "video": "backend/data/media_cache/videos/D0518N.mp4",
+          "final_sign": "NEUTRAL",
+          "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+          "h_letter": "E",
+          "h_conf": 0.1416
+        }
+      ]
+    }
+  }
+}

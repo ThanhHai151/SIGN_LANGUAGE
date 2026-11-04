@@ -6,7 +6,11 @@ Hỗ trợ:
 3. API Từ điển VSL Đa phương tiện & Kiểm tra Sức khỏe Hệ thống
 """
 
+from asyncio import timeouts
 import os
+import sys
+import time
+import re
 import json
 import base64
 import cv2
@@ -56,9 +60,18 @@ class LandmarkRequest(BaseModel):
     handedness: Optional[str] = "Right"
     mode: Optional[str] = None
     timestamp: Optional[float] = None
+    expected_sign: Optional[str] = None
+    session_id: Optional[str] = None
+    trial_id: Optional[str] = None
+    frame_idx: Optional[int] = None
 
 class FrameRequest(BaseModel):
     image_base64: str
+
+class PilotControlRequest(BaseModel):
+    enabled: bool
+    filepath: Optional[str] = None
+    session_id: Optional[str] = None
 
 class SequenceRequest(BaseModel):
     sequence: List[List[List[float]]]  # Chuỗi 30 frames x 75 joints x 3 coords
@@ -153,7 +166,7 @@ def warm_common_videos():
     """Tải dần ở nền video của các từ THÔNG DỤNG (≈800 video, ~0,7 GB) vào bộ đệm, để Từ điển phát tức thì.
     Máy chủ QIPEDC phản hồi thất thường (0,2–5 giây/video) nên không chờ tới lúc người dùng bấm mới tải.
     Tắt bằng biến môi trường VSL_PREFETCH=0."""
-    if os.environ.get("VSL_PREFETCH", "1") == "0":
+    if os.environ.get("VSL_PREFETCH", "0") == "0" or "pytest" in sys.modules or "unittest" in sys.modules:
         return
     try:
         entries = sorted((e for e in load_lexicon()["entries"] if e.get("common")), key=lambda e: e.get("rank") or 1e9)
@@ -235,8 +248,17 @@ def recognize_landmarks(req: LandmarkRequest, request: Request):
     Đảm bảo độ trễ siêu thấp (<10ms) và tính chính xác cao.
     """
     try:
-        expected_sign = request.headers.get("x-expected-sign")
-        session_id = request.headers.get("x-session-id")
+        expected_sign = req.expected_sign or request.headers.get("x-expected-sign")
+        session_id = req.session_id or request.headers.get("x-session-id")
+        trial_id = req.trial_id or request.headers.get("x-trial-id")
+        raw_frame_idx = req.frame_idx if req.frame_idx is not None else request.headers.get("x-frame-idx")
+        frame_idx = None
+        if raw_frame_idx is not None:
+            try:
+                frame_idx = int(raw_frame_idx)
+            except (ValueError, TypeError):
+                frame_idx = None
+
         mode = req.mode or request.headers.get("x-conversion-mode")
         if mode is not None and mode not in VALID_CONVERSION_MODES:
             raise HTTPException(
@@ -249,13 +271,99 @@ def recognize_landmarks(req: LandmarkRequest, request: Request):
             expected_sign=expected_sign,
             session_id=session_id,
             mode=mode,
-            timestamp=req.timestamp
+            timestamp=req.timestamp,
+            trial_id=trial_id,
+            frame_idx=frame_idx,
         )
         return {"success": True, "data": result}
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/pilot/control")
+def control_pilot_logging(req: PilotControlRequest):
+    """Bật/tắt chế độ ghi nhật ký chẩn đoán pilot từ UI (Task 7F.5B / 7F.5D Fix B-01)."""
+    if req.filepath is not None:
+        raise HTTPException(
+            status_code=400,
+            detail="Chỉ định filepath qua API bị từ chối vì lý do an toàn bảo mật. Vui lòng chỉ truyền session_id."
+        )
+
+    if req.enabled:
+        raw_sess = req.session_id
+        if raw_sess is not None:
+            from backend.vision.pilot_logger import validate_session_id
+            try:
+                clean_sess = validate_session_id(raw_sess)
+            except ValueError as ve:
+                raise HTTPException(status_code=400, detail=str(ve))
+        else:
+            clean_sess = f"session_{time.strftime('%Y%m%d_%H%M%S')}"
+
+        target_dir = getattr(
+            recognizer,
+            "diagnostic_dir",
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "diagnostics", "pilot")
+        )
+
+        try:
+            # Kiểm tra xung đột session trước khi tạo file mới
+            if recognizer.pilot_logging_enabled and recognizer.active_pilot_session_id:
+                if clean_sess != recognizer.active_pilot_session_id:
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f"Phiên '{recognizer.active_pilot_session_id}' đang hoạt động. "
+                               f"Vui lòng tắt phiên hiện tại trước khi bật phiên mới '{clean_sess}'."
+                    )
+                logger = recognizer.pilot_logger
+                return {
+                    "success": True,
+                    "enabled": True,
+                    "session_id": recognizer.active_pilot_session_id,
+                    "filepath": recognizer.pilot_filepath,
+                    "stats": logger.get_stats() if logger else None
+                }
+
+            from backend.vision.pilot_logger import create_safe_pilot_file
+            target_file = create_safe_pilot_file(target_dir, clean_sess)
+            logger = recognizer.enable_pilot_logging(session_id=clean_sess, filepath=target_file)
+            return {
+                "success": True,
+                "enabled": True,
+                "session_id": clean_sess,
+                "filepath": target_file,
+                "stats": logger.get_stats()
+            }
+        except HTTPException:
+            raise
+        except ValueError as ve:
+            raise HTTPException(status_code=400, detail=str(ve))
+        except RuntimeError as re_err:
+            raise HTTPException(status_code=409, detail=str(re_err))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    else:
+        recognizer.disable_pilot_logging()
+        return {"success": True, "enabled": False}
+
+
+@app.post("/api/pilot/flush")
+def flush_pilot_log():
+    """Flush toàn bộ bản ghi pilot diagnostic logger xuống đĩa (Task 7F.5A)."""
+    if hasattr(recognizer, "pilot_logger") and recognizer.pilot_logger:
+        recognizer.pilot_logger.flush()
+        return {"success": True, "stats": recognizer.pilot_logger.get_stats()}
+    return {"success": True, "stats": None}
+
+
+@app.get("/api/pilot/stats")
+def get_pilot_stats():
+    """Lấy thống kê ghi nhật ký pilot (Task 7F.5A)."""
+    if hasattr(recognizer, "pilot_logger") and recognizer.pilot_logger:
+        return {"success": True, "stats": recognizer.pilot_logger.get_stats()}
+    return {"success": True, "stats": None}
 
 @app.post("/api/recognize_sequence")
 def recognize_sequence(req: SequenceRequest):

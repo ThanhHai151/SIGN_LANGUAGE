@@ -8,6 +8,8 @@ các chữ độc lập (B, I, Y, V), và tính an toàn bảo lưu UNKNOWN cho 
 import json
 import math
 import os
+import numpy as np
+# pyrefly: ignore[missing-import]
 import pytest
 from typing import List
 
@@ -280,6 +282,40 @@ class TestAlphabetClassifierDistinctLetters:
             assert res["status"] == "MATCH"
             assert res["letter"] == "V"
 
+    def test_letter_e(self, classifier, alphabet_fixture_data):
+        """Chữ E: 4 ngón tì gập lên ngón cái."""
+        samples = [s for s in alphabet_fixture_data["samples"] if s["letter_upper"] == "E" and s.get("quality_status") == "ok"]
+        # Khung hình hợp lệ của chữ E trong fixture
+        valid_e = [s for s in samples if s.get("frame_idx") in [8, 20, 32]]
+        assert len(valid_e) >= 2
+        for s in valid_e:
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["status"] == "MATCH"
+            assert res["letter"] == "E"
+            assert res["confidence"] >= 0.90
+
+    def test_letter_g(self, classifier, alphabet_fixture_data):
+        """Chữ G: Ngón trỏ duỗi ngang chỉ sang bên, 3 ngón giữa/áp út/út gập gọn."""
+        samples = [s for s in alphabet_fixture_data["samples"] if s["letter_upper"] == "G" and s.get("quality_status") == "ok"]
+        horiz_g = [s for s in samples if s.get("frame_idx") == 39]
+        assert len(horiz_g) == 1
+        for s in horiz_g:
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["status"] == "MATCH"
+            assert res["letter"] == "G"
+            assert res["confidence"] >= 0.90
+
+    def test_letter_h(self, classifier, alphabet_fixture_data):
+        """Chữ H: Nhận diện đúng các khung hình ổn định của chữ H trong fixture."""
+        samples = [s for s in alphabet_fixture_data["samples"] if s["letter_upper"] == "H" and s.get("quality_status") == "ok"]
+        valid_h = [s for s in samples if s.get("frame_idx") in [18, 28, 35]]
+        assert len(valid_h) == 3
+        for s in valid_h:
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["status"] == "MATCH"
+            assert res["letter"] == "H"
+            assert res["confidence"] >= 0.90
+
 
 # ===========================================================================
 # 4. KIỂM THỬ BẢO VỆ CHỮ CHƯA HỖ TRỢ (UNSUPPORTED / UNKNOWN SAFETY)
@@ -329,4 +365,363 @@ class TestAlphabetClassifierUnsupportedSafety:
                 wrong_count += 1
 
         assert wrong_count == 0, f"Có {wrong_count} mẫu bị phân loại sai chéo giữa các chữ được hỗ trợ!"
+
+
+# ===========================================================================
+# 5. KIỂM THỬ CHUYÊN SÂU CHỮ E (ROBUSTNESS & CROSS-CLASS SAFETY)
+# ===========================================================================
+
+class TestLetterERobustnessAndSafety:
+    """Kiểm tra chuyên sâu chữ E: độ bền vững trước nhiễu MediaPipe và an toàn không nhầm lẫn."""
+
+    def test_e_dataset_high_recall_and_zero_fp(self, classifier):
+        """
+        Nếu dataset tĩnh v2 tồn tại, kiểm tra:
+        - Recall của chữ E >= 85% (ít nhất 30/35 mẫu thực tế).
+        - Tuyệt đối không sinh false positive (0 mẫu) trên 516 mẫu của 21 lớp còn lại.
+        """
+        npz_path = os.path.join(
+            os.path.dirname(__file__), "..", "data", "alphabet_v2", "datasets", "vsl_alphabet_static_v2.npz"
+        )
+        if not os.path.exists(npz_path):
+            pytest.skip("Dataset vsl_alphabet_static_v2.npz không tồn tại trên môi trường hiện tại.")
+
+        data = np.load(npz_path, allow_pickle=True)
+        landmarks = data["landmarks"]
+        y = data["y"]
+        classes = list(data["classes"])
+        e_idx = classes.index("E")
+
+        e_matched = 0
+        e_total = 0
+        non_e_fp = 0
+
+        for i in range(len(y)):
+            lm = landmarks[i].tolist()
+            res = classifier.classify_detailed(lm)
+            if y[i] == e_idx:
+                e_total += 1
+                if res["letter"] == "E" and res["status"] == "MATCH":
+                    e_matched += 1
+            else:
+                if res["letter"] == "E":
+                    non_e_fp += 1
+
+        assert e_total == 35
+        assert e_matched >= 30, f"Chữ E chỉ nhận diện được {e_matched}/{e_total} mẫu (kỳ vọng >= 30)!"
+        assert non_e_fp == 0, f"Chữ E bị dương tính giả {non_e_fp} lần trên các chữ khác trong dataset!"
+
+    def test_e_separates_from_confusable_letters(self, classifier, alphabet_fixture_data):
+        """
+        Đảm bảo chữ E không bao giờ bị kích hoạt nhầm bởi các chữ dễ gây nhầm lẫn:
+        A, S, O, T, C, I.
+        """
+        confusable = {"A", "S", "O", "T", "C", "I"}
+        samples = [
+            s for s in alphabet_fixture_data["samples"]
+            if s["letter_upper"] in confusable and s.get("quality_status") == "ok"
+        ]
+        assert len(samples) > 0
+
+        for s in samples:
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["letter"] != "E", (
+                f"Mẫu {s['letter_upper']} frame {s.get('frame_idx')} bị nhận diện nhầm thành E!"
+            )
+
+
+# ===========================================================================
+# 6. KIỂM THỬ CHUYÊN SÂU CHỮ G (ROBUSTNESS, DIRECTION INVARIANCE & SAFETY)
+# ===========================================================================
+
+class TestLetterGRobustnessAndSafety:
+    """Kiểm tra chuyên sâu chữ G: tư thế ngang, bất biến hướng trái/phải, góc nghiêng webcam và an toàn không nhầm lẫn."""
+
+    def test_g_horizontal_cluster_and_zero_fp(self, classifier):
+        """
+        Kiểm tra trên dataset tĩnh v2:
+        - Toàn bộ 8/8 khung hình chữ G tư thế ngang chuẩn (indices 99..106) đạt MATCH 'G'.
+        - Tuyệt đối không sinh false positive (0 mẫu) trên toàn bộ 522 mẫu của 21 lớp còn lại.
+        """
+        npz_path = os.path.join(
+            os.path.dirname(__file__), "..", "data", "alphabet_v2", "datasets", "vsl_alphabet_static_v2.npz"
+        )
+        if not os.path.exists(npz_path):
+            pytest.skip("Dataset vsl_alphabet_static_v2.npz không tồn tại trên môi trường hiện tại.")
+
+        data = np.load(npz_path, allow_pickle=True)
+        landmarks = data["landmarks"]
+        y = data["y"]
+        classes = list(data["classes"])
+        g_idx = classes.index("G")
+
+        horiz_g_indices = list(range(99, 107))
+        horiz_matched = 0
+        non_g_fp = 0
+
+        for i in range(len(y)):
+            lm = landmarks[i].tolist()
+            res = classifier.classify_detailed(lm)
+            if i in horiz_g_indices:
+                assert y[i] == g_idx
+                if res["letter"] == "G" and res["status"] == "MATCH":
+                    horiz_matched += 1
+            elif y[i] != g_idx:
+                if res["letter"] == "G":
+                    non_g_fp += 1
+
+        assert horiz_matched == 8, f"Chữ G tư thế ngang chỉ nhận diện được {horiz_matched}/8 khung hình!"
+        assert non_g_fp == 0, f"Chữ G bị dương tính giả {non_g_fp} lần trên các chữ khác trong dataset!"
+
+    def test_g_direction_invariance_and_webcam_rotations(self, classifier, alphabet_fixture_data):
+        """
+        Kiểm tra chữ G giữ nguyên kết quả MATCH khi:
+        - Lật đối xứng ngang trục X (chỉ sang trái -X hoặc tay trái / webcam mirror).
+        - Nghiêng góc cổ tay trên webcam từ -40 độ đến +45 độ.
+        """
+        samples = [
+            s for s in alphabet_fixture_data["samples"]
+            if s["letter_upper"] == "G" and s.get("frame_idx") == 39
+        ]
+        assert len(samples) == 1
+        base_lm = samples[0]["landmarks"]
+        w = base_lm[0]
+
+        # 1. Đối xứng ngang trục X (chỉ sang hướng -X)
+        mirrored_lm = [[2.0 * w[0] - pt[0], pt[1], pt[2]] for pt in base_lm]
+        res_mir = classifier.classify_detailed(mirrored_lm)
+        assert res_mir["status"] == "MATCH"
+        assert res_mir["letter"] == "G"
+
+        # 2. Quét góc xoay cổ tay (-40 độ đến +45 độ)
+        for deg in (-40, -25, -15, 0, 15, 30, 45):
+            rad = math.radians(deg)
+            c, s_val = math.cos(rad), math.sin(rad)
+            rot_lm = [
+                [
+                    w[0] + (pt[0] - w[0]) * c - (pt[1] - w[1]) * s_val,
+                    w[1] + (pt[0] - w[0]) * s_val + (pt[1] - w[1]) * c,
+                    pt[2],
+                ]
+                for pt in base_lm
+            ]
+            res_rot = classifier.classify_detailed(rot_lm)
+            assert res_rot["status"] == "MATCH", f"Chữ G bị trượt tại góc xoay {deg} độ!"
+            assert res_rot["letter"] == "G"
+
+    def test_g_separates_from_confusable_letters(self, classifier, alphabet_fixture_data):
+        """
+        Đảm bảo chữ G không bao giờ bị kích hoạt nhầm bởi các chữ dễ nhầm lẫn:
+        D, L, K, P, Q, X, T, C, E.
+        """
+        confusable = {"D", "L", "K", "P", "Q", "X", "T", "C", "E"}
+        samples = [
+            s for s in alphabet_fixture_data["samples"]
+            if s["letter_upper"] in confusable and s.get("quality_status") == "ok"
+        ]
+        assert len(samples) > 0
+
+        for s in samples:
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["letter"] != "G", (
+                f"Mẫu {s['letter_upper']} frame {s.get('frame_idx')} bị nhận diện nhầm thành G!"
+            )
+
+
+# ===========================================================================
+# 7. KIỂM THỬ CHUYÊN SÂU CHỮ H (BOTH VARIANTS, DIRECTION INVARIANCE & SAFETY)
+# ===========================================================================
+
+class TestLetterHRobustnessAndSafety:
+    """Kiểm tra chuyên sâu chữ H: cả tư thế 2 ngón ngang chuẩn từ điển và biến thể Miền Bắc QIPEDC, bất biến hướng & góc xoay."""
+
+    def test_h_dataset_and_zero_fp(self, classifier):
+        """
+        Kiểm tra trên dataset tĩnh v2:
+        - Toàn bộ 12/12 khung hình ổn định chính của chữ H (indices 129..140) đạt MATCH 'H'.
+        - Tuyệt đối không sinh false positive (0 mẫu) trên toàn bộ 533 mẫu của 21 lớp còn lại.
+        """
+        npz_path = os.path.join(
+            os.path.dirname(__file__), "..", "data", "alphabet_v2", "datasets", "vsl_alphabet_static_v2.npz"
+        )
+        if not os.path.exists(npz_path):
+            pytest.skip("Dataset vsl_alphabet_static_v2.npz không tồn tại trên môi trường hiện tại.")
+
+        data = np.load(npz_path, allow_pickle=True)
+        landmarks = data["landmarks"]
+        y = data["y"]
+        classes = list(data["classes"])
+        h_idx = classes.index("H")
+
+        core_h_indices = list(range(129, 141))
+        core_matched = 0
+        non_h_fp = 0
+
+        for i in range(len(y)):
+            lm = landmarks[i].tolist()
+            res = classifier.classify_detailed(lm)
+            if i in core_h_indices:
+                assert y[i] == h_idx
+                if res["letter"] == "H" and res["status"] == "MATCH":
+                    core_matched += 1
+            elif y[i] != h_idx:
+                if res["letter"] == "H":
+                    non_h_fp += 1
+
+        assert core_matched == 12, f"Chữ H chỉ nhận diện được {core_matched}/12 khung hình ổn định!"
+        assert non_h_fp == 0, f"Chữ H bị dương tính giả {non_h_fp} lần trên các chữ khác trong dataset!"
+
+    def test_h_horizontal_two_finger_variant_and_rotations(self, classifier, alphabet_fixture_data):
+        """
+        Kiểm tra tư thế chữ H ngang chuẩn từ điển (2 ngón trỏ và giữa duỗi ngang song song, áp út và út gập):
+        - Được tạo từ mẫu chữ U thực tế xoay ngang (-90..+90 độ) và từ mẫu chữ G ngang mở thêm ngón giữa song song.
+        - Bất biến với hướng chỉ trái/phải (+X và -X).
+        """
+        u_samples = [
+            s for s in alphabet_fixture_data["samples"]
+            if s["letter_upper"] == "U" and s.get("quality_status") == "ok" and s.get("phase") == "stable_pose"
+        ]
+        assert len(u_samples) > 0
+        base_u = u_samples[0]["landmarks"]
+        w = base_u[0]
+
+        for deg in (-90, -80, -70, 70, 80, 90):
+            rad = math.radians(deg)
+            c, s_val = math.cos(rad), math.sin(rad)
+            rot_lm = [
+                [
+                    w[0] + (pt[0] - w[0]) * c - (pt[1] - w[1]) * s_val,
+                    w[1] + (pt[0] - w[0]) * s_val + (pt[1] - w[1]) * c,
+                    pt[2],
+                ]
+                for pt in base_u
+            ]
+            res = classifier.classify_detailed(rot_lm)
+            assert res["status"] == "MATCH", f"Chữ H ngang (từ U xoay {deg} độ) không khớp!"
+            assert res["letter"] == "H"
+
+        # Kiểm tra biến thể Miền Bắc (frame 28) khi lật đối xứng trục X và xoay góc cổ tay (-40..+40 độ)
+        h_samples = [
+            s for s in alphabet_fixture_data["samples"]
+            if s["letter_upper"] == "H" and s.get("frame_idx") == 28
+        ]
+        assert len(h_samples) == 1
+        base_h = h_samples[0]["landmarks"]
+        wh = base_h[0]
+
+        mir_h = [[2.0 * wh[0] - pt[0], pt[1], pt[2]] for pt in base_h]
+        res_mir = classifier.classify_detailed(mir_h)
+        assert res_mir["status"] == "MATCH"
+        assert res_mir["letter"] == "H"
+
+        for deg in (-40, -25, -15, 0, 15, 25, 40):
+            rad = math.radians(deg)
+            c, s_val = math.cos(rad), math.sin(rad)
+            rot_h = [
+                [
+                    wh[0] + (pt[0] - wh[0]) * c - (pt[1] - wh[1]) * s_val,
+                    wh[1] + (pt[0] - wh[0]) * s_val + (pt[1] - wh[1]) * c,
+                    pt[2],
+                ]
+                for pt in base_h
+            ]
+            res_rot = classifier.classify_detailed(rot_h)
+            assert res_rot["status"] == "MATCH", f"Chữ H bị trượt tại góc xoay {deg} độ!"
+            assert res_rot["letter"] == "H"
+
+    def test_h_separates_from_confusable_letters(self, classifier, alphabet_fixture_data):
+        """
+        Đảm bảo chữ H không bao giờ bị kích hoạt nhầm bởi các chữ dễ nhầm lẫn:
+        G, U, V, R, K, P, B, I, Y, D, E.
+        """
+        confusable = {"G", "U", "V", "R", "K", "P", "B", "I", "Y", "D", "E"}
+        samples = [
+            s for s in alphabet_fixture_data["samples"]
+            if s["letter_upper"] in confusable and s.get("quality_status") == "ok"
+        ]
+        assert len(samples) > 0
+
+        for s in samples:
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["letter"] != "H", (
+                f"Mẫu {s['letter_upper']} frame {s.get('frame_idx')} bị nhận diện nhầm thành H!"
+            )
+
+    def test_h_vs_v_disambiguation_and_v_preservation(self, classifier, alphabet_fixture_data):
+        """
+        Kiểm tra phân biệt triệt để giữa chữ H và chữ V:
+        1. Tư thế chữ H ngang thực tế trên bàn tay người (ngón giữa dài hơn ngón trỏ: d_IW >= 1.70,
+           d_MW >= 1.70, d_IM >= 0.28, diff_x_IM >= 0.18) trên dải góc -45..+40 độ phải nhận diện là H,
+           tuyệt đối không bị nhận nhầm thành V.
+        2. Toàn bộ các mẫu chữ V chuẩn (trong fixture JSON và NPZ, kể cả khi nghiêng cổ tay -20..+20 độ)
+           vẫn nhận diện chính xác là V, không mẫu nào bị nhầm sang H.
+        """
+        npz_path = os.path.join(
+            os.path.dirname(__file__), "..", "data", "alphabet_v2", "datasets", "vsl_alphabet_static_v2.npz"
+        )
+        if not os.path.exists(npz_path):
+            pytest.skip("Dataset vsl_alphabet_static_v2.npz không tồn tại trên môi trường hiện tại.")
+
+        data = np.load(npz_path, allow_pickle=True)
+        landmarks = data["landmarks"]
+        y = data["y"]
+        classes = list(data["classes"])
+
+        # 1. Tạo tư thế H ngang có giải phẫu thực tế (d_IW=1.75 >= 1.70, d_MW=1.73 >= 1.70, d_IM=0.39 >= 0.28)
+        g_idx = classes.index("G")
+        pts_h_real = [list(p) for p in landmarks[np.where(y == g_idx)[0][1]].tolist()]
+        for k_i, k_m in [(5, 9), (6, 10), (7, 11), (8, 12)]:
+            dx = pts_h_real[k_i][0] - pts_h_real[5][0]
+            dy = pts_h_real[k_i][1] - pts_h_real[5][1]
+            dz = pts_h_real[k_i][2] - pts_h_real[5][2]
+            pts_h_real[k_m] = [
+                pts_h_real[9][0] + 1.22 * dx,
+                pts_h_real[9][1] + 1.22 * dy,
+                pts_h_real[9][2] + dz,
+            ]
+
+        w_h = pts_h_real[0]
+        for deg in range(-45, 45, 5):
+            rad = math.radians(deg)
+            c, s_val = math.cos(rad), math.sin(rad)
+            rot_h = [
+                [
+                    w_h[0] + (pt[0] - w_h[0]) * c - (pt[1] - w_h[1]) * s_val,
+                    w_h[1] + (pt[0] - w_h[0]) * s_val + (pt[1] - w_h[1]) * c,
+                    pt[2],
+                ]
+                for pt in pts_h_real
+            ]
+            res_h = classifier.classify_detailed(rot_h)
+            assert res_h["letter"] != "V", f"Chữ H ngang tại góc {deg} độ bị nhận nhầm thành V!"
+            assert res_h["status"] == "MATCH" and res_h["letter"] == "H", (
+                f"Chữ H ngang tại góc {deg} độ không đạt MATCH H (status={res_h['status']}, letter={res_h['letter']})"
+            )
+
+        # 2. Kiểm tra toàn bộ 13 khung hình ổn định của chữ V trong NPZ (indices 363..375)
+        v_idx = classes.index("V")
+        v_indices = np.where(y == v_idx)[0][:13]
+        assert len(v_indices) == 13
+        for idx in v_indices:
+            lm_v = landmarks[idx].tolist()
+            res_v = classifier.classify_detailed(lm_v)
+            assert res_v["status"] == "MATCH" and res_v["letter"] == "V", (
+                f"Mẫu V[{idx}] bị suy giảm: status={res_v['status']}, letter={res_v['letter']}"
+            )
+            # Nghiêng cổ tay chữ V trong phạm vi -25..+25 độ không bao giờ bị nhầm thành H
+            wv = lm_v[0]
+            for deg in (-25, -15, -10, 10, 15, 25):
+                rad = math.radians(deg)
+                c, s_val = math.cos(rad), math.sin(rad)
+                rot_v = [
+                    [
+                        wv[0] + (pt[0] - wv[0]) * c - (pt[1] - wv[1]) * s_val,
+                        wv[1] + (pt[0] - wv[0]) * s_val + (pt[1] - wv[1]) * c,
+                        pt[2],
+                    ]
+                    for pt in lm_v
+                ]
+                res_rv = classifier.classify_detailed(rot_v)
+                assert res_rv["letter"] != "H", f"Mẫu V[{idx}] xoay {deg} độ bị nhận nhầm thành H!"
+
 

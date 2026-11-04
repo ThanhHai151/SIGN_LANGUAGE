@@ -7,6 +7,7 @@ Hỗ trợ chống rung (temporal smoothing), chống lặp (cooldown debounce) 
 """
 
 import os
+import re
 import json
 import time
 import threading
@@ -21,12 +22,63 @@ from backend.models.vsl_dictionary import ALL_SIGNS
 from backend.models.lexicon import get_entry_by_sstcn
 from backend.vision.feature_extractor import normalize_hand_landmarks, calculate_distance, calculate_angle
 from backend.vision.alphabet_classifier import alphabet_classifier
+from backend.models.alphabet_static_head import (
+    load_static_alphabet_head,
+    DEFAULT_HEAD_WEIGHTS_PATH,
+)
+from backend.vision.diacritic_state_machine import (
+    DiacriticStateMachine,
+    BASE_GROUPS,
+    STATE_IDLE,
+    STATE_BASE_CANDIDATE,
+    STATE_BASE_STABLE,
+    STATE_DIACRITIC_CANDIDATE,
+    STATE_DIACRITIC_CONFIRMED,
+    STATE_COOLDOWN,
+)
 
-# Danh sach 27 chu cai VSL duoc phep trong che do letters_numbers
-ALLOWED_LETTERS = set(CLASSES[:27])
+# Bảng 29 chữ cái tiếng Việt VSL chuẩn hóa (Task 5B, 7D)
+VIETNAMESE_ALPHABET_29 = [
+    "A", "Ă", "Â", "B", "C", "D", "Đ", "E", "Ê", "G", "H", "I", "K", "L",
+    "M", "N", "O", "Ô", "Ơ", "P", "Q", "R", "S", "T", "U", "Ư", "V", "X", "Y"
+]
+ALLOWED_LETTERS = set(CLASSES[:27]) | set(VIETNAMESE_ALPHABET_29)
+
+# Metadata mô tả bổ sung cho các chữ cái có dấu động
+DIACRITIC_SIGNS_META = {
+    "Ă": {"label": "Ă", "type": "alphabet", "description": "Chữ cái Ă (dáng chữ A mở xòe ngón V)"},
+    "Â": {"label": "Â", "type": "alphabet", "description": "Chữ cái Â (dáng chữ A vẽ dấu nón nhọn)"},
+    "Ê": {"label": "Ê", "type": "alphabet", "description": "Chữ cái Ê (dáng chữ E vẽ dấu nón nhọn)"},
+    "Ô": {"label": "Ô", "type": "alphabet", "description": "Chữ cái Ô (dáng chữ O vẽ dấu nón nhọn)"},
+    "Ơ": {"label": "Ơ", "type": "alphabet", "description": "Chữ cái Ô (dáng chữ O vẩy móc râu ngón út)"},
+    "Ư": {"label": "Ư", "type": "alphabet", "description": "Chữ cái Ư (dáng chữ U bật râu ngón út)"},
+    "Đ": {"label": "Đ", "type": "alphabet", "description": "Chữ cái Đ (dáng chữ D gập vạch ngang ngón trỏ)"},
+}
 ALLOWED_DIGITS = {str(i) for i in range(1, 10)}
 DIGITS_MODE_SIGNS = {str(i) for i in range(0, 10)}
 ALLOWED_LETTERS_AND_DIGITS = ALLOWED_LETTERS | ALLOWED_DIGITS
+
+# 10 chữ cái tĩnh bổ sung qua mạng nơ-ron VSLStaticAlphabetHead (Task 6B/6C)
+ALLOWED_SUPPLEMENTAL_LETTERS = {"G", "H", "K", "M", "N", "P", "Q", "R", "U", "X"}
+
+# 3 chữ cái nền tĩnh hỗ trợ fallback từ VSLStaticAlphabetHead khi geometric rules NO_MATCH (Task 7E.5B)
+ALLOWED_FALLBACK_BASE_LETTERS = {"A", "D", "E"}
+DEFAULT_FALLBACK_BASE_THRESHOLD = 0.70
+
+# Ngưỡng tin cậy thực nghiệm (experimental thresholds) cho từng chữ cái bổ sung
+# Q được gán ngưỡng cao (0.85) để phòng ngừa dương tính giả do nhầm lẫn hình chiếu 2D với X
+DEFAULT_SUPPLEMENTAL_THRESHOLDS = {
+    "G": 0.70,
+    "H": 0.70,
+    "K": 0.75,
+    "M": 0.70,
+    "N": 0.75,
+    "P": 0.70,
+    "Q": 0.85,
+    "R": 0.75,
+    "U": 0.70,
+    "X": 0.70,
+}
 
 # Bảng ánh xạ phát âm TTS chuẩn cho từng chữ số (chỉ đọc tên số, không có tiền tố "số")
 DIGIT_TTS_MAP = {
@@ -43,8 +95,30 @@ DIGIT_TTS_MAP = {
     "10": "mười",
 }
 
+def _sanitize_static_head_error(err) -> str:
+    """Làm sạch thông báo lỗi nạp Static Head, loại bỏ đường dẫn tuyệt đối nhạy cảm."""
+    if err is None:
+        return None
+    raw_msg = " ".join(str(err).split())
+    sanitized = re.sub(r"[A-Za-z]:[\\/][^\s'\":]+", "<path>", raw_msg)
+    sanitized = re.sub(r"(?<=\s)/[^\s'\":]+/[^\s'\":]+", "<path>", sanitized)
+    err_type = type(err).__name__ if not isinstance(err, str) else "Error"
+    full_str = f"{err_type}: {sanitized}" if not sanitized.startswith(err_type) else sanitized
+    return full_str[:320]
+
+
 class VSLRecognizer:
-    def __init__(self, confidence_threshold=0.70, smoothing_window=10, cooldown_sec=1.2, weights_path=None):
+    def __init__(
+        self,
+        confidence_threshold=0.70,
+        smoothing_window=10,
+        cooldown_sec=1.2,
+        weights_path=None,
+        static_head_weights_path=None,
+        supplemental_thresholds=None,
+        fallback_base_threshold=None,
+        pilot_logging_enabled=None,
+    ):
         self.confidence_threshold = confidence_threshold
         self.smoothing_window = smoothing_window
         self.cooldown_sec = cooldown_sec
@@ -58,6 +132,42 @@ class VSLRecognizer:
         self.alphabet_classifier = alphabet_classifier
         from backend.vision.digit_10_detector import VSL10GestureDetector
         self.digit_10_detector = VSL10GestureDetector()
+
+        # 3. Mô-đun bổ sung 10 chữ cái tĩnh VSL (VSLStaticAlphabetHead - Task 6B/6C)
+        self.supplemental_thresholds = dict(DEFAULT_SUPPLEMENTAL_THRESHOLDS)
+        if supplemental_thresholds and isinstance(supplemental_thresholds, dict):
+            self.supplemental_thresholds.update(supplemental_thresholds)
+
+        # 4. Ngưỡng fallback chữ cái nền tĩnh A, D, E (Task 7E.5B)
+        self.fallback_base_threshold = float(fallback_base_threshold) if fallback_base_threshold is not None else DEFAULT_FALLBACK_BASE_THRESHOLD
+
+        self.static_head_weights_path = static_head_weights_path or DEFAULT_HEAD_WEIGHTS_PATH
+        self.static_alphabet_head = None
+        self.static_head_meta = {}
+        self.has_static_head = False
+        self.pytorch_version = str(getattr(torch, "__version__", "unknown"))
+        self.static_head_load_status = "uninitialized"
+        self.static_head_load_error = None
+
+        try:
+            if os.path.exists(self.static_head_weights_path):
+                self.static_alphabet_head, self.static_head_meta = load_static_alphabet_head(
+                    weights_path=self.static_head_weights_path,
+                    device=str(self.device) if torch.cuda.is_available() else "cpu",
+                )
+                self.has_static_head = True
+                self.static_head_load_status = "loaded"
+                self.static_head_load_error = None
+            else:
+                self.has_static_head = False
+                self.static_head_load_status = "missing_weights_file"
+                self.static_head_load_error = "Static head weights file not found"
+        except Exception as e:
+            print(f"[VSLRecognizer] Warning: Failed to load static alphabet head: {e}")
+            self.static_alphabet_head = None
+            self.has_static_head = False
+            self.static_head_load_status = "failed"
+            self.static_head_load_error = _sanitize_static_head_error(e)
         
         # 3. Bộ đệm thời gian chống rung cho chế độ tĩnh
         self.prediction_history = collections.deque(maxlen=smoothing_window)
@@ -67,12 +177,144 @@ class VSLRecognizer:
         self.last_confirmed_time = 0
         self.sentence_tokens = []
         
-        # 5. Diagnostic Logging State
+        # 5. Quản lý FSM phân giải dấu cho từng camera session (Task 7C/7D)
+        self.diacritic_fsms = {}
+        self.debug_diacritic = os.environ.get("VSL_DIACRITIC_DEBUG", "0") == "1"
+        
+        # 5. Diagnostic Logging State (Legacy rate-limited ~2.2 FPS)
         self.diagnostic_enabled = os.environ.get("VSL_DIAGNOSTIC", "0") == "1"
         self.diagnostic_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "diagnostics")
         self._last_diag_log_time = 0.0
         self._diag_lock = threading.Lock()
         self._diag_frame_counter = 0
+
+        # 6. Pilot Diagnostic Logging State (Task 7F.5A / 7F.5D - Non-blocking, unthrottled, session-exclusive)
+        self.pilot_logging_enabled = (
+            pilot_logging_enabled if pilot_logging_enabled is not None
+            else (os.environ.get("VSL_PILOT_LOGGING", "0") == "1")
+        )
+        self.pilot_logger = None
+        self.pilot_filepath = None
+        self.active_pilot_session_id = None
+        self._pilot_lock = threading.Lock()
+        if self.pilot_logging_enabled:
+            from backend.vision.pilot_logger import get_pilot_logger
+            self.pilot_logger = get_pilot_logger()
+        self._pilot_frame_counter = 0
+
+    def enable_pilot_logging(self, session_id=None, filepath=None):
+        """Kích hoạt chế độ ghi nhật ký chẩn đoán unthrottled cho webcam pilot (Task 7F.5A / 7F.5D)."""
+        from backend.vision.pilot_logger import get_pilot_logger
+        with self._pilot_lock:
+            # Nếu đang có session hoạt động, ngăn session khác ghi đè
+            if self.pilot_logging_enabled and self.active_pilot_session_id is not None:
+                if session_id is not None and session_id != self.active_pilot_session_id:
+                    raise RuntimeError(
+                        f"Phiên '{self.active_pilot_session_id}' đang hoạt động. "
+                        f"Phải disable phiên trước khi bật phiên mới '{session_id}'."
+                    )
+                # Idempotent: nếu cùng session_id, giữ nguyên target file hiện tại
+                return self.pilot_logger
+
+            self.pilot_logging_enabled = True
+            self.pilot_filepath = filepath
+            self.active_pilot_session_id = session_id
+            self.pilot_logger = get_pilot_logger(filepath=filepath)
+            return self.pilot_logger
+
+    def disable_pilot_logging(self):
+        """Tắt chế độ ghi nhật ký chẩn đoán pilot và flush dữ liệu còn đọng."""
+        with self._pilot_lock:
+            if self.pilot_logger is not None:
+                self.pilot_logger.flush()
+            self.pilot_logging_enabled = False
+            self.active_pilot_session_id = None
+            self.pilot_filepath = None
+
+    def _next_pilot_frame_idx(self) -> int:
+        with self._diag_lock:
+            self._pilot_frame_counter += 1
+            return self._pilot_frame_counter
+
+    def _build_pilot_geometric_payload(
+        self,
+        status,
+        letter,
+        reason=None,
+        matched_candidates=None,
+        features=None,
+    ) -> dict:
+        """
+        Chuẩn hóa thông tin chẩn đoán Geometric Rule cho Pilot JSONL (Task 5):
+        - Ghi nhận reason, matched_candidates, features và h_rule_diagnostics nếu có sẵn.
+        - Tuyệt đối không tạo giá trị giả khi trường gốc không tồn tại hoặc là None.
+        """
+        clean_candidates = None
+        if isinstance(matched_candidates, (list, tuple)):
+            clean_candidates = []
+            for item in matched_candidates:
+                if isinstance(item, (list, tuple)) and len(item) >= 2:
+                    c_let = str(item[0]) if item[0] is not None else None
+                    try:
+                        c_conf = round(float(item[1]), 4) if item[1] is not None else None
+                    except (ValueError, TypeError):
+                        c_conf = None
+                    clean_candidates.append([c_let, c_conf])
+                else:
+                    clean_candidates.append(item)
+
+        clean_features = None
+        h_rule_diag = None
+        if isinstance(features, dict):
+            clean_features = {}
+            for k, v in features.items():
+                if v is None:
+                    clean_features[k] = None
+                elif isinstance(v, (bool, np.bool_)):
+                    clean_features[k] = bool(v)
+                elif isinstance(v, (int, float, np.number)):
+                    try:
+                        fv = float(v)
+                        clean_features[k] = round(fv, 4) if np.isfinite(fv) else None
+                    except (ValueError, TypeError):
+                        clean_features[k] = None
+                else:
+                    clean_features[k] = v
+
+            if hasattr(self.alphabet_classifier, "evaluate_rule_h_diagnostics"):
+                try:
+                    h_rule_diag = self.alphabet_classifier.evaluate_rule_h_diagnostics(clean_features)
+                except Exception:
+                    h_rule_diag = None
+
+        return {
+            "status": status,
+            "letter": letter,
+            "reason": reason,
+            "matched_candidates": clean_candidates,
+            "features": clean_features,
+            "h_rule_diagnostics": h_rule_diag,
+        }
+
+    def _build_pilot_static_head_payload(self, head_info=None) -> dict:
+        """
+        Chuẩn hóa thông tin chẩn đoán Static Head cho Pilot JSONL (Task 5):
+        - Bổ sung has_static_head, load_status, pytorch_version, load_error.
+        """
+        base = head_info if isinstance(head_info, dict) else {}
+        has_head = bool(getattr(self, "has_static_head", False))
+        load_status = getattr(self, "static_head_load_status", "loaded" if has_head else "failed")
+        if not has_head and load_status == "loaded":
+            load_status = "disabled"
+        return {
+            "raw_predicted_letter": base.get("raw_predicted_letter"),
+            "confidence": base.get("confidence"),
+            "top_k": base.get("top_k"),
+            "has_static_head": has_head,
+            "load_status": load_status,
+            "pytorch_version": getattr(self, "pytorch_version", str(getattr(torch, "__version__", "unknown"))),
+            "load_error": getattr(self, "static_head_load_error", None),
+        }
 
     def predict_sequence(self, sequence_data, threshold=None):
         """
@@ -254,6 +496,14 @@ class VSLRecognizer:
         thumb_firmly_folded = thumb_curl > THUMB_FIRMLY_FOLDED
 
         # ================================================================
+        # RULE 0: Chu H (Uu tien kiem tra truoc V/U de tranh nham H nam ngang thanh V)
+        # ================================================================
+        if hasattr(self, "alphabet_classifier") and self.alphabet_classifier is not None:
+            h_let, h_conf = self.alphabet_classifier.classify(p)
+            if h_let == "H":
+                return "H", h_conf
+
+        # ================================================================
         # RULE 1: Chu V va U
         # Dieu kien: Chi ngon tro (8) VA ngon giua (12) duoi thang,
         #            ngon ap ut (16) va ut (20) gap chat.
@@ -424,12 +674,34 @@ class VSLRecognizer:
 
         return None, 0.0
 
-    def predict_landmarks(self, landmarks_list, landmarks_secondary=None, multi_hands=None, expected_sign=None, session_id=None, mode=None, timestamp=None):
+    def predict_landmarks(
+        self,
+        landmarks_list,
+        landmarks_secondary=None,
+        multi_hands=None,
+        expected_sign=None,
+        session_id=None,
+        mode=None,
+        timestamp=None,
+        trial_id=None,
+        frame_idx=None,
+    ):
         """
         Nhận diện cử chỉ đơn frame hỗ trợ cả 1 tay và 2 tay.
         Khi mode == 'letters_numbers', backend chi tra ve 27 chu cai VSL hoac NEUTRAL.
         """
         from backend.vision.feature_extractor import extract_dual_hand_features
+        from backend.vision.pilot_logger import sanitize_expected_sign
+
+        # Chuẩn hóa nhãn ground truth: chỉ dùng cho logging chẩn đoán, tuyệt đối KHÔNG vào bộ phân loại
+        clean_expected_sign = sanitize_expected_sign(expected_sign)
+        if frame_idx is not None:
+            try:
+                actual_frame_idx = int(frame_idx)
+            except (ValueError, TypeError):
+                actual_frame_idx = self._next_pilot_frame_idx()
+        else:
+            actual_frame_idx = self._next_pilot_frame_idx()
 
         # Phân tách và nhận biết 4 chế độ độc lập + alias tương thích ngược:
         # 1. 'letters': Chế độ Chữ cái chuyên biệt (27 chữ cái VSL A-Z, Đ).
@@ -455,6 +727,8 @@ class VSLRecognizer:
             self._session_last_modes[session_key] = mode
             if hasattr(self, "digit_10_detector"):
                 self.digit_10_detector.reset()
+            if session_key in self.diacritic_fsms:
+                self.diacritic_fsms[session_key].reset()
 
         p_prim = None
         p_sec = None
@@ -474,6 +748,32 @@ class VSLRecognizer:
             self.prediction_history.append(("NEUTRAL", 0.0))
             if is_digits_mode and hasattr(self, "digit_10_detector"):
                 self.digit_10_detector.reset()
+            if session_key in self.diacritic_fsms:
+                self.diacritic_fsms[session_key].reset()
+
+            if self.pilot_logging_enabled and self.pilot_logger is not None:
+                self.pilot_logger.log_frame({
+                    "timestamp": round(float(current_time), 4),
+                    "session_id": str(session_id) if session_id else None,
+                    "trial_id": str(trial_id) if trial_id else None,
+                    "frame_idx": actual_frame_idx,
+                    "expected_sign": clean_expected_sign,
+                    "final_sign": "NEUTRAL",
+                    "final_confidence": 0.0,
+                    "prediction_source": "none",
+                    "confirmed": False,
+                    "has_static_head": bool(getattr(self, "has_static_head", False)),
+                    "geometric": self._build_pilot_geometric_payload(
+                        "INVALID_INPUT",
+                        None,
+                        reason="No valid hand landmarks detected",
+                    ),
+                    "static_head": self._build_pilot_static_head_payload(),
+                    "gating_status": "none",
+                    "threshold_applied": None,
+                    "reject_reason": "No valid hand landmarks detected",
+                }, filepath=getattr(self, "pilot_filepath", None))
+
             return {
                 "sign": "NEUTRAL",
                 "label": "Chờ cử chỉ...",
@@ -488,6 +788,28 @@ class VSLRecognizer:
         try:
             arr_check = np.asarray(p_prim, dtype=np.float32)
             if arr_check.shape != (21, 3) or not np.isfinite(arr_check).all():
+                if self.pilot_logging_enabled and self.pilot_logger is not None:
+                    self.pilot_logger.log_frame({
+                        "timestamp": round(float(current_time), 4),
+                        "session_id": str(session_id) if session_id else None,
+                        "trial_id": str(trial_id) if trial_id else None,
+                        "frame_idx": actual_frame_idx,
+                        "expected_sign": clean_expected_sign,
+                        "final_sign": "NEUTRAL",
+                        "final_confidence": 0.0,
+                        "prediction_source": "none",
+                        "confirmed": False,
+                        "has_static_head": bool(getattr(self, "has_static_head", False)),
+                        "geometric": self._build_pilot_geometric_payload(
+                            "INVALID_INPUT",
+                            None,
+                            reason="Non-finite or invalid shape landmarks",
+                        ),
+                        "static_head": self._build_pilot_static_head_payload(),
+                        "gating_status": "none",
+                        "threshold_applied": None,
+                        "reject_reason": "Non-finite or invalid shape landmarks",
+                    }, filepath=getattr(self, "pilot_filepath", None))
                 return {
                     "sign": "NEUTRAL",
                     "label": "Chờ cử chỉ...",
@@ -497,7 +819,29 @@ class VSLRecognizer:
                     "new_token": None,
                     "sentence": " ".join(self.sentence_tokens)
                 }
-        except Exception:
+        except Exception as e:
+            if self.pilot_logging_enabled and self.pilot_logger is not None:
+                self.pilot_logger.log_frame({
+                    "timestamp": round(float(current_time), 4),
+                    "session_id": str(session_id) if session_id else None,
+                    "trial_id": str(trial_id) if trial_id else None,
+                    "frame_idx": actual_frame_idx,
+                    "expected_sign": clean_expected_sign,
+                    "final_sign": "NEUTRAL",
+                    "final_confidence": 0.0,
+                    "prediction_source": "none",
+                    "confirmed": False,
+                    "has_static_head": bool(getattr(self, "has_static_head", False)),
+                    "geometric": self._build_pilot_geometric_payload(
+                        "INVALID_INPUT",
+                        None,
+                        reason=f"Landmark validation exception: {e}",
+                    ),
+                    "static_head": self._build_pilot_static_head_payload(),
+                    "gating_status": "none",
+                    "threshold_applied": None,
+                    "reject_reason": f"Landmark validation exception: {e}",
+                }, filepath=getattr(self, "pilot_filepath", None))
             return {
                 "sign": "NEUTRAL",
                 "label": "Chờ cử chỉ...",
@@ -650,21 +994,375 @@ class VSLRecognizer:
         if is_letters_mode:
             alpha_res = self.alphabet_classifier.classify_detailed(p_prim)
             status = alpha_res.get("status")
+            geom_status = status
+            geom_letter = alpha_res.get("letter") if status == "MATCH" else None
+            geom_reason = alpha_res.get("reason")
+            geom_matched_candidates = alpha_res.get("matched_candidates")
+            geom_features = alpha_res.get("features")
 
-            # Chỉ chấp nhận khi MATCH và chữ cái thuộc tập hợp cho phép
+            head_info = {
+                "raw_predicted_letter": None,
+                "confidence": None,
+                "top_k": None,
+            }
+            gating_status = "none"
+            threshold_applied = None
+            reject_reason = None
+
+            # Bước 1: Ưu tiên tuyệt đối 12 luật hình học hiện có
             if status == "MATCH" and alpha_res.get("letter") in ALLOWED_LETTERS:
                 final_sign = alpha_res["letter"]
                 final_conf = alpha_res["confidence"]
+                recognition_source = "geometric_rule"
+                alpha_res["source"] = "geometric_rule"
+                gating_status = "passed_geometric"
+            elif status in ("NO_MATCH", "UNKNOWN") and self.has_static_head and p_prim and len(p_prim) >= 21:
+                # Bước 2: Gọi static alphabet head cho fallback A/D/E (Task 7E.5B) và 10 chữ cái bổ sung (Task 6C) khi luật hình học không khớp
+                try:
+                    feat_72, _ = normalize_hand_landmarks(p_prim)
+                    head_res = self.static_alphabet_head.predict_feature(feat_72[:72], confidence_threshold=0.0)
+                    head_letter = head_res.get("raw_predicted_letter", "UNKNOWN")
+                    head_conf = float(head_res.get("confidence", 0.0))
+                    head_top_k = head_res.get("top_k", [])
+                    head_info = {
+                        "raw_predicted_letter": head_letter,
+                        "confidence": round(head_conf, 4),
+                        "top_k": head_top_k,
+                    }
+
+                    req_threshold = self.supplemental_thresholds.get(head_letter, 0.70)
+
+                    # Hỗ trợ bất biến đối xứng trục X qua cổ tay cho chữ G và H (tay trái / camera mirror):
+                    geom_feat = alpha_res.get("features") if isinstance(alpha_res, dict) else None
+                    is_primary_accepted = (
+                        (head_letter in ALLOWED_FALLBACK_BASE_LETTERS and head_conf >= self.fallback_base_threshold)
+                        or (head_letter in ALLOWED_SUPPLEMENTAL_LETTERS and head_conf >= req_threshold)
+                    )
+                    if not is_primary_accepted and isinstance(geom_feat, dict):
+                        idx_dx = float(geom_feat.get("idx_dx", 0.0))
+                        d_iw = float(geom_feat.get("d_IW", 0.0))
+                        d_mw = float(geom_feat.get("d_MW", 0.0))
+                        d_rw = float(geom_feat.get("d_RW", 99.0))
+                        d_pw = float(geom_feat.get("d_PW", 99.0))
+                        i_curl = float(geom_feat.get("index_curl", 1.0))
+                        m_curl = float(geom_feat.get("middle_curl", 0.0))
+
+                        is_g_mir_cand = (
+                            idx_dx < -0.20 and d_iw >= 1.50 and (d_iw - d_mw) >= 0.55
+                            and d_rw <= 1.25 and d_pw <= 1.25 and i_curl <= 0.15
+                        )
+                        is_h_mir_cand = (
+                            d_iw >= 1.25 and d_rw >= 1.35 and d_pw >= 1.35
+                            and d_mw <= 1.05 and m_curl >= 0.40
+                        )
+                        if is_g_mir_cand or is_h_mir_cand:
+                            w_x = float(p_prim[0][0])
+                            p_mir = [[2.0 * w_x - float(pt[0]), float(pt[1]), float(pt[2])] for pt in p_prim]
+                            feat_mir, _ = normalize_hand_landmarks(p_mir)
+                            mir_res = self.static_alphabet_head.predict_feature(feat_mir[:72], confidence_threshold=0.0)
+                            mir_letter = mir_res.get("raw_predicted_letter", "UNKNOWN")
+                            mir_conf = float(mir_res.get("confidence", 0.0))
+                            target_mir = "G" if (is_g_mir_cand and mir_letter == "G") else ("H" if (is_h_mir_cand and mir_letter == "H") else None)
+                            if target_mir is not None:
+                                t_thresh = self.supplemental_thresholds.get(target_mir, 0.70)
+                                if mir_conf >= t_thresh:
+                                    head_letter = target_mir
+                                    head_conf = mir_conf
+                                    head_top_k = mir_res.get("top_k", [])
+                                    req_threshold = t_thresh
+                                    head_info = {
+                                        "raw_predicted_letter": head_letter,
+                                        "confidence": round(head_conf, 4),
+                                        "top_k": head_top_k,
+                                    }
+
+                    # 2a. Gated Static Head Fallback cho 3 chữ cái nền A, D, E (Task 7E.5B)
+                    if head_letter in ALLOWED_FALLBACK_BASE_LETTERS and head_conf >= self.fallback_base_threshold:
+                        final_sign = head_letter
+                        final_conf = head_conf
+                        recognition_source = "static_head_fallback"
+                        gating_status = "passed_fallback"
+                        threshold_applied = self.fallback_base_threshold
+                        alpha_res = {
+                            "status": "MATCH",
+                            "letter": head_letter,
+                            "confidence": head_conf,
+                            "source": "static_head_fallback",
+                            "head_top_k": head_top_k,
+                            "reject_reason": None,
+                        }
+                    # 2b. 10 chữ cái bổ sung chưa có geometric rules (Task 6C)
+                    elif head_letter in ALLOWED_SUPPLEMENTAL_LETTERS and head_conf >= req_threshold:
+                        final_sign = head_letter
+                        final_conf = head_conf
+                        recognition_source = "static_head"
+                        gating_status = "passed_supplemental"
+                        threshold_applied = req_threshold
+                        alpha_res = {
+                            "status": "MATCH",
+                            "letter": head_letter,
+                            "confidence": head_conf,
+                            "source": "static_head",
+                            "head_top_k": head_top_k,
+                            "reject_reason": None,
+                        }
+                    else:
+                        final_sign = "NEUTRAL"
+                        final_conf = 0.0
+                        recognition_source = "none"
+                        gating_status = "rejected"
+                        thresh_used = self.fallback_base_threshold if head_letter in ALLOWED_FALLBACK_BASE_LETTERS else req_threshold
+                        threshold_applied = thresh_used
+                        reject_reason = (
+                            f"Letter '{head_letter}' not in supplemental/fallback set"
+                            if head_letter not in ALLOWED_SUPPLEMENTAL_LETTERS and head_letter not in ALLOWED_FALLBACK_BASE_LETTERS
+                            else f"Confidence {head_conf:.2f} < threshold {thresh_used:.2f}"
+                        )
+                        alpha_res = {
+                            "status": "NO_MATCH",
+                            "letter": "UNKNOWN",
+                            "confidence": 0.0,
+                            "source": "static_head_rejected",
+                            "head_letter": head_letter,
+                            "head_confidence": head_conf,
+                            "reject_reason": reject_reason,
+                            "head_top_k": head_top_k,
+                        }
+                except Exception as e:
+                    final_sign = "NEUTRAL"
+                    final_conf = 0.0
+                    recognition_source = "none"
+                    gating_status = "error"
+                    threshold_applied = None
+                    reject_reason = str(e)
+                    alpha_res = {
+                        "status": "NO_MATCH",
+                        "letter": "UNKNOWN",
+                        "confidence": 0.0,
+                        "source": "static_head_error",
+                        "reject_reason": str(e),
+                    }
             else:
-                # Xử lý an toàn cho NO_MATCH, CONFLICT, INVALID_INPUT:
-                # Bảo lưu NEUTRAL, không để mạng nơ-ron MLP tự ý ép nhãn thiếu căn cứ
+                # Xử lý an toàn cho CONFLICT, INVALID_INPUT, hoặc khi không có static head
                 final_sign = "NEUTRAL"
                 final_conf = 0.0
+                recognition_source = "none"
+                gating_status = "none"
+                threshold_applied = None
+                reject_reason = geom_reason or f"Geometric status: {geom_status}"
+                alpha_res["source"] = "none"
+
+            # -------------------------------------------------------------
+            # Bước 3: Phân giải dấu qua DiacriticStateMachine cho 5 nhóm chữ nền (Task 7C/7D)
+            # -------------------------------------------------------------
+            base_sign = final_sign
+            base_conf = final_conf
+
+            if session_key not in self.diacritic_fsms:
+                self.diacritic_fsms[session_key] = DiacriticStateMachine()
+            fsm = self.diacritic_fsms[session_key]
+
+            has_valid_landmarks = (p_prim is not None and len(p_prim) >= 21)
+
+            if base_sign in BASE_GROUPS and has_valid_landmarks:
+                fsm_res = fsm.update(
+                    base_label=base_sign,
+                    base_confidence=base_conf,
+                    landmarks_raw=p_prim,
+                    timestamp=current_time,
+                    source=recognition_source,
+                )
+                resolved_sign = fsm_res.get("final_label", base_sign)
+                diacritic_detected = fsm_res.get("diacritic_detected")
+                base_key = fsm_res.get("base_label", base_sign)
+
+                if diacritic_detected and base_key in BASE_GROUPS and resolved_sign in BASE_GROUPS[base_key]["variants"]:
+                    final_sign = resolved_sign
+                    final_conf = fsm_res.get("confidence", base_conf)
+                    recognition_source = fsm_res.get("source", "diacritic_fsm")
+                    alpha_res["diacritic_fsm"] = {
+                        "state": fsm_res.get("state"),
+                        "base_label": base_key,
+                        "diacritic_detected": diacritic_detected,
+                        "reason": fsm_res.get("reason"),
+                        "source": recognition_source,
+                    }
+                    # Prime prediction history khi dấu vừa được xác nhận để hiển thị mượt mà
+                    if fsm_res.get("state") == STATE_DIACRITIC_CONFIRMED:
+                        for _ in range(max(1, self.smoothing_window // 2)):
+                            self.prediction_history.append((final_sign, final_conf))
+                else:
+                    final_sign = resolved_sign
+                    final_conf = fsm_res.get("confidence", base_conf)
+                    if self.debug_diacritic or self.diagnostic_enabled:
+                        alpha_res["diacritic_fsm"] = {
+                            "state": fsm_res.get("state"),
+                            "base_label": base_key,
+                            "diacritic_detected": None,
+                            "reason": fsm_res.get("reason"),
+                        }
+
+                if self.debug_diacritic:
+                    print(
+                        f"[DiacriticFSM] session={session_key} base={base_sign} -> final={final_sign} "
+                        f"state={fsm_res.get('state')} diac={diacritic_detected} reason={fsm_res.get('reason')}"
+                    )
+
+            elif base_sign in ("NEUTRAL", "UNKNOWN") and has_valid_landmarks and fsm.state in (STATE_BASE_STABLE, STATE_DIACRITIC_CANDIDATE, STATE_COOLDOWN) and fsm.baseline is not None:
+                # TÌNH HUỐNG B: Mất nhãn nền tạm thời nhưng landmarks vẫn tồn tại và FSM đang có baseline snapshot
+                fsm_res = fsm.update_transient(
+                    landmarks_raw=p_prim,
+                    timestamp=current_time,
+                )
+                diacritic_detected = fsm_res.get("diacritic_detected")
+                current_fsm_base = fsm.current_base
+
+                if diacritic_detected and current_fsm_base in BASE_GROUPS and fsm_res.get("final_label") in BASE_GROUPS[current_fsm_base]["variants"]:
+                    final_sign = fsm_res["final_label"]
+                    final_conf = fsm_res.get("confidence", 0.90)
+                    recognition_source = fsm_res.get("source", "diacritic_fsm")
+                    alpha_res["diacritic_fsm"] = {
+                        "state": fsm_res.get("state"),
+                        "base_label": current_fsm_base,
+                        "diacritic_detected": diacritic_detected,
+                        "reason": fsm_res.get("reason"),
+                        "source": recognition_source,
+                    }
+                    if fsm_res.get("state") == STATE_DIACRITIC_CONFIRMED:
+                        for _ in range(max(1, self.smoothing_window // 2)):
+                            self.prediction_history.append((final_sign, final_conf))
+                elif fsm_res.get("state") == STATE_COOLDOWN and current_fsm_base in BASE_GROUPS:
+                    final_sign = fsm_res.get("final_label", "NEUTRAL")
+                    final_conf = fsm_res.get("confidence", 0.90)
+                    recognition_source = "diacritic_fsm"
+                else:
+                    # Trong transient chưa xác nhận dấu: giữ nguyên kết quả NEUTRAL hiện tại (không tạo nhãn nền giả)
+                    final_sign = "NEUTRAL"
+                    final_conf = 0.0
+                    recognition_source = "none"
+                    if self.debug_diacritic or self.diagnostic_enabled:
+                        alpha_res["diacritic_fsm"] = {
+                            "state": fsm_res.get("state"),
+                            "base_label": current_fsm_base,
+                            "diacritic_detected": None,
+                            "reason": fsm_res.get("reason"),
+                        }
+
+                if self.debug_diacritic:
+                    print(
+                        f"[DiacriticFSM-Transient] session={session_key} base={current_fsm_base} -> final={final_sign} "
+                        f"state={fsm_res.get('state')} diac={diacritic_detected} reason={fsm_res.get('reason')}"
+                    )
+
+            elif has_valid_landmarks and fsm.baseline is not None and fsm.state in (STATE_BASE_STABLE, STATE_DIACRITIC_CANDIDATE, STATE_COOLDOWN) and fsm.is_competing_label(base_sign):
+                # TÌNH HUỐNG D: Nhãn cạnh tranh I/V trong lúc FSM đang theo dõi cử chỉ tạo dấu (Task 7E.4A)
+                fsm_res = fsm.update_competing(
+                    competing_label=base_sign,
+                    competing_confidence=base_conf,
+                    landmarks_raw=p_prim,
+                    timestamp=current_time,
+                )
+                diacritic_detected = fsm_res.get("diacritic_detected")
+                current_fsm_base = fsm.current_base
+
+                if diacritic_detected and current_fsm_base in BASE_GROUPS and fsm_res.get("final_label") in BASE_GROUPS[current_fsm_base]["variants"]:
+                    final_sign = fsm_res["final_label"]
+                    final_conf = fsm_res.get("confidence", 0.90)
+                    recognition_source = fsm_res.get("source", "diacritic_fsm")
+                    alpha_res["diacritic_fsm"] = {
+                        "state": fsm_res.get("state"),
+                        "base_label": current_fsm_base,
+                        "diacritic_detected": diacritic_detected,
+                        "reason": fsm_res.get("reason"),
+                        "source": recognition_source,
+                    }
+                    if fsm_res.get("state") == STATE_DIACRITIC_CONFIRMED:
+                        for _ in range(max(1, self.smoothing_window // 2)):
+                            self.prediction_history.append((final_sign, final_conf))
+                elif fsm_res.get("state") == STATE_COOLDOWN and current_fsm_base in BASE_GROUPS:
+                    final_sign = fsm_res.get("final_label", "NEUTRAL")
+                    final_conf = fsm_res.get("confidence", 0.90)
+                    recognition_source = "diacritic_fsm"
+                    alpha_res["diacritic_fsm"] = {
+                        "state": fsm_res.get("state"),
+                        "base_label": current_fsm_base,
+                        "diacritic_detected": fsm_res.get("diacritic_detected"),
+                        "reason": fsm_res.get("reason"),
+                        "source": recognition_source,
+                    }
+                elif fsm_res.get("suppressed"):
+                    final_sign = "NEUTRAL"
+                    final_conf = 0.0
+                    recognition_source = "diacritic_fsm"
+                    if self.debug_diacritic or self.diagnostic_enabled:
+                        alpha_res["diacritic_fsm"] = {
+                            "state": fsm_res.get("state"),
+                            "base_label": current_fsm_base,
+                            "diacritic_detected": None,
+                            "reason": fsm_res.get("reason"),
+                            "source": "diacritic_fsm",
+                        }
+                else:
+                    # Người ký chủ động chuyển sang I/V hoặc hết timeout tìm kiếm dấu
+                    final_sign = fsm_res.get("final_label", base_sign)
+                    final_conf = fsm_res.get("confidence", base_conf)
+                    if self.debug_diacritic or self.diagnostic_enabled:
+                        alpha_res["diacritic_fsm"] = {
+                            "state": fsm_res.get("state"),
+                            "base_label": current_fsm_base,
+                            "diacritic_detected": None,
+                            "reason": fsm_res.get("reason"),
+                            "source": "classifier",
+                        }
+
+                if self.debug_diacritic:
+                    print(
+                        f"[DiacriticFSM-Competing] session={session_key} competing={base_sign} -> final={final_sign} "
+                        f"state={fsm_res.get('state')} diac={diacritic_detected} reason={fsm_res.get('reason')}"
+                    )
+
+            elif has_valid_landmarks and fsm.baseline is not None and fsm.state in (STATE_BASE_STABLE, STATE_DIACRITIC_CANDIDATE, STATE_COOLDOWN):
+                # TÌNH HUỐNG E (Task 7E.4B): Chữ tĩnh ngoài BASE_GROUPS (B, C, G...) nhưng landmarks hợp lệ và FSM đang có baseline snapshot -> dùng switch candidate tolerance
+                fsm_res = fsm.update(
+                    base_label=base_sign,
+                    base_confidence=base_conf,
+                    landmarks_raw=p_prim,
+                    timestamp=current_time,
+                    source=recognition_source,
+                )
+                final_sign = fsm_res.get("final_label", base_sign)
+                final_conf = fsm_res.get("confidence", base_conf)
+                if self.debug_diacritic or self.diagnostic_enabled:
+                    alpha_res["diacritic_fsm"] = {
+                        "state": fsm_res.get("state"),
+                        "base_label": fsm.current_base,
+                        "diacritic_detected": None,
+                        "reason": fsm_res.get("reason"),
+                        "source": "classifier",
+                    }
+                if self.debug_diacritic:
+                    print(
+                        f"[DiacriticFSM-SwitchCandidate] session={session_key} base={fsm.current_base} new={base_sign} -> final={final_sign} "
+                        f"state={fsm_res.get('state')} reason={fsm_res.get('reason')}"
+                    )
+
+            else:
+                # TÌNH HUỐNG C: Mất landmarks thực sự (has_valid_landmarks == False),
+                # hoặc FSM chưa từng đạt BASE_STABLE: reset FSM ngay lập tức
+                fsm.reset()
 
             # Chặn tuyệt đối: chế độ letters không bao giờ trả về chữ số hoặc từ vựng
             if final_sign not in ALLOWED_LETTERS:
                 final_sign = "NEUTRAL"
                 final_conf = 0.0
+
+            # Khi nhận diện rõ chữ H, loại bỏ các frame V cũ trong bộ đệm smoothing (do quá trình đưa/xoay 2 ngón tay)
+            if final_sign == "H" and final_conf >= self.confidence_threshold:
+                if any(s == "V" for s, _ in self.prediction_history):
+                    self.prediction_history = collections.deque(
+                        [(s, c) for s, c in self.prediction_history if s != "V"],
+                        maxlen=self.smoothing_window,
+                    )
 
             self.prediction_history.append((final_sign, final_conf))
 
@@ -676,38 +1374,63 @@ class VSLRecognizer:
             if len(recent_signs) >= self.smoothing_window // 2:
                 most_common, count = collections.Counter(recent_signs).most_common(1)[0]
                 if count >= (self.smoothing_window // 2) and most_common in ALLOWED_LETTERS:
-                    current_time = time.time()
-                    if most_common != self.last_confirmed_sign or (current_time - self.last_confirmed_time > self.cooldown_sec):
+                    current_time_clock = time.time() if timestamp is None else float(timestamp)
+                    if most_common != self.last_confirmed_sign or (current_time_clock - self.last_confirmed_time > self.cooldown_sec):
                         self.last_confirmed_sign = most_common
-                        self.last_confirmed_time = current_time
+                        self.last_confirmed_time = current_time_clock
                         confirmed = True
-                        sign_info = ALL_SIGNS.get(most_common, {})
+                        sign_info = ALL_SIGNS.get(most_common) or DIACRITIC_SIGNS_META.get(most_common, {})
                         label_text = sign_info.get("label", most_common)
                         self.sentence_tokens.append(label_text)
                         new_token_added = label_text
 
-            sign_meta = ALL_SIGNS.get(final_sign, {})
+            sign_meta = ALL_SIGNS.get(final_sign) or DIACRITIC_SIGNS_META.get(final_sign, {})
             default_display = final_sign if final_sign != "NEUTRAL" else "Đang theo dõi cử chỉ..."
             display_label = sign_meta.get("label", default_display)
             sign_type = "alphabet" if final_sign in ALLOWED_LETTERS else "unknown"
 
-            self._log_diagnostic(
-                p_prim=p_prim,
-                handedness=handedness,
-                finger_states=None,
-                geom_sign=alpha_res.get("letter", "NEUTRAL"),
-                geom_conf=alpha_res.get("confidence", 0.0),
-                has_mlp=False,
-                nn_sign="NEUTRAL",
-                nn_conf=0.0,
-                final_sign=final_sign,
-                final_conf=final_conf,
-                confirmed=confirmed,
-                expected_sign=expected_sign,
-                session_id=session_id,
-                mode=mode,
-                classifier_details=alpha_res
-            )
+            if self.pilot_logging_enabled and self.pilot_logger is not None:
+                self.pilot_logger.log_frame({
+                    "timestamp": round(float(current_time), 4),
+                    "session_id": str(session_id) if session_id else None,
+                    "trial_id": str(trial_id) if trial_id else None,
+                    "frame_idx": actual_frame_idx,
+                    "expected_sign": clean_expected_sign,
+                    "final_sign": final_sign,
+                    "final_confidence": round(float(final_conf), 4),
+                    "prediction_source": recognition_source,
+                    "confirmed": bool(confirmed),
+                    "has_static_head": bool(getattr(self, "has_static_head", False)),
+                    "geometric": self._build_pilot_geometric_payload(
+                        geom_status,
+                        geom_letter,
+                        reason=geom_reason,
+                        matched_candidates=geom_matched_candidates,
+                        features=geom_features,
+                    ),
+                    "static_head": self._build_pilot_static_head_payload(head_info),
+                    "gating_status": gating_status,
+                    "threshold_applied": round(float(threshold_applied), 4) if threshold_applied is not None else None,
+                    "reject_reason": reject_reason,
+                }, filepath=getattr(self, "pilot_filepath", None))
+            else:
+                self._log_diagnostic(
+                    p_prim=p_prim,
+                    handedness=handedness,
+                    finger_states=None,
+                    geom_sign=alpha_res.get("letter", "NEUTRAL"),
+                    geom_conf=alpha_res.get("confidence", 0.0),
+                    has_mlp=False,
+                    nn_sign="NEUTRAL",
+                    nn_conf=0.0,
+                    final_sign=final_sign,
+                    final_conf=final_conf,
+                    confirmed=confirmed,
+                    expected_sign=clean_expected_sign,
+                    session_id=session_id,
+                    mode=mode,
+                    classifier_details=alpha_res
+                )
 
             return {
                 "sign": final_sign,
@@ -717,7 +1440,10 @@ class VSLRecognizer:
                 "confirmed": confirmed,
                 "new_token": new_token_added,
                 "sentence": " ".join(self.sentence_tokens),
-                "description": sign_meta.get("description", "")
+                "description": sign_meta.get("description", ""),
+                "source": recognition_source,
+                "prediction_source": recognition_source,
+                "classifier_details": alpha_res
             }
 
         # -------------------------------------------------------------
@@ -809,6 +1535,13 @@ class VSLRecognizer:
                 final_sign = "NEUTRAL"
                 final_conf = 0.0
 
+        if final_sign == "H" and final_conf >= self.confidence_threshold:
+            if any(s == "V" for s, _ in self.prediction_history):
+                self.prediction_history = collections.deque(
+                    [(s, c) for s, c in self.prediction_history if s != "V"],
+                    maxlen=self.smoothing_window,
+                )
+
         self.prediction_history.append((final_sign, final_conf))
 
         # Đếm tần suất trong cửa sổ làm mượt
@@ -843,23 +1576,45 @@ class VSLRecognizer:
         display_label = sign_meta.get("label", default_display)
         sign_type = "digit" if final_sign in ALLOWED_DIGITS else sign_meta.get("type", "unknown")
 
-        # Diagnostic logging (chỉ kích hoạt khi VSL_DIAGNOSTIC=1 hoặc rec.diagnostic_enabled=True)
-        self._log_diagnostic(
-            p_prim=p_prim,
-            handedness=handedness,
-            finger_states=finger_states,
-            geom_sign=geom_sign,
-            geom_conf=geom_conf,
-            has_mlp=has_mlp,
-            nn_sign=nn_sign,
-            nn_conf=nn_conf,
-            final_sign=final_sign,
-            final_conf=final_conf,
-            confirmed=confirmed,
-            expected_sign=expected_sign,
-            session_id=session_id,
-            mode=mode
-        )
+        # Diagnostic logging (chỉ kích hoạt khi VSL_PILOT_LOGGING=1 hoặc rec.pilot_logging_enabled=True, hoặc legacy VSL_DIAGNOSTIC=1)
+        if self.pilot_logging_enabled and self.pilot_logger is not None:
+            self.pilot_logger.log_frame({
+                "timestamp": round(float(current_time), 4),
+                "session_id": str(session_id) if session_id else None,
+                "trial_id": str(trial_id) if trial_id else None,
+                "frame_idx": actual_frame_idx,
+                "expected_sign": clean_expected_sign,
+                "final_sign": final_sign,
+                "final_confidence": round(float(final_conf), 4),
+                "prediction_source": "geometric_rule" if geom_sign != "NEUTRAL" else "none",
+                "confirmed": bool(confirmed),
+                "has_static_head": bool(getattr(self, "has_static_head", False)),
+                "geometric": self._build_pilot_geometric_payload(
+                    "MATCH" if geom_sign != "NEUTRAL" else "NO_MATCH",
+                    geom_sign if geom_sign != "NEUTRAL" else None,
+                ),
+                "static_head": self._build_pilot_static_head_payload(),
+                "gating_status": "none",
+                "threshold_applied": None,
+                "reject_reason": None,
+            }, filepath=getattr(self, "pilot_filepath", None))
+        else:
+            self._log_diagnostic(
+                p_prim=p_prim,
+                handedness=handedness,
+                finger_states=finger_states,
+                geom_sign=geom_sign,
+                geom_conf=geom_conf,
+                has_mlp=has_mlp,
+                nn_sign=nn_sign,
+                nn_conf=nn_conf,
+                final_sign=final_sign,
+                final_conf=final_conf,
+                confirmed=confirmed,
+                expected_sign=clean_expected_sign,
+                session_id=session_id,
+                mode=mode
+            )
 
         return {
             "sign": final_sign,
@@ -997,3 +1752,14 @@ class VSLRecognizer:
         self.sentence_tokens = []
         if hasattr(self, "digit_10_detector"):
             self.digit_10_detector.reset()
+        self.reset_diacritic_fsm()
+
+    def reset_diacritic_fsm(self, session_id=None):
+        """Reset máy trạng thái dấu cho một session cụ thể hoặc toàn bộ (Task 7D)."""
+        if session_id is None:
+            for fsm in self.diacritic_fsms.values():
+                fsm.reset()
+        else:
+            session_key = str(session_id)
+            if session_key in self.diacritic_fsms:
+                self.diacritic_fsms[session_key].reset()
