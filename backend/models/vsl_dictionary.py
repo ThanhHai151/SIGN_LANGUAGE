@@ -673,7 +673,7 @@ VSL_VOCABULARY = {
         "label": "Lịch trình",
         "gloss": "LICH_TRINH",
         "type": "phrase",
-        "keywords": ["lịch trình", "lịch trình cụ thể", "kế hoạch", "thời gian biểu", "schedule", "lich trinh", "ke hoach"],
+        "keywords": ["lịch trình", "kế hoạch", "thời gian biểu", "schedule", "lich trinh", "ke hoach"],
         "description": "Tay trái xòe phẳng làm mặt bảng biểu; tay phải dùng ngón trỏ và ngón giữa vạch các hàng cột có trật tự trên lòng bàn tay trái.",
         "motion": "grid_schedule_trace",
         "two_handed": True,

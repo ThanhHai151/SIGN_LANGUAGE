@@ -13,7 +13,7 @@ Quy trình nâng cao:
 import re
 import unicodedata
 from backend.models.vsl_dictionary import VSL_VOCABULARY, VSL_ALPHABET
-from backend.models.lexicon import load_lexicon, gloss_of, display_label, norm_key, motion_id_of, motion_ids, motion_clip, sign_description
+from backend.models.lexicon import robot_pose_key, region_label, load_lexicon, gloss_of, display_label, norm_key, motion_id_of, motion_ids, motion_clip, sign_description
 
 # Các hư từ trong ngữ pháp tiếng Việt nói thường được lược bỏ hoặc tinh gọn trong VSL
 STOPWORDS = {
@@ -34,7 +34,6 @@ SEMANTIC_SYNONYM_MAP = {
     "những ngày cuối tuần": "CUOI_TUAN",
     "ngày cuối tuần": "CUOI_TUAN",
     "cuối tuần": "CUOI_TUAN",
-    "lịch trình cụ thể": "LICH_TRINH",
     "lịch trình": "LICH_TRINH",
     "kế hoạch": "LICH_TRINH",
     "thời gian biểu": "LICH_TRINH",
@@ -123,9 +122,16 @@ def remove_accents(input_str: str) -> str:
     return "".join([c for c in nfkd_form if not unicodedata.combining(c)])
 
 
+# Từ thường trùng tên riêng trong QIPEDC: "anh" (đại từ / anh trai) ≠ "Anh (nước Anh)".
+# Gõ đứng một mình thì không dùng ký hiệu tên nước; "nước anh" vẫn khớp cụm đầy đủ.
+AMBIGUOUS_PROPER_KEYS = {"anh"}
+
+
 def _resolve(phrase: str, lex: dict):
     """Tìm mục từ cho một cụm từ: khớp trực tiếp → đồng nghĩa → bản đồ ngữ nghĩa cũ (theo tư thế robot)."""
     entry = lex["by_key"].get(phrase)
+    if entry and entry.get("proper_noun") and phrase in AMBIGUOUS_PROPER_KEYS:
+        entry = None
     if entry:
         return entry
     syn = SYNONYM_WORDS.get(phrase)
@@ -148,7 +154,8 @@ def _video_id(entry: dict):
 def _vocab_item(token: str, entry: dict, available_motions: set = None) -> dict:
     gloss = gloss_of(entry)
     motion_id = motion_id_of(entry, available_motions)
-    legacy = VSL_VOCABULARY.get(entry.get("pose_key") or "", {})
+    pose_key = robot_pose_key(entry)
+    legacy = VSL_VOCABULARY.get(pose_key or "", {})
     return {
         "token": token,
         "gloss": gloss,
@@ -162,17 +169,20 @@ def _vocab_item(token: str, entry: dict, available_motions: set = None) -> dict:
         "how_to": entry.get("how_to", ""),
         "pos": entry.get("pos", ""),
         "source": entry.get("source", ""),
-        # Chỉ 1 video minh họa: đúng video QIPEDC mà robot đã học chuyển động (không chia vùng miền).
+        # Chỉ 1 video minh họa: video QIPEDC miền Nam (hoặc dùng chung cả nước) mà robot học chuyển động.
         # Video giáo trình lưu trên Supabase hay bị chặn/treo → không dùng.
         "video_url": entry.get("video_url") if "qipedc.moet.gov.vn" in (entry.get("video_url") or "") else None,
         "thumb_url": entry.get("thumb_url"),
         "variants": [],
-        "pose_key": entry.get("pose_key"),
-        # Robot diễn được nếu có chuyển động học từ video (motion_id) hoặc tư thế vẽ tay (pose_key)
+        "pose_key": pose_key,
+        "region": entry.get("region"),
+        "region_label": region_label(entry),
+        "no_south": bool(entry.get("no_south")),
+        # Robot diễn được nếu có chuyển động học từ video miền Nam (motion_id)
         "motion_id": motion_id,
         # Đoạn có động tác trong video mẫu (bỏ phần đứng yên đầu/cuối) — video & robot chỉ phát đoạn này
         "clip": list(motion_clip(motion_id)) if motion_id else None,
-        "has_pose": bool(entry.get("pose_key") or motion_id),
+        "has_pose": bool(pose_key or motion_id),
         # Mã video QIPEDC: từ chưa có chuyển động → trình duyệt học từ video này rồi robot diễn
         "video_id": _video_id(entry),
         # Chữ cái để robot đánh vần tạm trong lúc chưa có / đang học chuyển động

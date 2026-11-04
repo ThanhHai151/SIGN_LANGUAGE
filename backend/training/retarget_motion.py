@@ -130,20 +130,30 @@ def bone_angle(a, b):
 
 
 def finger_angles(Hl, side):
-    """Hl: 21 điểm bàn tay trong khung bàn tay robot."""
+    """Hl: 21 điểm bàn tay trong khung bàn tay robot.
+
+    Góc giữa từng cặp đốt ngón tính trực tiếp từ điểm MediaPipe rất nhiễu (một bàn tay duỗi thẳng vẫn
+    cho PIP/DIP ≈ 1–1,5 rad vì sai số độ sâu của từng khớp nhỏ). Vì vậy dùng hai đại lượng bền hơn:
+      • độ duỗi e = |đầu ngón − gốc ngón| / tổng chiều dài 3 đốt (≈1 khi duỗi, ≈0,4 khi nắm) → độ cong c
+        → PIP, DIP gập theo cùng tỉ lệ như ngón tay thật (gập liên động);
+      • hướng dây cung gốc→đầu ngón trong khung bàn tay → góc gập MCP và độ dạng ngón.
+    """
     m = -1.0 if side == "left" else 1.0
     out = {}
     for name, (a, b, c, d) in FINGERS.items():
-        b1, b2, b3 = Hl[b] - Hl[a], Hl[c] - Hl[b], Hl[d] - Hl[c]
-        mcp_x, spread = flex_spread(b1)
-        # Khớp PIP/DIP chỉ gập được một chiều → dùng độ lớn góc giữa 2 đốt liền nhau
-        pip_x = bone_angle(b1, b2)
-        dip_x = bone_angle(b2, b3)
+        seg = np.linalg.norm(Hl[b] - Hl[a]) + np.linalg.norm(Hl[c] - Hl[b]) + np.linalg.norm(Hl[d] - Hl[c])
+        e = float(np.linalg.norm(Hl[d] - Hl[a]) / seg) if seg > 1e-6 else 1.0
+        curl = float(np.clip((E_STRAIGHT - e) / (E_STRAIGHT - E_FIST), 0.0, 1.0))
+        pip_x = 1.75 * curl
+        dip_x = 1.15 * curl
+        chord_flex, chord_spread = flex_spread(Hl[d] - Hl[a])
+        # dây cung của ngón cong lệch về phía lòng bàn tay ≈ nửa tổng góc PIP+DIP → phần còn lại là MCP
+        mcp_x = chord_flex - 0.5 * (pip_x + dip_x) * 0.85
         out[name] = {
-            "mcp_x": float(np.clip(mcp_x, -0.4, 1.75)),
-            "pip_x": float(np.clip(pip_x, 0.0, 1.95)),
-            "dip_x": float(np.clip(dip_x, 0.0, 1.6)),
-            "spread_z": float(np.clip(spread, -0.45, 0.45)) * m,
+            "mcp_x": float(np.clip(mcp_x, -0.25, 1.6)),
+            "pip_x": float(pip_x),
+            "dip_x": float(dip_x),
+            "spread_z": float(np.clip(chord_spread, -0.35, 0.35)) * m,
         }
     # Ngón cái: gốc robot có phép quay cố định THUMB_ROOT
     R0 = THUMB_ROOT[side]
@@ -168,6 +178,19 @@ def finger_angles(Hl, side):
 # nhất là với bàn tay → giảm trọng số độ sâu khi tính HƯỚNG tay để robot nhìn từ phía trước giống video.
 KZ_ARM = 0.5
 KZ_HAND = 0.35
+KZ_POS = 0.6          # độ sâu khi đặt VỊ TRÍ cổ tay (MediaPipe phóng đại trước–sau)
+E_STRAIGHT, E_FIST = 0.95, 0.45
+
+# Kích thước robot (RobotSigner3D.jsx), toạ độ so với trung điểm hai vai, Y lên, Z ra phía trước
+R_SHOULDER_HALF, R_UPPER, R_FORE = 0.20, 0.30, 0.29
+R_REACH = R_UPPER + R_FORE - 0.005
+R_TORSO = 0.50        # vai → đáy thân robot
+R_FACE = 0.215        # vai → tầm mắt robot
+PALM_OFFSET = 0.058   # cổ tay → tâm lòng bàn tay (đã nhân tỉ lệ bàn tay 1,3)
+HAND_MARGIN = 0.045   # nửa bề dày bàn tay + khe hở
+# Hộp va chạm: (xmin, xmax, ymin, ymax, zmin, zmax)
+TORSO_BOX = (-0.22, 0.22, -0.50, 0.02, -0.12, 0.12)
+HEAD_BOX = (-0.15, 0.15, 0.08, 0.32, -0.12, 0.12)
 
 
 def damp_z(v, k):
@@ -176,7 +199,80 @@ def damp_z(v, k):
     return v
 
 
-def retarget_frame(fr, prev):
+def _push_out(p, box, margin, front_only):
+    """Độ dời nhỏ nhất đưa điểm p ra khỏi hộp (đã nới thêm margin). front_only: chỉ đẩy ra phía trước."""
+    x0, x1, y0, y1, z0, z1 = box
+    x0, x1, y0, y1, z0, z1 = x0 - margin, x1 + margin, y0 - margin, y1 + margin, z0 - margin, z1 + margin
+    if not (x0 < p[0] < x1 and y0 < p[1] < y1 and z0 < p[2] < z1):
+        return np.zeros(3)
+    cands = [np.array([0.0, 0.0, z1 - p[2]])]
+    if not front_only:
+        cands += [np.array([x0 - p[0], 0.0, 0.0]), np.array([x1 - p[0], 0.0, 0.0])]
+    return min(cands, key=lambda v: float(np.linalg.norm(v)))
+
+
+def _avoid_body(W, palm_dir):
+    """Dời vị trí cổ tay sao cho cổ tay và lòng bàn tay không lọt vào thân / đầu robot."""
+    for _ in range(3):
+        moved = False
+        for pt in (W, W + palm_dir * PALM_OFFSET):
+            for box, front in ((TORSO_BOX, True), (HEAD_BOX, False)):
+                d = _push_out(pt, box, HAND_MARGIN, front)
+                if np.any(d):
+                    W = W + d
+                    moved = True
+        if not moved:
+            break
+    return W
+
+
+def _solve_arm(S, Wt, pole, prev_bend):
+    """IK hai đoạn của robot: vai S, đích cổ tay Wt, hướng khuỷu ưu tiên pole → (R vai, góc khuỷu, mặt gập)."""
+    d = Wt - S
+    D = float(np.linalg.norm(d))
+    if D > R_REACH:
+        d *= R_REACH / D
+        D = R_REACH
+    D = max(D, abs(R_UPPER - R_FORE) + 0.02)
+    dh = unit(d)
+    pole = pole - np.dot(pole, dh) * dh
+    if np.linalg.norm(pole) < 1e-4:
+        pole = np.array([0.0, -1.0, -0.3])
+        pole = pole - np.dot(pole, dh) * dh
+    ph = unit(pole)
+    ca = (R_UPPER ** 2 + D ** 2 - R_FORE ** 2) / (2 * R_UPPER * D)
+    ang = math.acos(max(-1.0, min(1.0, ca)))
+    E = S + R_UPPER * (math.cos(ang) * dh + math.sin(ang) * ph)
+    return arm_ik(S, E, S + dh * D, prev_bend)
+
+
+def body_scale(raw):
+    """Tỉ lệ quy đổi vị trí người → robot theo từng trục, lấy trung vị qua các khung.
+
+    x: theo bề rộng vai; y dưới vai: theo chiều dài thân (vai → hông); y trên vai: theo độ cao mặt
+    (vai → mũi, robot: vai → mắt) để tay chạm mặt/đầu đúng chỗ; z: như trục y dưới vai × KZ_POS."""
+    half, torso, nose = [], [], []
+    for fr in raw["frames"]:
+        if fr.get("p"):
+            P = to_robot(fr["p"])
+            T = torso_frame(P)
+            c = (P[1] + P[2]) / 2
+            half.append(np.linalg.norm(P[1] - P[2]) / 2)
+            torso.append(np.linalg.norm(c - (P[7] + P[8]) / 2))
+            nose.append(float((T.T @ (P[0] - c))[1]))
+    med = lambda v, d: float(np.median(v)) if v else d  # noqa: E731
+    sx = R_SHOULDER_HALF / max(med(half, 0.17), 0.08)
+    sy = R_TORSO / max(med(torso, 0.48), 0.2)
+    sup = R_FACE / max(med(nose, 0.14), 0.05)
+    return {"x": sx, "y": sy, "up": sup, "z": sy * KZ_POS}
+
+
+def to_robot_pos(v, sc):
+    """Vị trí trong khung thân người (so với trung điểm hai vai) → vị trí tương ứng trên robot."""
+    return np.array([v[0] * sc["x"], v[1] * (sc["up"] if v[1] > 0 else sc["y"]), v[2] * sc["z"]])
+
+
+def retarget_frame(fr, prev, scale=None):
     if not fr.get("p"):
         return None
     P = to_robot(fr["p"])
@@ -187,17 +283,28 @@ def retarget_frame(fr, prev):
     # Nghiêng thân nhẹ (giới hạn để robot không cúi quá)
     te = euler(T)
     res["torso"] = [float(np.clip(te[0] * 0.6, -0.15, 0.15)), float(np.clip(te[1] * 0.6, -0.2, 0.2)), float(np.clip(te[2] * 0.6, -0.12, 0.12))]
+    scale = scale or {"x": 1.25, "y": 1.04, "up": 1.5, "z": 0.62}
     for side, (si, ei, wi, hk) in {"right": (2, 4, 6, "r"), "left": (1, 3, 5, "l")}.items():
-        S, E, W = loc(P[si]), damp_z(loc(P[ei]), KZ_ARM), damp_z(loc(P[wi]), KZ_ARM)
-        Rs, theta, bend = arm_ik(S, E, W, (prev or {}).get(side + "_bend"))
-        res[side + "_bend"] = bend
-        Rfore = Rs @ Rot.from_euler("XYZ", [-theta, 0, 0]).as_matrix()
-        entry = {"arm": euler(Rs), "fore": [-theta, 0.0, 0.0], "hand": None}
+        sgn = -1.0 if side == "right" else 1.0
+        Sr = np.array([sgn * R_SHOULDER_HALF, 0.0, 0.0])          # vai robot (so với trung điểm hai vai)
+        Sh, Eh, Wh = loc(P[si]), loc(P[ei]), loc(P[wi])
+        # Đích cổ tay: giữ VỊ TRÍ so với thân người (quy về tỉ lệ robot) → hai tay chạm nhau, chạm ngực,
+        # đưa lên mặt… đúng chỗ như video; độ sâu giảm vì MediaPipe phóng đại trục trước–sau.
+        Wt = to_robot_pos(Wh, scale)
+        Rh = Rh_shape = Hrel = None
         if fr.get(hk):
             H = np.stack([loc(h) for h in to_robot(fr[hk])])
             Hrel = H - H[0]
             Rh = hand_frame(damp_z(Hrel, KZ_HAND), side)   # hướng bàn tay: giảm độ sâu
             Rh_shape = hand_frame(Hrel, side)              # hình dạng ngón: dùng 3D đầy đủ
+        palm_dir = -Rh[:, 1] if Rh is not None else unit(damp_z(Wh - Eh, KZ_ARM))
+        Wt = _avoid_body(Wt, palm_dir)
+        pole = damp_z(Eh - (Sh + Wh) / 2, KZ_ARM)                 # khuỷu nằm phía nào của đường vai–cổ tay
+        Rs, theta, bend = _solve_arm(Sr, Wt, pole, (prev or {}).get(side + "_bend"))
+        res[side + "_bend"] = bend
+        Rfore = Rs @ Rot.from_euler("XYZ", [-theta, 0, 0]).as_matrix()
+        entry = {"arm": euler(Rs), "fore": [-theta, 0.0, 0.0], "hand": None}
+        if Rh is not None:
             Rrel = Rfore.T @ Rh
             q = Rot.from_matrix(Rrel).as_quat()  # x, y, z, w
             twist = 2 * math.atan2(q[1], q[3])
@@ -227,8 +334,9 @@ def flatten_side(entry, side):
 def retarget(raw, smooth=True):
     frames = []
     prev = None
+    scale = body_scale(raw)
     for fr in raw["frames"]:
-        r = retarget_frame(fr, prev)
+        r = retarget_frame(fr, prev, scale)
         if r:
             prev = r
         frames.append(r)
@@ -275,6 +383,10 @@ def retarget(raw, smooth=True):
             col[k] = col[last] * (1 - a) + rest_vec[j] * a
         M[:, j] = col
     if smooth and n >= 3:
+        # Ngón tay: lọc trung vị 3 khung trước để bỏ các khung MediaPipe nhận sai hình dạng tay
+        fcols = [j for j, name in enumerate(LAYOUT) if any(f in name for f in ("thumb", "index", "middle", "ring", "pinky"))]
+        Mp = np.vstack([M[:1], M, M[-1:]])
+        M[:, fcols] = np.median(np.stack([Mp[:-2, fcols], Mp[1:-1, fcols], Mp[2:, fcols]]), axis=0)
         K = np.array([0.25, 0.5, 0.25])
         Mp = np.vstack([M[:1], M, M[-1:]])
         M = K[0] * Mp[:-2] + K[1] * Mp[1:-1] + K[2] * Mp[2:]
@@ -329,29 +441,36 @@ def retarget(raw, smooth=True):
 
 
 def fk_check(motion, raw):
-    """Kiểm tra động học thuận: hướng cẳng tay & bàn tay của robot so với video (độ lệch góc trung bình, độ)."""
-    errs = {"forearm": [], "hand_y": [], "hand_z": []}
+    """Kiểm tra động học thuận trên robot:
+      • wrist_xy_cm: sai lệch vị trí cổ tay robot so với vị trí người (đã quy về tỉ lệ robot) trên mặt phẳng
+        nhìn thẳng (x, y) — điều người xem thấy; cm.
+      • hand_y / hand_z: độ lệch hướng bàn tay (trục ngón giữa / pháp tuyến lòng bàn tay) so với video, độ.
+    Chỉ tính ở các khung thấy tay."""
+    errs = {"wrist_xy_cm": [], "hand_y": [], "hand_z": []}
     idx = {k: i for i, k in enumerate(LAYOUT)}
+    sc = body_scale(raw)
     for row, fr in zip(motion["frames"], raw["frames"]):
-        r = retarget_frame(fr, None)
-        if not r:
+        if not fr.get("p"):
             continue
         P = to_robot(fr["p"])
         T = torso_frame(P)
-        for side, (ei, wi, hk) in {"right": (4, 6, "r"), "left": (3, 5, "l")}.items():
+        c = (P[1] + P[2]) / 2
+        for side, (wi, hk) in {"right": (6, "r"), "left": (5, "l")}.items():
+            if not fr.get(hk):
+                continue
             g = lambda k: row[idx[f"{side}_{k}"]]  # noqa: E731
+            sgn = -1.0 if side == "right" else 1.0
             Rs = Rot.from_euler("XYZ", [g("arm_x"), g("arm_y"), g("arm_z")]).as_matrix()
             Rf = Rs @ Rot.from_euler("XYZ", [g("fore_x"), g("fore_y"), g("fore_z")]).as_matrix()
-            fwd = Rf @ DOWN
-            true_f = unit(T.T @ (P[wi] - P[ei]))
-            errs["forearm"].append(math.degrees(math.acos(np.clip(np.dot(fwd, true_f), -1, 1))))
-            if fr.get(hk):
-                Rh = Rf @ Rot.from_euler("Y", g("twist")).as_matrix() @ Rot.from_euler("XYZ", [g("wrist_x"), g("wrist_y"), g("wrist_z")]).as_matrix()
-                H = np.stack([T.T @ h for h in to_robot(fr[hk])])
-                Rt = hand_frame(H, side)
-                errs["hand_y"].append(math.degrees(math.acos(np.clip(np.dot(Rh[:, 1], Rt[:, 1]), -1, 1))))
-                errs["hand_z"].append(math.degrees(math.acos(np.clip(np.dot(Rh[:, 2], Rt[:, 2]), -1, 1))))
-    return {k: (round(float(np.mean(v)), 1) if v else None) for k, v in errs.items()}
+            wr = np.array([sgn * R_SHOULDER_HALF, 0, 0]) + Rs @ (DOWN * R_UPPER) + Rf @ (DOWN * R_FORE)
+            tgt = to_robot_pos(T.T @ (P[wi] - c), sc)
+            errs["wrist_xy_cm"].append(100 * float(np.linalg.norm((wr - tgt)[:2])))
+            Rh = Rf @ Rot.from_euler("Y", g("twist")).as_matrix() @ Rot.from_euler("XYZ", [g("wrist_x"), g("wrist_y"), g("wrist_z")]).as_matrix()
+            H = np.stack([T.T @ h for h in to_robot(fr[hk])])
+            Rt = hand_frame(damp_z(H - H[0], KZ_HAND), side)
+            errs["hand_y"].append(math.degrees(math.acos(np.clip(np.dot(Rh[:, 1], Rt[:, 1]), -1, 1))))
+            errs["hand_z"].append(math.degrees(math.acos(np.clip(np.dot(Rh[:, 2], Rt[:, 2]), -1, 1))))
+    return {k: (round(float(np.median(v)), 1) if v else None) for k, v in errs.items()}
 
 
 if __name__ == "__main__":

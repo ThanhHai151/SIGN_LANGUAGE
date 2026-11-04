@@ -12,6 +12,10 @@ import re
 import threading
 
 from backend.models.lexicon import MOTION_DIR, DESC_PATH, motion_clip
+
+# Điểm khớp gốc (trước khi chuyển sang robot) được giữ lại để có thể chuyển đổi lại khi cải tiến
+# thuật toán mà không phải chạy MediaPipe trên video lần nữa:  python -m backend.training.batch_retarget
+RAW_DIR = os.path.join(os.path.dirname(MOTION_DIR), "raw_motion")
 from backend.training.retarget_motion import retarget
 from backend.training.describe_signs import describe
 
@@ -44,6 +48,12 @@ def learn(raw: dict) -> dict:
         return {"success": False, "reason": "Dữ liệu khung hình không hợp lệ"}
     fps = float(raw.get("fps") or 8)
     raw = {"id": mid, "fps": fps, "dur": float(raw.get("dur") or len(frames) / fps), "frames": frames}
+
+    os.makedirs(RAW_DIR, exist_ok=True)
+    rpath = os.path.join(RAW_DIR, mid + ".json")
+    with open(rpath + ".part", "w", encoding="utf-8") as f:
+        json.dump(raw, f, separators=(",", ":"))
+    os.replace(rpath + ".part", rpath)
 
     m = retarget(raw)
     cov = max(m["hand_coverage"].values())

@@ -1,5 +1,5 @@
 """
-Chuyển hàng loạt dữ liệu trích từ video (raw_motion/*.json) → backend/data/motions/*.json
+Chuyển hàng loạt dữ liệu trích từ video (backend/data/raw_motion/*.json) → backend/data/motions/*.json
 
     python -m backend.training.batch_retarget <thư_mục_raw | qipedc_motion_raw.json.gz>
 """
@@ -45,13 +45,13 @@ def main(src_dir):
         stats.append((m["id"], cov, fk_check(m, raw)))
     with open(os.path.join(OUT, "_layout.json"), "w", encoding="utf-8") as fo:
         json.dump({"layout_version": 1, "channels": LAYOUT}, fo, indent=1)
-    fe = [s[2]["forearm"] for s in stats if s[2]["forearm"] is not None]
+    fe = [s[2]["wrist_xy_cm"] for s in stats if s[2]["wrist_xy_cm"] is not None]
     hz = [s[2]["hand_z"] for s in stats if s[2]["hand_z"] is not None]
     print(f"Đã chuyển {len(stats)} ký hiệu, bỏ qua {len(skipped)} (không thấy tay): {skipped[:10]}")
     if fe:
-        print(f"Sai lệch hướng cẳng tay TB: {sum(fe) / len(fe):.1f}°, hướng lòng bàn tay TB: {sum(hz) / max(1, len(hz)):.1f}°")
+        print(f"Sai lệch vị trí cổ tay (mặt phẳng nhìn thẳng) TB: {sum(fe) / len(fe):.1f} cm, hướng lòng bàn tay TB: {sum(hz) / max(1, len(hz)):.1f}°")
     return stats, skipped
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "raw_motion")
+    main(sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "backend", "data", "raw_motion"))

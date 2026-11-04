@@ -507,12 +507,23 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
               <strong style={{ fontSize: '20px', fontFamily: 'Outfit, sans-serif' }}>{currentStep.label}</strong>
               {currentStep.pos && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{currentStep.pos}</span>}
               <span style={{ flex: 1 }} />
+              {currentStep.type === 'vocabulary' && currentStep.region_label && (
+                <span className="badge badge-cyan" style={{ fontSize: '10.5px' }} title="Ứng dụng lấy ký hiệu miền Nam làm chuẩn">
+                  {currentStep.region_label}
+                </span>
+              )}
               <span className="badge badge-emerald" style={{ fontSize: '10.5px' }}>Diễn tả ký hiệu</span>
             </div>
             {currentStep.definition && (
               <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                 <strong style={{ color: 'var(--text-main)' }}>Nghĩa: </strong>{currentStep.definition}
               </p>
+            )}
+            {currentStep.type === 'vocabulary' && !currentStep.video_id && !currentStep.motion_id && !currentStep.pose_key && (
+              <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.35)', fontSize: 12.5, color: 'var(--text-main)', lineHeight: 1.5 }}>
+                Danh mục QIPEDC chưa có ký hiệu <strong>miền Nam</strong> (hoặc dùng chung cả nước) cho từ này,
+                nên robot đánh vần bằng bảng chữ cái ngón tay thay vì đoán ký hiệu.
+              </div>
             )}
             {currentStep.video_id && !currentStep.motion_id && (() => {
               const st = learning[currentStep.video_id];
@@ -522,7 +533,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
                   <span style={{ fontSize: 12.5, color: 'var(--text-main)' }}>
                     {st === 'failed'
                       ? 'Chưa học được ký hiệu này từ video — robot đánh vần thay thế.'
-                      : `Robot đang học ký hiệu này từ video người thật… ${pct}% (trong lúc chờ, robot đánh vần từ)`}
+                      : `Robot đang học ký hiệu miền Nam này từ video người thật… ${pct}% (trong lúc chờ, robot đánh vần từ)`}
                   </span>
                   {st !== 'failed' && (
                     <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>

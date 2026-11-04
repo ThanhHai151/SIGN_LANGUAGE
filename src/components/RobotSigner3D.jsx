@@ -124,6 +124,7 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
   const captionRef = useRef(null);
 
   const [cameraMode, setCameraMode] = useState('full');
+  const [spellIdx, setSpellIdx] = useState(-1); // chữ cái đang đánh vần tạm (từ chưa học động tác)
   const cameraModeRef = useRef('full');
   const targetCamPosRef = useRef(new THREE.Vector3(0, 1.12, 2.15));
   const targetCamLookRef = useRef(new THREE.Vector3(0, 0.98, 0));
@@ -760,10 +761,21 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
       const letters = currentStep.spell;
       let i = 0;
       rig.currentPose.smoothTime = 0.1;
-      const run = () => { applyStatic(getHandPoseByGloss(letters[i % letters.length])); i += 1; };
+      const run = () => {
+        const k = i % letters.length;
+        applyStatic(getHandPoseByGloss(letters[k]));
+        setSpellIdx(k);
+        // màn hình ngực hiện đúng chữ cái robot đang làm
+        const sc = screenRef.current;
+        if (sc) {
+          const from = sc.anim ? sc.anim.to : sc.shown;
+          sc.anim = { from, to: { text: letters[k], sub: `ĐÁNH VẦN ${k + 1}/${letters.length}` }, start: undefined };
+        }
+        i += 1;
+      };
       run();
       const iv = setInterval(() => { if (!rig.motion) run(); }, SPELL_LETTER_MS / Math.max(0.25, speed));
-      return () => { cancelled = true; clearInterval(iv); };
+      return () => { cancelled = true; clearInterval(iv); setSpellIdx(-1); };
     }
 
     // 2) Tư thế vẽ tay (handPoses.js); từ chưa có tư thế robot → tư thế nghỉ (xem video mẫu)
@@ -852,6 +864,34 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
           style={{ position: 'absolute', inset: 0, cursor: 'grab' }}
           title="Kéo chuột để xoay robot 360°"
         />
+
+        {/* Đánh vần tạm: dãy chữ cái, sáng chữ robot đang làm */}
+        {isTempSpell(currentStep) && spellIdx >= 0 && (
+          <div style={{
+            position: 'absolute', left: 12, right: 150, top: 12, display: 'flex', flexDirection: 'column', gap: 6,
+            background: 'rgba(8, 15, 28, 0.85)', padding: '8px 10px', borderRadius: 10,
+            border: '1px solid var(--border-subtle)', backdropFilter: 'blur(10px)', pointerEvents: 'none'
+          }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              {currentStep.video_id
+                ? <>Đang đánh vần “{currentStep.label}” (chờ robot học ký hiệu)</>
+                : <>Đánh vần “{currentStep.label}” (chưa có ký hiệu miền Nam)</>}
+            </span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {currentStep.spell.map((ch, k) => (
+                <span key={k} style={{
+                  minWidth: 26, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: 6, fontWeight: 800, fontSize: k === spellIdx ? 18 : 14, fontFamily: 'Outfit, sans-serif',
+                  color: k === spellIdx ? '#fff' : k < spellIdx ? 'var(--text-secondary)' : 'var(--text-muted)',
+                  background: k === spellIdx ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${k === spellIdx ? 'var(--primary)' : 'var(--border-subtle)'}`,
+                  transform: k === spellIdx ? 'translateY(-2px)' : 'none',
+                  transition: 'all .18s ease'
+                }}>{ch}</span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Thanh góc nhìn (dọc, góc phải) */}
         <div style={{

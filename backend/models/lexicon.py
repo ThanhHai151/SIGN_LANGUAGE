@@ -18,6 +18,12 @@ MOTION_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "m
 _VIDEO_ID_RE = re.compile(r"qipedc\.moet\.gov\.vn/videos/([^./]+)\.mp4")
 
 
+# Chuẩn ký hiệu của ứng dụng: MIỀN NAM. Robot chỉ diễn chuyển động học từ video miền Nam (hoặc video
+# dùng chung cả nước) của QIPEDC; KHÔNG dùng tư thế vẽ tay cho từ vựng (chưa kiểm chứng được với video).
+# Từ không có video miền Nam → robot đánh vần bằng bảng chữ cái ngón tay.
+STANDARD_REGION = "N"
+SOUTH_ONLY = True
+
 _motion_cache = {"mtime": None, "ids": set()}
 
 
@@ -59,6 +65,22 @@ def sign_description(motion_id: str):
             _desc_cache["data"] = {}
         _desc_cache["mtime"] = mtime
     return _desc_cache["data"].get(motion_id)
+
+
+def robot_pose_key(entry: dict):
+    """Khóa tư thế vẽ tay được phép dùng: chữ cái/số của bảng chữ cái ngón tay luôn dùng được;
+    từ vựng chỉ dùng khi tắt chế độ SOUTH_ONLY."""
+    pk = entry.get("pose_key")
+    if not pk:
+        return None
+    if SOUTH_ONLY and not entry.get("fingerspelling"):
+        return None
+    return pk
+
+
+def region_label(entry: dict) -> str:
+    r = entry.get("region")
+    return {"N": "Miền Nam", "": "Dùng chung cả nước", "GT": "Video giáo trình (chưa rõ miền)"}.get(r, "Chưa có ký hiệu miền Nam")
 
 
 def motion_id_of(entry: dict, available: set = None):
@@ -171,8 +193,11 @@ def compact_entry(e: dict) -> dict:
         "image_url": e.get("image_url"),
         "variants": e.get("variants", []),
         "sstcn_index": e.get("sstcn_index"),
-        "pose_key": e.get("pose_key"),
+        "pose_key": robot_pose_key(e),
         "motion_id": motion_id_of(e),
+        "region": e.get("region"),
+        "region_label": region_label(e),
+        "no_south": bool(e.get("no_south")),
         "common": bool(e.get("common")),
         "fingerspelling": bool(e.get("fingerspelling")),
         "proper_noun": bool(e.get("proper_noun")),

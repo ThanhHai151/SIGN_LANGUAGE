@@ -108,9 +108,9 @@ def get_lexicon(
     elif filter == "camera":
         items = sorted([e for e in items if e.get("sstcn_index") is not None], key=lambda e: e["sstcn_index"])
     elif filter == "robot":
-        from backend.models.lexicon import motion_id_of, motion_ids
+        from backend.models.lexicon import motion_id_of, motion_ids, robot_pose_key
         avail = motion_ids()
-        items = [e for e in items if e.get("pose_key") or motion_id_of(e, avail)]
+        items = [e for e in items if robot_pose_key(e) or motion_id_of(e, avail)]
     elif filter == "alphabet":
         items = [e for e in items if e.get("fingerspelling")]
     if q:
@@ -213,6 +213,35 @@ def learn_motion(req: LearnRequest):
     → chuyển sang góc khớp robot, lưu lại và trả về để robot diễn ngay."""
     from backend.models.motion_learn import learn
     return learn(req.model_dump() if hasattr(req, "model_dump") else req.dict())
+
+
+@app.post("/api/motion/import")
+async def import_raw_motions(request: Request):
+    """Nhập HÀNG LOẠT điểm khớp đã trích từ video (công cụ cho nhà phát triển).
+
+    Nhận form (application/x-www-form-urlencoded) với trường data = base64(gzip(JSON danh sách
+    {id, fps, dur, frames})) — gửi được bằng một form POST thông thường từ trang QIPEDC (nơi kịch bản
+    extract_motion_browser.js lưu kết quả), không cần quyền gọi API khác nguồn. Mỗi mục được kiểm tra
+    và xử lý y như /api/motion/learn (lưu điểm khớp gốc, chuyển sang robot, viết diễn tả)."""
+    import gzip
+    from urllib.parse import parse_qs
+    from backend.models.motion_learn import learn
+    body = await request.body()
+    try:
+        data = parse_qs(body.decode("ascii")).get("data", [""])[0]
+        raws = json.loads(gzip.decompress(base64.b64decode(data)).decode("utf-8"))
+        if not isinstance(raws, list):
+            raise ValueError
+    except Exception:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail="Dữ liệu không hợp lệ")
+
+    def run():
+        ok, bad = [], []
+        for raw in raws[:400]:
+            r = learn(raw if isinstance(raw, dict) else {})
+            (ok if r.get("success") else bad).append(str((raw or {}).get("id"))[:40] if r.get("success") else [str((raw or {}).get("id"))[:40], r.get("reason")])
+        return {"success": True, "imported": len(ok), "failed": bad, "ids": ok}
+    return await run_in_threadpool(run)
 
 
 @app.get("/api/lexicon/{entry_id}")

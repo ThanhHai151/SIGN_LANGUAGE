@@ -230,12 +230,26 @@ class TestVSLSystem(unittest.TestCase):
             seq = text_to_vsl_glosses(entry["keys"][0])
             self.assertEqual(seq[0]["entry_id"], entry["id"], entry["word"])
 
-    def test_regional_variants(self):
-        """Mục từ QIPEDC có video biến thể vùng miền Bắc / Trung / Nam"""
+    def test_south_standard(self):
+        """Chuẩn miền Nam: chỉ còn video miền Nam / dùng chung; từ chỉ có video miền Bắc/Trung → không có video"""
         data = self.client.get("/api/lexicon", params={"q": "địa chỉ"}).json()
         entry = next(e for e in data["entries"] if e["word"] == "địa chỉ")
-        regions = {v["region"] for v in entry["variants"]}
-        self.assertTrue({"B", "T", "N"} <= regions)
+        self.assertEqual({v["region"] for v in entry["variants"]} - {"GT"}, {"N"})
+        self.assertTrue(entry["video_url"].endswith("N.mp4"))
+        self.assertEqual(entry["region"], "N")
+        lex = self.client.get("/api/lexicon").json()["entries"]
+        for e in lex:
+            for v in e.get("variants", []):
+                self.assertNotIn(v["region"], ("B", "T"), e["word"])
+        # "bạn": robot / video dùng ký hiệu miền Nam
+        seq = self.client.post("/api/text_to_sign", json={"text": "bạn"}).json()["sequence"]
+        self.assertTrue(seq[0]["video_id"].endswith("N"))
+        # từ không có video miền Nam: không dùng tư thế vẽ tay, robot đánh vần
+        no_south = next(e for e in lex if e.get("no_south") and e.get("source") == "QIPEDC")
+        self.assertIsNone(no_south["video_url"])
+        item = self.client.post("/api/text_to_sign", json={"text": no_south["keys"][0]}).json()["sequence"][0]
+        self.assertFalse(item["has_pose"])
+        self.assertTrue(item["spell"])
 
     # ------------------------------------------------------------------
     # Chuyển động robot học từ video QIPEDC
@@ -328,9 +342,10 @@ class TestVSLSystem(unittest.TestCase):
             bad = self.client.post("/api/motion/learn", json={"id": "../x", "frames": []}).json()
             self.assertFalse(bad["success"])
         finally:
-            p = os.path.join(MOTION_DIR, "ZZLEARN.json")
-            if os.path.exists(p):
-                os.remove(p)
+            from backend.models.motion_learn import RAW_DIR
+            for p in (os.path.join(MOTION_DIR, "ZZLEARN.json"), os.path.join(RAW_DIR, "ZZLEARN.json")):
+                if os.path.exists(p):
+                    os.remove(p)
             shutil.move(bak, DESC_PATH)
 
 if __name__ == "__main__":

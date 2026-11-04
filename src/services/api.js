@@ -234,22 +234,29 @@ function clientSideLocalRecognize(landmarks) {
  * Fallback Text-to-Sign Client-side
  */
 function clientSideTextToSign(text) {
-  const words = text.trim().split(/\s+/);
+  // Mất kết nối backend → không có bộ từ vựng để ghép cụm từ / tra chuyển động.
+  // Không giả vờ diễn ký hiệu: robot ĐÁNH VẦN chữ cái ngón tay từng từ (đúng chữ, dù chậm hơn).
+  const toSpell = (w) => w
+    .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase().split('').filter(c => /[A-Z]/.test(c)).slice(0, 12);
+  const words = text.trim().split(/\s+/).map(w => w.replace(/[?!.,;:"“”]+/g, '')).filter(Boolean);
   const sequence = words.map(w => ({
     token: w,
     gloss: w.toUpperCase(),
     label: w.charAt(0).toUpperCase() + w.slice(1),
     type: 'vocabulary',
     duration_ms: 1500,
-    description: `Thực hiện cử chỉ VSL cho từ "${w}"`,
-    avatar_pose: {
-      right_arm: [30, 20, 0],
-      right_wrist: [10, 0, 0],
-      fingers: [1, 1, 1, 1, 1]
-    }
+    description: `Chưa kết nối máy chủ — robot đánh vần chữ cái ngón tay cho từ "${w}"`,
+    pose_key: null,
+    motion_id: null,
+    has_pose: false,
+    spell: toSpell(w),
+    offline: true,
   }));
   return {
     success: true,
+    offline: true,
     input_text: text,
     sequence,
     total_tokens: sequence.length,
