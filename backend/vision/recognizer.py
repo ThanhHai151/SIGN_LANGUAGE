@@ -281,11 +281,26 @@ class VSLRecognizer:
                 else:
                     clean_features[k] = v
 
+            h_rule_diag = None
             if hasattr(self.alphabet_classifier, "evaluate_rule_h_diagnostics"):
                 try:
                     h_rule_diag = self.alphabet_classifier.evaluate_rule_h_diagnostics(clean_features)
                 except Exception:
                     h_rule_diag = None
+
+            k_rule_diag = None
+            if hasattr(self.alphabet_classifier, "evaluate_rule_k_diagnostics"):
+                try:
+                    k_rule_diag = self.alphabet_classifier.evaluate_rule_k_diagnostics(clean_features)
+                except Exception:
+                    k_rule_diag = None
+
+            i_rule_diag = None
+            if hasattr(self.alphabet_classifier, "evaluate_rule_i_diagnostics"):
+                try:
+                    i_rule_diag = self.alphabet_classifier.evaluate_rule_i_diagnostics(clean_features)
+                except Exception:
+                    i_rule_diag = None
 
         return {
             "status": status,
@@ -294,6 +309,8 @@ class VSLRecognizer:
             "matched_candidates": clean_candidates,
             "features": clean_features,
             "h_rule_diagnostics": h_rule_diag,
+            "k_rule_diagnostics": k_rule_diag,
+            "i_rule_diagnostics": i_rule_diag,
         }
 
     def _build_pilot_static_head_payload(self, head_info=None) -> dict:
@@ -496,12 +513,12 @@ class VSLRecognizer:
         thumb_firmly_folded = thumb_curl > THUMB_FIRMLY_FOLDED
 
         # ================================================================
-        # RULE 0: Chu H (Uu tien kiem tra truoc V/U de tranh nham H nam ngang thanh V)
+        # RULE 0: Chu H, Chu K, Chu I, Chu Y (Uu tien kiem tra truoc V/U/Y tu AlphabetClassifier)
         # ================================================================
         if hasattr(self, "alphabet_classifier") and self.alphabet_classifier is not None:
-            h_let, h_conf = self.alphabet_classifier.classify(p)
-            if h_let == "H":
-                return "H", h_conf
+            c_let, c_conf = self.alphabet_classifier.classify(p)
+            if c_let in ("H", "K", "I", "Y"):
+                return c_let, c_conf
 
         # ================================================================
         # RULE 1: Chu V va U
@@ -1361,6 +1378,22 @@ class VSLRecognizer:
                 if any(s == "V" for s, _ in self.prediction_history):
                     self.prediction_history = collections.deque(
                         [(s, c) for s, c in self.prediction_history if s != "V"],
+                        maxlen=self.smoothing_window,
+                    )
+
+            # Khi nhận diện rõ chữ K, loại bỏ các frame V hoặc D cũ trong bộ đệm smoothing (do quá trình tạo dáng)
+            if final_sign == "K" and final_conf >= self.confidence_threshold:
+                if any(s in ("V", "D") for s, _ in self.prediction_history):
+                    self.prediction_history = collections.deque(
+                        [(s, c) for s, c in self.prediction_history if s not in ("V", "D")],
+                        maxlen=self.smoothing_window,
+                    )
+
+            # Khi nhận diện rõ chữ I, loại bỏ các frame Y hoặc B cũ trong bộ đệm smoothing (do quá trình khép ngón)
+            if final_sign == "I" and final_conf >= self.confidence_threshold:
+                if any(s in ("Y", "B") for s, _ in self.prediction_history):
+                    self.prediction_history = collections.deque(
+                        [(s, c) for s, c in self.prediction_history if s not in ("Y", "B")],
                         maxlen=self.smoothing_window,
                     )
 

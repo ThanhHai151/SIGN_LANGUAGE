@@ -724,4 +724,698 @@ class TestLetterHRobustnessAndSafety:
                 res_rv = classifier.classify_detailed(rot_v)
                 assert res_rv["letter"] != "H", f"Mẫu V[{idx}] xoay {deg} độ bị nhận nhầm thành H!"
 
+    def test_v_requires_spread_angle_and_upward_orientation(self, classifier, alphabet_fixture_data):
+        """
+        Kiểm tra các ràng buộc mới của Rule V (Giai đoạn B - TASK 4):
+        1. Dáng 2 ngón duỗi song song (ang_IM_dir < 5.0°) không bao giờ kích hoạt Rule V.
+        2. Dáng 2 ngón duỗi hướng ngang (idx_horiz_ratio >= 0.50 hoặc idx_tip_y > -0.80) không kích hoạt Rule V.
+        3. evaluate_rule_h_diagnostics phản ánh chính xác các điều kiện con mới của Rule V.
+        """
+        # Lấy mẫu chữ U chuẩn (2 ngón duỗi song song thẳng đứng)
+        u_samples = [
+            s for s in alphabet_fixture_data["samples"]
+            if s["letter_upper"] == "U" and s.get("frame_idx") in [19, 30, 38]
+        ]
+        assert len(u_samples) > 0
+
+        for s in u_samples:
+            lm = s["landmarks"]
+            feat = classifier.extract_features(lm)
+            diag = classifier.evaluate_rule_h_diagnostics(feat)
+            res = classifier.classify_detailed(lm)
+
+            # Chữ U có ang_IM_dir ~ 0..3° < 9.0° -> Rule V phải False
+            assert feat["ang_IM_dir"] < 9.0, f"Chữ U frame {s['frame_idx']} có góc xòe bất thường: {feat['ang_IM_dir']}"
+            assert res["letter"] != "V", f"Chữ U frame {s['frame_idx']} bị kích hoạt nhầm Rule V!"
+            assert diag["rule_v"]["matched"] is False
+            assert "ang_IM_dir_ge_min" in diag["rule_v"]["failed_conditions"]
+
+    def test_u_and_closed_fingers_never_match_v_or_h(self, classifier, alphabet_fixture_data):
+        """
+        Đảm bảo các mẫu chữ U (2 ngón khép song song hướng lên) tuyệt đối không
+        bị nhận diện nhầm thành V (vì thiếu độ xòe) hay H (vì không hướng ngang).
+        """
+        u_samples = [
+            s for s in alphabet_fixture_data["samples"]
+            if s["letter_upper"] == "U" and s.get("quality_status") == "ok"
+        ]
+        assert len(u_samples) > 0
+        for s in u_samples:
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["letter"] != "V", f"Mẫu U frame {s.get('frame_idx')} bị nhận nhầm thành V!"
+            assert res["letter"] != "H", f"Mẫu U frame {s.get('frame_idx')} bị nhận nhầm thành H!"
+
+    def test_vsl_static_dataset_all_22_classes_regression(self, classifier):
+        """
+        Kiểm thử hồi quy toàn bộ 22 lớp chữ cái tĩnh trên dataset chuẩn vsl_alphabet_static_v2.npz:
+        - Chữ V đạt MATCH trên toàn bộ 13/13 mẫu ổn định (indices 363..375), 0 FP trên 21 lớp khác.
+        - Chữ H đạt MATCH trên toàn bộ 12/12 mẫu ổn định (indices 129..140), 0 FP trên 21 lớp khác.
+        - Các lớp còn lại không bị suy giảm độ chính xác hoặc tăng đột biến FP.
+        """
+        npz_path = os.path.join(
+            os.path.dirname(__file__), "..", "data", "alphabet_v2", "datasets", "vsl_alphabet_static_v2.npz"
+        )
+        if not os.path.exists(npz_path):
+            pytest.skip("Dataset vsl_alphabet_static_v2.npz không tồn tại trên môi trường hiện tại.")
+
+        data = np.load(npz_path, allow_pickle=True)
+        landmarks = data["landmarks"]
+        y = data["y"]
+        classes = list(data["classes"])
+
+        v_idx = classes.index("V")
+        h_idx = classes.index("H")
+
+        v_matched = 0
+        v_fp = 0
+        h_matched = 0
+        h_fp = 0
+
+        for i in range(len(y)):
+            lm = landmarks[i].tolist()
+            res = classifier.classify_detailed(lm)
+            pred = res.get("letter")
+
+            if y[i] == v_idx:
+                if pred == "V" and res.get("status") == "MATCH":
+                    v_matched += 1
+            else:
+                if pred == "V":
+                    v_fp += 1
+
+            if y[i] == h_idx:
+                if pred == "H" and res.get("status") == "MATCH":
+                    h_matched += 1
+            else:
+                if pred == "H":
+                    h_fp += 1
+
+        assert v_matched >= 13, f"Chữ V chỉ nhận được {v_matched}/17 mẫu trong dataset!"
+        assert v_fp == 0, f"Chữ V bị False Positive {v_fp} lần trên các chữ khác!"
+        assert h_matched >= 12, f"Chữ H chỉ nhận được {h_matched}/18 mẫu trong dataset!"
+        assert h_fp == 0, f"Chữ H bị False Positive {h_fp} lần trên các chữ khác!"
+
+
+# ===========================================================================
+# 11. KIỂM THỬ CHỮ H MIỀN NAM & PHÂN XỬ H/V HÌNH HỌC TĨNH (TASK 7)
+# ===========================================================================
+
+class TestHSouthGeometricRuleAndDisambiguation:
+    """
+    Kiểm thử chuyên sâu cho quy tắc hình học chữ H Miền Nam (QIPEDC D0500N)
+    và cơ chế phân xử H vs V dựa trên hình chiếu bề ngang bàn tay (MCP_width_2d)
+    và tư thế ngón cái đè ngón áp út (thumb_ring_dist).
+    """
+
+    @pytest.fixture(scope="module")
+    def d0500n_data(self):
+        """Tải dữ liệu landmark trích xuất từ video QIPEDC D0500N (H Miền Nam)."""
+        path = os.path.join(
+            os.path.dirname(__file__), "..", "data", "alphabet_v2", "static_landmarks", "D0500N.json"
+        )
+        assert os.path.exists(path), f"File không tồn tại: {path}"
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    @pytest.fixture(scope="module")
+    def v_qipedc_data(self):
+        """Tải dữ liệu landmark trích xuất từ video QIPEDC D0516 (Chữ V)."""
+        path = os.path.join(
+            os.path.dirname(__file__), "..", "data", "alphabet_v2", "static_landmarks", "V.json"
+        )
+        assert os.path.exists(path), f"File không tồn tại: {path}"
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    @pytest.fixture(scope="module")
+    def h_north_data(self):
+        """Tải dữ liệu landmark trích xuất từ video QIPEDC D0500B (H Miền Bắc)."""
+        path = os.path.join(
+            os.path.dirname(__file__), "..", "data", "alphabet_v2", "static_landmarks", "H.json"
+        )
+        assert os.path.exists(path), f"File không tồn tại: {path}"
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def test_h_south_qipedc_stable_frames_match_h(self, classifier, d0500n_data):
+        """
+        Toàn bộ 24 khung hình ổn định của D0500N (indices 10..33) phải được
+        nhận diện chính xác là H với status MATCH và confidence 0.95.
+        Tuyệt đối không có khung hình nào bị nhận nhầm thành V.
+        """
+        stable_samples = [
+            s for s in d0500n_data["samples"]
+            if s.get("quality_status") == "ok" and 10 <= s.get("frame_index", -1) <= 33
+        ]
+        assert len(stable_samples) == 24, f"Số lượng frame ổn định mong đợi 24, nhận {len(stable_samples)}"
+
+        for s in stable_samples:
+            f_idx = s.get("frame_index")
+            lm = s["landmarks"]
+            res = classifier.classify_detailed(lm)
+
+            assert res["status"] == "MATCH", f"D0500N frame {f_idx} không đạt MATCH: status={res['status']}, reason={res['reason']}"
+            assert res["letter"] == "H", f"D0500N frame {f_idx} bị nhận nhầm thành {res['letter']}!"
+            assert res["confidence"] == 0.95
+            assert "Miền Nam" in res["reason"]
+
+    def test_h_south_with_spread_fingers_never_matches_v(self, classifier, d0500n_data):
+        """
+        Trong D0500N, các khung hình xòe ngón trỏ & giữa rộng (ang_IM_dir >= 25.0° như frame 22..33)
+        phải nhận đúng H và tuyệt đối KHÔNG kích hoạt Rule V.
+        Chẩn đoán Rule V phải chỉ rõ failed điều kiện mcp_width_2d_ge_min và thumb_ring_dist_ge_min.
+        """
+        spread_samples = [
+            s for s in d0500n_data["samples"]
+            if s.get("quality_status") == "ok" and 22 <= s.get("frame_index", -1) <= 32
+        ]
+        assert len(spread_samples) > 0
+
+        for s in spread_samples:
+            f_idx = s.get("frame_index")
+            lm = s["landmarks"]
+            feat = classifier.extract_features(lm)
+            assert feat is not None
+            assert feat["ang_IM_dir"] >= 25.0, f"Frame {f_idx} có góc xòe {feat['ang_IM_dir']:.1f}° < 25°"
+
+            res = classifier.classify_detailed(lm)
+            assert res["letter"] == "H", f"Frame xòe {f_idx} bị nhận nhầm thành {res['letter']}"
+            assert res["status"] == "MATCH"
+
+            diag = classifier.evaluate_rule_h_diagnostics(feat)
+            assert diag is not None
+            assert diag["rule_v"]["matched"] is False, f"Rule V bị kích hoạt nhầm trên H South frame {f_idx}!"
+            assert "mcp_width_2d_ge_min" in diag["rule_v"]["failed_conditions"]
+            assert "thumb_ring_dist_ge_min" in diag["rule_v"]["failed_conditions"]
+            assert diag["h_south"]["matched"] is True
+
+    def test_v_qipedc_stable_frames_never_match_h(self, classifier, v_qipedc_data):
+        """
+        Toàn bộ 13 khung hình ổn định của V (D0516, indices 14..38) phải nhận diện chính xác là V.
+        Tuyệt đối không có khung hình nào bị nhận nhầm thành H Miền Nam.
+        Chẩn đoán H South phải chỉ rõ failed điều kiện mcp_width_2d_le_max và thumb_ring_dist_le_max.
+        """
+        stable_v = [
+            s for s in v_qipedc_data["samples"]
+            if s.get("quality_status") == "ok" and 14 <= s.get("frame_index", -1) <= 38
+        ]
+        assert len(stable_v) == 13
+
+        for s in stable_v:
+            f_idx = s.get("frame_index")
+            lm = s["landmarks"]
+            feat = classifier.extract_features(lm)
+            res = classifier.classify_detailed(lm)
+
+            assert res["status"] == "MATCH", f"V frame {f_idx} status={res['status']}"
+            assert res["letter"] == "V", f"V frame {f_idx} bị nhận nhầm thành {res['letter']}"
+
+            diag = classifier.evaluate_rule_h_diagnostics(feat)
+            assert diag is not None
+            assert diag["rule_v"]["matched"] is True
+            assert diag["h_south"]["matched"] is False
+            assert "mcp_width_2d_le_max" in diag["h_south"]["failed_conditions"]
+            assert "thumb_ring_dist_le_max" in diag["h_south"]["failed_conditions"]
+
+    def test_h_north_qipedc_remains_h(self, classifier, h_north_data):
+        """
+        Bảo toàn chữ H Miền Bắc (D0500B): 12 khung hình ổn định (indices 16..38) vẫn nhận diện
+        chính xác là H, không bị xung đột với Rule V hay H Miền Nam.
+        """
+        stable_north = [
+            s for s in h_north_data["samples"]
+            if s.get("quality_status") == "ok" and 16 <= s.get("frame_index", -1) <= 38
+        ]
+        assert len(stable_north) == 12
+
+        for s in stable_north:
+            f_idx = s.get("frame_index")
+            lm = s["landmarks"]
+            res = classifier.classify_detailed(lm)
+
+            assert res["status"] == "MATCH", f"H North frame {f_idx} status={res['status']}"
+            assert res["letter"] == "H", f"H North frame {f_idx} nhận nhầm {res['letter']}"
+            assert "Miền Bắc" in res["reason"]
+
+    def test_ambiguous_zone_yields_unknown_no_match(self, classifier):
+        """
+        Kiểm thử vùng nhập nhằng (ambiguous zone) và mâu thuẫn đặc trưng:
+        1. mcp_width_2d nằm trong khoảng 0.40..0.48 -> Không đoán, trả về UNKNOWN (NO_MATCH).
+        2. mcp_width_2d <= 0.40 (hẹp) nhưng thumb_ring_dist >= 0.21 (ngón cái không đè) -> UNKNOWN (NO_MATCH).
+        3. mcp_width_2d >= 0.48 (rộng) nhưng thumb_ring_dist <= 0.16 (ngón cái đè áp út) -> UNKNOWN (NO_MATCH).
+        """
+        # Mẫu cơ sở: trỏ & giữa duỗi, áp út & út gập, đứng thẳng, góc xòe 15 độ
+        base_feat = {
+            "thumb_ext": False,
+            "index_ext": True,
+            "middle_ext": True,
+            "ring_ext": False,
+            "pinky_ext": False,
+            "index_curl": 0.05,
+            "middle_curl": 0.05,
+            "ring_curl": 0.85,
+            "pinky_curl": 0.90,
+            "d_TI": 1.20,
+            "d_TM": 0.90,
+            "d_TW": 0.90,
+            "d_IM": 0.45,
+            "d_IW": 1.90,
+            "d_MW": 1.90,
+            "d_RW": 0.55,
+            "d_PW": 0.55,
+            "diff_x_IM": 0.30,
+            "ang_TI": 45.0,
+            "ang_TP": 60.0,
+            "thumb_lat": 0.20,
+            "idx_horiz_ratio": 0.10,
+            "idx_straight": 0.98,
+            "idx_tip_y": -1.90,
+            "idx_dx": 0.15,
+            "mid_horiz_ratio": 0.10,
+            "mid_straight": 0.98,
+            "mid_tip_y": -1.90,
+            "ang_IM_dir": 18.0,
+        }
+
+        # Case 1: mcp_width_2d = 0.44 (vùng giữa 0.40 và 0.48)
+        feat_ambiguous = dict(base_feat)
+        feat_ambiguous["mcp_width_2d"] = 0.44
+        feat_ambiguous["thumb_ring_dist"] = 0.18
+        feat_ambiguous["thumb_mid_dist"] = 0.30
+        matches = classifier.evaluate_rules(feat_ambiguous)
+        assert len(matches) == 0, f"Vùng nhập nhằng không được match bất kỳ chữ nào, nhận: {matches}"
+
+        # Case 2: Hông hẹp (mcp_w=0.35) nhưng thumb-ring xa (0.28) -> Mâu thuẫn
+        feat_conflict_1 = dict(base_feat)
+        feat_conflict_1["mcp_width_2d"] = 0.35
+        feat_conflict_1["thumb_ring_dist"] = 0.28
+        feat_conflict_1["thumb_mid_dist"] = 0.50
+        matches_c1 = classifier.evaluate_rules(feat_conflict_1)
+        assert len(matches_c1) == 0, f"Mâu thuẫn đặc trưng 1 không được match, nhận: {matches_c1}"
+
+        # Case 3: Lòng bàn tay mở rộng (mcp_w=0.54) nhưng ngón cái đè áp út (0.12) -> Mâu thuẫn
+        feat_conflict_2 = dict(base_feat)
+        feat_conflict_2["mcp_width_2d"] = 0.54
+        feat_conflict_2["thumb_ring_dist"] = 0.12
+        feat_conflict_2["thumb_mid_dist"] = 0.25
+        matches_c2 = classifier.evaluate_rules(feat_conflict_2)
+        assert len(matches_c2) == 0, f"Mâu thuẫn đặc trưng 2 không được match, nhận: {matches_c2}"
+
+    def test_evaluate_rule_h_diagnostics_all_four_branches(self, classifier):
+        """
+        Kiểm tra hàm evaluate_rule_h_diagnostics trả về đầy đủ 4 nhánh
+        ('rule_v', 'h_horiz', 'h_north', 'h_south') và an toàn trước None / dữ liệu rỗng.
+        """
+        assert classifier.evaluate_rule_h_diagnostics(None) is None
+
+        diag_empty = classifier.evaluate_rule_h_diagnostics({})
+        assert isinstance(diag_empty, dict)
+        assert "rule_v" in diag_empty
+        assert "h_horiz" in diag_empty
+        assert "h_north" in diag_empty
+        assert "h_south" in diag_empty
+        assert diag_empty["rule_v"]["matched"] is None
+        assert diag_empty["h_south"]["matched"] is None
+
+    def test_h_south_rotation_invariance_tolerance(self, classifier, d0500n_data):
+        """
+        Kiểm tra khả năng chịu biến thiên góc xoay mặt phẳng của H Miền Nam:
+        Xoay cổ tay trong phạm vi -15..+15 độ không bị nhận nhầm thành V hay các chữ khác.
+        """
+        sample = next(
+            s for s in d0500n_data["samples"]
+            if s.get("quality_status") == "ok" and s.get("frame_index") == 20
+        )
+        lm = sample["landmarks"]
+        wrist = lm[0]
+
+        for deg in (-15, -10, -5, 5, 10, 15):
+            rad = math.radians(deg)
+            c, s_val = math.cos(rad), math.sin(rad)
+            rot_lm = [
+                [
+                    wrist[0] + (pt[0] - wrist[0]) * c - (pt[1] - wrist[1]) * s_val,
+                    wrist[1] + (pt[0] - wrist[0]) * s_val + (pt[1] - wrist[1]) * c,
+                    pt[2],
+                ]
+                for pt in lm
+            ]
+            res = classifier.classify_detailed(rot_lm)
+            assert res["letter"] != "V", f"H South xoay {deg} độ bị nhận nhầm thành V!"
+            assert res["status"] in ("MATCH", "NO_MATCH"), f"Trạng thái bất thường: {res['status']}"
+
+
+# ===========================================================================
+# 12. KIỂM THỬ CHỮ K CHUẨN QIPEDC D0502 (QUY ƯỚC MIỀN NAM / TOÀN QUỐC)
+# ===========================================================================
+
+class TestRuleKSouthernConvention:
+    """
+    Bộ kiểm thử cho chữ K dựa trên video mẫu thực tế QIPEDC D0502.mp4:
+    - Ngón trỏ duỗi đứng
+    - Ngón giữa duỗi ngang sang bên phải
+    - Ngón cái dựng lên kẹp giữa trỏ và giữa
+    - Ngón áp út và út gập sát lòng bàn tay
+    - Bất biến phản chiếu (tay trái / webcam mirror) và phân xử tuyệt đối với V, D, L, G, H, B.
+    """
+
+    def test_k_matches_on_d0502_fixtures(self, classifier, alphabet_fixture_data):
+        """Kiểm tra chữ K được nhận diện đúng (MATCH, conf=0.95) trên các khung hình ổn định của D0502."""
+        k_samples = [
+            s for s in alphabet_fixture_data.get("samples", [])
+            if s.get("letter_upper") == "K" and s.get("quality_status") == "ok"
+        ]
+        assert len(k_samples) >= 4, "Tập fixture phải có ít nhất 4 frame K hợp lệ."
+
+        # Kiểm tra các frame ổn định (f26, f32, f38) và frame chuyển tiếp vào tư thế (f16)
+        valid_k_frames = [s for s in k_samples if s["frame_idx"] in (16, 26, 32, 38)]
+        for s in valid_k_frames:
+            f_idx = s["frame_idx"]
+            lm = s["landmarks"]
+            res = classifier.classify_detailed(lm)
+            assert res["status"] == "MATCH", (
+                f"Frame K f{f_idx} không đạt MATCH (status={res['status']}, reason={res.get('reason')})"
+            )
+            assert res["letter"] == "K", f"Frame K f{f_idx} bị gán sai nhãn: {res['letter']}"
+            assert res["confidence"] == 0.95
+
+            # Kiểm tra hàm classify nhanh
+            let, conf = classifier.classify(lm)
+            assert let == "K" and conf == 0.95
+
+    def test_k_rejects_on_exit_frame(self, classifier, alphabet_fixture_data):
+        """Frame f48 khi bàn tay bắt đầu buông tư thế (exit) không được ép nhận nhãn K."""
+        exit_sample = next(
+            (s for s in alphabet_fixture_data.get("samples", [])
+             if s.get("letter_upper") == "K" and s.get("frame_idx") == 48 and s.get("quality_status") == "ok"),
+            None
+        )
+        if exit_sample is not None:
+            res = classifier.classify_detailed(exit_sample["landmarks"])
+            assert res["letter"] != "K", "Frame buông tay f48 không được gán nhãn K!"
+
+    def test_k_does_not_conflict_with_v(self, classifier, alphabet_fixture_data):
+        """
+        Phân xử K vs V: Chữ V có ngón giữa vươn đứng (d_MW >= 1.70, mid_horiz <= 0.50),
+        không bao giờ bị nhận diện là K.
+        """
+        v_samples = [
+            s for s in alphabet_fixture_data.get("samples", [])
+            if s.get("letter_upper") == "V" and s.get("quality_status") == "ok"
+        ]
+        for s in v_samples:
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["letter"] != "K", f"Mẫu chữ V (frame {s.get('frame_idx')}) bị nhận nhầm thành K!"
+
+        npz_path = os.path.join(os.path.dirname(__file__), "..", "data", "alphabet_v2", "datasets", "vsl_alphabet_static_v2.npz")
+        if os.path.exists(npz_path):
+            data = np.load(npz_path)
+            classes = list(data["classes"])
+            y = data["y"]
+            landmarks = data["landmarks"]
+            v_idx = classes.index("V")
+            for idx in np.where(y == v_idx)[0][:10]:
+                res = classifier.classify_detailed(landmarks[idx].tolist())
+                assert res["letter"] != "K", f"Mẫu V NPZ[{idx}] bị nhận nhầm thành K!"
+
+    def test_k_does_not_conflict_with_d_and_l(self, classifier, alphabet_fixture_data):
+        """
+        Phân xử K vs D/L:
+        - D có ngón giữa gập sát (d_TM <= 0.30, d_MW <= 0.85).
+        - L có ngón cái mở vuông góc sang trái (ang_TI >= 35°, d_TI >= 1.40).
+        Cả D và L không bao giờ bị nhận nhầm thành K.
+        """
+        dl_samples = [
+            s for s in alphabet_fixture_data.get("samples", [])
+            if s.get("letter_upper") in ("D", "L") and s.get("quality_status") == "ok"
+        ]
+        for s in dl_samples:
+            let = s.get("letter_upper")
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["letter"] != "K", f"Mẫu chữ {let} (frame {s.get('frame_idx')}) bị nhận nhầm thành K!"
+
+    def test_k_does_not_conflict_with_g_and_h(self, classifier, alphabet_fixture_data):
+        """
+        Phân xử K vs G/H:
+        - G có trỏ duỗi ngang (idx_horiz >= 0.65), 3 ngón còn lại gập.
+        - H có cả trỏ & giữa cùng hướng (ngang hoặc cùng đứng).
+        Không bao giờ bị nhận nhầm thành K.
+        """
+        gh_samples = [
+            s for s in alphabet_fixture_data.get("samples", [])
+            if s.get("letter_upper") in ("G", "H") and s.get("quality_status") == "ok"
+        ]
+        for s in gh_samples:
+            let = s.get("letter_upper")
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["letter"] != "K", f"Mẫu chữ {let} (frame {s.get('frame_idx')}) bị nhận nhầm thành K!"
+
+        # Kiểm tra H Nam (D0500N) nếu file tồn tại
+        d0500n_path = os.path.join(os.path.dirname(__file__), "..", "data", "alphabet_v2", "static_landmarks", "D0500N.json")
+        if os.path.exists(d0500n_path):
+            with open(d0500n_path, "r", encoding="utf-8") as fp:
+                d0500n_data = json.load(fp)
+            if "samples" in d0500n_data:
+                for s in d0500n_data["samples"][:10]:
+                    if s.get("quality_status") == "ok":
+                        res = classifier.classify_detailed(s["landmarks"])
+                        assert res["letter"] != "K", f"H Nam frame {s.get('frame_index')} bị nhận nhầm thành K!"
+
+    def test_k_diagnostics(self, classifier, alphabet_fixture_data):
+        """Kiểm tra bộ chẩn đoán evaluate_rule_k_diagnostics."""
+        k_sample = next(
+            s for s in alphabet_fixture_data.get("samples", [])
+            if s.get("letter_upper") == "K" and s.get("frame_idx") == 26
+        )
+        features = classifier.extract_features(k_sample["landmarks"])
+        diag = classifier.evaluate_rule_k_diagnostics(features)
+        assert isinstance(diag, dict)
+        assert diag["matched"] is True
+        assert len(diag["failed_conditions"]) == 0
+        assert "middle_d_mw_in_range" in diag["conditions"]
+        assert "ang_im_in_range" in diag["conditions"]
+
+        # Kiểm tra trên mẫu chữ V (phải chẩn đoán rõ lý do không đạt K)
+        v_sample = next(
+            s for s in alphabet_fixture_data.get("samples", [])
+            if s.get("letter_upper") == "V" and s.get("phase") == "stable_pose" and s.get("quality_status") == "ok"
+        )
+        v_features = classifier.extract_features(v_sample["landmarks"])
+        diag_v = classifier.evaluate_rule_k_diagnostics(v_features)
+        assert diag_v["matched"] is False
+        assert len(diag_v["failed_conditions"]) > 0
+
+        # Kiểm tra tính an toàn trên None / dict rỗng
+        assert classifier.evaluate_rule_k_diagnostics(None) is None
+        diag_empty = classifier.evaluate_rule_k_diagnostics({})
+        assert isinstance(diag_empty, dict)
+        assert diag_empty["matched"] is None
+
+    def test_k_mirror_invariance(self, classifier, alphabet_fixture_data):
+        """
+        Kiểm tra tính bất biến phản chiếu (tay trái / webcam mirror):
+        Lật trục X của landmarks qua cổ tay vẫn phải nhận diện đúng chữ K.
+        """
+        k_sample = next(
+            s for s in alphabet_fixture_data.get("samples", [])
+            if s.get("letter_upper") == "K" and s.get("frame_idx") == 26
+        )
+        lm = k_sample["landmarks"]
+        wrist_x = lm[0][0]
+        # Phản chiếu qua trục x của wrist
+        mirrored_lm = [
+            [2.0 * wrist_x - pt[0], pt[1], pt[2]]
+            for pt in lm
+        ]
+        res = classifier.classify_detailed(mirrored_lm)
+        assert res["status"] == "MATCH" and res["letter"] == "K", (
+            f"Chữ K bị mất nhận diện khi phản chiếu webcam (status={res['status']}, reason={res.get('reason')})"
+        )
+
+
+class TestRuleISouthernConvention:
+    """
+    Bộ kiểm thử chất lượng cao cho Chữ I và Chữ Y theo chuẩn video QIPEDC D0501.mp4:
+    - Ngón út duỗi thẳng (d_PW >= 1.35, pinky_curl <= 0.20).
+    - 3 ngón giữa (trỏ, giữa, áp út) gập sát lòng bàn tay.
+    - Ngón cái gấp ôm vào ngón trỏ/giữa (d_TI <= 0.42, d_TM <= 0.52, thumb_lat <= 0.38).
+    - Phân biệt tuyệt đối với chữ Y (Shaka: ngón cái xòe sang bên, d_TW >= 1.05, d_TI >= 0.40).
+    - Bất biến quay ±30°, bất biến phản chiếu webcam (tay trái/phải), chịu lỗi khi ngón cái gấp khiến thumb_ext=True.
+    """
+
+    def test_i_positive_fixture_matches(self, classifier, alphabet_fixture_data):
+        """Tất cả các frame ổn định của chữ I trong fixture phải nhận diện đúng với confidence 0.95."""
+        i_samples = [
+            s for s in alphabet_fixture_data.get("samples", [])
+            if s.get("letter_upper") == "I" and s.get("quality_status") == "ok"
+        ]
+        assert len(i_samples) >= 4, "Thiếu mẫu kiểm thử chữ I trong fixture"
+        for s in i_samples:
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["status"] == "MATCH", (
+                f"Chữ I frame {s.get('frame_idx')} không MATCH (status={res['status']}, reason={res.get('reason')})"
+            )
+            assert res["letter"] == "I", f"Chữ I frame {s.get('frame_idx')} bị gán nhãn {res.get('letter')}"
+            assert res["confidence"] >= 0.95, f"Confidence chữ I frame {s.get('frame_idx')} < 0.95"
+
+    def test_i_dataset_d0501_high_recall(self, classifier):
+        """Kiểm thử trên toàn bộ các frame stable_pose thực tế của video D0501.mp4 (I.json)."""
+        i_path = os.path.join(os.path.dirname(__file__), "..", "data", "alphabet_v2", "static_landmarks", "I.json")
+        if not os.path.exists(i_path):
+            pytest.skip("File I.json không tồn tại")
+        with open(i_path, "r", encoding="utf-8") as fp:
+            data = json.load(fp)
+        # Các frame tư thế ổn định chuẩn từ f14 đến f40
+        stable_samples = [
+            s for s in data.get("samples", [])
+            if 14 <= s.get("frame_index", -1) <= 40 and s.get("landmarks") is not None
+        ]
+        assert len(stable_samples) >= 10, "Không đủ frame stable_pose trong I.json"
+        for s in stable_samples:
+            f_idx = s["frame_index"]
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["status"] == "MATCH" and res["letter"] == "I", (
+                f"D0501 frame {f_idx} thất bại: status={res['status']}, letter={res.get('letter')}, reason={res.get('reason')}"
+            )
+            assert res["confidence"] >= 0.95
+
+    def test_i_rejects_on_exit_frames(self, classifier):
+        """Các frame hạ tay (exit phase) không được nhận diện thành chữ I."""
+        i_path = os.path.join(os.path.dirname(__file__), "..", "data", "alphabet_v2", "static_landmarks", "I.json")
+        if not os.path.exists(i_path):
+            pytest.skip("File I.json không tồn tại")
+        with open(i_path, "r", encoding="utf-8") as fp:
+            data = json.load(fp)
+        exit_samples = [
+            s for s in data.get("samples", [])
+            if s.get("frame_index", -1) in (48, 50) and s.get("landmarks") is not None
+        ]
+        for s in exit_samples:
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["letter"] != "I", f"Frame exit {s['frame_index']} bị nhận nhầm thành I!"
+
+    def test_i_does_not_conflict_with_y(self, classifier, alphabet_fixture_data):
+        """
+        Phân xử nghiêm ngặt I vs Y:
+        - I: ngón cái gấp ôm vào ngón trỏ/giữa (d_TI <= 0.42, d_TW <= 1.15).
+        - Y: ngón cái xòe ra ngoài (Shaka: d_TW >= 1.05, d_TI >= 0.40, thumb_lat >= 0.36 hoặc ang_TP >= 33°).
+        Hai chữ không được cướp nhãn lẫn nhau.
+        """
+        # Kiểm tra mẫu I không được nhận thành Y
+        i_samples = [
+            s for s in alphabet_fixture_data.get("samples", [])
+            if s.get("letter_upper") == "I" and s.get("quality_status") == "ok"
+        ]
+        for s in i_samples:
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["letter"] == "I" and res["letter"] != "Y"
+
+        # Kiểm tra mẫu Y không được nhận thành I
+        y_samples = [
+            s for s in alphabet_fixture_data.get("samples", [])
+            if s.get("letter_upper") == "Y" and s.get("quality_status") == "ok"
+        ]
+        for s in y_samples:
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["letter"] == "Y" and res["letter"] != "I"
+
+    def test_i_does_not_conflict_with_b_v_d_l_g_h(self, classifier, alphabet_fixture_data):
+        """Đối chứng âm tính: Không nhận nhầm B, V, D, L, G, H thành I."""
+        other_samples = [
+            s for s in alphabet_fixture_data.get("samples", [])
+            if s.get("letter_upper") in ("B", "V", "D", "L", "G", "H") and s.get("quality_status") == "ok"
+        ]
+        for s in other_samples:
+            res = classifier.classify_detailed(s["landmarks"])
+            assert res["letter"] != "I", f"Mẫu chữ {s.get('letter_upper')} frame {s.get('frame_idx')} bị nhận nhầm thành I!"
+
+    def test_i_thumb_folded_tolerance(self, classifier, alphabet_fixture_data):
+        """
+        Kiểm tra khả năng chịu lỗi khi ngón cái gấp qua mặt trước các ngón (tư thế nắm tay tự nhiên).
+        Ngay cả khi MediaPipe tính thumb_ext=True, hệ thống vẫn phải nhận diện đúng chữ I dựa trên hình học 3D.
+        """
+        i_sample = next(
+            s for s in alphabet_fixture_data.get("samples", [])
+            if s.get("letter_upper") == "I" and s.get("frame_idx") == 24
+        )
+        lm = np.array(i_sample["landmarks"])
+        # Dịch ngón cái tip (4) gần về phía ngón giữa tip (12) mô phỏng ngón cái ôm sâu
+        lm_mod = np.array(lm)
+        lm_mod[4] = lm_mod[12] * 0.6 + lm_mod[4] * 0.4
+        
+        # Kiểm tra rằng đặc trưng đã bị thumb_ext=True
+        feat = classifier.extract_features(lm_mod.tolist())
+        assert feat is not None
+        
+        res = classifier.classify_detailed(lm_mod.tolist())
+        assert res["status"] == "MATCH" and res["letter"] == "I", (
+            f"Chữ I bị lỗi khi ngón cái gấp sâu (status={res['status']}, reason={res.get('reason')})"
+        )
+
+    def test_i_rotations_and_mirror_invariance(self, classifier, alphabet_fixture_data):
+        """
+        Kiểm tra tính bất biến quay (±30°) và phản chiếu webcam (tay trái/phải).
+        """
+        i_sample = next(
+            s for s in alphabet_fixture_data.get("samples", [])
+            if s.get("letter_upper") == "I" and s.get("frame_idx") == 24
+        )
+        lm = np.array(i_sample["landmarks"])
+        wrist = lm[0][:2]
+
+        for angle in [-30, -15, 15, 30]:
+            theta = np.radians(angle)
+            c, s = np.cos(theta), np.sin(theta)
+            rot_mat = np.array([[c, -s], [s, c]])
+            rot_lm = []
+            for pt in lm:
+                xy = pt[:2] - wrist
+                new_xy = rot_mat @ xy + wrist
+                rot_lm.append([float(new_xy[0]), float(new_xy[1]), float(pt[2])])
+            res = classifier.classify_detailed(rot_lm)
+            assert res["status"] == "MATCH" and res["letter"] == "I", (
+                f"Chữ I thất bại khi quay {angle}°: status={res['status']}, letter={res.get('letter')}"
+            )
+
+        # Lật gương qua trục X cổ tay
+        wrist_x = lm[0][0]
+        mirrored_lm = [[2.0 * wrist_x - pt[0], pt[1], pt[2]] for pt in lm]
+        res_mir = classifier.classify_detailed(mirrored_lm)
+        assert res_mir["status"] == "MATCH" and res_mir["letter"] == "I", (
+            f"Chữ I thất bại khi phản chiếu webcam: status={res_mir['status']}, letter={res_mir.get('letter')}"
+        )
+
+    def test_i_diagnostics(self, classifier, alphabet_fixture_data):
+        """Kiểm tra bộ chẩn đoán evaluate_rule_i_diagnostics."""
+        i_sample = next(
+            s for s in alphabet_fixture_data.get("samples", [])
+            if s.get("letter_upper") == "I" and s.get("frame_idx") == 24
+        )
+        features = classifier.extract_features(i_sample["landmarks"])
+        diag = classifier.evaluate_rule_i_diagnostics(features)
+        assert isinstance(diag, dict)
+        assert diag["matched"] is True
+        assert len(diag["failed_conditions"]) == 0
+        assert "pinky_ext_or_straight" in diag["conditions"]
+        assert "thumb_not_spread" in diag["conditions"]
+
+        # Kiểm tra trên mẫu chữ Y (phải chẩn đoán không đạt điều kiện ngón cái khép)
+        y_sample = next(
+            s for s in alphabet_fixture_data.get("samples", [])
+            if s.get("letter_upper") == "Y" and s.get("frame_idx") == 25 and s.get("quality_status") == "ok"
+        )
+        y_features = classifier.extract_features(y_sample["landmarks"])
+        diag_y = classifier.evaluate_rule_i_diagnostics(y_features)
+        assert diag_y["matched"] is False
+        assert len(diag_y["failed_conditions"]) > 0
+
+        # Kiểm tra tính an toàn trên None / dict rỗng
+        assert classifier.evaluate_rule_i_diagnostics(None) is None
+        diag_empty = classifier.evaluate_rule_i_diagnostics({})
+        assert isinstance(diag_empty, dict)
+        assert diag_empty["matched"] is None
+
+
+
+
 

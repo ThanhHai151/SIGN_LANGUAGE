@@ -45,15 +45,32 @@ B_THUMB_LAT_MAX = 0.35
 
 # 2. Chữ I & Y (Duỗi ngón út)
 I_D_PW_MIN = 1.35
-I_D_IW_MAX = 0.85
-I_D_MW_MAX = 0.75
+I_D_IW_MAX = 0.90
+I_D_MW_MAX = 0.80
+I_D_RW_MAX = 0.80
+I_DIFF_PW_FOLDED_MIN = 0.55
+I_D_TI_MAX = 0.42
+I_D_TM_MAX = 0.52
+I_D_TW_MAX = 1.15
+I_THUMB_LAT_MAX = 0.38
+I_ANG_TP_MAX = 33.0
+I_PINKY_CURL_MAX = 0.20
+
 Y_D_TW_MIN = 1.05
+Y_D_TI_MIN = 0.40
+Y_THUMB_LAT_MIN = 0.36
+Y_ANG_TP_MIN = 33.0
 
 # 3. Chữ V (Ngón trỏ & giữa xòe chữ V)
 V_D_IW_MIN = 1.70
 V_D_MW_MIN = 1.70
 V_D_IM_MIN = 0.28
 V_DIFF_X_IM_MIN = 0.18
+V_ANG_IM_MIN = 9.0
+V_IDX_HORIZ_MAX = 0.50
+V_IDX_TIP_Y_MAX = -0.80
+V_MCP_WIDTH_MIN = 0.48
+V_THUMB_RING_MIN = 0.21
 
 # 4. Cặp D vs L (Trỏ duỗi đơn)
 D_D_IW_MIN = 1.70
@@ -130,23 +147,25 @@ G_D_TI_MAX = 1.35
 G_D_TM_MIN = 0.22
 G_ANG_TI_MAX = 42.0
 
-# 12. Chữ H (Hỗ trợ cả 2 biến thể thực tế:
+# 12. Chữ H (Hỗ trợ cả 3 biến thể thực tế:
 #     - H-1 chuẩn từ điển: Ngón trỏ và ngón giữa duỗi thẳng song song hướng ngang, áp út & út gập.
-#     - H-2 phương ngữ Miền Bắc QIPEDC D0500B: Trỏ, áp út, út duỗi thẳng; ngón giữa gập chạm ngón cái.)
+#     - H-2 phương ngữ Miền Bắc QIPEDC D0500B: Trỏ, áp út, út duỗi thẳng; ngón giữa gập chạm ngón cái.
+#     - H-3 phương ngữ Miền Nam QIPEDC D0500N: Hông/má bàn tay hướng camera (MCP_width_2D <= 0.40),
+#       ngón cái đè ngón áp út (Thumb-Ring <= 0.16), trỏ & giữa duỗi hướng đứng (có thể xòe hoặc khép).)
 H_HORIZ_D_IW_MIN = 1.40
 H_HORIZ_D_MW_MIN = 1.38
 H_HORIZ_STRAIGHT_MIN = 0.85
 H_HORIZ_STRAIGHT_EXT_MIN = 0.80
 H_HORIZ_CURL_MAX = 0.26
 H_HORIZ_DIFF_RP_MIN = 0.32
-H_HORIZ_D_RW_MAX = 1.42
-H_HORIZ_D_PW_MAX = 1.32
+H_HORIZ_D_RW_MAX = 1.48
+H_HORIZ_D_PW_MAX = 1.48
 H_HORIZ_R_CURL_MIN = 0.20
 H_HORIZ_P_CURL_MIN = 0.18
-H_HORIZ_RATIO_MIN = 0.52
+H_HORIZ_RATIO_MIN = 0.50
 H_HORIZ_ANG_IM_MAX = 28.0
 H_HORIZ_D_IM_MAX = 0.72
-H_HORIZ_TIP_Y_MAX = 0.65
+H_HORIZ_TIP_Y_MAX = 0.85
 
 H_NORTH_D_IW_MIN = 1.65
 H_NORTH_D_RW_MIN = 1.80
@@ -158,6 +177,39 @@ H_NORTH_DIFF_PW_MW_MIN = 0.50
 H_NORTH_IRP_CURL_MAX = 0.10
 H_NORTH_M_CURL_MIN = 0.60
 H_NORTH_D_TM_MAX = 0.20
+
+H_SOUTH_D_IW_MIN = 1.60
+H_SOUTH_D_MW_MIN = 1.60
+H_SOUTH_MCP_WIDTH_MAX = 0.40
+H_SOUTH_THUMB_RING_MAX = 0.16
+H_SOUTH_THUMB_MID_MAX = 0.40
+H_SOUTH_IDX_HORIZ_MAX = 0.50
+H_SOUTH_IDX_TIP_Y_MAX = -0.80
+
+# 13. Chữ K (Ngón trỏ duỗi đứng, ngón giữa duỗi ngang, ngón cái kẹp giữa, áp út & út gập)
+K_D_IW_MIN = 1.65
+K_IDX_CURL_MAX = 0.15
+K_IDX_HORIZ_MAX = 0.35
+K_IDX_STRAIGHT_MIN = 0.90
+
+K_D_MW_MIN = 1.00
+K_D_MW_MAX = 1.55
+K_MID_CURL_MAX = 0.15
+K_MID_STRAIGHT_MIN = 0.85
+K_MID_HORIZ_MIN = 0.55
+
+K_ANG_IM_MIN = 60.0
+K_ANG_IM_MAX = 115.0
+K_D_IM_MIN = 0.75
+
+K_D_RW_MAX = 1.00
+K_D_PW_MAX = 0.90
+K_DIFF_IW_RP_MIN = 0.80
+
+K_D_TI_MAX = 1.10
+K_D_TM_MAX = 0.85
+K_THUMB_MID_MAX = 0.50
+
 
 
 def validate_input_landmarks(landmarks: Any) -> Tuple[bool, str]:
@@ -265,6 +317,11 @@ class VSLAlphabetClassifier:
         cos_im = max(-1.0, min(1.0, (vx_58 * vx_9_12 + vy_58 * vy_9_12) / (len_58 * len_9_12)))
         ang_im_dir = float(math.degrees(math.acos(cos_im)))
 
+        # Đặc trưng định hướng bàn tay và quan hệ ngón cái để phân biệt H (Miền Nam) vs V
+        mcp_width_2d = float(math.hypot(sh[17][0] - sh[5][0], sh[17][1] - sh[5][1]) / palm_scale)
+        thumb_ring_dist = float(calculate_distance(sh[4], sh[14]) / palm_scale)
+        thumb_mid_dist = float(calculate_distance(sh[4], sh[10]) / palm_scale)
+
         return {
             "palm_scale": round(palm_scale, 4),
             "thumb_ext": t_ext,
@@ -296,6 +353,9 @@ class VSLAlphabetClassifier:
             "mid_straight": round(mid_straight, 4),
             "mid_tip_y": round(mid_tip_y, 4),
             "ang_IM_dir": round(ang_im_dir, 2),
+            "mcp_width_2d": round(mcp_width_2d, 4),
+            "thumb_ring_dist": round(thumb_ring_dist, 4),
+            "thumb_mid_dist": round(thumb_mid_dist, 4),
         }
 
     def evaluate_rules(self, feat: Dict[str, Any]) -> List[Tuple[str, str, float]]:
@@ -332,22 +392,67 @@ class VSLAlphabetClassifier:
         # -------------------------------------------------------------------
         # 2. Chữ I & Chữ Y (Duỗi ngón út)
         # -------------------------------------------------------------------
-        # Chữ I: Duy nhất ngón út duỗi thẳng, 4 ngón còn lại gập
-        if p_ext and not i_ext and not m_ext and not r_ext and not t_ext:
-            if d_pw >= I_D_PW_MIN and d_iw <= I_D_IW_MAX and d_mw <= I_D_MW_MAX:
-                matches.append(("I", f"Chỉ ngón út duỗi thẳng: d_PW={d_pw:.2f}>={I_D_PW_MIN}", 0.95))
+        d_rw = float(feat.get("d_RW", 0.0))
+        ang_tp = float(feat.get("ang_TP", 0.0))
+        p_curl = float(feat.get("pinky_curl", 1.0))
+
+        # Chữ I: Duy nhất ngón út duỗi thẳng, 3 ngón giữa gập sát lòng bàn tay, ngón cái gấp ôm vào ngón trỏ/giữa (không xòe Shaka)
+        is_i_pinky = (p_ext or p_curl <= 0.12) and (d_pw >= I_D_PW_MIN) and (p_curl <= I_PINKY_CURL_MAX)
+        is_i_middle_curled = (not i_ext) and (not m_ext) and (not r_ext)
+        is_i_middle_dists = (d_iw <= I_D_IW_MAX) and (d_mw <= I_D_MW_MAX) and (d_rw <= I_D_RW_MAX)
+        is_i_diff = (d_pw - max(d_iw, d_mw, d_rw)) >= I_DIFF_PW_FOLDED_MIN
+        is_i_thumb_tucked = (
+            d_ti <= I_D_TI_MAX
+            and d_tm <= I_D_TM_MAX
+            and d_tw <= I_D_TW_MAX
+            and (thumb_lat <= I_THUMB_LAT_MAX or ang_tp <= I_ANG_TP_MAX)
+        )
+
+        if is_i_pinky and is_i_middle_curled and is_i_middle_dists and is_i_diff and is_i_thumb_tucked:
+            matches.append(("I", f"Chỉ ngón út duỗi thẳng, 4 ngón gập ôm: d_PW={d_pw:.2f}>={I_D_PW_MIN}, d_TI={d_ti:.2f}<={I_D_TI_MAX}", 0.95))
 
         # Chữ Y: Ngón cái và ngón út cùng duỗi thẳng (Shaka), 3 ngón giữa gập
-        if p_ext and not i_ext and not m_ext and not r_ext:
-            if d_pw >= I_D_PW_MIN and d_tw >= Y_D_TW_MIN and d_iw <= I_D_IW_MAX and d_mw <= I_D_MW_MAX:
-                matches.append(("Y", f"Ngón cái và út cùng duỗi thẳng (Shaka): d_PW={d_pw:.2f}>={I_D_PW_MIN}, d_TW={d_tw:.2f}>={Y_D_TW_MIN}", 0.95))
+        is_y_pinky = (p_ext or p_curl <= 0.12) and (d_pw >= 1.30)
+        is_y_middle_curled = (not i_ext) and (not m_ext) and (not r_ext)
+        is_y_middle_dists = (d_iw <= I_D_IW_MAX) and (d_mw <= I_D_MW_MAX) and (d_rw <= I_D_RW_MAX)
+        is_y_thumb_spread = (
+            d_tw >= Y_D_TW_MIN
+            and d_ti >= Y_D_TI_MIN
+            and (thumb_lat >= Y_THUMB_LAT_MIN or ang_tp >= Y_ANG_TP_MIN)
+        )
+
+        if is_y_pinky and is_y_middle_curled and is_y_middle_dists and is_y_thumb_spread:
+            matches.append(("Y", f"Ngón cái và út cùng duỗi thẳng (Shaka): d_PW={d_pw:.2f}>=1.30, d_TW={d_tw:.2f}>={Y_D_TW_MIN}", 0.95))
 
         # -------------------------------------------------------------------
-        # 3. Chữ V (Trỏ & Giữa xòe hình chữ V)
+        # 3. Chữ V (Trỏ & Giữa xòe hình chữ V, hướng lên trên, lòng bàn tay hướng camera)
         # -------------------------------------------------------------------
+        idx_horiz_ratio = float(feat.get("idx_horiz_ratio", 0.0))
+        idx_tip_y = float(feat.get("idx_tip_y", 0.0))
+        ang_im_dir = float(feat.get("ang_IM_dir", 0.0))
+        mcp_width_2d = feat.get("mcp_width_2d")
+        thumb_ring_dist = feat.get("thumb_ring_dist")
+
+        v_width_ok = (mcp_width_2d is not None and mcp_width_2d >= V_MCP_WIDTH_MIN)
+        v_thumb_ok = (thumb_ring_dist is None or thumb_ring_dist >= V_THUMB_RING_MIN)
+
         if i_ext and m_ext and not r_ext and not p_ext:
-            if d_iw >= V_D_IW_MIN and d_mw >= V_D_MW_MIN and d_im >= V_D_IM_MIN and diff_x_im >= V_DIFF_X_IM_MIN:
-                matches.append(("V", f"Trỏ & Giữa xòe chữ V: d_IM={d_im:.2f}>={V_D_IM_MIN}, diff_x={diff_x_im:.2f}>={V_DIFF_X_IM_MIN}", 0.95))
+            if (
+                d_iw >= V_D_IW_MIN
+                and d_mw >= V_D_MW_MIN
+                and d_im >= V_D_IM_MIN
+                and diff_x_im >= V_DIFF_X_IM_MIN
+                and ang_im_dir >= V_ANG_IM_MIN
+                and idx_horiz_ratio <= V_IDX_HORIZ_MAX
+                and idx_tip_y <= V_IDX_TIP_Y_MAX
+                and v_width_ok
+                and v_thumb_ok
+            ):
+                matches.append((
+                    "V",
+                    f"Trỏ & Giữa xòe chữ V: d_IM={d_im:.2f}>={V_D_IM_MIN}, ang_IM={ang_im_dir:.1f}°>={V_ANG_IM_MIN}°, MCP_width={mcp_width_2d:.2f}>={V_MCP_WIDTH_MIN}",
+                    0.95
+                ))
 
         # -------------------------------------------------------------------
         # 4. Cặp D vs L (Trỏ duỗi đơn, Giữa/Áp út/Út gập)
@@ -453,13 +558,18 @@ class VSLAlphabetClassifier:
                 ))
 
         # -------------------------------------------------------------------
-        # 12. Chữ H (Hỗ trợ cả tư thế 2 ngón trỏ+giữa duỗi ngang chuẩn từ điển
-        #            và biến thể Miền Bắc QIPEDC D0500B: trỏ/áp út/út duỗi, giữa gập chạm cái)
+        # 12. Chữ H (Hỗ trợ cả 3 biến thể:
+        #            - H ngang chuẩn từ điển
+        #            - Biến thể Miền Bắc QIPEDC D0500B: trỏ/áp út/út duỗi, giữa gập chạm cái
+        #            - Biến thể Miền Nam QIPEDC D0500N: hông bàn tay hướng camera, trỏ & giữa duỗi)
         # -------------------------------------------------------------------
         mid_horiz_ratio = float(feat.get("mid_horiz_ratio", 0.0))
         mid_straight = float(feat.get("mid_straight", 0.0))
         mid_tip_y = float(feat.get("mid_tip_y", 99.0))
         ang_im_dir = float(feat.get("ang_IM_dir", 180.0))
+        mcp_width_2d = feat.get("mcp_width_2d")
+        thumb_ring_dist = feat.get("thumb_ring_dist")
+        thumb_mid_dist = feat.get("thumb_mid_dist")
 
         is_b_match = (
             i_ext and m_ext and r_ext and p_ext
@@ -507,17 +617,90 @@ class VSLAlphabetClassifier:
                 and m_curl >= H_NORTH_M_CURL_MIN
                 and d_tm <= H_NORTH_D_TM_MAX
             )
-            if is_h_horiz or is_h_north:
-                if is_h_horiz:
-                    # Khi cả 2 ngón trỏ & giữa hướng ngang rõ rệt (is_h_horiz),
-                    # độ lệch chiều dài ngón tay dọc trục X có thể kích hoạt nhầm điều kiện diff_x của V
-                    # hoặc khi nghiêng nhẹ làm m_ext=False kích hoạt nhầm D/L. Loại bỏ kết quả chiếu trục giả này cho H:
+            # Biến thể H Miền Nam (QIPEDC D0500N):
+            # Trỏ & Giữa duỗi hướng đứng, hông bàn tay hướng camera (mcp_width_2d <= 0.40),
+            # ngón cái đè ngón áp út (thumb_ring_dist <= 0.16).
+            # Không ràng buộc ang_im_dir (cho phép cả khép lẫn xòe).
+            is_h_south_fingers = (
+                (i_ext and m_ext and not r_ext and not p_ext)
+                or (d_iw >= H_SOUTH_D_IW_MIN and d_mw >= H_SOUTH_D_MW_MIN and not r_ext and not p_ext)
+            )
+            is_h_south_upright = (
+                idx_horiz_ratio <= H_SOUTH_IDX_HORIZ_MAX
+                and idx_tip_y <= H_SOUTH_IDX_TIP_Y_MAX
+            )
+            is_h_south_orientation = (
+                mcp_width_2d is not None
+                and mcp_width_2d <= H_SOUTH_MCP_WIDTH_MAX
+                and thumb_ring_dist is not None
+                and thumb_ring_dist <= H_SOUTH_THUMB_RING_MAX
+                and (thumb_mid_dist is None or thumb_mid_dist <= H_SOUTH_THUMB_MID_MAX)
+            )
+            is_h_south = is_h_south_fingers and is_h_south_upright and is_h_south_orientation
+
+            if is_h_horiz or is_h_north or is_h_south:
+                if is_h_horiz or is_h_south:
+                    # Loại bỏ các phán đoán nhầm V, D, L khi cử chỉ thỏa mãn H ngang hoặc H Miền Nam
                     matches[:] = [m for m in matches if m[0] not in ("V", "D", "L")]
+
+                if is_h_south:
+                    sub_variant = "biến thể Miền Nam"
+                    reason_detail = f"MCP_width={mcp_width_2d:.2f}<={H_SOUTH_MCP_WIDTH_MAX}, Thumb-Ring={thumb_ring_dist:.2f}<={H_SOUTH_THUMB_RING_MAX}"
+                elif is_h_horiz:
+                    sub_variant = "2 ngón ngang"
+                    reason_detail = f"d_IW={d_iw:.2f}, d_MW={d_mw:.2f}"
+                else:
+                    sub_variant = "biến thể Miền Bắc"
+                    reason_detail = f"d_IW={d_iw:.2f}, d_MW={d_mw:.2f}"
+
                 matches.append((
                     "H",
-                    f"Chữ H ({'2 ngón ngang' if is_h_horiz else 'biến thể Miền Bắc'}): d_IW={d_iw:.2f}, d_MW={d_mw:.2f}",
+                    f"Chữ H ({sub_variant}): {reason_detail}",
                     0.95
                 ))
+
+        # -------------------------------------------------------------------
+        # 13. Chữ K (Trỏ duỗi đứng, giữa duỗi ngang, cái kẹp giữa, áp út & út gập)
+        # -------------------------------------------------------------------
+        # Đặc biệt: Ngón giữa duỗi ngang nên KHÔNG sử dụng middle_extended (phụ thuộc trục Y).
+        # Dùng middle_curl và mid_straight để xác nhận ngón giữa duỗi thẳng,
+        # mid_horiz_ratio để xác nhận hướng ngang và ang_im_dir để xác nhận góc mở chữ K.
+        is_k_index = (
+            d_iw >= K_D_IW_MIN
+            and i_curl <= K_IDX_CURL_MAX
+            and idx_horiz_ratio <= K_IDX_HORIZ_MAX
+            and idx_straight >= K_IDX_STRAIGHT_MIN
+        )
+        is_k_middle = (
+            K_D_MW_MIN <= d_mw <= K_D_MW_MAX
+            and m_curl <= K_MID_CURL_MAX
+            and mid_straight >= K_MID_STRAIGHT_MIN
+            and mid_horiz_ratio >= K_MID_HORIZ_MIN
+        )
+        is_k_angle = (
+            K_ANG_IM_MIN <= ang_im_dir <= K_ANG_IM_MAX
+            and d_im >= K_D_IM_MIN
+        )
+        is_k_curled = (
+            d_rw <= K_D_RW_MAX
+            and d_pw <= K_D_PW_MAX
+            and (d_iw - d_rw) >= K_DIFF_IW_RP_MIN
+            and (d_iw - d_pw) >= K_DIFF_IW_RP_MIN
+        )
+        is_k_thumb = (
+            d_ti <= K_D_TI_MAX
+            and d_tm <= K_D_TM_MAX
+            and (thumb_mid_dist is None or thumb_mid_dist <= K_THUMB_MID_MAX)
+        )
+
+        if is_k_index and is_k_middle and is_k_angle and is_k_curled and is_k_thumb:
+            # Loại bỏ các phán đoán nhầm V, D, L, G, H nếu có
+            matches[:] = [m for m in matches if m[0] not in ("V", "D", "L", "G", "H")]
+            matches.append((
+                "K",
+                f"Chữ K: trỏ đứng d_IW={d_iw:.2f}, giữa ngang d_MW={d_mw:.2f}, ang_IM={ang_im_dir:.1f}°",
+                0.95
+            ))
 
         return matches
 
@@ -605,6 +788,9 @@ class VSLAlphabetClassifier:
         idx_tip_y = _num("idx_tip_y")
         mid_tip_y = _num("mid_tip_y")
         ang_im_dir = _num("ang_IM_dir")
+        mcp_width_2d = _num("mcp_width_2d")
+        thumb_ring_dist = _num("thumb_ring_dist")
+        thumb_mid_dist = _num("thumb_mid_dist")
 
         # 1. Kiểm tra is_b_match (guard của Rule H)
         is_b_match = _and(
@@ -622,6 +808,11 @@ class VSLAlphabetClassifier:
             "d_MW_ge_min": _ge(d_mw, V_D_MW_MIN),
             "d_IM_ge_min": _ge(d_im, V_D_IM_MIN),
             "diff_x_IM_ge_min": _ge(diff_x_im, V_DIFF_X_IM_MIN),
+            "ang_IM_dir_ge_min": _ge(ang_im_dir, V_ANG_IM_MIN),
+            "idx_horiz_ratio_le_max": _le(idx_horiz_ratio, V_IDX_HORIZ_MAX),
+            "idx_tip_y_le_max": _le(idx_tip_y, V_IDX_TIP_Y_MAX),
+            "mcp_width_2d_ge_min": _ge(mcp_width_2d, V_MCP_WIDTH_MIN),
+            "thumb_ring_dist_ge_min": _ge(thumb_ring_dist, V_THUMB_RING_MIN) if thumb_ring_dist is not None else True,
         }
         v_matched = _and(*v_conds.values())
         v_failed = [k for k, v in v_conds.items() if v is False]
@@ -695,6 +886,23 @@ class VSLAlphabetClassifier:
         h_north_matched = _and(*h_north_primary.values())
         h_north_failed = [k for k, v in h_north_primary.items() if v is False]
 
+        # 5. Chẩn đoán từng điều kiện của is_h_south (QIPEDC D0500N)
+        h_south_finger_ext = _and(i_ext, m_ext, _not(r_ext), _not(p_ext))
+        h_south_finger_dist = _and(_ge(d_iw, H_SOUTH_D_IW_MIN), _ge(d_mw, H_SOUTH_D_MW_MIN), _not(r_ext), _not(p_ext))
+        h_south_fingers = _or(h_south_finger_ext, h_south_finger_dist)
+
+        h_south_primary = {
+            "not_b_match": not_b_match,
+            "fingers_extended_ok": h_south_fingers,
+            "idx_horiz_ratio_le_max": _le(idx_horiz_ratio, H_SOUTH_IDX_HORIZ_MAX),
+            "idx_tip_y_le_max": _le(idx_tip_y, H_SOUTH_IDX_TIP_Y_MAX),
+            "mcp_width_2d_le_max": _le(mcp_width_2d, H_SOUTH_MCP_WIDTH_MAX),
+            "thumb_ring_dist_le_max": _le(thumb_ring_dist, H_SOUTH_THUMB_RING_MAX),
+            "thumb_mid_dist_le_max": _le(thumb_mid_dist, H_SOUTH_THUMB_MID_MAX) if thumb_mid_dist is not None else True,
+        }
+        h_south_matched = _and(*h_south_primary.values())
+        h_south_failed = [k for k, v in h_south_primary.items() if v is False]
+
         return {
             "rule_v": {
                 "matched": v_matched,
@@ -711,6 +919,192 @@ class VSLAlphabetClassifier:
                 "conditions": h_north_primary,
                 "failed_conditions": h_north_failed,
             },
+            "h_south": {
+                "matched": h_south_matched,
+                "conditions": h_south_primary,
+                "failed_conditions": h_south_failed,
+            },
+        }
+
+    def evaluate_rule_k_diagnostics(self, feat: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """
+        Ghi nhận kết quả chẩn đoán từng điều kiện con của Rule K
+        mà không thay đổi cách tính hay kết quả phân loại.
+        Nếu đặc trưng đầu vào không tồn tại hoặc là None, trả về None cho điều kiện tương ứng.
+        """
+        if feat is None or not isinstance(feat, dict):
+            return None
+
+        def _num(key: str) -> Optional[float]:
+            val = feat.get(key)
+            if val is None or isinstance(val, bool):
+                return None
+            try:
+                fval = float(val)
+                if math.isnan(fval) or math.isinf(fval):
+                    return None
+                return fval
+            except (ValueError, TypeError):
+                return None
+
+        def _ge(val: Optional[float], thresh: float) -> Optional[bool]:
+            return (val >= thresh) if val is not None else None
+
+        def _le(val: Optional[float], thresh: float) -> Optional[bool]:
+            return (val <= thresh) if val is not None else None
+
+        def _range(val: Optional[float], low: float, high: float) -> Optional[bool]:
+            return (low <= val <= high) if val is not None else None
+
+        def _diff_ge(a: Optional[float], b: Optional[float], thresh: float) -> Optional[bool]:
+            return ((a - b) >= thresh) if (a is not None and b is not None) else None
+
+        def _and(*vals: Optional[bool]) -> Optional[bool]:
+            if any(v is False for v in vals):
+                return False
+            if any(v is None for v in vals):
+                return None
+            return True
+
+        d_iw = _num("d_IW")
+        d_mw = _num("d_MW")
+        d_rw = _num("d_RW")
+        d_pw = _num("d_PW")
+        d_im = _num("d_IM")
+        d_ti = _num("d_TI")
+        d_tm = _num("d_TM")
+        i_curl = _num("index_curl")
+        m_curl = _num("middle_curl")
+        idx_horiz = _num("idx_horiz_ratio")
+        mid_horiz = _num("mid_horiz_ratio")
+        idx_straight = _num("idx_straight")
+        mid_straight = _num("mid_straight")
+        ang_im = _num("ang_IM_dir")
+        thumb_mid = _num("thumb_mid_dist")
+
+        conds = {
+            "index_d_iw_ge_min": _ge(d_iw, K_D_IW_MIN),
+            "index_curl_le_max": _le(i_curl, K_IDX_CURL_MAX),
+            "index_horiz_le_max": _le(idx_horiz, K_IDX_HORIZ_MAX),
+            "index_straight_ge_min": _ge(idx_straight, K_IDX_STRAIGHT_MIN),
+            "middle_d_mw_in_range": _range(d_mw, K_D_MW_MIN, K_D_MW_MAX),
+            "middle_curl_le_max": _le(m_curl, K_MID_CURL_MAX),
+            "middle_straight_ge_min": _ge(mid_straight, K_MID_STRAIGHT_MIN),
+            "middle_horiz_ge_min": _ge(mid_horiz, K_MID_HORIZ_MIN),
+            "ang_im_in_range": _range(ang_im, K_ANG_IM_MIN, K_ANG_IM_MAX),
+            "d_im_ge_min": _ge(d_im, K_D_IM_MIN),
+            "ring_d_rw_le_max": _le(d_rw, K_D_RW_MAX),
+            "pinky_d_pw_le_max": _le(d_pw, K_D_PW_MAX),
+            "diff_iw_rw_ge_min": _diff_ge(d_iw, d_rw, K_DIFF_IW_RP_MIN),
+            "diff_iw_pw_ge_min": _diff_ge(d_iw, d_pw, K_DIFF_IW_RP_MIN),
+            "thumb_d_ti_le_max": _le(d_ti, K_D_TI_MAX),
+            "thumb_d_tm_le_max": _le(d_tm, K_D_TM_MAX),
+            "thumb_mid_dist_le_max": (_le(thumb_mid, K_THUMB_MID_MAX) if thumb_mid is not None else True),
+        }
+
+        matched = _and(*conds.values())
+        failed = [k for k, v in conds.items() if v is False]
+
+        return {
+            "matched": matched,
+            "conditions": conds,
+            "failed_conditions": failed,
+        }
+
+    def evaluate_rule_i_diagnostics(self, feat: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """
+        Ghi nhận kết quả chẩn đoán từng điều kiện con của Rule I và Rule Y
+        mà không thay đổi cách tính hay kết quả phân loại.
+        Nếu đặc trưng đầu vào không tồn tại hoặc là None, trả về None cho điều kiện tương ứng.
+        """
+        if feat is None or not isinstance(feat, dict):
+            return None
+
+        def _num(key: str) -> Optional[float]:
+            val = feat.get(key)
+            if val is None or isinstance(val, bool):
+                return None
+            try:
+                fval = float(val)
+                if math.isnan(fval) or math.isinf(fval):
+                    return None
+                return fval
+            except (ValueError, TypeError):
+                return None
+
+        def _bool(key: str) -> Optional[bool]:
+            val = feat.get(key)
+            if val is None:
+                return None
+            return bool(val)
+
+        p_ext = _bool("pinky_ext")
+        i_ext = _bool("index_ext")
+        m_ext = _bool("middle_ext")
+        r_ext = _bool("ring_ext")
+
+        d_pw = _num("d_PW")
+        d_iw = _num("d_IW")
+        d_mw = _num("d_MW")
+        d_rw = _num("d_RW")
+        d_tw = _num("d_TW")
+        d_ti = _num("d_TI")
+        d_tm = _num("d_TM")
+        thumb_lat = _num("thumb_lat")
+        ang_tp = _num("ang_TP")
+        p_curl = _num("pinky_curl")
+
+        def _ge(v: Optional[float], thresh: float) -> Optional[bool]:
+            return None if v is None else (v >= thresh)
+
+        def _le(v: Optional[float], thresh: float) -> Optional[bool]:
+            return None if v is None else (v <= thresh)
+
+        def _not(v: Optional[bool]) -> Optional[bool]:
+            return None if v is None else (not v)
+
+        def _and(*args: Optional[bool]) -> Optional[bool]:
+            if any(a is False for a in args):
+                return False
+            if any(a is None for a in args):
+                return None
+            return True
+
+        def _or(*args: Optional[bool]) -> Optional[bool]:
+            if any(a is True for a in args):
+                return True
+            if any(a is None for a in args):
+                return None
+            return False
+
+        max_curled = None
+        if d_iw is not None and d_mw is not None and d_rw is not None:
+            max_curled = max(d_iw, d_mw, d_rw)
+        diff_pw_curled = None
+        if d_pw is not None and max_curled is not None:
+            diff_pw_curled = d_pw - max_curled
+
+        conds = {
+            "pinky_ext_or_straight": _or(p_ext, _le(p_curl, 0.12)),
+            "d_PW_ge_min": _ge(d_pw, I_D_PW_MIN),
+            "pinky_curl_le_max": _le(p_curl, I_PINKY_CURL_MAX),
+            "middle_fingers_folded": _and(_not(i_ext), _not(m_ext), _not(r_ext)),
+            "d_IW_le_max": _le(d_iw, I_D_IW_MAX),
+            "d_MW_le_max": _le(d_mw, I_D_MW_MAX),
+            "d_RW_le_max": _le(d_rw, I_D_RW_MAX),
+            "diff_PW_curled_ge_min": _ge(diff_pw_curled, I_DIFF_PW_FOLDED_MIN),
+            "d_TI_le_max": _le(d_ti, I_D_TI_MAX),
+            "d_TM_le_max": _le(d_tm, I_D_TM_MAX),
+            "d_TW_le_max": _le(d_tw, I_D_TW_MAX),
+            "thumb_not_spread": _or(_le(thumb_lat, I_THUMB_LAT_MAX), _le(ang_tp, I_ANG_TP_MAX)),
+        }
+        matched = _and(*conds.values())
+        failed = [k for k, v in conds.items() if v is False]
+
+        return {
+            "matched": matched,
+            "conditions": conds,
+            "failed_conditions": failed,
         }
 
     def classify_detailed(self, landmarks: Any) -> Dict[str, Any]:

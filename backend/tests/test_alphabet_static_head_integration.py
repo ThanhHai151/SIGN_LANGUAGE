@@ -381,7 +381,7 @@ class TestAlphabetStaticHeadIntegration(unittest.TestCase):
             sample_lm = self.dataset_landmarks[sample_indices[0]].tolist()
             res = self.rec.predict_landmarks(sample_lm, mode="letters", session_id=f"test_real_{target}")
 
-            if res["sign"] == target and res.get("source") == "static_head":
+            if res["sign"] == target and res.get("source") in ("static_head", "geometric_rule"):
                 recognized_count += 1
 
         self.assertGreaterEqual(recognized_count, 6, "Đa số các chữ cái bổ sung phải được nhận diện thành công trên dataset thật!")
