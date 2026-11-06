@@ -96,6 +96,18 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
   // Trạng thái kỹ thuật đồng bộ với backend & pipeline
   const [recognitionMode, setRecognitionMode] = useState('instant'); // 'instant' | 'sequence'
   const [trackerEngine, setTrackerEngine] = useState('hands'); // 'hands' | 'holistic'
+  const trackerEngineRef = useRef('hands');
+  const cameraActiveRef = useRef(false);
+  const holisticCanvasRef = useRef(null);
+  const missingHandsCountRef = useRef(0);
+
+  useEffect(() => {
+    trackerEngineRef.current = trackerEngine;
+  }, [trackerEngine]);
+
+  useEffect(() => {
+    cameraActiveRef.current = cameraActive;
+  }, [cameraActive]);
 
   // Trạng thái nhận diện chuỗi động
   const [topKPredictions, setTopKPredictions] = useState([]);
@@ -253,42 +265,49 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
     return keypoints;
   };
 
+  // Tạo bộ theo dõi MediaPipe (Hands hoặc Holistic)
+  const createTracker = (engine) => {
+    let tracker = null;
+    if (engine === 'hands' && window.Hands) {
+      tracker = new window.Hands({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+      });
+      tracker.setOptions({
+        maxNumHands: 2,
+        modelComplexity: 0, // Lite mode = 60 FPS
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.4
+      });
+      tracker.onResults(onHandsResultsFast);
+    } else if (window.Holistic) {
+      tracker = new window.Holistic({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`
+      });
+      tracker.setOptions({
+        modelComplexity: 0,
+        smoothLandmarks: false, // Tắt smoothing để loại bỏ hoàn toàn độ trễ kéo rê khung xương
+        minDetectionConfidence: 0.35, // Giảm ngưỡng để không bị mất bàn tay khi xoay úp/ngửa
+        minTrackingConfidence: 0.30
+      });
+      tracker.onResults(onHolisticResultsFast);
+    } else {
+      throw new Error('Thư viện MediaPipe chưa sẵn sàng. Vui lòng kiểm tra kết nối mạng CDN.');
+    }
+    return tracker;
+  };
+
   // Khởi động Camera và MediaPipe với tối ưu hóa tối đa
-  const startCamera = async (engine = trackerEngine) => {
+  const startCamera = async (engine = trackerEngineRef.current) => {
     setCameraLoading(true);
     setCameraError(null);
     isFrameBusyRef.current = false;
 
     try {
-      let tracker = null;
-
-      if (engine === 'hands' && window.Hands) {
-        tracker = new window.Hands({
-          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-        });
-        tracker.setOptions({
-          maxNumHands: 2,
-          modelComplexity: 0, // Lite mode = 60 FPS
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.4 // Giảm nhẹ ngưỡng tracking để không bao giờ bị drop khi chuyển động nhanh
-        });
-        tracker.onResults(onHandsResultsFast);
-      } else if (window.Holistic) {
-        tracker = new window.Holistic({
-          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`
-        });
-        tracker.setOptions({
-          modelComplexity: 0,
-          smoothLandmarks: true,
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.4
-        });
-        tracker.onResults(onHolisticResultsFast);
-      } else {
-        throw new Error('Thư viện MediaPipe chưa sẵn sàng. Vui lòng kiểm tra kết nối mạng CDN.');
-      }
-
+      const tracker = createTracker(engine);
       trackerInstanceRef.current = tracker;
+      trackerEngineRef.current = engine;
+      setTrackerEngine(engine);
+      setRecognitionScope(engine);
 
       // Khởi động luồng webcam trực tiếp bằng getUserMedia với thông số tối ưu tuyệt đối
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -307,16 +326,25 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
         // Đồng bộ kích thước canvas
         handleVideoMetadata();
         setCameraActive(true);
+        cameraActiveRef.current = true;
 
-        // Khởi tạo Canvas Downsampler 320x240 tăng tốc phần cứng
+        // Khởi tạo Canvas Downsampler: 320x240 cho Hands (60 FPS) & 480x360 cho Holistic (25-30 FPS)
         if (!processCanvasRef.current) {
           const pCanvas = document.createElement('canvas');
           pCanvas.width = 320;
           pCanvas.height = 240;
           processCanvasRef.current = pCanvas;
         }
+        if (!holisticCanvasRef.current) {
+          const hCanvas = document.createElement('canvas');
+          hCanvas.width = 480;
+          hCanvas.height = 360;
+          holisticCanvasRef.current = hCanvas;
+        }
         const pCanvas = processCanvasRef.current;
         const pCtx = pCanvas.getContext('2d', { willReadFrequently: true });
+        const hCanvas = holisticCanvasRef.current;
+        const hCtx = hCanvas.getContext('2d', { willReadFrequently: true });
 
         // Vòng lặp gửi frame tối ưu siêu tốc với Downsampling GPU & Frame Throttling
         const processCameraFrame = async () => {
@@ -325,14 +353,21 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
           }
 
           const now = performance.now();
-          // Điều tiết tối đa 30-33 FPS để giải phóng hoàn toàn CPU cho giao diện mượt mà 60 FPS
+          // Điều tiết 30-33 FPS để giải phóng CPU cho giao diện mượt mà
           if (!isFrameBusyRef.current && videoRef.current.readyState >= 2 && now - lastFrameSentTimeRef.current >= 30) {
             isFrameBusyRef.current = true;
             lastFrameSentTimeRef.current = now;
             try {
-              // Thu nhỏ cực nhanh từ webcam xuống 320x240 trong < 0.2ms bằng GPU
-              pCtx.drawImage(videoRef.current, 0, 0, 320, 240);
-              await trackerInstanceRef.current.send({ image: pCanvas });
+              const currentEngine = trackerEngineRef.current;
+              let imageToSend;
+              if (currentEngine === 'holistic') {
+                hCtx.drawImage(videoRef.current, 0, 0, 480, 360);
+                imageToSend = hCanvas;
+              } else {
+                pCtx.drawImage(videoRef.current, 0, 0, 320, 240);
+                imageToSend = pCanvas;
+              }
+              await trackerInstanceRef.current.send({ image: imageToSend });
             } catch (err) {
               // Bỏ qua lỗi frame đơn lẻ
             } finally {
@@ -349,6 +384,7 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
       console.error('[Camera error]:', err);
       setCameraError(err.message || 'Không thể truy cập camera. Vui lòng cấp quyền truy cập webcam.');
       setCameraActive(false);
+      cameraActiveRef.current = false;
     } finally {
       setCameraLoading(false);
     }
@@ -364,12 +400,21 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
       cameraInstanceRef.current.stop();
       cameraInstanceRef.current = null;
     }
+    if (trackerInstanceRef.current) {
+      try {
+        if (typeof trackerInstanceRef.current.close === 'function') {
+          trackerInstanceRef.current.close();
+        }
+      } catch (e) {}
+      trackerInstanceRef.current = null;
+    }
     if (videoRef.current && videoRef.current.srcObject) {
       const tracks = videoRef.current.srcObject.getTracks();
       tracks.forEach(track => track.stop());
       videoRef.current.srcObject = null;
     }
     setCameraActive(false);
+    cameraActiveRef.current = false;
     isFrameBusyRef.current = false;
     sequenceBufferRef.current = [];
     prevLeftHandRef.current = null;
@@ -384,20 +429,36 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
 
   // Đổi động cơ tracking (Hands vs Holistic)
   const switchTrackerEngine = async (newEngine) => {
-    if (newEngine === trackerEngine) return;
+    if (newEngine === trackerEngineRef.current) return;
+    trackerEngineRef.current = newEngine;
     setTrackerEngine(newEngine);
-    if (cameraActive) {
-      stopCamera();
-      setTimeout(() => {
-        startCamera(newEngine);
-      }, 250);
+    setRecognitionScope(newEngine);
+
+    if (cameraActiveRef.current && videoRef.current) {
+      isFrameBusyRef.current = true;
+      try {
+        const oldTracker = trackerInstanceRef.current;
+        const newTracker = createTracker(newEngine);
+        trackerInstanceRef.current = newTracker;
+        if (oldTracker) {
+          try {
+            if (typeof oldTracker.close === 'function') oldTracker.close();
+          } catch (e) {}
+        }
+        sequenceBufferRef.current = [];
+        prevLeftHandRef.current = null;
+        prevRightHandRef.current = null;
+      } catch (err) {
+        console.warn('Lỗi chuyển đổi động cơ tracking:', err);
+      } finally {
+        isFrameBusyRef.current = false;
+      }
     }
   };
 
   // Xử lý chuyển đổi độc lập TIÊU CHÍ A: Phạm vi nhận diện
   const handleScopeChange = (newScope) => {
     if (newScope === recognitionScope) return;
-    setRecognitionScope(newScope);
     switchTrackerEngine(newScope);
   };
 
@@ -416,6 +477,11 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
     setRecognitionMode(newRecMode);
     sequenceBufferRef.current = [];
     updateHUDProgress(0, 0);
+
+    // CHỈ áp dụng Holistic cho duy nhất chế độ 'words' (Từ vựng SSTCN 102)
+    // Các chế độ khác ('letters', 'digits', 'sentence') giữ nguyên tuyệt đối trên MediaPipe Hands
+    const targetScope = (newMode === 'words') ? 'holistic' : 'hands';
+    switchTrackerEngine(targetScope);
 
     // Nếu chuyển sang chế độ digits, chuẩn hóa phụ đề hiện tại để bỏ từ "Số "
     if (newMode === 'digits') {
@@ -523,16 +589,17 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
       return currentLms;
     }
 
-    // Hệ số bù trễ (Extrapolation coefficient ~ 0.55)
-    const LATENCY_COMPENSATION = 0.55;
+    const isHolistic = trackerEngineRef.current === 'holistic';
+    // Holistic đã tắt smoothing nên chỉ bù nhẹ 0.20; Hands giữ 0.55
+    const LATENCY_COMPENSATION = isHolistic ? 0.20 : 0.55;
+    const maxV = isHolistic ? 0.12 : 0.06;
 
     return currentLms.map((curr, i) => {
       const vx = curr.x - prev[i].x;
       const vy = curr.y - prev[i].y;
 
-      // Giới hạn vận tốc tối đa để tránh biến dạng khi bàn tay đổi hướng đột ngột
-      const clampedVx = Math.max(-0.06, Math.min(0.06, vx));
-      const clampedVy = Math.max(-0.06, Math.min(0.06, vy));
+      const clampedVx = Math.max(-maxV, Math.min(maxV, vx));
+      const clampedVy = Math.max(-maxV, Math.min(maxV, vy));
 
       return {
         x: curr.x + clampedVx * LATENCY_COMPENSATION,
@@ -721,15 +788,21 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
     // 2. CHẾ ĐỘ 1: CHUỖI ĐỘNG VSL (SSTCN-Attention 30-Frame Sliding Window)
     if (currentRecognitionMode === 'sequence') {
       if (!hasHands) {
-        if (sequenceBufferRef.current.length > 0) {
-          if (currentConversionMode === 'words') {
-            logWordDebugReset(sequenceBufferRef.current.length, 'no_hands_detected');
+        missingHandsCountRef.current = (missingHandsCountRef.current || 0) + 1;
+        // Chỉ reset buffer khi tay thực sự biến mất khỏi khung hình > 4 frame liên tiếp (~150ms)
+        // Tránh tình trạng xoay úp/ngửa bị drop 1-2 frame làm mất toàn bộ 30 frame đang tích lũy
+        if (missingHandsCountRef.current >= 4) {
+          if (sequenceBufferRef.current.length > 0) {
+            if (currentConversionMode === 'words') {
+              logWordDebugReset(sequenceBufferRef.current.length, 'no_hands_detected');
+            }
+            sequenceBufferRef.current = [];
+            updateHUDProgress(0, 0);
           }
-          sequenceBufferRef.current = [];
-          updateHUDProgress(0, 0);
         }
         return;
       }
+      missingHandsCountRef.current = 0;
 
       // Đẩy frame vào bộ đệm
       const frameKeypoints = getKeypointsFn();
