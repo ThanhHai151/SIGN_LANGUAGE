@@ -101,6 +101,11 @@ class PilotSidecarRequest(BaseModel):
     session_id: str
     sync_data: dict
 
+class PilotEvaluationRequest(BaseModel):
+    session_id: str
+    report: Dict[str, Any]
+    frames: Optional[List[Dict[str, Any]]] = None
+
 class SequenceRequest(BaseModel):
     sequence: List[List[List[float]]]  # Chuỗi 30 frames x 75 joints x 3 coords
     threshold: Optional[float] = 0.65
@@ -707,6 +712,85 @@ def save_pilot_sidecar(req: PilotSidecarRequest):
         raise HTTPException(status_code=409, detail="Diagnostic sidecar for this trial already exists; refusing to overwrite it.")
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/pilot/save_evaluation")
+def save_pilot_evaluation(req: PilotEvaluationRequest):
+    """
+    Lưu kết quả chẩn đoán Controlled Pilot 29 chữ cái vào backend/data/diagnostics/
+    Bao gồm file JSON tổng kết và file JSONL chi tiết từng frame (nếu có).
+    """
+    try:
+        diag_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "diagnostics")
+        os.makedirs(diag_dir, exist_ok=True)
+
+        clean_sess = re.sub(r'[^a-zA-Z0-9_-]', '_', req.session_id)
+        if not clean_sess:
+            clean_sess = f"session_{int(time.time())}"
+
+        timestamp_str = time.strftime("%Y%m%d_%H%M%S")
+        json_filename = f"pilot_eval_29_{clean_sess}_{timestamp_str}.json"
+        json_path = os.path.join(diag_dir, json_filename)
+
+        req.report["saved_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        req.report["server_timestamp"] = time.time()
+        req.report["filename"] = json_filename
+
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(req.report, f, ensure_ascii=False, indent=2)
+
+        jsonl_filename = None
+        jsonl_path = None
+        if req.frames:
+            jsonl_filename = f"pilot_eval_29_{clean_sess}_{timestamp_str}_frames.jsonl"
+            jsonl_path = os.path.join(diag_dir, jsonl_filename)
+            with open(jsonl_path, "w", encoding="utf-8") as f:
+                for frame in req.frames:
+                    f.write(json.dumps(frame, ensure_ascii=False) + "\n")
+
+        return {
+            "success": True,
+            "filename": json_filename,
+            "filepath": json_path,
+            "frames_filename": jsonl_filename,
+            "frames_filepath": jsonl_path,
+            "total_letters_evaluated": len(req.report.get("letters", {})),
+            "summary": req.report.get("summary", {})
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi khi lưu file JSON chẩn đoán: {str(e)}")
+
+
+@app.get("/api/pilot/evaluations")
+def list_pilot_evaluations():
+    """Liệt kê danh sách các file báo cáo chẩn đoán trong backend/data/diagnostics/"""
+    try:
+        diag_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "diagnostics")
+        if not os.path.exists(diag_dir):
+            return {"success": True, "evaluations": []}
+
+        evaluations = []
+        for fname in os.listdir(diag_dir):
+            if fname.startswith("pilot_eval_29_") and fname.endswith(".json"):
+                fpath = os.path.join(diag_dir, fname)
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    evaluations.append({
+                        "filename": fname,
+                        "session_id": data.get("session_id", fname),
+                        "saved_at": data.get("saved_at", ""),
+                        "mode": data.get("config", {}).get("mode", "single_letter"),
+                        "total_letters": len(data.get("letters", {})),
+                        "summary": data.get("summary", {})
+                    })
+                except Exception:
+                    continue
+
+        evaluations.sort(key=lambda x: x.get("saved_at", ""), reverse=True)
+        return {"success": True, "evaluations": evaluations}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
