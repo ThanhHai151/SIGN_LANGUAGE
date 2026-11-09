@@ -1,0 +1,59 @@
+{
+  "overlap_audit": {
+    "npz_sample_39": {
+      "video_id": "D0492",
+      "frame_index": 54,
+      "timestamp_sec": 2.252,
+      "label": "B"
+    },
+    "fixture_b_frame_54": {
+      "video_id": "D0492",
+      "frame_index": 54,
+      "timestamp_sec": 2.252,
+      "phase": "stable_pose",
+      "letter": "B"
+    },
+    "is_same_video": true,
+    "is_same_frame": true,
+    "is_same_timestamp": true,
+    "max_landmark_difference": 1.9439697296341762e-08,
+    "is_identical_observation": true,
+    "unique_source_false_positives": 1
+  },
+  "reconciliation": {
+    "npz_non_o": {
+      "total_samples": 503,
+      "total_fps": 1,
+      "true_negatives": 502,
+      "tn_rate": 0.9980119284294234
+    },
+    "fixtures_non_o": {
+      "total_fixtures": 22,
+      "total_valid_frames": 514,
+      "total_fps": 1,
+      "true_negatives": 513,
+      "tn_rate": 0.9980544747081712
+    },
+    "p_holdout": {
+      "active_frames": 314,
+      "fps": 0
+    },
+    "x_holdout": {
+      "active_frames": 108,
+      "fps": 0
+    },
+    "webcam_213800_o": {
+      "active_frames": 92,
+      "matches": 88,
+      "accuracy": 0.9565,
+      "trial_accuracy": "9/10",
+      "confirmed_trials": "9/10"
+    },
+    "webcam_211742_o": {
+      "active_frames": 68,
+      "matches": 6,
+      "accuracy": 0.0882,
+      "trial_accuracy": "0/10"
+    }
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "task_id": "TASK 7E.2",
+  "task_title": "Xác minh Root Cause và Đề xuất sửa lỗi FSM / Rule Hijacking",
+  "project": "VSL Connect AI",
+  "timestamp": "2026-10-31T15:20:00+07:00",
+  "audit_mode": "READ-ONLY INVESTIGATION (Tuyệt đối không sửa code, không đổi threshold, không sửa FSM, không đổi checkpoint)",
+  "hypothesis_verifications": {
+    "hypothesis_1_fsm_reset_on_transient_neutral": {
+      "statement": "FSM bị reset ngay lập tức khi chữ nền tạm thời mất nhận diện (rơi về NEUTRAL)",
+      "verdict": "CONFIRMED",
+      "evidence_location": "backend/vision/recognizer.py dòng 815-859",
+      "mechanism": "Khi base_sign không thuộc BASE_GROUPS ({'A', 'E', 'O', 'U', 'D'}), nhánh else thực thi fsm.reset() ngay trong 1 frame đơn lẻ. Khi chuyển động vẩy dấu làm biến dạng bàn tay, static classifier trả về NEUTRAL, FSM bị xóa sổ toàn bộ baseline snapshot ngay frame đầu tiên của chuyển động."
+    },
+    "hypothesis_2_rule_hijacking_i_v": {
+      "statement": "Rule I và Rule V ở Tầng 1 cướp nhãn trong quá trình tạo dấu của Ă, Ơ, Ư",
+      "verdict": "CONFIRMED",
+      "evidence_location": "backend/vision/alphabet_classifier.py dòng 251 (Rule I) và dòng 263 (Rule V)",
+      "mechanism": "Tầng 1 chạy trước không phụ thuộc trạng thái FSM. Động tác mở ngón của Ă kích hoạt Rule V (MATCH conf 0.95); động tác vẩy ngón út của Ơ và Ư kích hoạt Rule I (MATCH conf 0.95). Do short-circuit ở recognizer.py dòng 740, Static Head bị bỏ qua, FSM nhận base_sign là V hoặc I (không thuộc BASE_GROUPS) nên bị reset, và token cuối cùng bị chốt nhầm sang V hoặc I."
+    },
+    "hypothesis_3_overconstrained_geometric_rules_a_d_e": {
+      "statement": "Các rule hình học A/D/E quá khắt khe khiến FSM không thể nhận diện chữ nền trong pha BASE_POSE",
+      "verdict": "CONFIRMED",
+      "evidence_location": "backend/vision/alphabet_classifier.py dòng 272 (D), 303 (A), 318 (E)",
+      "quantitative_evidence": {
+        "A": "47/64 mẫu thật (73.4%) thất bại. 42 mẫu vi phạm d_IW <= 0.90, 37 mẫu vi phạm d_TM >= 0.75.",
+        "D": "31/46 mẫu thật (67.4%) thất bại. 29 mẫu vi phạm d_IW >= 1.70.",
+        "E": "25/35 mẫu thật (71.4%) thất bại. 25/25 mẫu vi phạm d_TI <= 0.35, 23/25 mẫu vi phạm d_TM <= 0.38."
+      },
+      "consequence": "Trong các video thực tế của Ă, Â, Ê, Đ, 100% frame trong pha BASE_POSE trả về NEUTRAL, FSM không bao giờ vào BASE_STABLE để bắt đầu nhận diện dấu."
+    }
+  },
+  "hypothetical_sequences_simulation": {
+    "Ô (O -> O -> O -> O -> NEUTRAL -> O)": {
+      "frame_4_state": "BASE_STABLE (current_base=O, has_baseline=True)",
+      "frame_5_state": "IDLE (fsm.reset() kích hoạt ngay lập tức tại Frame 5 do base_sign == 'NEUTRAL')",
+      "frame_6_state": "BASE_CANDIDATE (current_base=None, has_baseline=False - phải học lại từ đầu)",
+      "baseline_preserved": false
+    },
+    "Ơ (O -> O -> O -> O -> I -> I -> O)": {
+      "frame_4_state": "BASE_STABLE (current_base=O, has_baseline=True)",
+      "frame_5_state": "IDLE (fsm.reset() kích hoạt tại Frame 5 do Rule I cướp nhãn, 'I' not in BASE_GROUPS)",
+      "frame_6_state": "IDLE",
+      "baseline_preserved": false
+    },
+    "Ư (U -> U -> U -> U -> I -> I -> U)": {
+      "frame_4_state": "BASE_STABLE (current_base=U, has_baseline=True)",
+      "frame_5_state": "IDLE (fsm.reset() kích hoạt tại Frame 5 do Rule I cướp nhãn)",
+      "frame_6_state": "IDLE",
+      "baseline_preserved": false
+    },
+    "Ă (A -> A -> A -> A -> V -> V -> A)": {
+      "frame_4_state": "BASE_STABLE (current_base=A, has_baseline=True)",
+      "frame_5_state": "IDLE (fsm.reset() kích hoạt tại Frame 5 do Rule V cướp nhãn, 'V' not in BASE_GROUPS)",
+      "frame_6_state": "IDLE",
+      "baseline_preserved": false
+    },
+    "Â (A -> A -> A -> A -> NEUTRAL -> A)": {
+      "frame_4_state": "BASE_STABLE (current_base=A, has_baseline=True)",
+      "frame_5_state": "IDLE (fsm.reset() kích hoạt tại Frame 5 do base_sign == 'NEUTRAL')",
+      "frame_6_state": "BASE_CANDIDATE",
+      "baseline_preserved": false
+    }
+  },
+  "alphabet_status_dual_column": [
+    {"letter": "A", "offline_replay_accuracy": "17/64 (26.6%)", "offline_replay_status": "UNSTABLE", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay trên 64 mẫu tĩnh V2."},
+    {"letter": "Ă", "offline_replay_accuracy": "0/89 (0.0%)", "offline_replay_status": "FAIL", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay video D0490B. Token chốt: 'V'."},
+    {"letter": "Â", "offline_replay_accuracy": "0/108 (0.0%)", "offline_replay_status": "FAIL", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay video D0491B. 0 frame Â."},
+    {"letter": "B", "offline_replay_accuracy": "13/22 (59.1%)", "offline_replay_status": "UNSTABLE", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay trên 22 mẫu tĩnh V2."},
+    {"letter": "C", "offline_replay_accuracy": "12/20 (60.0%)", "offline_replay_status": "UNSTABLE", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay trên 20 mẫu tĩnh V2."},
+    {"letter": "D", "offline_replay_accuracy": "15/46 (32.6%)", "offline_replay_status": "UNSTABLE", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay trên 46 mẫu tĩnh V2."},
+    {"letter": "Đ", "offline_replay_accuracy": "0/105 (0.0%)", "offline_replay_status": "FAIL", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay video D0494B. 0 frame Đ."},
+    {"letter": "E", "offline_replay_accuracy": "10/35 (28.6%)", "offline_replay_status": "UNSTABLE", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay trên 35 mẫu tĩnh V2."},
+    {"letter": "Ê", "offline_replay_accuracy": "0/76 (0.0%)", "offline_replay_status": "FAIL", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay video D0497B. 0 frame Ê."},
+    {"letter": "G", "offline_replay_accuracy": "26/29 (89.7%)", "offline_replay_status": "PASS", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Static Head MLP."},
+    {"letter": "H", "offline_replay_accuracy": "16/18 (88.9%)", "offline_replay_status": "PASS", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Static Head MLP."},
+    {"letter": "I", "offline_replay_accuracy": "14/18 (77.8%)", "offline_replay_status": "PASS", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Rule I. Cướp nhãn Ơ/Ư."},
+    {"letter": "K", "offline_replay_accuracy": "14/17 (82.4%)", "offline_replay_status": "PASS", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Static Head MLP."},
+    {"letter": "L", "offline_replay_accuracy": "11/16 (68.8%)", "offline_replay_status": "UNSTABLE", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Rule L."},
+    {"letter": "M", "offline_replay_accuracy": "17/19 (89.5%)", "offline_replay_status": "PASS", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Static Head MLP."},
+    {"letter": "N", "offline_replay_accuracy": "15/21 (71.4%)", "offline_replay_status": "UNSTABLE", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Static Head MLP. Nhầm M (1 mẫu)."},
+    {"letter": "O", "offline_replay_accuracy": "37/48 (77.1%)", "offline_replay_status": "PASS", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Rule O."},
+    {"letter": "Ô", "offline_replay_accuracy": "0/84 (0.0%)", "offline_replay_status": "FAIL", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay video D0507B. Token chốt: 'O'."},
+    {"letter": "Ơ", "offline_replay_accuracy": "0/89 (0.0%)", "offline_replay_status": "FAIL", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay video D0508B. Token chốt: 'O'."},
+    {"letter": "P", "offline_replay_accuracy": "16/20 (80.0%)", "offline_replay_status": "PASS", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Static Head MLP."},
+    {"letter": "Q", "offline_replay_accuracy": "5/19 (26.3%)", "offline_replay_status": "FAIL", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Static Head. Threshold 0.85 loại bỏ 73.7%."},
+    {"letter": "R", "offline_replay_accuracy": "11/14 (78.6%)", "offline_replay_status": "PASS", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Static Head MLP."},
+    {"letter": "S", "offline_replay_accuracy": "11/15 (73.3%)", "offline_replay_status": "UNSTABLE", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Rule S (< 75%)."},
+    {"letter": "T", "offline_replay_accuracy": "11/20 (55.0%)", "offline_replay_status": "UNSTABLE", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Rule T."},
+    {"letter": "U", "offline_replay_accuracy": "27/32 (84.4%)", "offline_replay_status": "PASS", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Static Head MLP."},
+    {"letter": "Ư", "offline_replay_accuracy": "0/118 (0.0%)", "offline_replay_status": "FAIL", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay video D0518B. Token chốt: 'U'."},
+    {"letter": "V", "offline_replay_accuracy": "13/17 (76.5%)", "offline_replay_status": "PASS", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Rule V. Cướp nhãn Ă."},
+    {"letter": "X", "offline_replay_accuracy": "17/25 (68.0%)", "offline_replay_status": "UNSTABLE", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Static Head MLP."},
+    {"letter": "Y", "offline_replay_accuracy": "11/16 (68.8%)", "offline_replay_status": "UNSTABLE", "live_webcam_status": "NOT_TESTED", "notes": "Offline replay Rule Y."}
+  ],
+  "summary_metrics_offline": {
+    "pass_count": 10,
+    "unstable_count": 11,
+    "fail_count": 8,
+    "not_tested_count": 0
+  },
+  "summary_metrics_live_webcam": {
+    "pass_count": 0,
+    "unstable_count": 0,
+    "fail_count": 0,
+    "not_tested_count": 29
+  },
+  "proposed_solutions": {
+    "solution_a": {
+      "title": "Tránh reset FSM khi base label tạm thời thành NEUTRAL",
+      "target_file": "backend/vision/recognizer.py",
+      "target_function": "predict_landmarks() dòng 815-860",
+      "current_logic": "if base_sign in BASE_GROUPS: fsm.update(...) else: fsm.reset()",
+      "proposed_logic": "Nếu landmarks còn hợp lệ (len >= 21) và FSM đang ở STATE_BASE_STABLE hoặc STATE_DIACRITIC_CANDIDATE, không gọi fsm.reset() khi base_sign == 'NEUTRAL'. Cho phép FSM tiếp tục duy trì search window (0.65s). Chỉ reset khi hết thời gian search window hoặc người ký hạ tay (vy > 0.65).",
+      "improved_letters": ["Ô", "Â", "Ê"],
+      "risk_letters": ["B", "C", "G", "H", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "V", "X", "Y (nếu người ký đổi thế tay sang chữ khác nhóm mà FSM chưa hết search window)"],
+      "tests_to_add": ["test_fsm_persistence_on_transient_neutral_window", "test_circumflex_confirmed_across_neutral_frames"]
+    },
+    "solution_b": {
+      "title": "Xử lý xung đột Rule I/V trong lúc FSM đang theo dõi một nhóm chữ nền",
+      "target_file": "backend/vision/recognizer.py và backend/vision/alphabet_classifier.py",
+      "target_function": "predict_landmarks() dòng 740-860",
+      "current_logic": "Tầng 1 Geometric Rules chạy trước độc lập, MATCH chữ V hoặc chữ I với conf 0.95 và short-circuit Static Head/FSM.",
+      "proposed_logic": "Trước khi chấp nhận kết quả Tầng 1: kiểm tra nếu FSM session đang ở STATE_BASE_STABLE hoặc DIACRITIC_CANDIDATE: nếu current_base == 'A' và rule là 'V', chuyển giao frame cho FSM xử lý chuyển động Ă; nếu current_base in ('U', 'O') và rule là 'I', chuyển giao frame cho FSM xử lý chuyển động râu Ư/Ơ.",
+      "improved_letters": ["Ă", "Ư", "Ơ"],
+      "risk_letters": ["V (khi người ký thực sự muốn ký V ngay sau A)", "I (khi người ký thực sự muốn ký I ngay sau U/O)"],
+      "tests_to_add": ["test_a_base_suppresses_v_rule_hijack", "test_u_base_suppresses_i_rule_hijack", "test_o_base_suppresses_i_rule_hijack"]
+    },
+    "solution_c": {
+      "title": "Cải thiện khả năng nhận diện A/D/E dựa trên dữ liệu thực tế",
+      "target_file": "backend/vision/recognizer.py và backend/vision/alphabet_classifier.py",
+      "target_function": "predict_landmarks() dòng 756 và evaluate_rules()",
+      "current_logic": "Chỉ 10 chữ phụ trợ được phép gọi Static Head. A, D, E phụ thuộc 100% vào Geometric Rules với ngưỡng d_IW, d_TM, d_TI quá hẹp.",
+      "proposed_logic": "1) Bổ sung A, D, E vào danh mục fallback của Static Head (mô hình alphabet_static_head_v1.pt đã có sẵn 22 lớp bao gồm A, D, E). 2) Nới lỏng nhẹ ngưỡng Geometric Rules: A (d_TM_MIN 0.75->0.50, d_IW_MAX 0.90->1.15), D (d_IW_MIN 1.70->1.40), E (d_TI_MAX 0.35->0.55, d_TM_MAX 0.38->0.60).",
+      "improved_letters": ["A", "D", "E", "Ă", "Â", "Ê", "Đ"],
+      "risk_letters": ["S (nhầm với A nếu nới lỏng quá mức)", "L (nhầm với D)", "O (nhầm với E)"],
+      "tests_to_add": ["test_static_head_fallback_for_base_letters_a_d_e", "test_geometric_rules_relaxed_thresholds_confusion_matrix"]
+    }
+  },
+  "required_regression_test_suite": [
+    "test_alphabet_classifier.py (26 tests bảo toàn luật hình học)",
+    "test_alphabet_static_head_integration.py (10 tests bảo toàn Static Head 10 chữ)",
+    "test_diacritic_state_machine.py (15 tests FSM logic)",
+    "test_diacritic_camera_integration.py (14 tests camera integration)",
+    "test_mode_separation.py (Bảo toàn tách biệt letters, digits, words)",
+    "test_digit_10_integration.py (Bảo toàn số 10)",
+    "test_sequential_digits_integration.py (Bảo toàn chuỗi số 1-9)"
+  ]
+}
+

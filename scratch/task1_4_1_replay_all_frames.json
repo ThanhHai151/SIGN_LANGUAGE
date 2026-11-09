@@ -1,0 +1,3200 @@
+[
+  {
+    "frame_index": 6,
+    "timestamp": 0.25,
+    "phase": "entry",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "NEUTRAL",
+    "runtime_conf": 0.0,
+    "runtime_source": "none",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": null,
+    "last_confirmed_time": 0,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ]
+    ],
+    "recent_signs": [],
+    "vote_counts": {}
+  },
+  {
+    "frame_index": 8,
+    "timestamp": 0.334,
+    "phase": "entry",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "NEUTRAL",
+    "runtime_conf": 0.0,
+    "runtime_source": "none",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": null,
+    "last_confirmed_time": 0,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ]
+    ],
+    "recent_signs": [],
+    "vote_counts": {}
+  },
+  {
+    "frame_index": 10,
+    "timestamp": 0.417,
+    "phase": "entry",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "X",
+    "runtime_conf": 0.91,
+    "runtime_source": "static_head",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": null,
+    "last_confirmed_time": 0,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.9053
+      ]
+    ],
+    "recent_signs": [
+      "X"
+    ],
+    "vote_counts": {
+      "X": 1
+    }
+  },
+  {
+    "frame_index": 12,
+    "timestamp": 0.5,
+    "phase": "entry",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (dựng đứng): trỏ cong móc chạm cái d_TI=0.19, d_TW=0.76, idx_straight=0.69",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": null,
+    "last_confirmed_time": 0,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.9053
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 2
+    }
+  },
+  {
+    "frame_index": 14,
+    "timestamp": 0.584,
+    "phase": "entry",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "X",
+    "runtime_conf": 0.82,
+    "runtime_source": "static_head",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": null,
+    "last_confirmed_time": 0,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.9053
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8185
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 3
+    }
+  },
+  {
+    "frame_index": 16,
+    "timestamp": 0.667,
+    "phase": "entry",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (dựng đứng): trỏ cong móc chạm cái d_TI=0.11, d_TW=0.76, idx_straight=0.69",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": null,
+    "last_confirmed_time": 0,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.9053
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8185
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 4
+    }
+  },
+  {
+    "frame_index": 18,
+    "timestamp": 0.751,
+    "phase": "entry",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "X",
+    "runtime_conf": 0.89,
+    "runtime_source": "static_head",
+    "runtime_confirmed": true,
+    "runtime_new_token": "X",
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 0.751,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.9053
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8185
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8944
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 5
+    }
+  },
+  {
+    "frame_index": 20,
+    "timestamp": 0.834,
+    "phase": "entry",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "X",
+    "runtime_conf": 0.9,
+    "runtime_source": "static_head",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 0.751,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.9053
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8185
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8944
+      ],
+      [
+        "X",
+        0.8985
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 6
+    }
+  },
+  {
+    "frame_index": 22,
+    "timestamp": 0.918,
+    "phase": "entry",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (dựng đứng): trỏ cong móc chạm cái d_TI=0.14, d_TW=0.77, idx_straight=0.73",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 0.751,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.9053
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8185
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8944
+      ],
+      [
+        "X",
+        0.8985
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 7
+    }
+  },
+  {
+    "frame_index": 24,
+    "timestamp": 1.001,
+    "phase": "entry",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "X",
+    "runtime_conf": 0.89,
+    "runtime_source": "static_head",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 0.751,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.9053
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8185
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8944
+      ],
+      [
+        "X",
+        0.8985
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8915
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 8
+    }
+  },
+  {
+    "frame_index": 26,
+    "timestamp": 1.084,
+    "phase": "entry",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (dựng đứng): trỏ cong móc chạm cái d_TI=0.16, d_TW=0.77, idx_straight=0.72",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 0.751,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.9053
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8185
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8944
+      ],
+      [
+        "X",
+        0.8985
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8915
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 9
+    }
+  },
+  {
+    "frame_index": 28,
+    "timestamp": 1.168,
+    "phase": "entry",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (dựng đứng): trỏ cong móc chạm cái d_TI=0.19, d_TW=0.77, idx_straight=0.69",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 0.751,
+    "history_after": [
+      [
+        "X",
+        0.9053
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8185
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8944
+      ],
+      [
+        "X",
+        0.8985
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8915
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 30,
+    "timestamp": 1.251,
+    "phase": "entry",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (dựng đứng): trỏ cong móc chạm cái d_TI=0.17, d_TW=0.77, idx_straight=0.71",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 0.751,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8185
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8944
+      ],
+      [
+        "X",
+        0.8985
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8915
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 32,
+    "timestamp": 1.335,
+    "phase": "entry",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (dựng đứng): trỏ cong móc chạm cái d_TI=0.20, d_TW=0.78, idx_straight=0.67",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 0.751,
+    "history_after": [
+      [
+        "X",
+        0.8185
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8944
+      ],
+      [
+        "X",
+        0.8985
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8915
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 34,
+    "timestamp": 1.418,
+    "phase": "entry",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (dựng đứng): trỏ cong móc chạm cái d_TI=0.17, d_TW=0.79, idx_straight=0.70",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 0.751,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8944
+      ],
+      [
+        "X",
+        0.8985
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8915
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 36,
+    "timestamp": 1.501,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (dựng đứng): trỏ cong móc chạm cái d_TI=0.16, d_TW=0.79, idx_straight=0.71",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 0.751,
+    "history_after": [
+      [
+        "X",
+        0.8944
+      ],
+      [
+        "X",
+        0.8985
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8915
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 38,
+    "timestamp": 1.585,
+    "phase": "stable_pose",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "X",
+    "runtime_conf": 0.79,
+    "runtime_source": "static_head",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 0.751,
+    "history_after": [
+      [
+        "X",
+        0.8985
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8915
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7928
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 40,
+    "timestamp": 1.668,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (dựng đứng): trỏ cong móc chạm cái d_TI=0.13, d_TW=0.78, idx_straight=0.71",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 0.751,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8915
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7928
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 42,
+    "timestamp": 1.752,
+    "phase": "stable_pose",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "X",
+    "runtime_conf": 0.72,
+    "runtime_source": "static_head",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 0.751,
+    "history_after": [
+      [
+        "X",
+        0.8915
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7928
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7225
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 44,
+    "timestamp": 1.835,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (dựng đứng): trỏ cong móc chạm cái d_TI=0.16, d_TW=0.83, idx_straight=0.65",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 0.751,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7928
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7225
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 46,
+    "timestamp": 1.919,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (dựng đứng): trỏ cong móc chạm cái d_TI=0.21, d_TW=0.83, idx_straight=0.55",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 0.751,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7928
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7225
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 48,
+    "timestamp": 2.002,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (dựng đứng): trỏ cong móc chạm cái d_TI=0.13, d_TW=0.83, idx_straight=0.72",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": true,
+    "runtime_new_token": "X",
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 2.002,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7928
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7225
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 50,
+    "timestamp": 2.085,
+    "phase": "stable_pose",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "NEUTRAL",
+    "runtime_conf": 0.0,
+    "runtime_source": "none",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 2.002,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7928
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7225
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 9
+    }
+  },
+  {
+    "frame_index": 52,
+    "timestamp": 2.169,
+    "phase": "stable_pose",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "X",
+    "runtime_conf": 0.74,
+    "runtime_source": "static_head",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 2.002,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7928
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7225
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.7446
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 9
+    }
+  },
+  {
+    "frame_index": 54,
+    "timestamp": 2.252,
+    "phase": "stable_pose",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "NEUTRAL",
+    "runtime_conf": 0.0,
+    "runtime_source": "none",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 2.002,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7928
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7225
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.7446
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 8
+    }
+  },
+  {
+    "frame_index": 108,
+    "timestamp": 4.504,
+    "phase": "stable_pose",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "NEUTRAL",
+    "runtime_conf": 0.0,
+    "runtime_source": "none",
+    "runtime_confirmed": true,
+    "runtime_new_token": "X",
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 4.504,
+    "history_after": [
+      [
+        "X",
+        0.7928
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7225
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.7446
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 7
+    }
+  },
+  {
+    "frame_index": 110,
+    "timestamp": 4.588,
+    "phase": "stable_pose",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "NEUTRAL",
+    "runtime_conf": 0.0,
+    "runtime_source": "none",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 4.504,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.7225
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.7446
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 6
+    }
+  },
+  {
+    "frame_index": 112,
+    "timestamp": 4.671,
+    "phase": "stable_pose",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "NEUTRAL",
+    "runtime_conf": 0.0,
+    "runtime_source": "none",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 4.504,
+    "history_after": [
+      [
+        "X",
+        0.7225
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.7446
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 5
+    }
+  },
+  {
+    "frame_index": 114,
+    "timestamp": 4.755,
+    "phase": "stable_pose",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "X",
+    "runtime_conf": 0.85,
+    "runtime_source": "static_head",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 4.504,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.7446
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.8496
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 5
+    }
+  },
+  {
+    "frame_index": 116,
+    "timestamp": 4.838,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (chúi trước): trỏ cong móc chạm cái d_TI=0.54, d_TW=1.30, idx_straight=0.92",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 4.504,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.7446
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.8496
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 5
+    }
+  },
+  {
+    "frame_index": 118,
+    "timestamp": 4.922,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (chúi trước): trỏ cong móc chạm cái d_TI=0.44, d_TW=1.26, idx_straight=0.91",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 4.504,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.7446
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.8496
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 5
+    }
+  },
+  {
+    "frame_index": 120,
+    "timestamp": 5.005,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (chúi trước): trỏ cong móc chạm cái d_TI=0.48, d_TW=1.24, idx_straight=0.91",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 4.504,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.7446
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.8496
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 5
+    }
+  },
+  {
+    "frame_index": 122,
+    "timestamp": 5.088,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (chúi trước): trỏ cong móc chạm cái d_TI=0.42, d_TW=1.27, idx_straight=0.90",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 4.504,
+    "history_after": [
+      [
+        "X",
+        0.7446
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.8496
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 6
+    }
+  },
+  {
+    "frame_index": 124,
+    "timestamp": 5.172,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (chúi trước): trỏ cong móc chạm cái d_TI=0.44, d_TW=1.26, idx_straight=0.89",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 4.504,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.8496
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 6
+    }
+  },
+  {
+    "frame_index": 126,
+    "timestamp": 5.255,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (chúi trước): trỏ cong móc chạm cái d_TI=0.45, d_TW=1.26, idx_straight=0.89",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 4.504,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.8496
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 7
+    }
+  },
+  {
+    "frame_index": 128,
+    "timestamp": 5.339,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (chúi trước): trỏ cong móc chạm cái d_TI=0.45, d_TW=1.25, idx_straight=0.87",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 4.504,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.8496
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 8
+    }
+  },
+  {
+    "frame_index": 130,
+    "timestamp": 5.422,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (chúi trước): trỏ cong móc chạm cái d_TI=0.42, d_TW=1.25, idx_straight=0.88",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 4.504,
+    "history_after": [
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "X",
+        0.8496
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 9
+    }
+  },
+  {
+    "frame_index": 132,
+    "timestamp": 5.505,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (chúi trước): trỏ cong móc chạm cái d_TI=0.43, d_TW=1.26, idx_straight=0.88",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 4.504,
+    "history_after": [
+      [
+        "X",
+        0.8496
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 134,
+    "timestamp": 5.589,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (chúi trước): trỏ cong móc chạm cái d_TI=0.44, d_TW=1.25, idx_straight=0.87",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 4.504,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 136,
+    "timestamp": 5.672,
+    "phase": "stable_pose",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (chúi trước): trỏ cong móc chạm cái d_TI=0.44, d_TW=1.24, idx_straight=0.87",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 4.504,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 138,
+    "timestamp": 5.756,
+    "phase": "exit",
+    "geom_status": "MATCH",
+    "geom_letter": "X",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ X (chúi trước): trỏ cong móc chạm cái d_TI=0.42, d_TW=1.27, idx_straight=0.87",
+    "runtime_sign": "X",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": true,
+    "runtime_new_token": "X",
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 5.756,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 140,
+    "timestamp": 5.839,
+    "phase": "exit",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "X",
+    "runtime_conf": 0.88,
+    "runtime_source": "static_head",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 5.756,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8805
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 142,
+    "timestamp": 5.923,
+    "phase": "exit",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "X",
+    "runtime_conf": 0.84,
+    "runtime_source": "static_head",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 5.756,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8805
+      ],
+      [
+        "X",
+        0.8448
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "vote_counts": {
+      "X": 10
+    }
+  },
+  {
+    "frame_index": 144,
+    "timestamp": 6.006,
+    "phase": "exit",
+    "geom_status": "MATCH",
+    "geom_letter": "P",
+    "geom_conf": 0.95,
+    "geom_reason": "Chữ P (chúc xuống (VSL toàn quốc)): trỏ & giữa chúc xuống d_IW=2.18, idx_tip_y=1.00>=0.6, ang_IM=21.4°",
+    "runtime_sign": "P",
+    "runtime_conf": 0.95,
+    "runtime_source": "geometric_rule",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 5.756,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8805
+      ],
+      [
+        "X",
+        0.8448
+      ],
+      [
+        "P",
+        0.95
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "P"
+    ],
+    "vote_counts": {
+      "X": 9,
+      "P": 1
+    }
+  },
+  {
+    "frame_index": 146,
+    "timestamp": 6.089,
+    "phase": "exit",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "NEUTRAL",
+    "runtime_conf": 0.0,
+    "runtime_source": "none",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 5.756,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8805
+      ],
+      [
+        "X",
+        0.8448
+      ],
+      [
+        "P",
+        0.95
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "P"
+    ],
+    "vote_counts": {
+      "X": 8,
+      "P": 1
+    }
+  },
+  {
+    "frame_index": 148,
+    "timestamp": 6.173,
+    "phase": "exit",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "NEUTRAL",
+    "runtime_conf": 0.0,
+    "runtime_source": "none",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 5.756,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8805
+      ],
+      [
+        "X",
+        0.8448
+      ],
+      [
+        "P",
+        0.95
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "P"
+    ],
+    "vote_counts": {
+      "X": 7,
+      "P": 1
+    }
+  },
+  {
+    "frame_index": 150,
+    "timestamp": 6.256,
+    "phase": "exit",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "NEUTRAL",
+    "runtime_conf": 0.0,
+    "runtime_source": "none",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 5.756,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8805
+      ],
+      [
+        "X",
+        0.8448
+      ],
+      [
+        "P",
+        0.95
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "P"
+    ],
+    "vote_counts": {
+      "X": 6,
+      "P": 1
+    }
+  },
+  {
+    "frame_index": 152,
+    "timestamp": 6.34,
+    "phase": "exit",
+    "geom_status": "NO_MATCH",
+    "geom_letter": "UNKNOWN",
+    "geom_conf": 0.0,
+    "geom_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "runtime_sign": "NEUTRAL",
+    "runtime_conf": 0.0,
+    "runtime_source": "none",
+    "runtime_confirmed": false,
+    "runtime_new_token": null,
+    "last_confirmed_sign": "X",
+    "last_confirmed_time": 5.756,
+    "history_after": [
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.95
+      ],
+      [
+        "X",
+        0.8805
+      ],
+      [
+        "X",
+        0.8448
+      ],
+      [
+        "P",
+        0.95
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ],
+      [
+        "NEUTRAL",
+        0.0
+      ]
+    ],
+    "recent_signs": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X",
+      "P"
+    ],
+    "vote_counts": {
+      "X": 5,
+      "P": 1
+    }
+  }
+]

@@ -12,6 +12,7 @@ Kiểm thử các trường hợp:
 
 import os
 import json
+# pyrefly: ignore[missing-import]
 import pytest
 import tempfile
 from backend.training.extract_video_landmarks import (

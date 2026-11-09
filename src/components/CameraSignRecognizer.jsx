@@ -10,6 +10,7 @@ import {
   clearCurrentSentence,
   speakVietnamese
 } from '../services/api';
+import PilotTestingHUD from './PilotTestingHUD';
 
 // Bảng ánh xạ phát âm TTS chuẩn cho từng chữ số (chỉ đọc tên số, không có tiền tố "số")
 const DIGIT_TTS_MAP = {
@@ -136,6 +137,17 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
   useEffect(() => {
     recognitionModeRef.current = recognitionMode;
   }, [recognitionMode]);
+
+  // Controlled Webcam Pilot State (Task 7F.5B / Task 11.2.2)
+  const [showPilotHUD, setShowPilotHUD] = useState(false);
+  const pilotMetadataProviderRef = useRef(null);
+  const onPilotFrameResultRef = useRef(null);
+  const [latestPilotResult, setLatestPilotResult] = useState(null);
+
+  const handlePilotMetadataUpdate = ({ getFrameMetadata, onFrameResult }) => {
+    pilotMetadataProviderRef.current = getFrameMetadata;
+    onPilotFrameResultRef.current = onFrameResult;
+  };
 
   // Danh mục cử chỉ mẫu để test nhanh mô phỏng
   const SAMPLE_GESTURES = [
@@ -752,6 +764,17 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
             }
             if (resp && resp.success && resp.data) {
               const data = resp.data;
+              setLatestPilotResult(data);
+              if (onPilotFrameResultRef.current) {
+                try {
+                onPilotFrameResultRef.current(data, pilotMeta, {
+                  backendError: Boolean(resp.backend_error),
+                  backendErrorMessage: resp.error || null,
+                });
+                } catch (e) {
+                  // Ignore pilot subscriber errors
+                }
+              }
               setCurrentResult({
                 sign: data.sign,
                 label: data.label,
@@ -801,33 +824,73 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
 
     // 3. CHẾ ĐỘ 2: ĐÁNH VẦN CHỮ CÁI TỨC THÌ (<5ms)
     else if (currentRecognitionMode === 'instant') {
-      if (!hasHands) return;
+      if (!hasHands && !pilotMetadataProviderRef.current) return;
 
       if (!isInferringRef.current) {
         isInferringRef.current = true;
         const currentGen = requestGenRef.current;
         const requestMode = currentConversionMode;
         const primary = rightHand || leftHand;
-        const rawPrimary = primary.map(lm => [lm.x, lm.y, lm.z]);
+        const rawPrimary = primary ? primary.map(lm => [lm.x, lm.y, lm.z]) : [];
         const multiHands = [];
         if (rightHand) multiHands.push({ handedness: 'Right', landmarks: rightHand.map(l => [l.x, l.y, l.z]) });
         if (leftHand) multiHands.push({ handedness: 'Left', landmarks: leftHand.map(l => [l.x, l.y, l.z]) });
 
-        sendLandmarksForRecognition(rawPrimary, multiHands, 'Right', requestMode)
+        let pilotMeta = null;
+        const reqSendTs = performance.now() / 1000;
+        if (pilotMetadataProviderRef.current) {
+          try {
+            pilotMeta = pilotMetadataProviderRef.current();
+            if (pilotMeta) {
+              pilotMeta.request_send_ts = reqSendTs;
+              if (videoRef.current) {
+                pilotMeta.image_width = videoRef.current.videoWidth || 640;
+                pilotMeta.image_height = videoRef.current.videoHeight || 480;
+                pilotMeta.video_pts_sec = Number.isFinite(videoRef.current.currentTime)
+                  ? Number(videoRef.current.currentTime.toFixed(4))
+                  : 'UNKNOWN';
+                pilotMeta.video_frame_idx = pilotMeta.frame_idx;
+              }
+            }
+          } catch (e) {
+            pilotMeta = null;
+          }
+        }
+
+        if (!hasHands && !pilotMeta) {
+          isInferringRef.current = false;
+          return;
+        }
+
+        sendLandmarksForRecognition(rawPrimary, multiHands, 'Right', requestMode, pilotMeta)
           .then((resp) => {
             if (currentGen !== requestGenRef.current || conversionModeRef.current !== requestMode) {
+              if (pilotMeta && onPilotFrameResultRef.current) {
+                onPilotFrameResultRef.current({}, pilotMeta, {
+                  backendError: true,
+                  backendErrorMessage: 'Recognition response became stale during the pilot trial',
+                });
+              }
               return; // Bỏ qua response stale khi mode đã chuyển sang mode khác
             }
             if (resp && resp.success && resp.data) {
               const data = resp.data;
+              setLatestPilotResult(data);
+              if (onPilotFrameResultRef.current) {
+                try {
+                  onPilotFrameResultRef.current(data, pilotMeta);
+                } catch (e) {
+                  // Ignore pilot subscriber errors
+                }
+              }
 
               // Chốt chặn bảo vệ UI:
               // Nếu đang ở mode 'digits' mà kết quả không phải chữ số (0-9, số nhiều chữ số, hoặc NEUTRAL) -> bỏ qua
               if (requestMode === 'digits' && data.sign !== 'NEUTRAL' && !/^[0-9]+$/.test(data.sign)) {
                 return;
               }
-              // Nếu đang ở mode 'letters' mà kết quả là chữ số -> bỏ qua
-              if (requestMode === 'letters' && /^[0-9]+$/.test(data.sign)) {
+              // Nếu đang ở mode 'letters': chỉ cho phép 29 chữ cái tiếng Việt chuẩn VSL (A..Y, Ă, Â, Đ, Ê, Ô, Ơ, Ư; không có F, J, W, Z) hoặc NEUTRAL
+              if (requestMode === 'letters' && data.sign !== 'NEUTRAL' && !/^[A-EG-IK-VXYĂÂĐÊÔƠƯ]$/u.test(data.sign)) {
                 return;
               }
 
@@ -842,6 +905,9 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
               });
 
               if (data.confirmed && data.new_token && data.sign !== 'NEUTRAL') {
+                if (requestMode === 'letters' && !/^[A-EG-IK-VXYĂÂĐÊÔƠƯ]$/u.test(data.sign)) {
+                  return;
+                }
                 // Loại bỏ hoàn toàn tiền tố "Số " nếu kết quả là chữ số
                 const cleanToken = (requestMode === 'digits' && typeof data.new_token === 'string')
                   ? data.new_token.replace(/^Số\s*/, '')
@@ -1095,6 +1161,16 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
 
         </div>
 
+        {/* GIAO DIỆN KIỂM THỬ CONTROLLED WEBCAM PILOT HUD (TASK 7F.5B / TASK 11.2.2 / TASK 3.10) */}
+        <PilotTestingHUD
+          isActive={showPilotHUD}
+          onToggleActive={() => setShowPilotHUD(prev => !prev)}
+          onMetadataUpdate={handlePilotMetadataUpdate}
+          cameraActive={cameraActive}
+          latestRecognition={latestPilotResult}
+          videoElementRef={videoRef}
+        />
+
         {/* Khung hiển thị Video & Canvas */}
         <div
           ref={containerRef}
@@ -1299,7 +1375,7 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
         <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>
-              {conversionMode === 'letters' ? '🔤 Chữ cái VSL (A–Z)' : conversionMode === 'digits' ? '🔢 Chữ số VSL' : conversionMode === 'words' ? '📖 Từ vựng (102 Từ)' : conversionMode === 'sentence' ? '💬 Ghép câu ngữ cảnh' : '🔤 Chữ cái & Số'}
+              {conversionMode === 'letters' ? '🔤 Chữ cái VSL (29 Chữ)' : conversionMode === 'digits' ? '🔢 Chữ số VSL' : conversionMode === 'words' ? '📖 Từ vựng (102 Từ)' : conversionMode === 'sentence' ? '💬 Ghép câu ngữ cảnh' : '🔤 Chữ cái & Số'}
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
               <span className={`badge ${conversionMode === 'letters' || conversionMode === 'digits' || conversionMode === 'letters_numbers' ? 'badge-emerald' : conversionMode === 'words' ? 'badge-indigo' : 'badge-cyan'}`} style={{ fontSize: '11px' }}>

@@ -1,0 +1,237 @@
+{
+  "session_id": "pilot_short_20261107_213344",
+  "log_path": "D:\\SIGN_LANGUAGE\\backend\\data\\diagnostics\\pilot_pilot_short_20261107_213344.jsonl",
+  "total_records": 60,
+  "trial_summaries": [
+    {
+      "trial_id": "pilot_short_20261107_213344_A_rep01_att01",
+      "letter": "A",
+      "rep": 1,
+      "frames_sent": 10,
+      "final_sign": "A",
+      "confidence": 0.95,
+      "confirmed": false,
+      "source": "geometric_rule"
+    },
+    {
+      "trial_id": "pilot_short_20261107_213344_A_rep02_att01",
+      "letter": "A",
+      "rep": 2,
+      "frames_sent": 10,
+      "final_sign": "A",
+      "confidence": 0.95,
+      "confirmed": false,
+      "source": "geometric_rule"
+    },
+    {
+      "trial_id": "pilot_short_20261107_213344_M_rep01_att01",
+      "letter": "M",
+      "rep": 1,
+      "frames_sent": 10,
+      "final_sign": "M",
+      "confidence": 0.9,
+      "confirmed": false,
+      "source": "static_head"
+    },
+    {
+      "trial_id": "pilot_short_20261107_213344_M_rep02_att01",
+      "letter": "M",
+      "rep": 2,
+      "frames_sent": 10,
+      "final_sign": "N",
+      "confidence": 0.87,
+      "confirmed": false,
+      "source": "static_head"
+    },
+    {
+      "trial_id": "pilot_short_20261107_213344_N_rep01_att01",
+      "letter": "N",
+      "rep": 1,
+      "frames_sent": 10,
+      "final_sign": "NEUTRAL",
+      "confidence": 0.0,
+      "confirmed": false,
+      "source": "none"
+    },
+    {
+      "trial_id": "pilot_short_20261107_213344_N_rep02_att01",
+      "letter": "N",
+      "rep": 2,
+      "frames_sent": 10,
+      "final_sign": "NEUTRAL",
+      "confidence": 0.0,
+      "confirmed": false,
+      "source": "none"
+    }
+  ],
+  "stats_by_trial": {
+    "pilot_short_20261107_213344_A_rep01_att01": {
+      "letter": "A",
+      "frame_count": 10,
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "is_monotonic": true,
+      "sources": [
+        "geometric_rule"
+      ],
+      "gatings": [
+        "passed_geometric"
+      ],
+      "dominant_sign": "A",
+      "avg_conf": 0.95,
+      "has_static_head_all": true,
+      "load_status": "loaded",
+      "pytorch_version": "2.2.2+cpu"
+    },
+    "pilot_short_20261107_213344_A_rep02_att01": {
+      "letter": "A",
+      "frame_count": 10,
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "is_monotonic": true,
+      "sources": [
+        "geometric_rule"
+      ],
+      "gatings": [
+        "passed_geometric"
+      ],
+      "dominant_sign": "A",
+      "avg_conf": 0.95,
+      "has_static_head_all": true,
+      "load_status": "loaded",
+      "pytorch_version": "2.2.2+cpu"
+    },
+    "pilot_short_20261107_213344_M_rep01_att01": {
+      "letter": "M",
+      "frame_count": 10,
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "is_monotonic": true,
+      "sources": [
+        "static_head"
+      ],
+      "gatings": [
+        "passed_supplemental"
+      ],
+      "dominant_sign": "M",
+      "avg_conf": 0.902,
+      "has_static_head_all": true,
+      "load_status": "loaded",
+      "pytorch_version": "2.2.2+cpu"
+    },
+    "pilot_short_20261107_213344_M_rep02_att01": {
+      "letter": "M",
+      "frame_count": 10,
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "is_monotonic": true,
+      "sources": [
+        "static_head"
+      ],
+      "gatings": [
+        "passed_supplemental"
+      ],
+      "dominant_sign": "N",
+      "avg_conf": 0.875,
+      "has_static_head_all": true,
+      "load_status": "loaded",
+      "pytorch_version": "2.2.2+cpu"
+    },
+    "pilot_short_20261107_213344_N_rep01_att01": {
+      "letter": "N",
+      "frame_count": 10,
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "is_monotonic": true,
+      "sources": [
+        "none"
+      ],
+      "gatings": [
+        "rejected"
+      ],
+      "dominant_sign": "NEUTRAL",
+      "avg_conf": 0.0,
+      "has_static_head_all": true,
+      "load_status": "loaded",
+      "pytorch_version": "2.2.2+cpu"
+    },
+    "pilot_short_20261107_213344_N_rep02_att01": {
+      "letter": "N",
+      "frame_count": 10,
+      "frame_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "is_monotonic": true,
+      "sources": [
+        "none"
+      ],
+      "gatings": [
+        "rejected"
+      ],
+      "dominant_sign": "NEUTRAL",
+      "avg_conf": 0.0,
+      "has_static_head_all": true,
+      "load_status": "loaded",
+      "pytorch_version": "2.2.2+cpu"
+    }
+  }
+}

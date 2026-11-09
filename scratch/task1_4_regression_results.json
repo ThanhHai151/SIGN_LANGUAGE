@@ -1,0 +1,389 @@
+[
+  {
+    "letter": "A",
+    "status": "Found (23 frames)",
+    "total": 23,
+    "p_count": 0,
+    "expected_count": 17,
+    "neutral_count": 6,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 6,
+      "A": 17
+    }
+  },
+  {
+    "letter": "Ă",
+    "status": "NOT TESTED (No fixture)",
+    "total": 0,
+    "p_count": 0,
+    "expected_count": 0,
+    "neutral_count": 0,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {}
+  },
+  {
+    "letter": "Â",
+    "status": "NOT TESTED (No fixture)",
+    "total": 0,
+    "p_count": 0,
+    "expected_count": 0,
+    "neutral_count": 0,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {}
+  },
+  {
+    "letter": "B",
+    "status": "Found (22 frames)",
+    "total": 22,
+    "p_count": 0,
+    "expected_count": 13,
+    "neutral_count": 9,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 9,
+      "B": 13
+    }
+  },
+  {
+    "letter": "C",
+    "status": "Found (20 frames)",
+    "total": 20,
+    "p_count": 0,
+    "expected_count": 12,
+    "neutral_count": 8,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 8,
+      "C": 12
+    }
+  },
+  {
+    "letter": "D",
+    "status": "Found (22 frames)",
+    "total": 22,
+    "p_count": 0,
+    "expected_count": 15,
+    "neutral_count": 7,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 7,
+      "D": 15
+    }
+  },
+  {
+    "letter": "Đ",
+    "status": "NOT TESTED (No fixture)",
+    "total": 0,
+    "p_count": 0,
+    "expected_count": 0,
+    "neutral_count": 0,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {}
+  },
+  {
+    "letter": "E",
+    "status": "Found (20 frames)",
+    "total": 20,
+    "p_count": 0,
+    "expected_count": 13,
+    "neutral_count": 7,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 7,
+      "E": 13
+    }
+  },
+  {
+    "letter": "Ê",
+    "status": "NOT TESTED (No fixture)",
+    "total": 0,
+    "p_count": 0,
+    "expected_count": 0,
+    "neutral_count": 0,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {}
+  },
+  {
+    "letter": "G",
+    "status": "Found (44 frames)",
+    "total": 44,
+    "p_count": 0,
+    "expected_count": 15,
+    "neutral_count": 27,
+    "conflict_count": 0,
+    "other_count": 2,
+    "details": {
+      "UNKNOWN": 27,
+      "G": 15,
+      "Q": 2
+    }
+  },
+  {
+    "letter": "H",
+    "status": "Found (22 frames)",
+    "total": 22,
+    "p_count": 0,
+    "expected_count": 12,
+    "neutral_count": 10,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 10,
+      "H": 12
+    }
+  },
+  {
+    "letter": "I",
+    "status": "Found (21 frames)",
+    "total": 21,
+    "p_count": 0,
+    "expected_count": 14,
+    "neutral_count": 7,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 7,
+      "I": 14
+    }
+  },
+  {
+    "letter": "K",
+    "status": "Found (19 frames)",
+    "total": 19,
+    "p_count": 0,
+    "expected_count": 13,
+    "neutral_count": 6,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 6,
+      "K": 13
+    }
+  },
+  {
+    "letter": "L",
+    "status": "Found (20 frames)",
+    "total": 20,
+    "p_count": 0,
+    "expected_count": 13,
+    "neutral_count": 7,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 7,
+      "L": 13
+    }
+  },
+  {
+    "letter": "M",
+    "status": "Found (19 frames)",
+    "total": 19,
+    "p_count": 0,
+    "expected_count": 0,
+    "neutral_count": 19,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 19
+    }
+  },
+  {
+    "letter": "N",
+    "status": "Found (25 frames)",
+    "total": 25,
+    "p_count": 0,
+    "expected_count": 0,
+    "neutral_count": 25,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 25
+    }
+  },
+  {
+    "letter": "O",
+    "status": "Found (20 frames)",
+    "total": 20,
+    "p_count": 0,
+    "expected_count": 12,
+    "neutral_count": 8,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 8,
+      "O": 12
+    }
+  },
+  {
+    "letter": "Ô",
+    "status": "NOT TESTED (No fixture)",
+    "total": 0,
+    "p_count": 0,
+    "expected_count": 0,
+    "neutral_count": 0,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {}
+  },
+  {
+    "letter": "Ơ",
+    "status": "NOT TESTED (No fixture)",
+    "total": 0,
+    "p_count": 0,
+    "expected_count": 0,
+    "neutral_count": 0,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {}
+  },
+  {
+    "letter": "P",
+    "status": "Found (23 frames)",
+    "total": 23,
+    "p_count": 0,
+    "expected_count": 14,
+    "neutral_count": 8,
+    "conflict_count": 0,
+    "other_count": 1,
+    "details": {
+      "UNKNOWN": 8,
+      "L": 1,
+      "P": 14
+    }
+  },
+  {
+    "letter": "Q",
+    "status": "Found (19 frames)",
+    "total": 19,
+    "p_count": 0,
+    "expected_count": 14,
+    "neutral_count": 5,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "Q": 14,
+      "UNKNOWN": 5
+    }
+  },
+  {
+    "letter": "R",
+    "status": "Found (16 frames)",
+    "total": 16,
+    "p_count": 0,
+    "expected_count": 6,
+    "neutral_count": 10,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 10,
+      "R": 6
+    }
+  },
+  {
+    "letter": "S",
+    "status": "Found (16 frames)",
+    "total": 16,
+    "p_count": 0,
+    "expected_count": 11,
+    "neutral_count": 4,
+    "conflict_count": 0,
+    "other_count": 1,
+    "details": {
+      "Q": 1,
+      "UNKNOWN": 4,
+      "S": 11
+    }
+  },
+  {
+    "letter": "T",
+    "status": "Found (23 frames)",
+    "total": 23,
+    "p_count": 0,
+    "expected_count": 14,
+    "neutral_count": 9,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 9,
+      "T": 14
+    }
+  },
+  {
+    "letter": "U",
+    "status": "Found (19 frames)",
+    "total": 19,
+    "p_count": 0,
+    "expected_count": 14,
+    "neutral_count": 5,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 5,
+      "U": 14
+    }
+  },
+  {
+    "letter": "Ư",
+    "status": "NOT TESTED (No fixture)",
+    "total": 0,
+    "p_count": 0,
+    "expected_count": 0,
+    "neutral_count": 0,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {}
+  },
+  {
+    "letter": "V",
+    "status": "Found (19 frames)",
+    "total": 19,
+    "p_count": 0,
+    "expected_count": 14,
+    "neutral_count": 5,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 5,
+      "V": 14
+    }
+  },
+  {
+    "letter": "X",
+    "status": "Found (48 frames)",
+    "total": 48,
+    "p_count": 1,
+    "expected_count": 25,
+    "neutral_count": 22,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 22,
+      "X": 25,
+      "P": 1
+    }
+  },
+  {
+    "letter": "Y",
+    "status": "Found (17 frames)",
+    "total": 17,
+    "p_count": 0,
+    "expected_count": 11,
+    "neutral_count": 6,
+    "conflict_count": 0,
+    "other_count": 0,
+    "details": {
+      "UNKNOWN": 6,
+      "Y": 11
+    }
+  }
+]

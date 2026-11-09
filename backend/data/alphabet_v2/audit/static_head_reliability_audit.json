@@ -1,0 +1,547 @@
+{
+  "audit_task": "TASK 6B.1 - KIỂM TOÁN ĐỘ TIN CẬY KẾT QUẢ HUẤN LUYỆN VSLStaticAlphabetHead",
+  "date": "2026-10-30",
+  "status_classifications": {
+    "dataset_split_method": "VERIFIED",
+    "table_data_source": "VERIFIED",
+    "data_leakage_risk": "WARNING",
+    "single_signer_generalization": "WARNING",
+    "checkpoint_integrity": "VERIFIED",
+    "letter_q_reliability": "WARNING",
+    "integration_readiness": "NEEDS DATA VALIDATION"
+  },
+  "report_discrepancy": {
+    "reported_table_source": "TOÀN BỘ 551 MẪU (train + holdout kết hợp), KHÔNG PHẢI chỉ 102 mẫu holdout.",
+    "evidence": "Số mẫu trong bảng Task 6B trùng khớp 100% với n_samples của toàn bộ 551 mẫu (G=29, M=19, N=21, Q=19).",
+    "holdout_accuracy_reported": 84.31,
+    "holdout_accuracy_actual": 84.31,
+    "holdout_correct_count": 86,
+    "holdout_total_count": 102,
+    "train_accuracy_actual": 93.32,
+    "all_accuracy_actual": 91.65
+  },
+  "leakage_summary": {
+    "total_val_samples": 102,
+    "adjacent_frames_count": 101,
+    "adjacent_frames_pct": 99.02,
+    "assessment": "WARNING: Do chia frame ngẫu nhiên (frame-level split) từ 1 video duy nhất cho mỗi chữ, 100% các mẫu holdout đều có frame liền kề trong tập train (khoảng cách frame_index <= 2 đến 4). Điều này gây rò rỉ thông tin tạm thời (temporal data leakage), dẫn đến Holdout Acc 84.31% là con số lạc quan nội bộ (within-signer)."
+  },
+  "per_class_holdout": {
+    "A": {
+      "class_idx": 0,
+      "train_samples": 52,
+      "holdout_samples": 12,
+      "total_samples": 64,
+      "tp": 12,
+      "fn": 0,
+      "fp": 1,
+      "recall_pct": 100.0,
+      "precision_pct": 92.31,
+      "f1_pct": 96.0,
+      "mean_confidence": 0.9685,
+      "mean_correct_conf": 0.9685,
+      "mean_wrong_conf": null,
+      "confused_to": {},
+      "confused_from": {
+        "B": 1
+      },
+      "is_missing_10": false,
+      "is_rule_12": true
+    },
+    "B": {
+      "class_idx": 1,
+      "train_samples": 18,
+      "holdout_samples": 4,
+      "total_samples": 22,
+      "tp": 3,
+      "fn": 1,
+      "fp": 0,
+      "recall_pct": 75.0,
+      "precision_pct": 100.0,
+      "f1_pct": 85.71,
+      "mean_confidence": 0.7391,
+      "mean_correct_conf": 0.935,
+      "mean_wrong_conf": 0.1514,
+      "confused_to": {
+        "A": 1
+      },
+      "confused_from": {},
+      "is_missing_10": false,
+      "is_rule_12": true
+    },
+    "C": {
+      "class_idx": 2,
+      "train_samples": 16,
+      "holdout_samples": 4,
+      "total_samples": 20,
+      "tp": 4,
+      "fn": 0,
+      "fp": 3,
+      "recall_pct": 100.0,
+      "precision_pct": 57.14,
+      "f1_pct": 72.72,
+      "mean_confidence": 0.9168,
+      "mean_correct_conf": 0.9168,
+      "mean_wrong_conf": null,
+      "confused_to": {},
+      "confused_from": {
+        "D": 1,
+        "K": 1,
+        "T": 1
+      },
+      "is_missing_10": false,
+      "is_rule_12": true
+    },
+    "D": {
+      "class_idx": 3,
+      "train_samples": 37,
+      "holdout_samples": 9,
+      "total_samples": 46,
+      "tp": 8,
+      "fn": 1,
+      "fp": 0,
+      "recall_pct": 88.89,
+      "precision_pct": 100.0,
+      "f1_pct": 94.12,
+      "mean_confidence": 0.8834,
+      "mean_correct_conf": 0.97,
+      "mean_wrong_conf": 0.1907,
+      "confused_to": {
+        "C": 1
+      },
+      "confused_from": {},
+      "is_missing_10": false,
+      "is_rule_12": true
+    },
+    "E": {
+      "class_idx": 4,
+      "train_samples": 28,
+      "holdout_samples": 7,
+      "total_samples": 35,
+      "tp": 6,
+      "fn": 1,
+      "fp": 1,
+      "recall_pct": 85.71,
+      "precision_pct": 85.71,
+      "f1_pct": 85.71,
+      "mean_confidence": 0.8805,
+      "mean_correct_conf": 0.9355,
+      "mean_wrong_conf": 0.5509,
+      "confused_to": {
+        "I": 1
+      },
+      "confused_from": {
+        "Y": 1
+      },
+      "is_missing_10": false,
+      "is_rule_12": true
+    },
+    "G": {
+      "class_idx": 5,
+      "train_samples": 24,
+      "holdout_samples": 5,
+      "total_samples": 29,
+      "tp": 4,
+      "fn": 1,
+      "fp": 1,
+      "recall_pct": 80.0,
+      "precision_pct": 80.0,
+      "f1_pct": 80.0,
+      "mean_confidence": 0.7787,
+      "mean_correct_conf": 0.8441,
+      "mean_wrong_conf": 0.5174,
+      "confused_to": {
+        "Q": 1
+      },
+      "confused_from": {
+        "K": 1
+      },
+      "is_missing_10": true,
+      "is_rule_12": false
+    },
+    "H": {
+      "class_idx": 6,
+      "train_samples": 15,
+      "holdout_samples": 3,
+      "total_samples": 18,
+      "tp": 2,
+      "fn": 1,
+      "fp": 0,
+      "recall_pct": 66.67,
+      "precision_pct": 100.0,
+      "f1_pct": 80.0,
+      "mean_confidence": 0.8747,
+      "mean_correct_conf": 0.9702,
+      "mean_wrong_conf": 0.6839,
+      "confused_to": {
+        "I": 1
+      },
+      "confused_from": {},
+      "is_missing_10": true,
+      "is_rule_12": false
+    },
+    "I": {
+      "class_idx": 7,
+      "train_samples": 15,
+      "holdout_samples": 3,
+      "total_samples": 18,
+      "tp": 3,
+      "fn": 0,
+      "fp": 3,
+      "recall_pct": 100.0,
+      "precision_pct": 50.0,
+      "f1_pct": 66.67,
+      "mean_confidence": 0.8467,
+      "mean_correct_conf": 0.8467,
+      "mean_wrong_conf": null,
+      "confused_to": {},
+      "confused_from": {
+        "E": 1,
+        "H": 1,
+        "R": 1
+      },
+      "is_missing_10": false,
+      "is_rule_12": true
+    },
+    "K": {
+      "class_idx": 8,
+      "train_samples": 14,
+      "holdout_samples": 3,
+      "total_samples": 17,
+      "tp": 1,
+      "fn": 2,
+      "fp": 0,
+      "recall_pct": 33.33,
+      "precision_pct": 100.0,
+      "f1_pct": 50.0,
+      "mean_confidence": 0.603,
+      "mean_correct_conf": 0.9548,
+      "mean_wrong_conf": 0.4272,
+      "confused_to": {
+        "C": 1,
+        "G": 1
+      },
+      "confused_from": {},
+      "is_missing_10": true,
+      "is_rule_12": false
+    },
+    "L": {
+      "class_idx": 9,
+      "train_samples": 13,
+      "holdout_samples": 3,
+      "total_samples": 16,
+      "tp": 3,
+      "fn": 0,
+      "fp": 1,
+      "recall_pct": 100.0,
+      "precision_pct": 75.0,
+      "f1_pct": 85.71,
+      "mean_confidence": 0.9324,
+      "mean_correct_conf": 0.9324,
+      "mean_wrong_conf": null,
+      "confused_to": {},
+      "confused_from": {
+        "U": 1
+      },
+      "is_missing_10": false,
+      "is_rule_12": true
+    },
+    "M": {
+      "class_idx": 10,
+      "train_samples": 16,
+      "holdout_samples": 3,
+      "total_samples": 19,
+      "tp": 3,
+      "fn": 0,
+      "fp": 2,
+      "recall_pct": 100.0,
+      "precision_pct": 60.0,
+      "f1_pct": 75.0,
+      "mean_confidence": 0.803,
+      "mean_correct_conf": 0.803,
+      "mean_wrong_conf": null,
+      "confused_to": {},
+      "confused_from": {
+        "N": 2
+      },
+      "is_missing_10": true,
+      "is_rule_12": false
+    },
+    "N": {
+      "class_idx": 11,
+      "train_samples": 17,
+      "holdout_samples": 4,
+      "total_samples": 21,
+      "tp": 2,
+      "fn": 2,
+      "fp": 0,
+      "recall_pct": 50.0,
+      "precision_pct": 100.0,
+      "f1_pct": 66.67,
+      "mean_confidence": 0.6189,
+      "mean_correct_conf": 0.6086,
+      "mean_wrong_conf": 0.6292,
+      "confused_to": {
+        "M": 2
+      },
+      "confused_from": {},
+      "is_missing_10": true,
+      "is_rule_12": false
+    },
+    "O": {
+      "class_idx": 12,
+      "train_samples": 39,
+      "holdout_samples": 9,
+      "total_samples": 48,
+      "tp": 9,
+      "fn": 0,
+      "fp": 0,
+      "recall_pct": 100.0,
+      "precision_pct": 100.0,
+      "f1_pct": 100.0,
+      "mean_confidence": 0.9654,
+      "mean_correct_conf": 0.9654,
+      "mean_wrong_conf": null,
+      "confused_to": {},
+      "confused_from": {},
+      "is_missing_10": false,
+      "is_rule_12": true
+    },
+    "P": {
+      "class_idx": 13,
+      "train_samples": 16,
+      "holdout_samples": 4,
+      "total_samples": 20,
+      "tp": 3,
+      "fn": 1,
+      "fp": 0,
+      "recall_pct": 75.0,
+      "precision_pct": 100.0,
+      "f1_pct": 85.71,
+      "mean_confidence": 0.8,
+      "mean_correct_conf": 0.9376,
+      "mean_wrong_conf": 0.3871,
+      "confused_to": {
+        "Q": 1
+      },
+      "confused_from": {},
+      "is_missing_10": true,
+      "is_rule_12": false
+    },
+    "Q": {
+      "class_idx": 14,
+      "train_samples": 16,
+      "holdout_samples": 3,
+      "total_samples": 19,
+      "tp": 1,
+      "fn": 2,
+      "fp": 2,
+      "recall_pct": 33.33,
+      "precision_pct": 33.33,
+      "f1_pct": 33.33,
+      "mean_confidence": 0.6417,
+      "mean_correct_conf": 0.8694,
+      "mean_wrong_conf": 0.5279,
+      "confused_to": {
+        "X": 2
+      },
+      "confused_from": {
+        "G": 1,
+        "P": 1
+      },
+      "is_missing_10": true,
+      "is_rule_12": false
+    },
+    "R": {
+      "class_idx": 15,
+      "train_samples": 12,
+      "holdout_samples": 2,
+      "total_samples": 14,
+      "tp": 1,
+      "fn": 1,
+      "fp": 0,
+      "recall_pct": 50.0,
+      "precision_pct": 100.0,
+      "f1_pct": 66.67,
+      "mean_confidence": 0.5202,
+      "mean_correct_conf": 0.8771,
+      "mean_wrong_conf": 0.1633,
+      "confused_to": {
+        "I": 1
+      },
+      "confused_from": {},
+      "is_missing_10": true,
+      "is_rule_12": false
+    },
+    "S": {
+      "class_idx": 16,
+      "train_samples": 12,
+      "holdout_samples": 3,
+      "total_samples": 15,
+      "tp": 3,
+      "fn": 0,
+      "fp": 0,
+      "recall_pct": 100.0,
+      "precision_pct": 100.0,
+      "f1_pct": 100.0,
+      "mean_confidence": 0.9061,
+      "mean_correct_conf": 0.9061,
+      "mean_wrong_conf": null,
+      "confused_to": {},
+      "confused_from": {},
+      "is_missing_10": false,
+      "is_rule_12": true
+    },
+    "T": {
+      "class_idx": 17,
+      "train_samples": 16,
+      "holdout_samples": 4,
+      "total_samples": 20,
+      "tp": 3,
+      "fn": 1,
+      "fp": 0,
+      "recall_pct": 75.0,
+      "precision_pct": 100.0,
+      "f1_pct": 85.71,
+      "mean_confidence": 0.7716,
+      "mean_correct_conf": 0.963,
+      "mean_wrong_conf": 0.1975,
+      "confused_to": {
+        "C": 1
+      },
+      "confused_from": {},
+      "is_missing_10": false,
+      "is_rule_12": true
+    },
+    "U": {
+      "class_idx": 18,
+      "train_samples": 26,
+      "holdout_samples": 6,
+      "total_samples": 32,
+      "tp": 5,
+      "fn": 1,
+      "fp": 0,
+      "recall_pct": 83.33,
+      "precision_pct": 100.0,
+      "f1_pct": 90.91,
+      "mean_confidence": 0.7793,
+      "mean_correct_conf": 0.8765,
+      "mean_wrong_conf": 0.2933,
+      "confused_to": {
+        "L": 1
+      },
+      "confused_from": {},
+      "is_missing_10": true,
+      "is_rule_12": false
+    },
+    "V": {
+      "class_idx": 19,
+      "train_samples": 14,
+      "holdout_samples": 3,
+      "total_samples": 17,
+      "tp": 3,
+      "fn": 0,
+      "fp": 0,
+      "recall_pct": 100.0,
+      "precision_pct": 100.0,
+      "f1_pct": 100.0,
+      "mean_confidence": 0.8673,
+      "mean_correct_conf": 0.8673,
+      "mean_wrong_conf": null,
+      "confused_to": {},
+      "confused_from": {},
+      "is_missing_10": false,
+      "is_rule_12": true
+    },
+    "X": {
+      "class_idx": 20,
+      "train_samples": 20,
+      "holdout_samples": 5,
+      "total_samples": 25,
+      "tp": 5,
+      "fn": 0,
+      "fp": 2,
+      "recall_pct": 100.0,
+      "precision_pct": 71.43,
+      "f1_pct": 83.33,
+      "mean_confidence": 0.7143,
+      "mean_correct_conf": 0.7143,
+      "mean_wrong_conf": null,
+      "confused_to": {},
+      "confused_from": {
+        "Q": 2
+      },
+      "is_missing_10": true,
+      "is_rule_12": false
+    },
+    "Y": {
+      "class_idx": 21,
+      "train_samples": 13,
+      "holdout_samples": 3,
+      "total_samples": 16,
+      "tp": 2,
+      "fn": 1,
+      "fp": 0,
+      "recall_pct": 66.67,
+      "precision_pct": 100.0,
+      "f1_pct": 80.0,
+      "mean_confidence": 0.6729,
+      "mean_correct_conf": 0.9385,
+      "mean_wrong_conf": 0.1416,
+      "confused_to": {
+        "E": 1
+      },
+      "confused_from": {},
+      "is_missing_10": false,
+      "is_rule_12": true
+    }
+  },
+  "q_letter_deep_dive": {
+    "holdout_count": 3,
+    "predictions": [
+      "X",
+      "X",
+      "Q"
+    ],
+    "confidences": [
+      0.5269,
+      0.529,
+      0.8694
+    ],
+    "misclassified_as_X": 2,
+    "X_holdout_count": 5,
+    "X_predictions": [
+      "X",
+      "X",
+      "X",
+      "X",
+      "X"
+    ],
+    "X_confidences": [
+      0.8736,
+      0.5736,
+      0.8933,
+      0.6569,
+      0.5743
+    ],
+    "X_misclassified_as_Q": 0,
+    "all_551_count": 19,
+    "all_551_misclassified_as_X": 5,
+    "all_551_correct": 12,
+    "all_551_accuracy_pct": 63.16
+  },
+  "integrity_check": {
+    "classes_match_labels_v2": false,
+    "input_dim_is_72": true,
+    "num_classes_is_22": true,
+    "feature_extractor_matches_runtime": true,
+    "weights_pt_sha256": "6965b4ffd9eed45c10317f0cc4eff453470ea4552c081f18ea997d74365907be",
+    "weights_pt_matches_report_6b": true,
+    "sstcn_sha256": "2a8ddcc4d06c4f23aa7910caf77371848034dcdf8f4749d134c5894764cf9697",
+    "sstcn_matches_report_6b": true,
+    "alphabet_static_head_sha256": "cab8123e23ed41a6088ba1c6e80a8aaaa9a382663418cc669eacff834795c254",
+    "alphabet_static_head_matches_report_6b": true
+  },
+  "final_verdict": "NEEDS DATA VALIDATION",
+  "final_verdict_reason": "Module VSLStaticAlphabetHead đạt chuẩn kỹ thuật về cấu trúc, không rò rỉ mã nguồn production, bảo toàn 100% checkpoint cũ. Tuy nhiên, kết quả Holdout 84.31% bị rò rỉ thông tin giữa các frame liền kề cùng một video, và chữ Q có độ tin cậy thấp (63.16% trên toàn bộ, dễ nhầm sang X). Cần bổ sung kiểm thử hoặc xác minh dữ liệu trước khi tích hợp production."
+}

@@ -1,0 +1,1880 @@
+{
+  "A": {
+    "letter": "A",
+    "total_samples": 64,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0489.mp4": 22,
+      "backend/data/media_cache/videos/D0490B.mp4": 19,
+      "backend/data/media_cache/videos/D0491B.mp4": 23
+    },
+    "video_count": 3,
+    "architecture_tier": "Tier 1 (Geom Rule) + Tier 2 (Gated Fallback)",
+    "has_geom_rule": true,
+    "has_static_fallback": true,
+    "has_supplemental": false,
+    "correct": 60,
+    "accuracy": 93.75,
+    "offline_category": "PASS",
+    "webcam_status": "UNSTABLE",
+    "webcam_evidence": "Cần fallback để đạt stable; nhạy cảm với góc camera và người ký mới",
+    "primary_recognition_source": "static_head_fallback",
+    "sources_breakdown": {
+      "static_head_fallback": 43,
+      "geometric_rule": 18,
+      "none": 3
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 3,
+      "O": 1
+    },
+    "geom_matches": {
+      "NO_MATCH": 46,
+      "A": 17,
+      "O": 1
+    },
+    "geom_match_rate": 26.56,
+    "head_raw_preds": {
+      "A": 62,
+      "L": 1,
+      "V": 1
+    },
+    "head_target_pred_rate": 96.88,
+    "head_confs_all": {
+      "mean": 0.926,
+      "min": 0.224,
+      "max": 0.974
+    },
+    "head_target_confs": {
+      "mean": 0.922,
+      "min": 0.138,
+      "max": 0.974
+    },
+    "geom_hijacked_count": 1,
+    "geom_hijacked_samples": [
+      {
+        "frame_idx": 49,
+        "video": "backend/data/media_cache/videos/D0491B.mp4",
+        "geom_letter": "O",
+        "geom_conf": 0.95,
+        "head_letter": "A",
+        "head_conf": 0.6362
+      }
+    ],
+    "gating_failures_count": 4,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 62,
+        "video": "backend/data/media_cache/videos/D0489.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "FALLBACK_LOW_CONF_0.47_LT_0.70",
+        "h_letter": "A",
+        "h_conf": 0.4672
+      },
+      {
+        "frame_idx": 64,
+        "video": "backend/data/media_cache/videos/D0489.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "FALLBACK_HEAD_PREDICTED_L",
+        "h_letter": "L",
+        "h_conf": 0.2241
+      },
+      {
+        "frame_idx": 66,
+        "video": "backend/data/media_cache/videos/D0489.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "FALLBACK_HEAD_PREDICTED_V",
+        "h_letter": "V",
+        "h_conf": 0.3346
+      },
+      {
+        "frame_idx": 49,
+        "video": "backend/data/media_cache/videos/D0491B.mp4",
+        "final_sign": "O",
+        "reason": "GEOM_HIJACKED_BY_O",
+        "h_letter": "A",
+        "h_conf": 0.6362
+      }
+    ]
+  },
+  "B": {
+    "letter": "B",
+    "total_samples": 22,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0492.mp4": 22
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 1 (Geometric Rule only)",
+    "has_geom_rule": true,
+    "has_static_fallback": false,
+    "has_supplemental": false,
+    "correct": 13,
+    "accuracy": 59.09,
+    "offline_category": "UNSTABLE",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; offline dao động 55-73%",
+    "primary_recognition_source": "geometric_rule",
+    "sources_breakdown": {
+      "none": 8,
+      "geometric_rule": 14
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 8,
+      "O": 1
+    },
+    "geom_matches": {
+      "NO_MATCH": 8,
+      "B": 13,
+      "O": 1
+    },
+    "geom_match_rate": 59.09,
+    "head_raw_preds": {
+      "B": 18,
+      "E": 1,
+      "I": 1,
+      "N": 1,
+      "A": 1
+    },
+    "head_target_pred_rate": 81.82,
+    "head_confs_all": {
+      "mean": 0.78,
+      "min": 0.151,
+      "max": 0.939
+    },
+    "head_target_confs": {
+      "mean": 0.749,
+      "min": 0.0,
+      "max": 0.939
+    },
+    "geom_hijacked_count": 1,
+    "geom_hijacked_samples": [
+      {
+        "frame_idx": 54,
+        "video": "backend/data/media_cache/videos/D0492.mp4",
+        "geom_letter": "O",
+        "geom_conf": 0.95,
+        "head_letter": "E",
+        "head_conf": 0.3074
+      }
+    ],
+    "gating_failures_count": 9,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 20,
+        "video": "backend/data/media_cache/videos/D0492.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "B",
+        "h_conf": 0.7788
+      },
+      {
+        "frame_idx": 22,
+        "video": "backend/data/media_cache/videos/D0492.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "B",
+        "h_conf": 0.7805
+      },
+      {
+        "frame_idx": 28,
+        "video": "backend/data/media_cache/videos/D0492.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "B",
+        "h_conf": 0.939
+      },
+      {
+        "frame_idx": 52,
+        "video": "backend/data/media_cache/videos/D0492.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "B",
+        "h_conf": 0.9029
+      },
+      {
+        "frame_idx": 54,
+        "video": "backend/data/media_cache/videos/D0492.mp4",
+        "final_sign": "O",
+        "reason": "GEOM_HIJACKED_BY_O",
+        "h_letter": "E",
+        "h_conf": 0.3074
+      }
+    ]
+  },
+  "C": {
+    "letter": "C",
+    "total_samples": 20,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0493.mp4": 20
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 1 (Geometric Rule only)",
+    "has_geom_rule": true,
+    "has_static_fallback": false,
+    "has_supplemental": false,
+    "correct": 12,
+    "accuracy": 60.0,
+    "offline_category": "UNSTABLE",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; offline dao động 55-73%",
+    "primary_recognition_source": "geometric_rule",
+    "sources_breakdown": {
+      "none": 8,
+      "geometric_rule": 12
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 8
+    },
+    "geom_matches": {
+      "NO_MATCH": 8,
+      "C": 12
+    },
+    "geom_match_rate": 60.0,
+    "head_raw_preds": {
+      "C": 19,
+      "E": 1
+    },
+    "head_target_pred_rate": 95.0,
+    "head_confs_all": {
+      "mean": 0.772,
+      "min": 0.128,
+      "max": 0.94
+    },
+    "head_target_confs": {
+      "mean": 0.77,
+      "min": 0.094,
+      "max": 0.94
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 8,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 18,
+        "video": "backend/data/media_cache/videos/D0493.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "C",
+        "h_conf": 0.5466
+      },
+      {
+        "frame_idx": 20,
+        "video": "backend/data/media_cache/videos/D0493.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "C",
+        "h_conf": 0.6078
+      },
+      {
+        "frame_idx": 22,
+        "video": "backend/data/media_cache/videos/D0493.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "C",
+        "h_conf": 0.8793
+      },
+      {
+        "frame_idx": 26,
+        "video": "backend/data/media_cache/videos/D0493.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "C",
+        "h_conf": 0.9294
+      },
+      {
+        "frame_idx": 50,
+        "video": "backend/data/media_cache/videos/D0493.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "C",
+        "h_conf": 0.6936
+      }
+    ]
+  },
+  "D": {
+    "letter": "D",
+    "total_samples": 46,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0494.mp4": 20,
+      "backend/data/media_cache/videos/D0495.mp4": 26
+    },
+    "video_count": 2,
+    "architecture_tier": "Tier 1 (Geom Rule) + Tier 2 (Gated Fallback)",
+    "has_geom_rule": true,
+    "has_static_fallback": true,
+    "has_supplemental": false,
+    "correct": 43,
+    "accuracy": 93.48,
+    "offline_category": "PASS",
+    "webcam_status": "UNSTABLE",
+    "webcam_evidence": "Cần fallback để đạt stable; nhạy cảm với góc camera và người ký mới",
+    "primary_recognition_source": "static_head_fallback",
+    "sources_breakdown": {
+      "geometric_rule": 15,
+      "static_head_fallback": 28,
+      "none": 3
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 3
+    },
+    "geom_matches": {
+      "D": 15,
+      "NO_MATCH": 31
+    },
+    "geom_match_rate": 32.61,
+    "head_raw_preds": {
+      "D": 44,
+      "C": 1,
+      "Q": 1
+    },
+    "head_target_pred_rate": 95.65,
+    "head_confs_all": {
+      "mean": 0.923,
+      "min": 0.173,
+      "max": 0.974
+    },
+    "head_target_confs": {
+      "mean": 0.916,
+      "min": 0.0,
+      "max": 0.974
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 3,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 52,
+        "video": "backend/data/media_cache/videos/D0494.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "FALLBACK_LOW_CONF_0.57_LT_0.70",
+        "h_letter": "D",
+        "h_conf": 0.5671
+      },
+      {
+        "frame_idx": 54,
+        "video": "backend/data/media_cache/videos/D0494.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "FALLBACK_HEAD_PREDICTED_C",
+        "h_letter": "C",
+        "h_conf": 0.1907
+      },
+      {
+        "frame_idx": 56,
+        "video": "backend/data/media_cache/videos/D0494.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "FALLBACK_HEAD_PREDICTED_Q",
+        "h_letter": "Q",
+        "h_conf": 0.1729
+      }
+    ]
+  },
+  "E": {
+    "letter": "E",
+    "total_samples": 35,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0496.mp4": 15,
+      "backend/data/media_cache/videos/D0497B.mp4": 20
+    },
+    "video_count": 2,
+    "architecture_tier": "Tier 1 (Geom Rule) + Tier 2 (Gated Fallback)",
+    "has_geom_rule": true,
+    "has_static_fallback": true,
+    "has_supplemental": false,
+    "correct": 32,
+    "accuracy": 91.43,
+    "offline_category": "PASS",
+    "webcam_status": "UNSTABLE",
+    "webcam_evidence": "Cần fallback để đạt stable; nhạy cảm với góc camera và người ký mới",
+    "primary_recognition_source": "static_head_fallback",
+    "sources_breakdown": {
+      "geometric_rule": 10,
+      "static_head_fallback": 22,
+      "none": 3
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 3
+    },
+    "geom_matches": {
+      "E": 10,
+      "NO_MATCH": 25
+    },
+    "geom_match_rate": 28.57,
+    "head_raw_preds": {
+      "E": 32,
+      "I": 1,
+      "A": 2
+    },
+    "head_target_pred_rate": 91.43,
+    "head_confs_all": {
+      "mean": 0.898,
+      "min": 0.194,
+      "max": 0.972
+    },
+    "head_target_confs": {
+      "mean": 0.877,
+      "min": 0.0,
+      "max": 0.972
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 3,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 42,
+        "video": "backend/data/media_cache/videos/D0496.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "FALLBACK_HEAD_PREDICTED_I",
+        "h_letter": "I",
+        "h_conf": 0.5509
+      },
+      {
+        "frame_idx": 44,
+        "video": "backend/data/media_cache/videos/D0496.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "FALLBACK_HEAD_PREDICTED_A",
+        "h_letter": "A",
+        "h_conf": 0.1939
+      },
+      {
+        "frame_idx": 46,
+        "video": "backend/data/media_cache/videos/D0496.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "FALLBACK_HEAD_PREDICTED_A",
+        "h_letter": "A",
+        "h_conf": 0.2616
+      }
+    ]
+  },
+  "G": {
+    "letter": "G",
+    "total_samples": 29,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0498B.mp4": 29
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 2 (Static Head Supplemental)",
+    "has_geom_rule": false,
+    "has_static_fallback": false,
+    "has_supplemental": true,
+    "correct": 26,
+    "accuracy": 89.66,
+    "offline_category": "PASS",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; chỉ có dữ liệu offline 1 signer (bị video leakage)",
+    "primary_recognition_source": "static_head",
+    "sources_breakdown": {
+      "static_head": 26,
+      "none": 3
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 3
+    },
+    "geom_matches": {
+      "NO_MATCH": 29
+    },
+    "geom_match_rate": 0.0,
+    "head_raw_preds": {
+      "G": 28,
+      "Q": 1
+    },
+    "head_target_pred_rate": 96.55,
+    "head_confs_all": {
+      "mean": 0.891,
+      "min": 0.517,
+      "max": 0.966
+    },
+    "head_target_confs": {
+      "mean": 0.875,
+      "min": 0.049,
+      "max": 0.966
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 3,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 52,
+        "video": "backend/data/media_cache/videos/D0498B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.68_LT_0.70",
+        "h_letter": "G",
+        "h_conf": 0.6818
+      },
+      {
+        "frame_idx": 54,
+        "video": "backend/data/media_cache/videos/D0498B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.54_LT_0.70",
+        "h_letter": "G",
+        "h_conf": 0.536
+      },
+      {
+        "frame_idx": 56,
+        "video": "backend/data/media_cache/videos/D0498B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_Q",
+        "h_letter": "Q",
+        "h_conf": 0.5174
+      }
+    ]
+  },
+  "H": {
+    "letter": "H",
+    "total_samples": 18,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0500B.mp4": 18
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 2 (Static Head Supplemental)",
+    "has_geom_rule": false,
+    "has_static_fallback": false,
+    "has_supplemental": true,
+    "correct": 16,
+    "accuracy": 88.89,
+    "offline_category": "PASS",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; chỉ có dữ liệu offline 1 signer (bị video leakage)",
+    "primary_recognition_source": "static_head",
+    "sources_breakdown": {
+      "static_head": 16,
+      "none": 2
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 2
+    },
+    "geom_matches": {
+      "NO_MATCH": 18
+    },
+    "geom_match_rate": 0.0,
+    "head_raw_preds": {
+      "H": 17,
+      "I": 1
+    },
+    "head_target_pred_rate": 94.44,
+    "head_confs_all": {
+      "mean": 0.916,
+      "min": 0.528,
+      "max": 0.972
+    },
+    "head_target_confs": {
+      "mean": 0.888,
+      "min": 0.178,
+      "max": 0.972
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 2,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 46,
+        "video": "backend/data/media_cache/videos/D0500B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_I",
+        "h_letter": "I",
+        "h_conf": 0.6839
+      },
+      {
+        "frame_idx": 48,
+        "video": "backend/data/media_cache/videos/D0500B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.53_LT_0.70",
+        "h_letter": "H",
+        "h_conf": 0.5277
+      }
+    ]
+  },
+  "I": {
+    "letter": "I",
+    "total_samples": 18,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0501.mp4": 18
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 1 (Geometric Rule only)",
+    "has_geom_rule": true,
+    "has_static_fallback": false,
+    "has_supplemental": false,
+    "correct": 14,
+    "accuracy": 77.78,
+    "offline_category": "UNSTABLE",
+    "webcam_status": "UNSTABLE",
+    "webcam_evidence": "Rule I/V bắt nhạy, dễ cướp nhãn của Ư/Ơ/Ă khi làm cử chỉ tạo dấu",
+    "primary_recognition_source": "geometric_rule",
+    "sources_breakdown": {
+      "none": 4,
+      "geometric_rule": 14
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 4
+    },
+    "geom_matches": {
+      "NO_MATCH": 4,
+      "I": 14
+    },
+    "geom_match_rate": 77.78,
+    "head_raw_preds": {
+      "I": 18
+    },
+    "head_target_pred_rate": 100.0,
+    "head_confs_all": {
+      "mean": 0.907,
+      "min": 0.618,
+      "max": 0.964
+    },
+    "head_target_confs": {
+      "mean": 0.907,
+      "min": 0.618,
+      "max": 0.964
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 4,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 12,
+        "video": "backend/data/media_cache/videos/D0501.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "I",
+        "h_conf": 0.7967
+      },
+      {
+        "frame_idx": 42,
+        "video": "backend/data/media_cache/videos/D0501.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "I",
+        "h_conf": 0.6179
+      },
+      {
+        "frame_idx": 44,
+        "video": "backend/data/media_cache/videos/D0501.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "I",
+        "h_conf": 0.7245
+      },
+      {
+        "frame_idx": 46,
+        "video": "backend/data/media_cache/videos/D0501.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "I",
+        "h_conf": 0.7181
+      }
+    ]
+  },
+  "K": {
+    "letter": "K",
+    "total_samples": 17,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0502.mp4": 17
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 2 (Static Head Supplemental)",
+    "has_geom_rule": false,
+    "has_static_fallback": false,
+    "has_supplemental": true,
+    "correct": 14,
+    "accuracy": 82.35,
+    "offline_category": "UNSTABLE",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; chỉ có dữ liệu offline 1 signer (bị video leakage)",
+    "primary_recognition_source": "static_head",
+    "sources_breakdown": {
+      "static_head": 14,
+      "none": 3
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 3
+    },
+    "geom_matches": {
+      "NO_MATCH": 17
+    },
+    "geom_match_rate": 0.0,
+    "head_raw_preds": {
+      "K": 14,
+      "G": 1,
+      "C": 1,
+      "Q": 1
+    },
+    "head_target_pred_rate": 82.35,
+    "head_confs_all": {
+      "mean": 0.842,
+      "min": 0.16,
+      "max": 0.957
+    },
+    "head_target_confs": {
+      "mean": 0.787,
+      "min": 0.0,
+      "max": 0.957
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 3,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 44,
+        "video": "backend/data/media_cache/videos/D0502.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_G",
+        "h_letter": "G",
+        "h_conf": 0.6877
+      },
+      {
+        "frame_idx": 46,
+        "video": "backend/data/media_cache/videos/D0502.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_C",
+        "h_letter": "C",
+        "h_conf": 0.1666
+      },
+      {
+        "frame_idx": 48,
+        "video": "backend/data/media_cache/videos/D0502.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_Q",
+        "h_letter": "Q",
+        "h_conf": 0.16
+      }
+    ]
+  },
+  "L": {
+    "letter": "L",
+    "total_samples": 16,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0503.mp4": 16
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 1 (Geometric Rule only)",
+    "has_geom_rule": true,
+    "has_static_fallback": false,
+    "has_supplemental": false,
+    "correct": 11,
+    "accuracy": 68.75,
+    "offline_category": "UNSTABLE",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; offline dao động 55-73%",
+    "primary_recognition_source": "geometric_rule",
+    "sources_breakdown": {
+      "none": 5,
+      "geometric_rule": 11
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 5
+    },
+    "geom_matches": {
+      "NO_MATCH": 5,
+      "L": 11
+    },
+    "geom_match_rate": 68.75,
+    "head_raw_preds": {
+      "L": 15,
+      "A": 1
+    },
+    "head_target_pred_rate": 93.75,
+    "head_confs_all": {
+      "mean": 0.835,
+      "min": 0.187,
+      "max": 0.936
+    },
+    "head_target_confs": {
+      "mean": 0.833,
+      "min": 0.153,
+      "max": 0.936
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 5,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 14,
+        "video": "backend/data/media_cache/videos/D0503.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "L",
+        "h_conf": 0.7695
+      },
+      {
+        "frame_idx": 38,
+        "video": "backend/data/media_cache/videos/D0503.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "L",
+        "h_conf": 0.9315
+      },
+      {
+        "frame_idx": 40,
+        "video": "backend/data/media_cache/videos/D0503.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "L",
+        "h_conf": 0.9159
+      },
+      {
+        "frame_idx": 42,
+        "video": "backend/data/media_cache/videos/D0503.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "L",
+        "h_conf": 0.2946
+      },
+      {
+        "frame_idx": 44,
+        "video": "backend/data/media_cache/videos/D0503.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "A",
+        "h_conf": 0.187
+      }
+    ]
+  },
+  "M": {
+    "letter": "M",
+    "total_samples": 19,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0504.mp4": 19
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 2 (Static Head Supplemental)",
+    "has_geom_rule": false,
+    "has_static_fallback": false,
+    "has_supplemental": true,
+    "correct": 17,
+    "accuracy": 89.47,
+    "offline_category": "PASS",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; chỉ có dữ liệu offline 1 signer (bị video leakage)",
+    "primary_recognition_source": "static_head",
+    "sources_breakdown": {
+      "static_head": 17,
+      "none": 2
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 2
+    },
+    "geom_matches": {
+      "NO_MATCH": 19
+    },
+    "geom_match_rate": 0.0,
+    "head_raw_preds": {
+      "M": 19
+    },
+    "head_target_pred_rate": 100.0,
+    "head_confs_all": {
+      "mean": 0.852,
+      "min": 0.621,
+      "max": 0.938
+    },
+    "head_target_confs": {
+      "mean": 0.852,
+      "min": 0.621,
+      "max": 0.938
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 2,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 32,
+        "video": "backend/data/media_cache/videos/D0504.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.67_LT_0.70",
+        "h_letter": "M",
+        "h_conf": 0.672
+      },
+      {
+        "frame_idx": 44,
+        "video": "backend/data/media_cache/videos/D0504.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.62_LT_0.70",
+        "h_letter": "M",
+        "h_conf": 0.6214
+      }
+    ]
+  },
+  "N": {
+    "letter": "N",
+    "total_samples": 21,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0505.mp4": 21
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 2 (Static Head Supplemental)",
+    "has_geom_rule": false,
+    "has_static_fallback": false,
+    "has_supplemental": true,
+    "correct": 15,
+    "accuracy": 71.43,
+    "offline_category": "UNSTABLE",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; chỉ có dữ liệu offline 1 signer (bị video leakage)",
+    "primary_recognition_source": "static_head",
+    "sources_breakdown": {
+      "none": 5,
+      "static_head": 16
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 5,
+      "M": 1
+    },
+    "geom_matches": {
+      "NO_MATCH": 21
+    },
+    "geom_match_rate": 0.0,
+    "head_raw_preds": {
+      "N": 18,
+      "M": 3
+    },
+    "head_target_pred_rate": 85.71,
+    "head_confs_all": {
+      "mean": 0.802,
+      "min": 0.291,
+      "max": 0.95
+    },
+    "head_target_confs": {
+      "mean": 0.729,
+      "min": 0.0,
+      "max": 0.95
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 6,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 16,
+        "video": "backend/data/media_cache/videos/D0505.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.39_LT_0.75",
+        "h_letter": "N",
+        "h_conf": 0.3943
+      },
+      {
+        "frame_idx": 46,
+        "video": "backend/data/media_cache/videos/D0505.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.64_LT_0.75",
+        "h_letter": "N",
+        "h_conf": 0.6397
+      },
+      {
+        "frame_idx": 48,
+        "video": "backend/data/media_cache/videos/D0505.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.69_LT_0.75",
+        "h_letter": "N",
+        "h_conf": 0.6875
+      },
+      {
+        "frame_idx": 52,
+        "video": "backend/data/media_cache/videos/D0505.mp4",
+        "final_sign": "M",
+        "reason": "HEAD_PREDICTED_M",
+        "h_letter": "M",
+        "h_conf": 0.8877
+      },
+      {
+        "frame_idx": 56,
+        "video": "backend/data/media_cache/videos/D0505.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_M",
+        "h_letter": "M",
+        "h_conf": 0.3708
+      }
+    ]
+  },
+  "O": {
+    "letter": "O",
+    "total_samples": 48,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0506.mp4": 20,
+      "backend/data/media_cache/videos/D0507B.mp4": 19,
+      "backend/data/media_cache/videos/D0508N.mp4": 9
+    },
+    "video_count": 3,
+    "architecture_tier": "Tier 1 (Geometric Rule only)",
+    "has_geom_rule": true,
+    "has_static_fallback": false,
+    "has_supplemental": false,
+    "correct": 37,
+    "accuracy": 77.08,
+    "offline_category": "UNSTABLE",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; chỉ có dữ liệu offline 1 signer (bị video leakage)",
+    "primary_recognition_source": "geometric_rule",
+    "sources_breakdown": {
+      "none": 9,
+      "geometric_rule": 39
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 9,
+      "E": 2
+    },
+    "geom_matches": {
+      "NO_MATCH": 9,
+      "O": 37,
+      "E": 2
+    },
+    "geom_match_rate": 77.08,
+    "head_raw_preds": {
+      "G": 1,
+      "O": 45,
+      "C": 2
+    },
+    "head_target_pred_rate": 93.75,
+    "head_confs_all": {
+      "mean": 0.907,
+      "min": 0.166,
+      "max": 0.98
+    },
+    "head_target_confs": {
+      "mean": 0.902,
+      "min": 0.1,
+      "max": 0.98
+    },
+    "geom_hijacked_count": 2,
+    "geom_hijacked_samples": [
+      {
+        "frame_idx": 35,
+        "video": "backend/data/media_cache/videos/D0508N.mp4",
+        "geom_letter": "E",
+        "geom_conf": 0.95,
+        "head_letter": "O",
+        "head_conf": 0.9736
+      },
+      {
+        "frame_idx": 43,
+        "video": "backend/data/media_cache/videos/D0508N.mp4",
+        "geom_letter": "E",
+        "geom_conf": 0.95,
+        "head_letter": "O",
+        "head_conf": 0.9487
+      }
+    ],
+    "gating_failures_count": 11,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 16,
+        "video": "backend/data/media_cache/videos/D0506.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "G",
+        "h_conf": 0.2748
+      },
+      {
+        "frame_idx": 18,
+        "video": "backend/data/media_cache/videos/D0506.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "O",
+        "h_conf": 0.6766
+      },
+      {
+        "frame_idx": 20,
+        "video": "backend/data/media_cache/videos/D0506.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "O",
+        "h_conf": 0.9642
+      },
+      {
+        "frame_idx": 24,
+        "video": "backend/data/media_cache/videos/D0506.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "O",
+        "h_conf": 0.9779
+      },
+      {
+        "frame_idx": 48,
+        "video": "backend/data/media_cache/videos/D0506.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "O",
+        "h_conf": 0.9427
+      }
+    ]
+  },
+  "P": {
+    "letter": "P",
+    "total_samples": 20,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0509B.mp4": 20
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 2 (Static Head Supplemental)",
+    "has_geom_rule": false,
+    "has_static_fallback": false,
+    "has_supplemental": true,
+    "correct": 16,
+    "accuracy": 80.0,
+    "offline_category": "UNSTABLE",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; chỉ có dữ liệu offline 1 signer (bị video leakage)",
+    "primary_recognition_source": "static_head",
+    "sources_breakdown": {
+      "static_head": 16,
+      "none": 4
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 4
+    },
+    "geom_matches": {
+      "NO_MATCH": 20
+    },
+    "geom_match_rate": 0.0,
+    "head_raw_preds": {
+      "P": 18,
+      "Q": 2
+    },
+    "head_target_pred_rate": 90.0,
+    "head_confs_all": {
+      "mean": 0.826,
+      "min": 0.314,
+      "max": 0.953
+    },
+    "head_target_confs": {
+      "mean": 0.791,
+      "min": 0.0,
+      "max": 0.953
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 4,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 52,
+        "video": "backend/data/media_cache/videos/D0509B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.50_LT_0.70",
+        "h_letter": "P",
+        "h_conf": 0.5033
+      },
+      {
+        "frame_idx": 54,
+        "video": "backend/data/media_cache/videos/D0509B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.53_LT_0.70",
+        "h_letter": "P",
+        "h_conf": 0.5308
+      },
+      {
+        "frame_idx": 58,
+        "video": "backend/data/media_cache/videos/D0509B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_Q",
+        "h_letter": "Q",
+        "h_conf": 0.3141
+      },
+      {
+        "frame_idx": 60,
+        "video": "backend/data/media_cache/videos/D0509B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_Q",
+        "h_letter": "Q",
+        "h_conf": 0.3871
+      }
+    ]
+  },
+  "Q": {
+    "letter": "Q",
+    "total_samples": 19,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0510.mp4": 19
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 2 (Static Head Supplemental)",
+    "has_geom_rule": false,
+    "has_static_fallback": false,
+    "has_supplemental": true,
+    "correct": 5,
+    "accuracy": 26.32,
+    "offline_category": "FAIL",
+    "webcam_status": "FAIL",
+    "webcam_evidence": "Ngưỡng 0.85 quá cao, loại bỏ phần lớn mẫu thật",
+    "primary_recognition_source": "static_head",
+    "sources_breakdown": {
+      "none": 14,
+      "static_head": 5
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 14
+    },
+    "geom_matches": {
+      "NO_MATCH": 19
+    },
+    "geom_match_rate": 0.0,
+    "head_raw_preds": {
+      "G": 1,
+      "Q": 12,
+      "X": 5,
+      "A": 1
+    },
+    "head_target_pred_rate": 63.16,
+    "head_confs_all": {
+      "mean": 0.631,
+      "min": 0.152,
+      "max": 0.876
+    },
+    "head_target_confs": {
+      "mean": 0.588,
+      "min": 0.057,
+      "max": 0.876
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 14,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 28,
+        "video": "backend/data/media_cache/videos/D0510.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_G",
+        "h_letter": "G",
+        "h_conf": 0.5707
+      },
+      {
+        "frame_idx": 30,
+        "video": "backend/data/media_cache/videos/D0510.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.55_LT_0.85",
+        "h_letter": "Q",
+        "h_conf": 0.5518
+      },
+      {
+        "frame_idx": 32,
+        "video": "backend/data/media_cache/videos/D0510.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_X",
+        "h_letter": "X",
+        "h_conf": 0.481
+      },
+      {
+        "frame_idx": 34,
+        "video": "backend/data/media_cache/videos/D0510.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_X",
+        "h_letter": "X",
+        "h_conf": 0.529
+      },
+      {
+        "frame_idx": 36,
+        "video": "backend/data/media_cache/videos/D0510.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_X",
+        "h_letter": "X",
+        "h_conf": 0.5165
+      }
+    ]
+  },
+  "R": {
+    "letter": "R",
+    "total_samples": 14,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0511.mp4": 14
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 2 (Static Head Supplemental)",
+    "has_geom_rule": false,
+    "has_static_fallback": false,
+    "has_supplemental": true,
+    "correct": 11,
+    "accuracy": 78.57,
+    "offline_category": "UNSTABLE",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; chỉ có dữ liệu offline 1 signer (bị video leakage)",
+    "primary_recognition_source": "static_head",
+    "sources_breakdown": {
+      "none": 3,
+      "static_head": 11
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 3
+    },
+    "geom_matches": {
+      "NO_MATCH": 14
+    },
+    "geom_match_rate": 0.0,
+    "head_raw_preds": {
+      "R": 12,
+      "I": 1,
+      "A": 1
+    },
+    "head_target_pred_rate": 85.71,
+    "head_confs_all": {
+      "mean": 0.753,
+      "min": 0.163,
+      "max": 0.935
+    },
+    "head_target_confs": {
+      "mean": 0.733,
+      "min": 0.0,
+      "max": 0.935
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 3,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 14,
+        "video": "backend/data/media_cache/videos/D0511.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.65_LT_0.75",
+        "h_letter": "R",
+        "h_conf": 0.6465
+      },
+      {
+        "frame_idx": 40,
+        "video": "backend/data/media_cache/videos/D0511.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_I",
+        "h_letter": "I",
+        "h_conf": 0.1633
+      },
+      {
+        "frame_idx": 42,
+        "video": "backend/data/media_cache/videos/D0511.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_A",
+        "h_letter": "A",
+        "h_conf": 0.1787
+      }
+    ]
+  },
+  "S": {
+    "letter": "S",
+    "total_samples": 15,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0512.mp4": 15
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 1 (Geometric Rule only)",
+    "has_geom_rule": true,
+    "has_static_fallback": false,
+    "has_supplemental": false,
+    "correct": 11,
+    "accuracy": 73.33,
+    "offline_category": "UNSTABLE",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; offline dao động 55-73%",
+    "primary_recognition_source": "geometric_rule",
+    "sources_breakdown": {
+      "none": 4,
+      "geometric_rule": 11
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 4
+    },
+    "geom_matches": {
+      "NO_MATCH": 4,
+      "S": 11
+    },
+    "geom_match_rate": 73.33,
+    "head_raw_preds": {
+      "Q": 1,
+      "S": 13,
+      "E": 1
+    },
+    "head_target_pred_rate": 86.67,
+    "head_confs_all": {
+      "mean": 0.788,
+      "min": 0.139,
+      "max": 0.912
+    },
+    "head_target_confs": {
+      "mean": 0.77,
+      "min": 0.098,
+      "max": 0.912
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 4,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 16,
+        "video": "backend/data/media_cache/videos/D0512.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "Q",
+        "h_conf": 0.4604
+      },
+      {
+        "frame_idx": 22,
+        "video": "backend/data/media_cache/videos/D0512.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "S",
+        "h_conf": 0.7983
+      },
+      {
+        "frame_idx": 44,
+        "video": "backend/data/media_cache/videos/D0512.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "S",
+        "h_conf": 0.46
+      },
+      {
+        "frame_idx": 46,
+        "video": "backend/data/media_cache/videos/D0512.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "E",
+        "h_conf": 0.1385
+      }
+    ]
+  },
+  "T": {
+    "letter": "T",
+    "total_samples": 20,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0513B.mp4": 20
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 1 (Geometric Rule only)",
+    "has_geom_rule": true,
+    "has_static_fallback": false,
+    "has_supplemental": false,
+    "correct": 11,
+    "accuracy": 55.0,
+    "offline_category": "UNSTABLE",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; offline dao động 55-73%",
+    "primary_recognition_source": "geometric_rule",
+    "sources_breakdown": {
+      "none": 9,
+      "geometric_rule": 11
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 9
+    },
+    "geom_matches": {
+      "NO_MATCH": 9,
+      "T": 11
+    },
+    "geom_match_rate": 55.0,
+    "head_raw_preds": {
+      "T": 18,
+      "C": 2
+    },
+    "head_target_pred_rate": 90.0,
+    "head_confs_all": {
+      "mean": 0.862,
+      "min": 0.198,
+      "max": 0.965
+    },
+    "head_target_confs": {
+      "mean": 0.839,
+      "min": 0.0,
+      "max": 0.965
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 9,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 18,
+        "video": "backend/data/media_cache/videos/D0513B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "T",
+        "h_conf": 0.925
+      },
+      {
+        "frame_idx": 20,
+        "video": "backend/data/media_cache/videos/D0513B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "T",
+        "h_conf": 0.9635
+      },
+      {
+        "frame_idx": 44,
+        "video": "backend/data/media_cache/videos/D0513B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "T",
+        "h_conf": 0.965
+      },
+      {
+        "frame_idx": 46,
+        "video": "backend/data/media_cache/videos/D0513B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "T",
+        "h_conf": 0.9621
+      },
+      {
+        "frame_idx": 48,
+        "video": "backend/data/media_cache/videos/D0513B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "T",
+        "h_conf": 0.8532
+      }
+    ]
+  },
+  "U": {
+    "letter": "U",
+    "total_samples": 32,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0514.mp4": 18,
+      "backend/data/media_cache/videos/D0515N.mp4": 14
+    },
+    "video_count": 2,
+    "architecture_tier": "Tier 2 (Static Head Supplemental)",
+    "has_geom_rule": false,
+    "has_static_fallback": false,
+    "has_supplemental": true,
+    "correct": 27,
+    "accuracy": 84.38,
+    "offline_category": "UNSTABLE",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; chỉ có dữ liệu offline 1 signer (bị video leakage)",
+    "primary_recognition_source": "static_head",
+    "sources_breakdown": {
+      "static_head": 27,
+      "none": 5
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 5
+    },
+    "geom_matches": {
+      "NO_MATCH": 32
+    },
+    "geom_match_rate": 0.0,
+    "head_raw_preds": {
+      "U": 29,
+      "L": 2,
+      "I": 1
+    },
+    "head_target_pred_rate": 90.62,
+    "head_confs_all": {
+      "mean": 0.865,
+      "min": 0.171,
+      "max": 0.971
+    },
+    "head_target_confs": {
+      "mean": 0.847,
+      "min": 0.073,
+      "max": 0.971
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 5,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 44,
+        "video": "backend/data/media_cache/videos/D0514.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_L",
+        "h_letter": "L",
+        "h_conf": 0.2933
+      },
+      {
+        "frame_idx": 46,
+        "video": "backend/data/media_cache/videos/D0514.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_I",
+        "h_letter": "I",
+        "h_conf": 0.5067
+      },
+      {
+        "frame_idx": 48,
+        "video": "backend/data/media_cache/videos/D0514.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.47_LT_0.70",
+        "h_letter": "U",
+        "h_conf": 0.4733
+      },
+      {
+        "frame_idx": 50,
+        "video": "backend/data/media_cache/videos/D0514.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_PREDICTED_L",
+        "h_letter": "L",
+        "h_conf": 0.171
+      },
+      {
+        "frame_idx": 33,
+        "video": "backend/data/media_cache/videos/D0515N.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.55_LT_0.70",
+        "h_letter": "U",
+        "h_conf": 0.5451
+      }
+    ]
+  },
+  "V": {
+    "letter": "V",
+    "total_samples": 17,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0516.mp4": 17
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 1 (Geometric Rule only)",
+    "has_geom_rule": true,
+    "has_static_fallback": false,
+    "has_supplemental": false,
+    "correct": 13,
+    "accuracy": 76.47,
+    "offline_category": "UNSTABLE",
+    "webcam_status": "UNSTABLE",
+    "webcam_evidence": "Rule I/V bắt nhạy, dễ cướp nhãn của Ư/Ơ/Ă khi làm cử chỉ tạo dấu",
+    "primary_recognition_source": "geometric_rule",
+    "sources_breakdown": {
+      "geometric_rule": 13,
+      "none": 4
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 4
+    },
+    "geom_matches": {
+      "V": 13,
+      "NO_MATCH": 4
+    },
+    "geom_match_rate": 76.47,
+    "head_raw_preds": {
+      "V": 16,
+      "N": 1
+    },
+    "head_target_pred_rate": 94.12,
+    "head_confs_all": {
+      "mean": 0.839,
+      "min": 0.269,
+      "max": 0.93
+    },
+    "head_target_confs": {
+      "mean": 0.835,
+      "min": 0.186,
+      "max": 0.93
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 4,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 40,
+        "video": "backend/data/media_cache/videos/D0516.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "V",
+        "h_conf": 0.7963
+      },
+      {
+        "frame_idx": 42,
+        "video": "backend/data/media_cache/videos/D0516.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "V",
+        "h_conf": 0.7978
+      },
+      {
+        "frame_idx": 44,
+        "video": "backend/data/media_cache/videos/D0516.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "V",
+        "h_conf": 0.7953
+      },
+      {
+        "frame_idx": 46,
+        "video": "backend/data/media_cache/videos/D0516.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "N",
+        "h_conf": 0.2689
+      }
+    ]
+  },
+  "X": {
+    "letter": "X",
+    "total_samples": 25,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0517B.mp4": 25
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 2 (Static Head Supplemental)",
+    "has_geom_rule": false,
+    "has_static_fallback": false,
+    "has_supplemental": true,
+    "correct": 17,
+    "accuracy": 68.0,
+    "offline_category": "UNSTABLE",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; chỉ có dữ liệu offline 1 signer (bị video leakage)",
+    "primary_recognition_source": "static_head",
+    "sources_breakdown": {
+      "static_head": 17,
+      "geometric_rule": 1,
+      "none": 7
+    },
+    "wrong_predictions": {
+      "T": 1,
+      "NEUTRAL": 7
+    },
+    "geom_matches": {
+      "NO_MATCH": 24,
+      "T": 1
+    },
+    "geom_match_rate": 0.0,
+    "head_raw_preds": {
+      "X": 23,
+      "Q": 2
+    },
+    "head_target_pred_rate": 92.0,
+    "head_confs_all": {
+      "mean": 0.781,
+      "min": 0.502,
+      "max": 0.91
+    },
+    "head_target_confs": {
+      "mean": 0.77,
+      "min": 0.349,
+      "max": 0.91
+    },
+    "geom_hijacked_count": 1,
+    "geom_hijacked_samples": [
+      {
+        "frame_idx": 40,
+        "video": "backend/data/media_cache/videos/D0517B.mp4",
+        "geom_letter": "T",
+        "geom_conf": 0.95,
+        "head_letter": "X",
+        "head_conf": 0.8927
+      }
+    ],
+    "gating_failures_count": 8,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 40,
+        "video": "backend/data/media_cache/videos/D0517B.mp4",
+        "final_sign": "T",
+        "reason": "GEOM_HIJACKED_BY_T",
+        "h_letter": "X",
+        "h_conf": 0.8927
+      },
+      {
+        "frame_idx": 46,
+        "video": "backend/data/media_cache/videos/D0517B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.50_LT_0.70",
+        "h_letter": "X",
+        "h_conf": 0.5023
+      },
+      {
+        "frame_idx": 48,
+        "video": "backend/data/media_cache/videos/D0517B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.57_LT_0.70",
+        "h_letter": "X",
+        "h_conf": 0.5736
+      },
+      {
+        "frame_idx": 50,
+        "video": "backend/data/media_cache/videos/D0517B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.57_LT_0.70",
+        "h_letter": "X",
+        "h_conf": 0.5743
+      },
+      {
+        "frame_idx": 54,
+        "video": "backend/data/media_cache/videos/D0517B.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "HEAD_LOW_CONF_0.53_LT_0.70",
+        "h_letter": "X",
+        "h_conf": 0.5339
+      }
+    ]
+  },
+  "Y": {
+    "letter": "Y",
+    "total_samples": 16,
+    "source_videos": {
+      "backend/data/media_cache/videos/D0518N.mp4": 16
+    },
+    "video_count": 1,
+    "architecture_tier": "Tier 1 (Geometric Rule only)",
+    "has_geom_rule": true,
+    "has_static_fallback": false,
+    "has_supplemental": false,
+    "correct": 11,
+    "accuracy": 68.75,
+    "offline_category": "UNSTABLE",
+    "webcam_status": "NOT_TESTED",
+    "webcam_evidence": "Chưa có kiểm thử webcam đa người ký chính thức; offline dao động 55-73%",
+    "primary_recognition_source": "geometric_rule",
+    "sources_breakdown": {
+      "none": 5,
+      "geometric_rule": 11
+    },
+    "wrong_predictions": {
+      "NEUTRAL": 5
+    },
+    "geom_matches": {
+      "NO_MATCH": 5,
+      "Y": 11
+    },
+    "geom_match_rate": 68.75,
+    "head_raw_preds": {
+      "Y": 15,
+      "E": 1
+    },
+    "head_target_pred_rate": 93.75,
+    "head_confs_all": {
+      "mean": 0.818,
+      "min": 0.142,
+      "max": 0.941
+    },
+    "head_target_confs": {
+      "mean": 0.809,
+      "min": 0.0,
+      "max": 0.941
+    },
+    "geom_hijacked_count": 0,
+    "geom_hijacked_samples": [],
+    "gating_failures_count": 5,
+    "gating_failures_sample": [
+      {
+        "frame_idx": 14,
+        "video": "backend/data/media_cache/videos/D0518N.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "Y",
+        "h_conf": 0.6877
+      },
+      {
+        "frame_idx": 20,
+        "video": "backend/data/media_cache/videos/D0518N.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "Y",
+        "h_conf": 0.8298
+      },
+      {
+        "frame_idx": 40,
+        "video": "backend/data/media_cache/videos/D0518N.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "Y",
+        "h_conf": 0.9252
+      },
+      {
+        "frame_idx": 44,
+        "video": "backend/data/media_cache/videos/D0518N.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "Y",
+        "h_conf": 0.2201
+      },
+      {
+        "frame_idx": 46,
+        "video": "backend/data/media_cache/videos/D0518N.mp4",
+        "final_sign": "NEUTRAL",
+        "reason": "GEOM_NO_MATCH_AND_NOT_IN_FALLBACK",
+        "h_letter": "E",
+        "h_conf": 0.1416
+      }
+    ]
+  }
+}

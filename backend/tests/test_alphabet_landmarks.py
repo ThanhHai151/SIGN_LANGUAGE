@@ -13,6 +13,7 @@ Kiểm định toàn diện:
 
 import os
 import json
+# pyrefly: ignore[missing-import]
 import pytest
 from backend.training.extract_video_landmarks import validate_landmark_format
 

@@ -6,7 +6,11 @@ Hỗ trợ:
 3. API Từ điển VSL Đa phương tiện & Kiểm tra Sức khỏe Hệ thống
 """
 
+from asyncio import timeouts
 import os
+import sys
+import time
+import re
 import json
 import base64
 import cv2
@@ -18,11 +22,12 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Union, Dict, Any, Literal
 
 from backend.models.sign_model import CLASSES
 from backend.models.vsl_dictionary import ALL_SIGNS, VSL_ALPHABET, VSL_VOCABULARY
 from backend.vision.recognizer import VSLRecognizer
+from backend.vision.alphabet_classifier import O_D_TI_MAX, O_IDX_STRAIGHT_MAX
 from backend.nlp.text_to_vsl import text_to_vsl_glosses
 from backend.models import video_cache
 from backend.models.lexicon import load_lexicon, compact_entry, get_entry_by_sstcn, norm_key, sign_description
@@ -56,9 +61,45 @@ class LandmarkRequest(BaseModel):
     handedness: Optional[str] = "Right"
     mode: Optional[str] = None
     timestamp: Optional[float] = None
+    expected_sign: Optional[str] = None
+    session_id: Optional[str] = None
+    trial_id: Optional[str] = None
+    frame_idx: Optional[int] = None
+    client_capture_ts: Optional[float] = None
+    landmark_extract_ts: Optional[float] = None
+    request_send_ts: Optional[float] = None
+    signer_id: Optional[str] = None
+    image_width: Optional[int] = None
+    image_height: Optional[int] = None
+    handedness_score: Optional[float] = None
+    tracking_confidence: Optional[float] = None
+    video_pts_sec: Optional[Union[float, str]] = None
+    video_frame_idx: Optional[Union[int, str]] = None
+    phase: Optional[Literal["PRE_IDLE", "ENTRY", "STABLE_HOLD", "EXIT", "POST_IDLE"]] = None
 
 class FrameRequest(BaseModel):
     image_base64: str
+
+class PilotControlRequest(BaseModel):
+    enabled: bool
+    filepath: Optional[str] = None
+    session_id: Optional[str] = None
+
+class PilotFlushRequest(BaseModel):
+    session_id: Optional[str] = None
+    trial_id: Optional[str] = None
+
+class PilotTrialRequest(BaseModel):
+    session_id: str
+    trial_id: str
+
+class PilotManifestRequest(BaseModel):
+    session_id: str
+    manifest: dict
+
+class PilotSidecarRequest(BaseModel):
+    session_id: str
+    sync_data: dict
 
 class SequenceRequest(BaseModel):
     sequence: List[List[List[float]]]  # Chuỗi 30 frames x 75 joints x 3 coords
@@ -80,6 +121,25 @@ def health_check():
         "lexicon_total": load_lexicon()["meta"]["total"],
         "lexicon_common": load_lexicon()["meta"]["common"],
         "classes": CLASSES
+    }
+
+@app.get("/api/pilot/config")
+def get_pilot_runtime_config():
+    """Expose the active classifier configuration for controlled pilot provenance."""
+    from backend.vision.recognizer import (
+        PILOT_CLASSIFIER_RULE_VERSION,
+        PILOT_FEATURE_EXTRACTOR_VERSION,
+        PILOT_SCHEMA_VERSION,
+    )
+    return {
+        "success": True,
+        "classifier_rule_version": PILOT_CLASSIFIER_RULE_VERSION,
+        "schema_version": PILOT_SCHEMA_VERSION,
+        "feature_extractor_version": PILOT_FEATURE_EXTRACTOR_VERSION,
+        "classifier_config": {
+            "O_D_TI_MAX": O_D_TI_MAX,
+            "O_IDX_STRAIGHT_MAX": O_IDX_STRAIGHT_MAX,
+        },
     }
 
 @app.get("/api/dictionary")
@@ -153,7 +213,7 @@ def warm_common_videos():
     """Tải dần ở nền video của các từ THÔNG DỤNG (≈800 video, ~0,7 GB) vào bộ đệm, để Từ điển phát tức thì.
     Máy chủ QIPEDC phản hồi thất thường (0,2–5 giây/video) nên không chờ tới lúc người dùng bấm mới tải.
     Tắt bằng biến môi trường VSL_PREFETCH=0."""
-    if os.environ.get("VSL_PREFETCH", "1") == "0":
+    if os.environ.get("VSL_PREFETCH", "0") == "0" or "pytest" in sys.modules or "unittest" in sys.modules:
         return
     try:
         entries = sorted((e for e in load_lexicon()["entries"] if e.get("common")), key=lambda e: e.get("rank") or 1e9)
@@ -233,29 +293,423 @@ def recognize_landmarks(req: LandmarkRequest, request: Request):
     """
     Nhận diện cử chỉ từ danh sách 21 điểm mốc bàn tay hoặc 2 bàn tay do MediaPipe Web trích xuất
     Đảm bảo độ trễ siêu thấp (<10ms) và tính chính xác cao.
+    Hỗ trợ lưu đầy đủ 21 landmarks thô, đồng bộ video RGB và temporal diagnostics (Task 3.10).
     """
+    backend_receive_ts = time.time()
     try:
-        expected_sign = request.headers.get("x-expected-sign")
-        session_id = request.headers.get("x-session-id")
+        expected_sign = req.expected_sign or request.headers.get("x-expected-sign")
+        session_id = req.session_id or request.headers.get("x-session-id")
+        trial_id = req.trial_id or request.headers.get("x-trial-id")
+        raw_frame_idx = req.frame_idx if req.frame_idx is not None else request.headers.get("x-frame-idx")
+        frame_idx = None
+        if raw_frame_idx is not None:
+            try:
+                frame_idx = int(raw_frame_idx)
+            except (ValueError, TypeError):
+                frame_idx = None
+
         mode = req.mode or request.headers.get("x-conversion-mode")
         if mode is not None and mode not in VALID_CONVERSION_MODES:
             raise HTTPException(
                 status_code=400,
                 detail=f"Chế độ nhận diện không hợp lệ: '{mode}'. Hỗ trợ: 'letters', 'digits', 'words', 'sentence', 'letters_numbers'."
             )
+
+        client_capture_ts = req.client_capture_ts
+        if client_capture_ts is None and request.headers.get("x-client-capture-ts"):
+            try:
+                client_capture_ts = float(request.headers.get("x-client-capture-ts"))
+            except (ValueError, TypeError):
+                client_capture_ts = None
+
+        landmark_extract_ts = req.landmark_extract_ts
+        if landmark_extract_ts is None and request.headers.get("x-landmark-extract-ts"):
+            try:
+                landmark_extract_ts = float(request.headers.get("x-landmark-extract-ts"))
+            except (ValueError, TypeError):
+                landmark_extract_ts = None
+
+        request_send_ts = req.request_send_ts
+        if request_send_ts is None and request.headers.get("x-request-send-ts"):
+            try:
+                request_send_ts = float(request.headers.get("x-request-send-ts"))
+            except (ValueError, TypeError):
+                request_send_ts = None
+
+        signer_id = req.signer_id or request.headers.get("x-signer-id")
+        video_pts_sec = req.video_pts_sec if req.video_pts_sec is not None else request.headers.get("x-video-pts-sec")
+        video_frame_idx = req.video_frame_idx if req.video_frame_idx is not None else request.headers.get("x-video-frame-idx")
+
         result = recognizer.predict_landmarks(
             landmarks_list=req.landmarks or [],
             multi_hands=req.multi_hands,
             expected_sign=expected_sign,
             session_id=session_id,
             mode=mode,
-            timestamp=req.timestamp
+            timestamp=req.timestamp,
+            trial_id=trial_id,
+            frame_idx=frame_idx,
+            client_capture_ts=client_capture_ts,
+            landmark_extract_ts=landmark_extract_ts,
+            request_send_ts=request_send_ts,
+            backend_receive_ts=backend_receive_ts,
+            video_pts_sec=video_pts_sec,
+            video_frame_idx=video_frame_idx,
+            signer_id=signer_id,
+            image_width=req.image_width,
+            image_height=req.image_height,
+            handedness_score=req.handedness_score,
+            tracking_confidence=req.tracking_confidence,
+            phase=req.phase,
         )
         return {"success": True, "data": result}
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/pilot/control")
+def control_pilot_logging(req: PilotControlRequest):
+    """Bật/tắt chế độ ghi nhật ký chẩn đoán pilot từ UI (Task 7F.5B / 7F.5D Fix B-01)."""
+    if req.filepath is not None:
+        raise HTTPException(
+            status_code=400,
+            detail="Chỉ định filepath qua API bị từ chối vì lý do an toàn bảo mật. Vui lòng chỉ truyền session_id."
+        )
+
+    if req.enabled:
+        raw_sess = req.session_id
+        if raw_sess is not None:
+            from backend.vision.pilot_logger import validate_session_id
+            try:
+                clean_sess = validate_session_id(raw_sess)
+            except ValueError as ve:
+                raise HTTPException(status_code=400, detail=str(ve))
+        else:
+            clean_sess = f"session_{time.strftime('%Y%m%d_%H%M%S')}"
+
+        target_dir = getattr(
+            recognizer,
+            "diagnostic_dir",
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "diagnostics", "pilot")
+        )
+
+        try:
+            # Kiểm tra xung đột session trước khi tạo file mới
+            if recognizer.pilot_logging_enabled and recognizer.active_pilot_session_id:
+                if clean_sess != recognizer.active_pilot_session_id:
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f"Phiên '{recognizer.active_pilot_session_id}' đang hoạt động. "
+                               f"Vui lòng tắt phiên hiện tại trước khi bật phiên mới '{clean_sess}'."
+                    )
+                logger = recognizer.pilot_logger
+                return {
+                    "success": True,
+                    "enabled": True,
+                    "session_id": recognizer.active_pilot_session_id,
+                    "filepath": recognizer.pilot_filepath,
+                    "stats": logger.get_stats() if logger else None
+                }
+
+            from backend.vision.pilot_logger import create_safe_pilot_file
+            target_file = create_safe_pilot_file(target_dir, clean_sess)
+            logger = recognizer.enable_pilot_logging(session_id=clean_sess, filepath=target_file)
+            return {
+                "success": True,
+                "enabled": True,
+                "session_id": clean_sess,
+                "filepath": target_file,
+                "stats": logger.get_stats()
+            }
+        except HTTPException:
+            raise
+        except ValueError as ve:
+            raise HTTPException(status_code=400, detail=str(ve))
+        except RuntimeError as re_err:
+            raise HTTPException(status_code=409, detail=str(re_err))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    else:
+        active_session_id = getattr(recognizer, "active_pilot_session_id", None)
+        if (
+            recognizer.pilot_logging_enabled
+            and req.session_id is not None
+            and req.session_id != active_session_id
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail=f"Không thể đóng session '{req.session_id}': backend đang ghi session '{active_session_id}'.",
+            )
+        recognizer.disable_pilot_logging()
+        return {"success": True, "enabled": False, "session_id": active_session_id}
+
+
+@app.post("/api/pilot/flush")
+def flush_pilot_log(req: Optional[PilotFlushRequest] = None):
+    """Return the logger barrier result and counters; HTTP 200 alone is not a flush acknowledgement."""
+    logger = getattr(recognizer, "pilot_logger", None)
+    session_id = getattr(recognizer, "active_pilot_session_id", None)
+    filepath = getattr(recognizer, "pilot_filepath", None)
+    expected_session_id = req.session_id if req else None
+    stats_before = None
+    stats = None
+    stats_error = None
+    if logger is not None:
+        try:
+            stats_before = logger.get_stats()
+        except Exception as exc:
+            stats_error = str(exc)
+    flush_attempted = False
+    flush_success = False
+    error_code = None
+    error = None
+
+    if logger is None:
+        error_code = "logger_unavailable"
+        error = "No pilot logger is available to verify a flush."
+    elif not isinstance(session_id, str) or not session_id or not isinstance(filepath, str) or not filepath:
+        error_code = "logger_unavailable"
+        error = "Logger session or output filepath is unavailable."
+    elif expected_session_id is not None and expected_session_id != session_id:
+        error_code = "session_mismatch"
+        error = f"Requested session '{expected_session_id}' does not match active session '{session_id}'."
+    elif not getattr(recognizer, "pilot_logging_enabled", False):
+        error_code = "logging_disabled"
+        error = "Pilot logging is disabled; no flush was attempted."
+    elif getattr(logger, "state", None) != getattr(logger, "STATE_OPEN", "OPEN") or not getattr(logger, "is_running", False):
+        error_code = "logger_unavailable"
+        error = "Pilot logger is not open and running."
+    else:
+        flush_attempted = True
+        try:
+            flush_success = bool(logger.flush())
+        except Exception as exc:
+            error_code = "flush_failed"
+            error = str(exc)
+
+    if logger is not None:
+        try:
+            stats = logger.get_stats()
+        except Exception as exc:
+            stats_error = stats_error or str(exc)
+    if flush_attempted and not flush_success and error_code is None:
+        before_dropped = (stats_before or {}).get("total_dropped", 0)
+        after_dropped = (stats or {}).get("total_dropped", 0)
+        error_code = "io_error" if after_dropped > before_dropped else "flush_failed"
+        error = "Logger reported an I/O/drop error during the flush barrier." if error_code == "io_error" else "Logger flush barrier did not complete successfully."
+
+    required_stats = (
+        "queued_count", "logged_count", "pending_in_queue",
+        "dropped_queue_full", "dropped_io_error", "total_dropped",
+    )
+    stats_complete = stats is not None and all(stats.get(key) is not None for key in required_stats)
+    if error_code is None and not stats_complete:
+        error_code = "stats_unavailable"
+        error = stats_error or "Logger did not provide all required accounting counters."
+    if error_code is None and stats["total_dropped"] > 0:
+        error_code = "io_error"
+        error = "Logger counters report one or more dropped records."
+    if error_code is None and (stats["pending_in_queue"] != 0 or stats["queued_count"] != stats["logged_count"]):
+        error_code = "record_accounting_mismatch"
+        error = "Queue is not empty or queued_count does not equal logged_count."
+
+    success = bool(flush_attempted and flush_success and error_code is None)
+    counter_fields = {
+        key: stats.get(key) if stats is not None else None
+        for key in required_stats
+    }
+    return {
+        "success": success,
+        "flush_success": flush_success,
+        "flush_attempted": flush_attempted,
+        "flush_semantics": "FIFO worker barrier processed without a logger-reported drop before the barrier; this does not guarantee fsync or physical-media durability.",
+        "error_code": error_code,
+        "error": error,
+        "session_id": session_id,
+        "requested_session_id": expected_session_id,
+        "filepath": filepath,
+        "counter_scope": "session_cumulative",
+        "stats": stats,
+        **counter_fields,
+    }
+
+
+@app.get("/api/pilot/stats")
+def get_pilot_stats():
+    """Lấy thống kê ghi nhật ký pilot (Task 7F.5A)."""
+    stats = recognizer.pilot_logger.get_stats() if hasattr(recognizer, "pilot_logger") and recognizer.pilot_logger else None
+    return {
+        "success": True,
+        "stats": stats,
+        "session_id": getattr(recognizer, "active_pilot_session_id", None),
+        "filepath": getattr(recognizer, "pilot_filepath", None),
+        "has_static_head": bool(getattr(recognizer, "has_static_head", False)),
+        "pilot_logging_enabled": bool(getattr(recognizer, "pilot_logging_enabled", False))
+    }
+
+
+def _pilot_trial_context(session_id: str, trial_id: str):
+    from backend.vision.pilot_logger import validate_session_id, validate_trial_id
+    try:
+        clean_session = validate_session_id(session_id)
+        clean_trial = validate_trial_id(trial_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail={"error_code": "invalid_trial_id", "error": str(exc)})
+
+    active_session = getattr(recognizer, "active_pilot_session_id", None)
+    logger = getattr(recognizer, "pilot_logger", None)
+    if active_session != clean_session:
+        raise HTTPException(status_code=409, detail={
+            "error_code": "session_mismatch", "session_id": active_session,
+            "requested_session_id": clean_session,
+        })
+    if (
+        logger is None or not getattr(recognizer, "pilot_logging_enabled", False) or
+        getattr(logger, "state", None) != getattr(logger, "STATE_OPEN", "OPEN") or
+        not getattr(logger, "is_running", False)
+    ):
+        raise HTTPException(status_code=503, detail={"error_code": "logger_unavailable"})
+    return logger, clean_session, clean_trial
+
+
+@app.post("/api/pilot/trial/open")
+def open_pilot_trial(req: PilotTrialRequest):
+    """Reserve a unique trial accounting scope before its first recognition frame."""
+    logger, session_id, trial_id = _pilot_trial_context(req.session_id, req.trial_id)
+    try:
+        created = logger.register_trial(session_id, trial_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail={"error_code": "invalid_trial_id", "error": str(exc)})
+    if not created:
+        raise HTTPException(status_code=409, detail={"error_code": "duplicate_trial_id"})
+    return {
+        "success": True, "session_id": session_id, "trial_id": trial_id,
+        "counter_scope": "session_trial", "trial_exists": True,
+        "stats": logger.get_trial_stats(session_id, trial_id),
+    }
+
+
+@app.get("/api/pilot/trial/accounting")
+def get_pilot_trial_accounting(session_id: str = Query(...), trial_id: str = Query(...)):
+    """Read backend-owned counters for one trial, independent of frontend responses."""
+    logger, clean_session, clean_trial = _pilot_trial_context(session_id, trial_id)
+    try:
+        stats = logger.get_trial_stats(clean_session, clean_trial)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail={"error_code": "invalid_trial_id", "error": str(exc)})
+    if stats is None:
+        raise HTTPException(status_code=404, detail={
+            "error_code": "trial_not_found", "session_id": clean_session,
+            "trial_id": clean_trial, "trial_exists": False,
+        })
+    verified = bool(
+        stats["sealed"] and stats["flush_barrier_passed"] and stats["record_count"] > 0 and
+        stats["pending_count"] == 0 and stats["queued_count"] == stats["logged_count"] and
+        stats["total_dropped"] == 0 and stats["late_record_count"] == 0
+    )
+    return {
+        "success": True, "session_id": clean_session, "trial_id": clean_trial,
+        "counter_scope": "session_trial", "trial_exists": True,
+        "trial_verified": verified,
+        "verification_status": "VERIFIED" if verified else "UNKNOWN_OR_INVALID",
+        "flush_barrier_passed": stats["flush_barrier_passed"],
+        "error_code": None if verified else (
+            "record_dropped" if stats["total_dropped"] else
+            "queue_pending" if stats["pending_count"] else
+            "late_record_after_seal" if stats["late_record_count"] else
+            "flush_not_verified" if not stats["flush_barrier_passed"] else
+            "trial_has_no_records" if stats["record_count"] == 0 else
+            "trial_accounting_mismatch"
+        ),
+        "stats": stats,
+    }
+
+
+@app.post("/api/pilot/trial/flush")
+def flush_pilot_trial(req: PilotTrialRequest):
+    """Seal a trial scope, drain its pre-barrier records, and return scoped accounting."""
+    logger, session_id, trial_id = _pilot_trial_context(req.session_id, req.trial_id)
+    try:
+        sealed = logger.seal_trial(session_id, trial_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail={"error_code": "invalid_trial_id", "error": str(exc)})
+    if sealed is None:
+        raise HTTPException(status_code=404, detail={
+            "error_code": "trial_not_found", "session_id": session_id,
+            "trial_id": trial_id, "trial_exists": False,
+        })
+    try:
+        barrier_passed = bool(logger.flush())
+    except Exception:
+        barrier_passed = False
+    logger.mark_trial_flush(session_id, trial_id, barrier_passed)
+    stats = logger.get_trial_stats(session_id, trial_id)
+    verified = bool(
+        barrier_passed and stats and stats["record_count"] > 0 and
+        stats["pending_count"] == 0 and stats["queued_count"] == stats["logged_count"] and
+        stats["total_dropped"] == 0 and stats["late_record_count"] == 0
+    )
+    error_code = None if verified else (
+        "flush_failed" if not barrier_passed else
+        "record_dropped" if stats["total_dropped"] else
+        "queue_pending" if stats["pending_count"] else
+        "late_record_after_seal" if stats["late_record_count"] else
+        "trial_has_no_records" if stats["record_count"] == 0 else
+        "trial_accounting_mismatch"
+    )
+    return {
+        "success": verified, "flush_success": barrier_passed,
+        "flush_semantics": "FIFO worker barrier processed; does not guarantee fsync or physical-media durability.",
+        "session_id": session_id, "trial_id": trial_id,
+        "filepath": getattr(recognizer, "pilot_filepath", None),
+        "counter_scope": "session_trial", "trial_exists": True,
+        "trial_verified": verified,
+        "verification_status": "VERIFIED" if verified else "UNKNOWN_OR_INVALID",
+        "error_code": error_code, "stats": stats,
+    }
+
+
+@app.post("/api/pilot/manifest")
+def save_pilot_manifest(req: PilotManifestRequest):
+    """Lưu session manifest kèm SHA256 cho phiên thử nghiệm pilot (Task 3.10 Section 8)."""
+    try:
+        from backend.vision.pilot_logger import save_session_manifest, validate_session_id
+        validate_session_id(req.session_id)
+        target_dir = getattr(
+            recognizer,
+            "diagnostic_dir",
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "diagnostics", "pilot")
+        )
+        saved_path = save_session_manifest(req.manifest, log_dir=target_dir)
+        return {"success": True, "manifest_path": saved_path}
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/pilot/sidecar_sync")
+def save_pilot_sidecar(req: PilotSidecarRequest):
+    """Lưu sidecar synchronization file ánh xạ video và JSONL (Task 3.10 Implementation C)."""
+    try:
+        from backend.vision.pilot_logger import save_sidecar_sync, validate_session_id
+        validate_session_id(req.session_id)
+        target_dir = getattr(
+            recognizer,
+            "diagnostic_dir",
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "diagnostics", "pilot")
+        )
+        saved_path = save_sidecar_sync(req.session_id, req.sync_data, log_dir=target_dir)
+        return {"success": True, "sidecar_path": saved_path}
+    except FileExistsError:
+        raise HTTPException(status_code=409, detail="Diagnostic sidecar for this trial already exists; refusing to overwrite it.")
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/api/recognize_sequence")
 def recognize_sequence(req: SequenceRequest):
