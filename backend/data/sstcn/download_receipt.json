@@ -1,0 +1,50 @@
+{
+  "data_05.zip": {
+    "name": "data_05.zip",
+    "id": "125ErdVX0nfHNoR-7mBZqNAhpPAygpJy_",
+    "sha256": "842789c73ad8cd42f077d8159910a5ada78ed2f29e5f0d77e2c697984bb3b91d",
+    "bytes": 26902565,
+    "retrieved_at": "2026-10-30T12:02:50.503637+00:00",
+    "extracted_to": "/home/thanhhai/Documents/UNIVERSITY/REPO/backend/data/sstcn/raw/data_05"
+  },
+  "test_set.zip": {
+    "name": "test_set.zip",
+    "id": "1YuwuY02Huk_QM5k0Cqvec6K6d19dRTy4",
+    "sha256": "f44df240c9bf4d2a09c00b065501eafb4b5d8e7a68611d07366c5a1566b1ddfe",
+    "bytes": 28366679,
+    "retrieved_at": "2026-10-30T12:02:50.892852+00:00",
+    "extracted_to": "/home/thanhhai/Documents/UNIVERSITY/REPO/backend/data/sstcn/raw/test_set"
+  },
+  "data_01.zip": {
+    "name": "data_01.zip",
+    "id": "1h3U5rOLI8y4hSLgOrHQvznEJpZtJEImk",
+    "sha256": "df04d686836d1e2bbf8b476af3ea4282c7cd7a5e909bacac1fb61ce9185a9e14",
+    "bytes": 328402029,
+    "retrieved_at": "2026-10-30T11:47:09.098098+00:00",
+    "extracted_to": "/home/thanhhai/Documents/UNIVERSITY/REPO/backend/data/sstcn/raw/data_01"
+  },
+  "data_02.zip": {
+    "name": "data_02.zip",
+    "id": "103vzapYCMY5OEG-X9-leWRDGyTqDfslH",
+    "sha256": "565370f2d1230d7d68add63a1e6b06ef36b06d4a84e25f8cda45868ca759b6c8",
+    "bytes": 644227415,
+    "retrieved_at": "2026-10-30T11:55:01.663770+00:00",
+    "extracted_to": "/home/thanhhai/Documents/UNIVERSITY/REPO/backend/data/sstcn/raw/data_02"
+  },
+  "data_03.zip": {
+    "name": "data_03.zip",
+    "id": "15916yF0dfLNxz1a6hdq8B5cYPs_ctLq7",
+    "sha256": "3133bbfe3ebe477e877ee6f09549e4319e9a187e46135efbd5b0da7613de1500",
+    "bytes": 351923502,
+    "retrieved_at": "2026-10-30T11:58:17.560114+00:00",
+    "extracted_to": "/home/thanhhai/Documents/UNIVERSITY/REPO/backend/data/sstcn/raw/data_03"
+  },
+  "data_04.zip": {
+    "name": "data_04.zip",
+    "id": "1RjuNMwxQu0Uad5yBzI6EST3ImZrn1HJm",
+    "sha256": "432d958a40d1d487a4bc9c1bbc3a5e521890087259ea8756f97aeb93715917a6",
+    "bytes": 414055634,
+    "retrieved_at": "2026-10-30T12:02:43.559684+00:00",
+    "extracted_to": "/home/thanhhai/Documents/UNIVERSITY/REPO/backend/data/sstcn/raw/data_04"
+  }
+}

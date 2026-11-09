@@ -97,36 +97,42 @@ class SSTCN_Attention(nn.Module):
         out = self.fc(x)               # [B, num_classes]
         return out
 
-def load_sstcn_model(weights_path=None, device='cpu'):
+def load_sstcn_model(weights_path=None, device='cpu', allow_untrained=False):
     """
     Tải và khởi tạo mô hình SSTCN_Attention với trọng số pretrained.
     """
     model = SSTCN_Attention(num_classes=102).to(device)
     model.eval()
 
-    # Đường dẫn mặc định
-    default_candidates = [
-        weights_path,
-        os.path.join(os.path.dirname(__file__), "weights", "sign_sstcn_attention_model.pth"),
-        "/home/thanhhai/Documents/UNIVERSITY/TOOL/SignLang/source/sign_sstcn_attention_model.pth"
+    requested = weights_path or os.environ.get("VSL_SSTCN_WEIGHTS")
+    default_candidates = [requested] if requested else [
+        os.path.join(os.path.dirname(__file__), "weights", "sign_sstcn_attention_model.pth")
     ]
 
     loaded = False
     for path in default_candidates:
         if path and os.path.exists(path):
             try:
-                ckpt = torch.load(path, map_location=device)
+                ckpt = torch.load(path, map_location='cpu', weights_only=True)
+                if isinstance(ckpt, dict) and "class_names" in ckpt:
+                    from backend.training.sstcn_data import CLASS_NAMES, PREPROCESSING
+                    if ckpt["class_names"] != CLASS_NAMES or ckpt.get("preprocessing") != PREPROCESSING:
+                        raise ValueError("Checkpoint class mapping/preprocessing does not match the recognizer")
                 if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
                     model.load_state_dict(ckpt["model_state_dict"])
                 else:
                     model.load_state_dict(ckpt)
                 print(f"[SSTCN] Tải thành công trọng số pretrained từ: {path}")
                 loaded = True
+                model.has_weights = True
+                model.weights_path = os.path.abspath(path)
                 break
             except Exception as e:
                 print(f"[SSTCN] Cảnh báo lỗi tải trọng số từ {path}: {e}")
 
     if not loaded:
-        print("[SSTCN] Cảnh báo: Không tìm thấy file trọng số hợp lệ. Mô hình khởi tạo với tham số ngẫu nhiên.")
+        model.has_weights = False
+        if not allow_untrained:
+            raise RuntimeError(f"Không tải được checkpoint SSTCN hợp lệ: {default_candidates}")
         
     return model

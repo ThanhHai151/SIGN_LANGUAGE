@@ -1,0 +1,7 @@
+# Separate Python 3.11-3.12 environment for the historical Holistic API.
+# MediaPipe 0.10.21 requires NumPy <2; do not install into the app environment.
+numpy==1.26.4
+mediapipe==0.10.21
+opencv-contrib-python==4.11.0.86
+jax==0.7.1
+jaxlib==0.7.1
