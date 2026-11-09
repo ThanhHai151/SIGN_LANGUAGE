@@ -349,6 +349,45 @@ export async function savePilotSidecarSync(sessionId, syncData) {
   }
 }
 
+/**
+ * Lưu kết quả chẩn đoán Controlled Pilot 29 Chữ cái vào backend/data/diagnostics/
+ */
+export async function savePilotEvaluation(sessionId, report, frames = null) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/pilot/save_evaluation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: sessionId,
+        report,
+        frames
+      })
+    });
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson.detail || `HTTP ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn('[VSL API] Save pilot evaluation error:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Lấy danh sách các file báo cáo chẩn đoán Controlled Pilot
+ */
+export async function fetchPilotEvaluations() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/pilot/evaluations`);
+    if (!res.ok) throw new Error('Cannot fetch pilot evaluations');
+    return await res.json();
+  } catch (err) {
+    console.warn('[VSL API] Fetch pilot evaluations error:', err);
+    return { success: false, evaluations: [] };
+  }
+}
+
 export async function convertTextToVSL(text) {
   try {
     const res = await fetch(`${API_BASE_URL}/api/text_to_sign`, {

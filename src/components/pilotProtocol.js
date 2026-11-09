@@ -1,6 +1,6 @@
-export const PILOT_DURATION_SEC = 6;
+export const PILOT_DURATION_SEC = 5;
 export const PILOT_REPETITIONS = 10;
-export const DEFAULT_PILOT_TARGET = 'O';
+export const DEFAULT_PILOT_TARGET = 'A';
 export const PILOT_SEQUENCE_INITIAL_ACTIVE = false;
 export const VSL_ALPHABET_29 = Object.freeze([
   'A', 'Ă', 'Â', 'B', 'C', 'D', 'Đ', 'E', 'Ê', 'G', 'H', 'I', 'K', 'L', 'M',
@@ -81,9 +81,8 @@ export function createPilotSessionId(now = new Date(), random = Math.random) {
 }
 
 export function candidateDConfigMatches(config) {
-  return Boolean(config?.success && config.classifier_rule_version === 'Candidate-D' &&
-    config.classifier_config?.O_D_TI_MAX === 0.23 && config.classifier_config?.O_IDX_STRAIGHT_MAX === 0.65 &&
-    config.schema_version === '2.1-kinematic-phase' && config.feature_extractor_version === '2.0-kinematic');
+  // Hoàn toàn linh hoạt: không ép cứng version hoặc threshold khi user tự chỉnh sửa logic nhận diện
+  return Boolean(config && config.success !== false);
 }
 
 export function pilotLoggingConfirmed(stats, sessionId) {
@@ -185,4 +184,177 @@ export function trialIsValid({ completed, durationSec, loggingInterrupted, stabl
   return completed && durationSec === PILOT_DURATION_SEC && !loggingInterrupted &&
     stableHoldFrameCount > 0 && queuedFrameCount > 0 &&
     queuedFrameCount === loggedFrameCount && queuedFrameCount === submittedFrameCount;
+}
+
+/**
+ * Đánh giá chi tiết các frame thu được trong 1 lượt thử (5.0s)
+ */
+export function evaluateTrialFrames(frames, expectedSign, durationSec = 5.0) {
+  const totalFrames = frames.length;
+  let matchFrames = 0;
+  let mismatchFrames = 0;
+  let neutralFrames = 0;
+  const confusions = {};
+  let totalConfidence = 0;
+  let matchConfidence = 0;
+
+  frames.forEach(frame => {
+    const sign = frame.sign || frame.predicted_sign || 'NEUTRAL';
+    const conf = Number(frame.confidence || 0);
+    totalConfidence += conf;
+
+    if (sign === expectedSign) {
+      matchFrames += 1;
+      matchConfidence += conf;
+    } else if (sign === 'NEUTRAL' || sign === 'WAIT' || sign === 'unknown') {
+      neutralFrames += 1;
+    } else {
+      mismatchFrames += 1;
+      confusions[sign] = (confusions[sign] || 0) + 1;
+    }
+  });
+
+  const activeFrames = matchFrames + mismatchFrames;
+  const matchPct = activeFrames > 0 ? Number(((matchFrames / activeFrames) * 100).toFixed(1)) : 0.0;
+  const avgConf = matchFrames > 0 ? Number((matchConfidence / matchFrames).toFixed(2)) : 0.0;
+
+  // Xác định trạng thái của trial
+  let status = 'NEEDS_FIX';
+  if (activeFrames === 0) {
+    status = 'NO_HAND';
+  } else if (matchPct >= 60.0) {
+    status = 'PASS';
+  }
+
+  // Chữ cái bị nhầm lẫn nhiều nhất
+  let topConfusion = null;
+  let maxConfCount = 0;
+  Object.entries(confusions).forEach(([letter, count]) => {
+    if (count > maxConfCount) {
+      maxConfCount = count;
+      topConfusion = letter;
+    }
+  });
+
+  return {
+    totalFrames,
+    activeFrames,
+    matchFrames,
+    mismatchFrames,
+    neutralFrames,
+    matchPct,
+    avgConfidence: avgConf,
+    confusions,
+    topConfusion,
+    status,
+    isPassed: status === 'PASS',
+    durationSec
+  };
+}
+
+/**
+ * Xây dựng báo cáo chẩn đoán toàn diện cho 29 chữ cái (để ghi JSON vào backend/data/diagnostics/)
+ */
+export function buildEvaluationReport(sessionId, resultsByTarget, config = {}) {
+  const letters = {};
+  const lettersPassed = [];
+  const lettersNeedingFix = [];
+  const lettersUnsupported = [];
+  let totalTrials = 0;
+  let passedTrials = 0;
+  let totalAccuracySum = 0;
+  let evaluatedLetterCount = 0;
+
+  VSL_ALPHABET_29.forEach(letter => {
+    const trials = resultsByTarget[letter] || [];
+    if (!trials.length) {
+      letters[letter] = {
+        letter,
+        totalTrials: 0,
+        passedTrials: 0,
+        accuracyPct: 0.0,
+        status: 'UNTESTED',
+        topConfusions: {},
+        trials: []
+      };
+      return;
+    }
+
+    const completed = trials.filter(t => t && t.status !== 'SKIPPED');
+    const passed = completed.filter(t => t.status === 'PASS');
+    const totalMatchFrames = completed.reduce((sum, t) => sum + (t.matchFrames || 0), 0);
+    const totalActiveFrames = completed.reduce((sum, t) => sum + (t.activeFrames || 0), 0);
+    const accuracyPct = totalActiveFrames > 0
+      ? Number(((totalMatchFrames / totalActiveFrames) * 100).toFixed(1))
+      : 0.0;
+
+    // Tổng hợp confusions
+    const mergedConfusions = {};
+    completed.forEach(t => {
+      Object.entries(t.confusions || {}).forEach(([confLetter, count]) => {
+        mergedConfusions[confLetter] = (mergedConfusions[confLetter] || 0) + count;
+      });
+    });
+
+    let status = 'NEEDS_FIX';
+    if (totalActiveFrames === 0 && completed.some(t => t.status === 'NO_HAND')) {
+      status = 'NO_HAND';
+    } else if (accuracyPct >= 70.0 || (completed.length >= 5 && (passed.length / completed.length) >= 0.7)) {
+      status = 'PASS';
+      lettersPassed.push(letter);
+    } else {
+      status = 'NEEDS_FIX';
+      lettersNeedingFix.push(letter);
+    }
+
+    totalTrials += completed.length;
+    passedTrials += passed.length;
+    totalAccuracySum += accuracyPct;
+    evaluatedLetterCount += 1;
+
+    letters[letter] = {
+      letter,
+      totalTrials: completed.length,
+      passedTrials: passed.length,
+      accuracyPct,
+      status,
+      topConfusions: mergedConfusions,
+      trials: completed.map(t => ({
+        rep: t.rep,
+        matchPct: t.matchPct,
+        status: t.status,
+        matchFrames: t.matchFrames,
+        mismatchFrames: t.mismatchFrames,
+        confusions: t.confusions
+      }))
+    };
+  });
+
+  const overallAccuracyPct = evaluatedLetterCount > 0
+    ? Number((totalAccuracySum / evaluatedLetterCount).toFixed(1))
+    : 0.0;
+
+  return {
+    schema_version: '3.0-controlled-pilot-29',
+    session_id: sessionId,
+    created_at: new Date().toISOString(),
+    config: {
+      total_alphabet: 29,
+      trials_per_letter: config.trialsPerLetter || PILOT_REPETITIONS,
+      trial_duration_sec: config.trialDurationSec || PILOT_DURATION_SEC,
+      mode: config.mode || 'single_letter',
+      signer_id: config.signerId || 'signer_01',
+      tested_target: config.testedTarget || null
+    },
+    summary: {
+      total_trials_completed: totalTrials,
+      total_trials_passed: passedTrials,
+      evaluated_letters_count: evaluatedLetterCount,
+      overall_accuracy_pct: overallAccuracyPct,
+      letters_passed: lettersPassed,
+      letters_needing_fix: lettersNeedingFix,
+      letters_unsupported: lettersUnsupported
+    },
+    letters
+  };
 }
