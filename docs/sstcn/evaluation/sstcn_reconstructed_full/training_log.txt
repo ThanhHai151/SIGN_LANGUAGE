@@ -1,0 +1,27 @@
+Training on cuda: {'train': 38818, 'val': 1407, 'test': 1420}, amp=True
+Epoch 1/12
+{"epoch": 0, "train_loss": 3.1722508916481917, "train_accuracy": 0.18025142974908548, "val_loss": 2.198606177010092, "val_accuracy": 0.38734896943852165, "lr": 0.001, "seconds": 88.14774405699973}
+Epoch 2/12
+{"epoch": 1, "train_loss": 2.0483545074077667, "train_accuracy": 0.3931423566386728, "val_loss": 1.4174952536673096, "val_accuracy": 0.5991471215351812, "lr": 0.001, "seconds": 86.55928576499991}
+Epoch 3/12
+{"epoch": 2, "train_loss": 1.5326356812148443, "train_accuracy": 0.5226956566541295, "val_loss": 1.0333636151871617, "val_accuracy": 0.6979388770433547, "lr": 0.001, "seconds": 86.5695473009996}
+Epoch 4/12
+{"epoch": 3, "train_loss": 1.2413499677277673, "train_accuracy": 0.6087897367200783, "val_loss": 0.8351639317720599, "val_accuracy": 0.746268656716418, "lr": 0.001, "seconds": 86.89921343000015}
+Epoch 5/12
+{"epoch": 4, "train_loss": 1.049142598331948, "train_accuracy": 0.6646143541655933, "val_loss": 0.9109054027547545, "val_accuracy": 0.7263681592039801, "lr": 0.001, "seconds": 86.74296896199985}
+Epoch 6/12
+{"epoch": 5, "train_loss": 0.9129894626730837, "train_accuracy": 0.7072234530372508, "val_loss": 0.6763340910657043, "val_accuracy": 0.8081023454157783, "lr": 0.001, "seconds": 86.92808714300008}
+Epoch 7/12
+{"epoch": 6, "train_loss": 0.8255413965068673, "train_accuracy": 0.7345046112628162, "val_loss": 0.6643118038191046, "val_accuracy": 0.7995735607675906, "lr": 0.001, "seconds": 87.03154337399974}
+Epoch 8/12
+{"epoch": 7, "train_loss": 0.7382890642429407, "train_accuracy": 0.7600082435983306, "val_loss": 0.5501291491329543, "val_accuracy": 0.8464818763326226, "lr": 0.001, "seconds": 86.6299813709993}
+Epoch 9/12
+{"epoch": 8, "train_loss": 0.687430282643678, "train_accuracy": 0.7804369107115255, "val_loss": 0.5185210251096469, "val_accuracy": 0.8443496801705757, "lr": 0.001, "seconds": 86.47719479199986}
+Epoch 10/12
+{"epoch": 9, "train_loss": 0.6491906560980081, "train_accuracy": 0.790020093770931, "val_loss": 0.5041573985976875, "val_accuracy": 0.8415067519545132, "lr": 0.001, "seconds": 86.86879084500015}
+Epoch 11/12
+{"epoch": 10, "train_loss": 0.6054508531656815, "train_accuracy": 0.8019733113504045, "val_loss": 0.4710657465368954, "val_accuracy": 0.8571428571428571, "lr": 0.001, "seconds": 86.56067977199928}
+Epoch 12/12
+{"epoch": 11, "train_loss": 0.5684451838599529, "train_accuracy": 0.8149827399659951, "val_loss": 0.5040407791024163, "val_accuracy": 0.8422174840085288, "lr": 0.001, "seconds": 86.64002441499997}
+{"split": "val", "samples": 1407, "accuracy": 0.8578535891968728, "top5_accuracy": 0.9864960909737029, "weighted_f1": 0.8561374617014242}
+{"split": "test", "samples": 1420, "accuracy": 0.8866197183098592, "top5_accuracy": 0.9950704225352113, "weighted_f1": 0.8844394970602992}

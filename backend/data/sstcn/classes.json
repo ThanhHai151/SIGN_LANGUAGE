@@ -1,0 +1,417 @@
+{
+  "classes": [
+    {
+      "index": 0,
+      "label": "A"
+    },
+    {
+      "index": 1,
+      "label": "Ă"
+    },
+    {
+      "index": 2,
+      "label": "Â"
+    },
+    {
+      "index": 3,
+      "label": "B"
+    },
+    {
+      "index": 4,
+      "label": "C"
+    },
+    {
+      "index": 5,
+      "label": "D"
+    },
+    {
+      "index": 6,
+      "label": "Đ"
+    },
+    {
+      "index": 7,
+      "label": "E"
+    },
+    {
+      "index": 8,
+      "label": "Ê"
+    },
+    {
+      "index": 9,
+      "label": "G"
+    },
+    {
+      "index": 10,
+      "label": "H"
+    },
+    {
+      "index": 11,
+      "label": "I"
+    },
+    {
+      "index": 12,
+      "label": "K"
+    },
+    {
+      "index": 13,
+      "label": "L"
+    },
+    {
+      "index": 14,
+      "label": "M"
+    },
+    {
+      "index": 15,
+      "label": "N"
+    },
+    {
+      "index": 16,
+      "label": "O"
+    },
+    {
+      "index": 17,
+      "label": "Ô"
+    },
+    {
+      "index": 18,
+      "label": "Ơ"
+    },
+    {
+      "index": 19,
+      "label": "P"
+    },
+    {
+      "index": 20,
+      "label": "Q"
+    },
+    {
+      "index": 21,
+      "label": "R"
+    },
+    {
+      "index": 22,
+      "label": "S"
+    },
+    {
+      "index": 23,
+      "label": "T"
+    },
+    {
+      "index": 24,
+      "label": "U"
+    },
+    {
+      "index": 25,
+      "label": "Ư"
+    },
+    {
+      "index": 26,
+      "label": "V"
+    },
+    {
+      "index": 27,
+      "label": "X"
+    },
+    {
+      "index": 28,
+      "label": "Y"
+    },
+    {
+      "index": 29,
+      "label": "Số 1"
+    },
+    {
+      "index": 30,
+      "label": "Số 2"
+    },
+    {
+      "index": 31,
+      "label": "Số 3"
+    },
+    {
+      "index": 32,
+      "label": "Số 4"
+    },
+    {
+      "index": 33,
+      "label": "Số 5"
+    },
+    {
+      "index": 34,
+      "label": "Số 6"
+    },
+    {
+      "index": 35,
+      "label": "Số 7"
+    },
+    {
+      "index": 36,
+      "label": "Số 8"
+    },
+    {
+      "index": 37,
+      "label": "Số 9"
+    },
+    {
+      "index": 38,
+      "label": "Số 10"
+    },
+    {
+      "index": 39,
+      "label": "Thời gian"
+    },
+    {
+      "index": 40,
+      "label": "Hỏi giờ"
+    },
+    {
+      "index": 41,
+      "label": "Ngày"
+    },
+    {
+      "index": 42,
+      "label": "Tháng"
+    },
+    {
+      "index": 43,
+      "label": "Năm"
+    },
+    {
+      "index": 44,
+      "label": "Hôm nay"
+    },
+    {
+      "index": 45,
+      "label": "Hôm qua"
+    },
+    {
+      "index": 46,
+      "label": "Buổi sáng"
+    },
+    {
+      "index": 47,
+      "label": "Buổi trưa"
+    },
+    {
+      "index": 48,
+      "label": "Buổi chiều"
+    },
+    {
+      "index": 49,
+      "label": "Buổi tối"
+    },
+    {
+      "index": 50,
+      "label": "Đêm"
+    },
+    {
+      "index": 51,
+      "label": "Tôi"
+    },
+    {
+      "index": 52,
+      "label": "Chào"
+    },
+    {
+      "index": 53,
+      "label": "Xin lỗi"
+    },
+    {
+      "index": 54,
+      "label": "Xin phép"
+    },
+    {
+      "index": 55,
+      "label": "Vui"
+    },
+    {
+      "index": 56,
+      "label": "Buồn"
+    },
+    {
+      "index": 57,
+      "label": "Mệt"
+    },
+    {
+      "index": 58,
+      "label": "Khỏe"
+    },
+    {
+      "index": 59,
+      "label": "Yếu"
+    },
+    {
+      "index": 60,
+      "label": "Bạn"
+    },
+    {
+      "index": 61,
+      "label": "Tên là gì"
+    },
+    {
+      "index": 62,
+      "label": "Tuổi"
+    },
+    {
+      "index": 63,
+      "label": "Thế nào"
+    },
+    {
+      "index": 64,
+      "label": "Bao nhiêu"
+    },
+    {
+      "index": 65,
+      "label": "Ở đâu"
+    },
+    {
+      "index": 66,
+      "label": "Làm gì"
+    },
+    {
+      "index": 67,
+      "label": "Đi"
+    },
+    {
+      "index": 68,
+      "label": "Đứng"
+    },
+    {
+      "index": 69,
+      "label": "Ngồi"
+    },
+    {
+      "index": 70,
+      "label": "Nằm"
+    },
+    {
+      "index": 71,
+      "label": "Chạy"
+    },
+    {
+      "index": 72,
+      "label": "Nhảy"
+    },
+    {
+      "index": 73,
+      "label": "Ngủ"
+    },
+    {
+      "index": 74,
+      "label": "Đi vệ sinh"
+    },
+    {
+      "index": 75,
+      "label": "Ăn"
+    },
+    {
+      "index": 76,
+      "label": "Uống"
+    },
+    {
+      "index": 77,
+      "label": "Tắm"
+    },
+    {
+      "index": 78,
+      "label": "Khóc"
+    },
+    {
+      "index": 79,
+      "label": "Cười"
+    },
+    {
+      "index": 80,
+      "label": "Gia đình"
+    },
+    {
+      "index": 81,
+      "label": "Ông"
+    },
+    {
+      "index": 82,
+      "label": "Bà"
+    },
+    {
+      "index": 83,
+      "label": "Bố"
+    },
+    {
+      "index": 84,
+      "label": "Mẹ"
+    },
+    {
+      "index": 85,
+      "label": "Em trai"
+    },
+    {
+      "index": 86,
+      "label": "Em gái"
+    },
+    {
+      "index": 87,
+      "label": "Con trai"
+    },
+    {
+      "index": 88,
+      "label": "Con gái"
+    },
+    {
+      "index": 89,
+      "label": "Vợ"
+    },
+    {
+      "index": 90,
+      "label": "Chồng"
+    },
+    {
+      "index": 91,
+      "label": "Anh trai"
+    },
+    {
+      "index": 92,
+      "label": "Chị gái"
+    },
+    {
+      "index": 93,
+      "label": "Em út"
+    },
+    {
+      "index": 94,
+      "label": "Yêu"
+    },
+    {
+      "index": 95,
+      "label": "Cô giáo"
+    },
+    {
+      "index": 96,
+      "label": "Công nhân"
+    },
+    {
+      "index": 97,
+      "label": "Nông dân"
+    },
+    {
+      "index": 98,
+      "label": "Bác sĩ"
+    },
+    {
+      "index": 99,
+      "label": "Y tá"
+    },
+    {
+      "index": 100,
+      "label": "Công an"
+    },
+    {
+      "index": 101,
+      "label": "Bộ đội"
+    }
+  ],
+  "unknown": {
+    "index": 102,
+    "is_model_class": false,
+    "label": "UNKNOWN"
+  }
+}

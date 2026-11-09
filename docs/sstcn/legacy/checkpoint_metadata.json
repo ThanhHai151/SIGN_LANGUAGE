@@ -1,0 +1,131 @@
+{
+  "checkpoint_sha256": "2a8ddcc4d06c4f23aa7910caf77371848034dcdf8f4749d134c5894764cf9697",
+  "keys": [
+    "epoch",
+    "model_state_dict",
+    "optimizer_state_dict",
+    "loss"
+  ],
+  "epoch": 32,
+  "loss": 1.0744346380233765,
+  "optimizer_param_groups": [
+    {
+      "lr": 0.0005,
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "weight_decay": 0.0001,
+      "amsgrad": false,
+      "foreach": null,
+      "maximize": false,
+      "capturable": false,
+      "differentiable": false,
+      "fused": null
+    }
+  ],
+  "tensor_shapes": {
+    "spatial_conv.weight": [
+      128,
+      3,
+      1
+    ],
+    "spatial_conv.bias": [
+      128
+    ],
+    "spatial_bn.weight": [
+      128
+    ],
+    "spatial_bn.bias": [
+      128
+    ],
+    "spatial_bn.running_mean": [
+      128
+    ],
+    "spatial_bn.running_var": [
+      128
+    ],
+    "spatial_bn.num_batches_tracked": [],
+    "left_hand_attn.attn.in_proj_weight": [
+      384,
+      128
+    ],
+    "left_hand_attn.attn.in_proj_bias": [
+      384
+    ],
+    "left_hand_attn.attn.out_proj.weight": [
+      128,
+      128
+    ],
+    "left_hand_attn.attn.out_proj.bias": [
+      128
+    ],
+    "right_hand_attn.attn.in_proj_weight": [
+      384,
+      128
+    ],
+    "right_hand_attn.attn.in_proj_bias": [
+      384
+    ],
+    "right_hand_attn.attn.out_proj.weight": [
+      128,
+      128
+    ],
+    "right_hand_attn.attn.out_proj.bias": [
+      128
+    ],
+    "temporal_conv1.weight": [
+      256,
+      128,
+      3,
+      1
+    ],
+    "temporal_conv1.bias": [
+      256
+    ],
+    "temporal_bn1.weight": [
+      256
+    ],
+    "temporal_bn1.bias": [
+      256
+    ],
+    "temporal_bn1.running_mean": [
+      256
+    ],
+    "temporal_bn1.running_var": [
+      256
+    ],
+    "temporal_bn1.num_batches_tracked": [],
+    "temporal_conv2.weight": [
+      512,
+      256,
+      3,
+      1
+    ],
+    "temporal_conv2.bias": [
+      512
+    ],
+    "temporal_bn2.weight": [
+      512
+    ],
+    "temporal_bn2.bias": [
+      512
+    ],
+    "temporal_bn2.running_mean": [
+      512
+    ],
+    "temporal_bn2.running_var": [
+      512
+    ],
+    "temporal_bn2.num_batches_tracked": [],
+    "fc.weight": [
+      102,
+      512
+    ],
+    "fc.bias": [
+      102
+    ]
+  },
+  "limitations": "These stored settings do not recover the original training script, initial optimizer schedule or data split."
+}
