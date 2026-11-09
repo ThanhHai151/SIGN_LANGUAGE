@@ -17,6 +17,7 @@ import time
 import json
 import queue
 import atexit
+import hashlib
 import threading
 from typing import Optional, Dict, Any, List
 
@@ -26,6 +27,13 @@ STATIC_CLASSES_22 = [
     "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "X", "Y"
 ]
 VALID_STATIC_CLASSES_SET = set(STATIC_CLASSES_22)
+
+# Bảng 29 chữ cái tiếng Việt VSL chuẩn hóa (VSL Alphabet 29)
+VSL_ALPHABET_29 = [
+    "A", "Ă", "Â", "B", "C", "D", "Đ", "E", "Ê", "G", "H", "I", "K", "L",
+    "M", "N", "O", "Ô", "Ơ", "P", "Q", "R", "S", "T", "U", "Ư", "V", "X", "Y"
+]
+VALID_TARGET_CLASSES_SET = set(VSL_ALPHABET_29)
 
 # Thư mục lưu trữ log pilot mặc định
 DEFAULT_PILOT_LOG_DIR = os.path.join(
@@ -37,19 +45,20 @@ DEFAULT_PILOT_LOG_DIR = os.path.join(
 def sanitize_expected_sign(expected_sign: Any) -> Optional[str]:
     """
     Chuẩn hóa và kiểm tra nhãn ground truth (expected_sign).
-    - Chỉ chấp nhận nếu thuộc danh sách 22 chữ cái tĩnh tiếng Việt.
+    - Chấp nhận 29 chữ cái trong bảng chữ cái tiếng Việt VSL (cả chữ tĩnh và chữ có dấu).
     - Trả về None nếu không hợp lệ hoặc rỗng.
     - Tuyệt đối không can thiệp vào logic dự đoán của mô hình.
     """
     if expected_sign is None:
         return None
     val = str(expected_sign).strip().upper()
-    if val in VALID_STATIC_CLASSES_SET:
+    if val in VALID_TARGET_CLASSES_SET:
         return val
     return None
 
 
 SESSION_ID_PATTERN = re.compile(r'^[a-zA-Z0-9_-]{3,64}$')
+TRIAL_ID_PATTERN = re.compile(r'^[a-zA-Z0-9_-]{3,128}$')
 
 
 def validate_session_id(session_id: Any) -> str:
@@ -83,6 +92,13 @@ def validate_session_id(session_id: Any) -> str:
         raise ValueError(f"session_id không hợp lệ: phải chứa ít nhất một ký tự chữ hoặc số: '{session_id}'.")
 
     return sess
+
+
+def validate_trial_id(trial_id: Any) -> str:
+    """Validate trial identifiers before using them as accounting keys."""
+    if not isinstance(trial_id, str) or not TRIAL_ID_PATTERN.fullmatch(trial_id) or not re.search(r'[a-zA-Z0-9]', trial_id):
+        raise ValueError("trial_id không hợp lệ: cần 3-128 ký tự chữ/số, '_' hoặc '-' và ít nhất một chữ/số.")
+    return trial_id
 
 
 def create_safe_pilot_file(target_dir: str, clean_session_id: str) -> str:
@@ -173,6 +189,18 @@ class PilotDiagnosticLogger:
             "dropped_queue_full": 0,
             "dropped_io_error": 0,
         }
+        self.out_of_trial_stats = {
+            "queued_count": 0, "logged_count": 0,
+            "dropped_queue_full": 0, "dropped_io_error": 0,
+            "total_dropped": 0, "pending_count": 0,
+        }
+        # Keys are (session_id, trial_id). Out-of-trial rows stay in the
+        # legacy cumulative counters above, but never enter these counters.
+        self.trial_stats: Dict[tuple, Dict[str, Any]] = {}
+        # Serialize producer enqueue against FIFO barrier insertion. This
+        # closes the race where a producer started before flush but enqueued
+        # after the barrier.
+        self._enqueue_barrier_lock = threading.Lock()
 
         # Vòng đời 3 trạng thái & đồng bộ hóa đóng logger (Task 7F.5F / 7F.5G)
         self.state = self.STATE_OPEN
@@ -206,33 +234,128 @@ class PilotDiagnosticLogger:
         Trả về True nếu đưa vào queue thành công, False nếu queue đầy hoặc logger đang đóng.
         Đảm bảo đồng bộ tuyệt đối với close(): không record nào bị enqueue sau sentinel (Task 7F.5F / 7F.5G).
         """
+        session_id = record.get("session_id") if isinstance(record, dict) else None
+        trial_id = record.get("trial_id") if isinstance(record, dict) else None
+        try:
+            trial_key = (validate_session_id(session_id), validate_trial_id(trial_id)) if trial_id is not None else None
+        except ValueError:
+            trial_key = None
+
+        # Fast state check before waiting for the barrier lock: during close,
+        # a newly arriving producer must be rejected immediately even if an
+        # already accepted producer is still inside its enqueue critical path.
         with self.lock:
             if self.state != self.STATE_OPEN or not self.is_running:
                 return False
-            self._in_flight_producers += 1
 
-        try:
-            if self._test_producer_pre_enqueue_hook is not None:
-                self._test_producer_pre_enqueue_hook(record)
-
-            target_file = filepath or self.get_default_filepath()
-            self.queue.put_nowait((record, target_file))
+        with self._enqueue_barrier_lock:
             with self.lock:
-                self.stats["queued_count"] += 1
+                # Recheck after acquiring the enqueue lock to cover a close
+                # that began between the fast check and lock acquisition.
+                if self.state != self.STATE_OPEN or not self.is_running:
+                    return False
+                self._in_flight_producers += 1
+
+            try:
+                if self._test_producer_pre_enqueue_hook is not None:
+                    self._test_producer_pre_enqueue_hook(record)
+
+                target_file = filepath or self.get_default_filepath()
+                with self.lock:
+                    self.queue.put_nowait((record, target_file, trial_key))
+                    self.stats["queued_count"] += 1
+                    if trial_key is not None:
+                        counters = self._ensure_trial_stats_locked(trial_key)
+                        counters["queued_count"] += 1
+                        counters["pending_count"] += 1
+                        counters["record_count"] += 1
+                        if counters["sealed"]:
+                            counters["late_record_count"] += 1
+                    else:
+                        self.out_of_trial_stats["queued_count"] += 1
+                        self.out_of_trial_stats["pending_count"] += 1
+                return True
+            except queue.Full:
+                with self.lock:
+                    self.stats["dropped_queue_full"] += 1
+                    if trial_key is not None:
+                        counters = self._ensure_trial_stats_locked(trial_key)
+                        counters["dropped_queue_full"] += 1
+                        counters["total_dropped"] += 1
+                        counters["record_count"] += 1
+                        if counters["sealed"]:
+                            counters["late_record_count"] += 1
+                    else:
+                        self.out_of_trial_stats["dropped_queue_full"] += 1
+                        self.out_of_trial_stats["total_dropped"] += 1
+                return False
+            except Exception:
+                with self.lock:
+                    self.stats["dropped_io_error"] += 1
+                    if trial_key is not None:
+                        counters = self._ensure_trial_stats_locked(trial_key)
+                        counters["dropped_io_error"] += 1
+                        counters["total_dropped"] += 1
+                        counters["record_count"] += 1
+                        if counters["sealed"]:
+                            counters["late_record_count"] += 1
+                    else:
+                        self.out_of_trial_stats["dropped_io_error"] += 1
+                        self.out_of_trial_stats["total_dropped"] += 1
+                return False
+            finally:
+                with self.lock:
+                    self._in_flight_producers -= 1
+                    if self._in_flight_producers == 0:
+                        self._all_producers_done.notify_all()
+
+    @staticmethod
+    def _empty_trial_stats() -> Dict[str, Any]:
+        return {
+            "queued_count": 0, "logged_count": 0,
+            "dropped_queue_full": 0, "dropped_io_error": 0,
+            "total_dropped": 0, "pending_count": 0,
+            "record_count": 0, "late_record_count": 0,
+            "sealed": False, "flush_barrier_passed": False,
+        }
+
+    def _ensure_trial_stats_locked(self, trial_key: tuple) -> Dict[str, Any]:
+        if trial_key not in self.trial_stats:
+            self.trial_stats[trial_key] = self._empty_trial_stats()
+        return self.trial_stats[trial_key]
+
+    def register_trial(self, session_id: str, trial_id: str) -> bool:
+        key = (validate_session_id(session_id), validate_trial_id(trial_id))
+        with self.lock:
+            if self.state != self.STATE_OPEN or not self.is_running or key in self.trial_stats:
+                return False
+            self.trial_stats[key] = self._empty_trial_stats()
             return True
-        except queue.Full:
+
+    def seal_trial(self, session_id: str, trial_id: str) -> Optional[Dict[str, Any]]:
+        key = (validate_session_id(session_id), validate_trial_id(trial_id))
+        # Ensure all producers that entered before the seal have either
+        # enqueued or failed before setting the terminal boundary.
+        with self._enqueue_barrier_lock:
             with self.lock:
-                self.stats["dropped_queue_full"] += 1
-            return False
-        except Exception:
-            with self.lock:
-                self.stats["dropped_io_error"] += 1
-            return False
-        finally:
-            with self.lock:
-                self._in_flight_producers -= 1
-                if self._in_flight_producers == 0:
-                    self._all_producers_done.notify_all()
+                counters = self.trial_stats.get(key)
+                if counters is None:
+                    return None
+                counters["sealed"] = True
+                return dict(counters)
+
+    def get_trial_stats(self, session_id: str, trial_id: str) -> Optional[Dict[str, Any]]:
+        key = (validate_session_id(session_id), validate_trial_id(trial_id))
+        with self.lock:
+            counters = self.trial_stats.get(key)
+            return dict(counters) if counters is not None else None
+
+    def mark_trial_flush(self, session_id: str, trial_id: str, barrier_passed: bool) -> None:
+        key = (validate_session_id(session_id), validate_trial_id(trial_id))
+        with self.lock:
+            counters = self.trial_stats.get(key)
+            if counters is not None:
+                counters["flush_barrier_passed"] = bool(barrier_passed)
 
     def _worker_loop(self):
         """Vòng lặp tiêu thụ bản ghi và ghi file JSONL trong background thread."""
@@ -264,7 +387,7 @@ class PilotDiagnosticLogger:
                     self.queue.task_done()
                 continue
 
-            record, target_file = item
+            record, target_file, trial_key = item
             try:
                 if self._test_worker_pre_write_hook is not None:
                     self._test_worker_pre_write_hook(record, target_file)
@@ -285,9 +408,25 @@ class PilotDiagnosticLogger:
                     f.flush()
                 with self.lock:
                     self.stats["logged_count"] += 1
+                    if trial_key is not None:
+                        counters = self._ensure_trial_stats_locked(trial_key)
+                        counters["logged_count"] += 1
+                        counters["pending_count"] = max(0, counters["pending_count"] - 1)
+                    else:
+                        self.out_of_trial_stats["logged_count"] += 1
+                        self.out_of_trial_stats["pending_count"] = max(0, self.out_of_trial_stats["pending_count"] - 1)
             except Exception:
                 with self.lock:
                     self.stats["dropped_io_error"] += 1
+                    if trial_key is not None:
+                        counters = self._ensure_trial_stats_locked(trial_key)
+                        counters["dropped_io_error"] += 1
+                        counters["total_dropped"] += 1
+                        counters["pending_count"] = max(0, counters["pending_count"] - 1)
+                    else:
+                        self.out_of_trial_stats["dropped_io_error"] += 1
+                        self.out_of_trial_stats["total_dropped"] += 1
+                        self.out_of_trial_stats["pending_count"] = max(0, self.out_of_trial_stats["pending_count"] - 1)
             finally:
                 self.queue.task_done()
 
@@ -301,18 +440,25 @@ class PilotDiagnosticLogger:
         - Trả về False nếu bị timeout, lỗi I/O, hoặc worker không hoạt động.
         """
         if not self._worker_thread.is_alive():
-            return self.queue.empty()
-
-        with self.lock:
-            initial_errors = self.stats["dropped_io_error"] + self.stats["dropped_queue_full"]
-
-        barrier = FlushBarrier(initial_error_count=initial_errors)
-        start_time = time.monotonic()
-
-        try:
-            self.queue.put(barrier, timeout=max(0.0, timeout))
-        except queue.Full:
+            # Without a live worker no FIFO barrier can be processed, even if
+            # the queue happens to be empty at this instant.
             return False
+
+        start_time = time.monotonic()
+        remaining = max(0.0, timeout - (time.monotonic() - start_time))
+        if not self._enqueue_barrier_lock.acquire(timeout=remaining):
+            return False
+        try:
+            with self.lock:
+                initial_errors = self.stats["dropped_io_error"] + self.stats["dropped_queue_full"]
+            barrier = FlushBarrier(initial_error_count=initial_errors)
+            remaining = max(0.0, timeout - (time.monotonic() - start_time))
+            try:
+                self.queue.put(barrier, timeout=remaining)
+            except queue.Full:
+                return False
+        finally:
+            self._enqueue_barrier_lock.release()
 
         elapsed = time.monotonic() - start_time
         remaining_timeout = max(0.0, timeout - elapsed)
@@ -331,6 +477,7 @@ class PilotDiagnosticLogger:
             res = dict(self.stats)
             res["total_dropped"] = res["dropped_queue_full"] + res["dropped_io_error"]
             res["pending_in_queue"] = self.queue.qsize()
+            res["out_of_trial"] = dict(self.out_of_trial_stats)
             return res
 
     def reset_stats(self):
@@ -341,6 +488,12 @@ class PilotDiagnosticLogger:
                 "logged_count": 0,
                 "dropped_queue_full": 0,
                 "dropped_io_error": 0,
+            }
+            self.trial_stats = {}
+            self.out_of_trial_stats = {
+                "queued_count": 0, "logged_count": 0,
+                "dropped_queue_full": 0, "dropped_io_error": 0,
+                "total_dropped": 0, "pending_count": 0,
             }
 
     def close(self, timeout: float = 3.0) -> bool:
@@ -446,4 +599,138 @@ def close_pilot_logger(timeout: float = 3.0) -> bool:
             _global_pilot_logger = None
             return ok
         return True
+
+
+PILOT_SCHEMA_VERSION = "2.0-kinematic"
+
+
+def compute_file_sha256(filepath: str) -> Optional[str]:
+    """Tính toán mã băm SHA256 của tệp để bảo đảm tính toàn vẹn (Data Integrity - Task 3.10)."""
+    if not filepath or not os.path.exists(filepath):
+        return None
+    h = hashlib.sha256()
+    try:
+        with open(filepath, "rb") as f:
+            while chunk := f.read(65536):
+                h.update(chunk)
+        return h.hexdigest()
+    except Exception:
+        return None
+
+
+def save_sidecar_sync(session_id: str, sync_data: Dict[str, Any], log_dir: Optional[str] = None) -> str:
+    """
+    Lưu tệp sidecar mapping đồng bộ hóa giữa video và landmarks (Task 3.10 Implementation C).
+    Nếu có trial_id, lưu độc lập bằng tên pilot_{session_id}_trial_{digest}_sync.json.
+    Payload cũ chưa có trial_id tiếp tục dùng pilot_{session_id}_sync.json.
+    """
+    clean_session_id = validate_session_id(session_id)
+    target_dir = log_dir or DEFAULT_PILOT_LOG_DIR
+    target_dir_real = os.path.realpath(target_dir)
+    os.makedirs(target_dir_real, exist_ok=True)
+
+    trial_id = sync_data.get("trial_id")
+    if trial_id is None:
+        sidecar_filename = f"pilot_{clean_session_id}_sync.json"
+    else:
+        if (
+            not isinstance(trial_id, str)
+            or not 3 <= len(trial_id) <= 128
+            or not any(char.isalnum() for char in trial_id)
+            or any(not (char.isalnum() or char in "_-") for char in trial_id)
+        ):
+            raise ValueError("trial_id không hợp lệ: chỉ chấp nhận 3-128 ký tự chữ/số, '_' hoặc '-'.")
+        trial_digest = hashlib.sha256(trial_id.encode("utf-8")).hexdigest()[:24]
+        sidecar_filename = f"pilot_{clean_session_id}_trial_{trial_digest}_sync.json"
+    sidecar_path = os.path.join(target_dir_real, sidecar_filename)
+    sidecar_real = os.path.realpath(sidecar_path)
+
+    if os.path.commonpath([sidecar_real, target_dir_real]) != target_dir_real:
+        raise ValueError(f"Đường dẫn file không hợp lệ hoặc thoát khỏi thư mục pilot: {sidecar_path}")
+
+    if trial_id is not None:
+        # Exclusive create prevents a repeated trial_id from overwriting an
+        # existing diagnostic artifact. The hashed component is path-safe;
+        # the original trial_id remains inside the JSON payload for audit.
+        fd = os.open(sidecar_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                json.dump(sync_data, f, ensure_ascii=False, indent=2)
+                f.flush()
+        except Exception:
+            try:
+                os.unlink(sidecar_path)
+            except OSError:
+                pass
+            raise
+    else:
+        tmp_path = sidecar_path + f".tmp_{time.time_ns()}"
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(sync_data, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_path, sidecar_path)
+    return sidecar_path
+
+
+def create_session_manifest(
+    session_id: str,
+    jsonl_filepath: str,
+    video_filename: Optional[str] = None,
+    sidecar_filepath: Optional[str] = None,
+    signer_id: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """
+    Tạo session manifest hoàn chỉnh gồm SHA256, schema version, thời điểm kết thúc (Task 3.10 Section 8).
+    """
+    clean_session_id = validate_session_id(session_id)
+    manifest = {
+        "schema_version": PILOT_SCHEMA_VERSION,
+        "session_id": clean_session_id,
+        "signer_id": signer_id or "anonymous",
+        "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "files": {
+            "jsonl": {
+                "path": jsonl_filepath,
+                "sha256": compute_file_sha256(jsonl_filepath),
+                "exists": os.path.exists(jsonl_filepath) if jsonl_filepath else False
+            },
+            "video": {
+                "name": video_filename,
+                "sha256": None,
+                "note": "Client local storage via MediaRecorder (not tracked in Git)"
+            },
+            "sidecar": {
+                "path": sidecar_filepath,
+                "sha256": compute_file_sha256(sidecar_filepath) if sidecar_filepath else None,
+                "exists": os.path.exists(sidecar_filepath) if sidecar_filepath else False
+            }
+        },
+        "metadata": metadata or {}
+    }
+    return manifest
+
+
+def save_session_manifest(manifest: Dict[str, Any], log_dir: Optional[str] = None) -> str:
+    """Lưu session manifest xuống đĩa: pilot_{session_id}_manifest.json."""
+    session_id = manifest.get("session_id")
+    if not session_id:
+        raise ValueError("Manifest thiếu trường session_id bắt buộc.")
+    clean_session_id = validate_session_id(session_id)
+
+    target_dir = log_dir or DEFAULT_PILOT_LOG_DIR
+    target_dir_real = os.path.realpath(target_dir)
+    os.makedirs(target_dir_real, exist_ok=True)
+
+    manifest_path = os.path.join(target_dir_real, f"pilot_{clean_session_id}_manifest.json")
+    manifest_real = os.path.realpath(manifest_path)
+
+    if os.path.commonpath([manifest_real, target_dir_real]) != target_dir_real:
+        raise ValueError(f"Đường dẫn file không hợp lệ hoặc thoát khỏi thư mục pilot: {manifest_path}")
+
+    tmp_path = manifest_path + f".tmp_{time.time_ns()}"
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, ensure_ascii=False, indent=2)
+    os.replace(tmp_path, manifest_path)
+    return manifest_path
+
 

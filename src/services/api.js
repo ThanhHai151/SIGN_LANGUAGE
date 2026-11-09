@@ -150,7 +150,13 @@ export async function sendLandmarksForRecognition(
       ...(metadata?.expected_sign ? { 'X-Expected-Sign': metadata.expected_sign } : {}),
       ...(metadata?.session_id ? { 'X-Session-Id': metadata.session_id } : {}),
       ...(metadata?.trial_id ? { 'X-Trial-Id': metadata.trial_id } : {}),
-      ...(metadata?.frame_idx !== undefined && metadata?.frame_idx !== null ? { 'X-Frame-Idx': String(metadata.frame_idx) } : {})
+      ...(metadata?.frame_idx !== undefined && metadata?.frame_idx !== null ? { 'X-Frame-Idx': String(metadata.frame_idx) } : {}),
+      ...(metadata?.signer_id ? { 'X-Signer-Id': metadata.signer_id } : {}),
+      ...(metadata?.client_capture_ts ? { 'X-Client-Capture-Ts': String(metadata.client_capture_ts) } : {}),
+      ...(metadata?.landmark_extract_ts ? { 'X-Landmark-Extract-Ts': String(metadata.landmark_extract_ts) } : {}),
+      ...(metadata?.request_send_ts ? { 'X-Request-Send-Ts': String(metadata.request_send_ts) } : {}),
+      ...(metadata?.video_pts_sec !== undefined && metadata?.video_pts_sec !== null ? { 'X-Video-Pts-Sec': String(metadata.video_pts_sec) } : {}),
+      ...(metadata?.video_frame_idx !== undefined && metadata?.video_frame_idx !== null ? { 'X-Video-Frame-Idx': String(metadata.video_frame_idx) } : {})
     };
     const bodyPayload = {
       landmarks,
@@ -160,7 +166,18 @@ export async function sendLandmarksForRecognition(
       ...(metadata?.expected_sign ? { expected_sign: metadata.expected_sign } : {}),
       ...(metadata?.session_id ? { session_id: metadata.session_id } : {}),
       ...(metadata?.trial_id ? { trial_id: metadata.trial_id } : {}),
-      ...(metadata?.frame_idx !== undefined && metadata?.frame_idx !== null ? { frame_idx: Number(metadata.frame_idx) } : {})
+      ...(metadata?.frame_idx !== undefined && metadata?.frame_idx !== null ? { frame_idx: Number(metadata.frame_idx) } : {}),
+      ...(metadata?.signer_id ? { signer_id: metadata.signer_id } : {}),
+      ...(metadata?.client_capture_ts ? { client_capture_ts: Number(metadata.client_capture_ts) } : {}),
+      ...(metadata?.landmark_extract_ts ? { landmark_extract_ts: Number(metadata.landmark_extract_ts) } : {}),
+      ...(metadata?.request_send_ts ? { request_send_ts: Number(metadata.request_send_ts) } : {}),
+      ...(metadata?.video_pts_sec !== undefined && metadata?.video_pts_sec !== null ? { video_pts_sec: metadata.video_pts_sec } : {}),
+      ...(metadata?.video_frame_idx !== undefined && metadata?.video_frame_idx !== null ? { video_frame_idx: metadata.video_frame_idx } : {}),
+      ...(metadata?.phase ? { phase: metadata.phase } : {}),
+      ...(metadata?.image_width ? { image_width: Number(metadata.image_width) } : {}),
+      ...(metadata?.image_height ? { image_height: Number(metadata.image_height) } : {}),
+      ...(metadata?.handedness_score !== undefined && metadata?.handedness_score !== null ? { handedness_score: Number(metadata.handedness_score) } : {}),
+      ...(metadata?.tracking_confidence !== undefined && metadata?.tracking_confidence !== null ? { tracking_confidence: Number(metadata.tracking_confidence) } : {})
     };
     const res = await fetch(`${API_BASE_URL}/api/recognize_landmarks`, {
       method: 'POST',
@@ -173,6 +190,8 @@ export async function sendLandmarksForRecognition(
     // Fallback: Local Client-side heuristic if backend is temporarily disconnected
     return {
       success: true,
+      backend_error: true,
+      error: err.message,
       data: clientSideLocalRecognize(landmarks)
     };
   }
@@ -208,14 +227,29 @@ export async function setPilotLogging(enabled, filepath_or_session_id = null, ma
 /**
  * Xả toàn bộ bộ đệm log chẩn đoán pilot xuống đĩa JSONL
  */
-export async function flushPilotLogs() {
+export async function flushPilotLogs(sessionId = null) {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/pilot/flush`, { method: 'POST' });
-    if (!res.ok) throw new Error('Failed to flush pilot logs');
-    return await res.json();
+    const request = { method: 'POST' };
+    if (sessionId) {
+      request.headers = { 'Content-Type': 'application/json' };
+      request.body = JSON.stringify({ session_id: sessionId });
+    }
+    const res = await fetch(`${API_BASE_URL}/api/pilot/flush`, request);
+    let body = null;
+    try { body = await res.json(); } catch { /* return explicit unknown/error below */ }
+    if (!res.ok) {
+      return {
+        ...(body || {}),
+        success: false,
+        flush_success: false,
+        http_status: res.status,
+        error: body?.detail || body?.error || `Failed to flush pilot logs (HTTP ${res.status})`
+      };
+    }
+    return body || { success: false, flush_success: false, error_code: 'invalid_response', error: 'Flush endpoint returned no JSON body.' };
   } catch (err) {
     console.warn('[VSL API] Pilot flush error:', err);
-    return { success: false, error: err.message };
+    return { success: false, flush_success: false, http_status: null, error_code: 'network_error', error: err.message };
   }
 }
 
@@ -228,6 +262,89 @@ export async function fetchPilotStats() {
     if (!res.ok) throw new Error('Failed to fetch pilot stats');
     return await res.json();
   } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function openPilotTrial(sessionId, trialId) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/pilot/trial/open`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId, trial_id: trialId })
+    });
+    const body = await res.json().catch(() => ({}));
+    return res.ok ? body : { ...body, success: false, http_status: res.status };
+  } catch (err) {
+    return { success: false, error_code: 'network_error', error: err.message };
+  }
+}
+
+export async function flushPilotTrial(sessionId, trialId) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/pilot/trial/flush`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId, trial_id: trialId })
+    });
+    const body = await res.json().catch(() => ({}));
+    return res.ok ? body : { ...body, success: false, flush_success: false, http_status: res.status };
+  } catch (err) {
+    return { success: false, flush_success: false, error_code: 'network_error', error: err.message };
+  }
+}
+
+export async function fetchPilotTrialAccounting(sessionId, trialId) {
+  try {
+    const params = new URLSearchParams({ session_id: sessionId, trial_id: trialId });
+    const res = await fetch(`${API_BASE_URL}/api/pilot/trial/accounting?${params}`);
+    const body = await res.json().catch(() => ({}));
+    return res.ok ? body : { ...body, success: false, http_status: res.status };
+  } catch (err) {
+    return { success: false, error_code: 'network_error', error: err.message };
+  }
+}
+
+export async function fetchPilotRuntimeConfig() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/pilot/config`);
+    if (!res.ok) throw new Error('Failed to verify pilot runtime configuration');
+    return await res.json();
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Lưu session manifest kèm SHA256 cho phiên thử nghiệm pilot (Task 3.10 Section 8)
+ */
+export async function savePilotSessionManifest(sessionId, manifest) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/pilot/manifest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId, manifest })
+    });
+    if (!res.ok) throw new Error('Failed to save session manifest');
+    return await res.json();
+  } catch (err) {
+    console.warn('[VSL API] Pilot manifest save error:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Lưu sidecar synchronization file ánh xạ video và JSONL (Task 3.10 Implementation C)
+ */
+export async function savePilotSidecarSync(sessionId, syncData) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/pilot/sidecar_sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId, sync_data: syncData })
+    });
+    if (!res.ok) throw new Error('Failed to save sidecar sync');
+    return await res.json();
+  } catch (err) {
+    console.warn('[VSL API] Pilot sidecar save error:', err);
     return { success: false, error: err.message };
   }
 }

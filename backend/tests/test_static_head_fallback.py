@@ -215,6 +215,26 @@ class TestStaticHeadFallback(unittest.TestCase):
                 self.assertEqual(res["sign"], "NEUTRAL")
                 self.assertEqual(res["source"], "none")
 
+    def test_b2b_fallback_rejects_o_when_geometry_does_not_match(self):
+        """O remains outside both static-head fallback allowlists."""
+        mock_no_match = {"letter": "UNKNOWN", "confidence": 0.0, "status": "NO_MATCH", "source": "none"}
+        mock_head_o = {
+            "letter": "O",
+            "raw_predicted_letter": "O",
+            "confidence": 0.99,
+            "status": "CONFIDENT",
+            "is_confident": True,
+            "top_k": [{"letter": "O", "confidence": 0.99}],
+        }
+        with patch.object(self.rec.alphabet_classifier, "classify_detailed", return_value=mock_no_match):
+            with patch.object(self.rec.static_alphabet_head, "predict_feature", return_value=mock_head_o):
+                res = self.rec.predict_landmarks(
+                    make_dummy_landmarks(), mode="letters", session_id="test_rej_o", timestamp=65.0
+                )
+
+        self.assertEqual(res["sign"], "NEUTRAL")
+        self.assertEqual(res["source"], "none")
+
     def test_b3_supplemental_letters_still_use_static_head(self):
         """Head dự đoán 'G' conf 0.80 -> sử dụng nhánh static_head chuẩn, source='static_head'."""
         mock_no_match = {"letter": "UNKNOWN", "confidence": 0.0, "status": "NO_MATCH", "source": "none"}

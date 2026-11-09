@@ -126,7 +126,13 @@ def load_static_alphabet_head(weights_path: Optional[str] = None, device: str = 
     metadata = {}
     
     if os.path.exists(target_path):
-        ckpt = torch.load(target_path, map_location=device)
+        safe_numpy_globals = [
+            (np._core.multiarray.scalar, "numpy.core.multiarray.scalar"),
+            (np.dtype, "numpy.dtype"),
+            (type(np.dtype(np.float64)), "numpy.dtypes.Float64DType"),
+        ]
+        with torch.serialization.safe_globals(safe_numpy_globals):
+            ckpt = torch.load(target_path, map_location=device, weights_only=True)
         if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
             head.load_state_dict(ckpt["model_state_dict"])
             metadata = {k: v for k, v in ckpt.items() if k != "model_state_dict"}

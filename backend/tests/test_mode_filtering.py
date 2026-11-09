@@ -97,16 +97,49 @@ class TestModeFiltering(unittest.TestCase):
         return lm
 
     def test_allowed_letters_set(self):
-        """Xác nhận ALLOWED_LETTERS chứa chính xác 27 chữ cái VSL đầu tiên."""
-        self.assertEqual(len(ALLOWED_LETTERS), 27)
-        expected = set(CLASSES[:27])
+        """Xác nhận ALLOWED_LETTERS chứa chính xác 29 chữ cái tiếng Việt chuẩn VSL (không có F, J, W, Z)."""
+        self.assertEqual(len(ALLOWED_LETTERS), 29)
+        expected = {
+            "A", "Ă", "Â", "B", "C", "D", "Đ", "E", "Ê", "G", "H", "I", "K", "L",
+            "M", "N", "O", "Ô", "Ơ", "P", "Q", "R", "S", "T", "U", "Ư", "V", "X", "Y"
+        }
         self.assertEqual(ALLOWED_LETTERS, expected)
-        self.assertIn("A", ALLOWED_LETTERS)
-        self.assertIn("Đ", ALLOWED_LETTERS)
-        self.assertIn("Z", ALLOWED_LETTERS)
+        # 1. Đầy đủ 7 chữ cái có dấu
+        for accented in ["Ă", "Â", "Đ", "Ê", "Ô", "Ơ", "Ư"]:
+            self.assertIn(accented, ALLOWED_LETTERS)
+        # 2. Tuyệt đối không có F, J, W, Z
+        for foreign in ["F", "J", "W", "Z"]:
+            self.assertNotIn(foreign, ALLOWED_LETTERS)
+        # 3. Không có nhãn từ vựng
         self.assertNotIn("XIN_CHAO", ALLOWED_LETTERS)
         self.assertNotIn("THOI_QUEN", ALLOWED_LETTERS)
         self.assertNotIn("HANG_NGAY", ALLOWED_LETTERS)
+
+    def test_mode_letters_accepts_accented_letters_and_blocks_fjwz(self):
+        """
+        Kiểm tra luồng lọc kết quả ở chế độ mode='letters':
+        - 29 chữ cái tiếng Việt (kể cả Ă, Â, Đ, Ê, Ô, Ơ, Ư) được coi là hợp lệ trong ALLOWED_LETTERS.
+        - Các chữ cái ngoại lai F, J, W, Z tuyệt đối không nằm trong ALLOWED_LETTERS.
+        """
+        accented_letters = ["Ă", "Â", "Đ", "Ê", "Ô", "Ơ", "Ư"]
+        for ch in accented_letters:
+            self.assertIn(ch, ALLOWED_LETTERS, f"Chữ có dấu {ch} phải thuộc ALLOWED_LETTERS")
+
+        foreign_letters = ["F", "J", "W", "Z"]
+        for ch in foreign_letters:
+            self.assertNotIn(ch, ALLOWED_LETTERS, f"Chữ ngoại lai {ch} không được phép xuất hiện trong ALLOWED_LETTERS")
+
+    def test_vocabulary_mode_unaffected(self):
+        """
+        Xác nhận các chế độ nhận diện khác (từ vựng / chuỗi hành động 30 frame)
+        hoàn toàn không bị ảnh hưởng bởi danh sách ALLOWED_LETTERS.
+        """
+        # Khi mode=None hoặc sequence nhận diện từ vựng, hệ thống dùng CLASSES gốc 84 nhãn
+        from backend.models.sign_model import CLASSES
+        self.assertIn("XIN_CHAO", CLASSES)
+        self.assertIn("CAM_ON", CLASSES)
+        self.assertIn("NEUTRAL", CLASSES)
+        self.assertEqual(len(CLASSES), 84)
 
     def test_valid_letter_recognized_in_letters_numbers_mode(self):
         """Chữ cái hợp lệ (chữ V) vẫn được nhận diện khi mode='letters_numbers'."""

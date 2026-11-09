@@ -1,0 +1,168 @@
+{
+  "audit_meta": {
+    "task": "TASK 3.8.2",
+    "scope": "Temporal Event & Evidence Classification Audit (READ-ONLY)",
+    "production_code_preserved": true,
+    "thresholds_preserved": true,
+    "models_datasets_preserved": true,
+    "acceptance_status": "O: WEBCAM VERIFIED — FAIL (TASK 3.7: 0/10 trials >= 70%, NOT FIXED)"
+  },
+  "rep04_temporal_event": [
+    {
+      "confirmed_token": "O",
+      "emission_frame_idx": 24,
+      "emission_line_no": 162,
+      "emission_timestamp": 1794159827.7281,
+      "trailing_window_size": 10,
+      "trailing_frames_indices": [
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24
+      ],
+      "trailing_predictions": [
+        "NEUTRAL",
+        "NEUTRAL",
+        "NEUTRAL",
+        "NEUTRAL",
+        "O",
+        "O",
+        "O",
+        "O",
+        "NEUTRAL",
+        "O"
+      ],
+      "trailing_confidences": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.0,
+        0.95
+      ],
+      "o_vote_count": 5,
+      "o_vote_frame_indices": [
+        19,
+        20,
+        21,
+        22,
+        24
+      ],
+      "future_frames_involved": false,
+      "window_mechanism": "trailing_sliding_window_fifo_deque_maxlen_10"
+    },
+    {
+      "confirmed_token": "O",
+      "emission_frame_idx": 32,
+      "emission_line_no": 170,
+      "emission_timestamp": 1794159829.0693,
+      "trailing_window_size": 10,
+      "trailing_frames_indices": [
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32
+      ],
+      "trailing_predictions": [
+        "NEUTRAL",
+        "O",
+        "O",
+        "O",
+        "NEUTRAL",
+        "O",
+        "NEUTRAL",
+        "O",
+        "NEUTRAL",
+        "O"
+      ],
+      "trailing_confidences": [
+        0.0,
+        0.95,
+        0.95,
+        0.95,
+        0.0,
+        0.95,
+        0.0,
+        0.95,
+        0.0,
+        0.95
+      ],
+      "o_vote_count": 6,
+      "o_vote_frame_indices": [
+        24,
+        25,
+        26,
+        28,
+        30,
+        32
+      ],
+      "future_frames_involved": false,
+      "window_mechanism": "trailing_sliding_window_fifo_deque_maxlen_10"
+    }
+  ],
+  "b_frame54_classification": {
+    "source_references": {
+      "b_json": {
+        "file": "backend/data/alphabet_v2/static_landmarks/B.json",
+        "sample_count_in_video": 47,
+        "frame_index": 54,
+        "timestamp_sec": 2.252,
+        "phase_in_metadata": "stable_pose",
+        "quality_status": "ok",
+        "confidence": 0.9888
+      },
+      "npz": {
+        "file": "backend/data/alphabet_v2/datasets/vsl_alphabet_static_v2.npz",
+        "sample_index": 39,
+        "label": "B",
+        "metadata": {
+          "label": "B",
+          "label_idx": 1,
+          "source_type": "static_video",
+          "source_letter": "B",
+          "video_id": "D0492",
+          "source_video": "backend/data/media_cache/videos/D0492.mp4",
+          "frame_index": 54,
+          "timestamp_sec": 2.252,
+          "quality_status": "ok",
+          "displacement_to_prev": 0.02376,
+          "is_representative": true
+        }
+      }
+    },
+    "data_confirmed_facts": [
+      "Tệp B.json và NPZ đều chứa chính xác 1 mẫu cho video D0492 frame 54 tại timestamp 2.252s.",
+      "Metadata nhãn tư thế được gán là phase='stable_pose'.",
+      "Đặc trưng hình học: idx_straight = 0.4136 (<=0.48), d_TI = 0.1278 (<=0.22), d_TM = 0.1545 (<=0.35), d_IW = 1.28, d_MW = 1.12, d_RW = 1.01, d_PW = 0.88, d_TW = 1.18.",
+      "Outer gate: cả 4 ngón tay đều không duỗi thẳng (not i_ext and not m_ext and not r_ext and not p_ext = True).",
+      "Quy tắc Rule 6 O-Candidate-03 khớp 100% với letter='O', confidence=0.95.",
+      "Vị trí timeline: Nằm ở frame 54 (t=2.252s), ngay sau khối B ổn định (frame 24-50, kết thúc t=2.085s) và trước khi bàn tay rời khung hình ở frame 64 (t=2.669s)."
+    ],
+    "reasonable_deductions": [
+      "D0492 thể hiện tư thế B chuẩn từ frame 24 đến frame 50 (d_TI > 1.05, idx_straight ~ 1.00).",
+      "Sau frame 50, các đặc trưng thay đổi đột ngột qua từng frame (frame 52: d_TI=0.68, frame 54: d_TI=0.13, frame 56: d_TI=0.31, frame 58: d_TI=0.81).",
+      "Frame 54 chỉ tồn tại trong 1 frame đơn lẻ (~33ms) trong chuỗi chuyển tiếp từ tư thế B sang tư thế hạ tay/buông tay.",
+      "Nhãn phase='stable_pose' trong metadata là một annotation artifact (gán bao trùm toàn bộ các frame có bàn tay mà không tách pha chuyển tiếp cuối video)."
+    ],
+    "unconfirmed_physical_hypotheses": [
+      "Giả thuyết: Ngón cái di chuyển lướt qua ngón trỏ khi hạ tay (chưa thể khẳng định do không có video RGB gốc đối chứng).",
+      "Giả thuyết: Góc quay camera hoặc hướng hạ tay cụ thể của người ký (chưa thể khẳng định do chỉ có tọa độ 21 mốc chuẩn hóa của MediaPipe)."
+    ]
+  }
+}

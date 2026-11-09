@@ -70,15 +70,17 @@ class TestPilotDiagnosticLogging(unittest.TestCase):
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_1_sanitization_of_expected_sign(self):
-        """4 & 5. Kiểm tra làm sạch nhãn ground truth: Chỉ nhận 22 chữ tĩnh, từ chối nhãn rác."""
+        """4 & 5. Kiểm tra làm sạch nhãn ground truth: Chấp nhận 29 chữ cái VSL (bao gồm chữ có dấu), từ chối nhãn rác."""
         self.assertEqual(sanitize_expected_sign("A"), "A")
         self.assertEqual(sanitize_expected_sign(" b "), "B")
         self.assertEqual(sanitize_expected_sign("q"), "Q")
+        self.assertEqual(sanitize_expected_sign("Ă"), "Ă")
+        self.assertEqual(sanitize_expected_sign(" đ "), "Đ")
+        self.assertEqual(sanitize_expected_sign("ơ"), "Ơ")
         self.assertIsNone(sanitize_expected_sign(None))
         self.assertIsNone(sanitize_expected_sign(""))
         self.assertIsNone(sanitize_expected_sign("UNKNOWN"))
         self.assertIsNone(sanitize_expected_sign("123"))
-        self.assertIsNone(sanitize_expected_sign("Ă"))  # Chữ động không nằm trong 22 chữ tĩnh
 
     def test_2_pilot_logging_disabled_by_default(self):
         """9. Khi không bật cờ pilot logging, không sinh file pilot log."""

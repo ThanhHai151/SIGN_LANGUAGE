@@ -1,0 +1,157 @@
+{
+  "total_active_records": 7456,
+  "affected_targets": [
+    [
+      "H",
+      140,
+      0,
+      -140
+    ],
+    [
+      "K",
+      1,
+      0,
+      -1
+    ]
+  ],
+  "table": {
+    "A": {
+      "total": 511,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "B": {
+      "total": 366,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "C": {
+      "total": 258,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "D": {
+      "total": 315,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "E": {
+      "total": 329,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "G": {
+      "total": 299,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "H": {
+      "total": 455,
+      "baseline_v": 140,
+      "new_v": 0,
+      "delta": -140
+    },
+    "I": {
+      "total": 362,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "K": {
+      "total": 299,
+      "baseline_v": 1,
+      "new_v": 0,
+      "delta": -1
+    },
+    "L": {
+      "total": 307,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "M": {
+      "total": 323,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "N": {
+      "total": 328,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "O": {
+      "total": 324,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "P": {
+      "total": 337,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "Q": {
+      "total": 303,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "R": {
+      "total": 316,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "S": {
+      "total": 309,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "T": {
+      "total": 306,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "U": {
+      "total": 396,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "V": {
+      "total": 400,
+      "baseline_v": 362,
+      "new_v": 362,
+      "delta": 0
+    },
+    "X": {
+      "total": 310,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    },
+    "Y": {
+      "total": 303,
+      "baseline_v": 0,
+      "new_v": 0,
+      "delta": 0
+    }
+  },
+  "eliminated_h_count": 140,
+  "eliminated_k_count": 1,
+  "h_other_geom_matches": {
+    "NO_MATCH": 140
+  },
+  "k_other_geom_matches": "NO_MATCH"
+}

@@ -1,0 +1,120 @@
+{
+  "file_metadata": {
+    "path": "backend/data/diagnostics/pilot_pilot_20261109_004312.jsonl",
+    "file_size_bytes": 4224136,
+    "sha256": "9cba31b91bedb3e30297435f58e6a3f53d235c776f64ef960e6ad99fd85f7ec1",
+    "session_id": "pilot_20261109_004312",
+    "total_records": 436,
+    "active_records": 349,
+    "idle_records": 87
+  },
+  "pipeline_state": {
+    "has_static_head": true,
+    "static_head_load_status": "loaded",
+    "confidence_threshold": 0.7,
+    "smoothing_window": 10,
+    "cooldown_sec": 1.2
+  },
+  "overall_metrics": {
+    "target_sign": "O",
+    "active_frames": 349,
+    "geometric_matches": 53,
+    "geometric_accuracy": 0.1519,
+    "pipeline_o_matches": 53,
+    "pipeline_accuracy": 0.1519,
+    "neutral_frames": 296,
+    "neutral_rate": 0.8481,
+    "false_positive_frames": 0,
+    "fps_by_letter": {},
+    "trial_accuracy_ge_70": "0/10",
+    "trial_pass_rate": 0.0,
+    "confirmed_o_trials": "3/10",
+    "confirmed_trials_rate": 0.3
+  },
+  "trials_detail": {
+    "pilot_20261109_004312_O_rep01": {
+      "total_frames": 32,
+      "matched_frames": 0,
+      "match_rate": 0.0,
+      "passed_70": false,
+      "confirmed_tokens": []
+    },
+    "pilot_20261109_004312_O_rep02": {
+      "total_frames": 49,
+      "matched_frames": 1,
+      "match_rate": 0.0204,
+      "passed_70": false,
+      "confirmed_tokens": []
+    },
+    "pilot_20261109_004312_O_rep03": {
+      "total_frames": 41,
+      "matched_frames": 1,
+      "match_rate": 0.0244,
+      "passed_70": false,
+      "confirmed_tokens": []
+    },
+    "pilot_20261109_004312_O_rep04": {
+      "total_frames": 37,
+      "matched_frames": 10,
+      "match_rate": 0.2703,
+      "passed_70": false,
+      "confirmed_tokens": [
+        "O",
+        "O"
+      ]
+    },
+    "pilot_20261109_004312_O_rep05": {
+      "total_frames": 36,
+      "matched_frames": 9,
+      "match_rate": 0.25,
+      "passed_70": false,
+      "confirmed_tokens": []
+    },
+    "pilot_20261109_004312_O_rep06": {
+      "total_frames": 29,
+      "matched_frames": 4,
+      "match_rate": 0.1379,
+      "passed_70": false,
+      "confirmed_tokens": []
+    },
+    "pilot_20261109_004312_O_rep07": {
+      "total_frames": 36,
+      "matched_frames": 0,
+      "match_rate": 0.0,
+      "passed_70": false,
+      "confirmed_tokens": []
+    },
+    "pilot_20261109_004312_O_rep08": {
+      "total_frames": 36,
+      "matched_frames": 10,
+      "match_rate": 0.2778,
+      "passed_70": false,
+      "confirmed_tokens": [
+        "O"
+      ]
+    },
+    "pilot_20261109_004312_O_rep09": {
+      "total_frames": 27,
+      "matched_frames": 16,
+      "match_rate": 0.5926,
+      "passed_70": false,
+      "confirmed_tokens": [
+        "O",
+        "O",
+        "O",
+        "O"
+      ]
+    },
+    "pilot_20261109_004312_O_rep10": {
+      "total_frames": 26,
+      "matched_frames": 2,
+      "match_rate": 0.0769,
+      "passed_70": false,
+      "confirmed_tokens": []
+    }
+  },
+  "rule_o_failure_distribution": {
+    "idx_straight_le_max": 200,
+    "d_ti_le_max": 102
+  }
+}
