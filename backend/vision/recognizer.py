@@ -203,61 +203,19 @@ class VSLRecognizer:
         self._diag_lock = threading.Lock()
         self._diag_frame_counter = 0
 
-        # 6. Pilot Diagnostic Logging State (Task 7F.5A / 7F.5D - Non-blocking, unthrottled, session-exclusive)
-        self.pilot_logging_enabled = (
-            pilot_logging_enabled if pilot_logging_enabled is not None
-            else (os.environ.get("VSL_PILOT_LOGGING", "0") == "1")
-        )
+        # Controlled Pilot V3 manages diagnostics outside this recognizer via adapter.
+        self.pilot_logging_enabled = False
         self.pilot_logger = None
         self.pilot_filepath = None
         self.active_pilot_session_id = None
         self._pilot_lock = threading.Lock()
-        if self.pilot_logging_enabled:
-            from backend.vision.pilot_logger import get_pilot_logger
-            self.pilot_logger = get_pilot_logger()
         self._pilot_frame_counter = 0
 
     def enable_pilot_logging(self, session_id=None, filepath=None):
-        """Kích hoạt chế độ ghi nhật ký chẩn đoán unthrottled cho webcam pilot (Task 7F.5A / 7F.5D)."""
-        from backend.vision.pilot_logger import get_pilot_logger
-        with self._pilot_lock:
-            # Nếu đang có session hoạt động, ngăn session khác ghi đè
-            if self.pilot_logging_enabled and self.active_pilot_session_id is not None:
-                if session_id is not None and session_id != self.active_pilot_session_id:
-                    raise RuntimeError(
-                        f"Phiên '{self.active_pilot_session_id}' đang hoạt động. "
-                        f"Phải disable phiên trước khi bật phiên mới '{session_id}'."
-                    )
-                # Idempotent: nếu cùng session_id, giữ nguyên target file hiện tại
-                return self.pilot_logger
-
-            if session_id is not None:
-                with self._pilot_temporal_lock:
-                    self._pilot_temporal_states = {
-                        key: state for key, state in self._pilot_temporal_states.items()
-                        if key[0] != str(session_id)
-                    }
-            self.pilot_logging_enabled = True
-            self.pilot_filepath = filepath
-            self.active_pilot_session_id = session_id
-            self.pilot_logger = get_pilot_logger(filepath=filepath)
-            return self.pilot_logger
+        return None
 
     def disable_pilot_logging(self):
-        """Tắt chế độ ghi nhật ký chẩn đoán pilot và flush dữ liệu còn đọng."""
-        with self._pilot_lock:
-            if self.pilot_logger is not None:
-                self.pilot_logger.flush()
-            self.pilot_logging_enabled = False
-            if self.active_pilot_session_id is not None:
-                session_id = str(self.active_pilot_session_id)
-                with self._pilot_temporal_lock:
-                    self._pilot_temporal_states = {
-                        key: state for key, state in self._pilot_temporal_states.items()
-                        if key[0] != session_id
-                    }
-            self.active_pilot_session_id = None
-            self.pilot_filepath = None
+        pass
 
     def _next_pilot_frame_idx(self) -> int:
         with self._diag_lock:
@@ -1038,10 +996,13 @@ class VSLRecognizer:
         if backend_receive_ts is None:
             backend_receive_ts = time.time()
         from backend.vision.feature_extractor import extract_dual_hand_features
-        from backend.vision.pilot_logger import sanitize_expected_sign
 
         # Chuẩn hóa nhãn ground truth: chỉ dùng cho logging chẩn đoán, tuyệt đối KHÔNG vào bộ phân loại
-        clean_expected_sign = sanitize_expected_sign(expected_sign)
+        clean_expected_sign = (
+            str(expected_sign).strip().upper()
+            if expected_sign and str(expected_sign).strip().upper() in ALLOWED_LETTERS
+            else None
+        )
         if frame_idx is not None:
             try:
                 actual_frame_idx = int(frame_idx)

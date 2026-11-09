@@ -197,9 +197,184 @@ export async function sendLandmarksForRecognition(
   }
 }
 
+// ==========================================
+// CONTROLLED PILOT V3 API CLIENT
+// ==========================================
+
+export async function createPilotV3Session({ mode = 'FULL_29', single_letter = null, session_id = null }) {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/session/create`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mode, single_letter, session_id }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to create pilot session');
+  }
+  return await res.json();
+}
+
+export async function startPilotV3Session() {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/session/start`, { method: 'POST' });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to start pilot session');
+  }
+  return await res.json();
+}
+
+export async function pausePilotV3Session() {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/session/pause`, { method: 'POST' });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to pause pilot session');
+  }
+  return await res.json();
+}
+
+export async function resumePilotV3Session() {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/session/resume`, { method: 'POST' });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to resume pilot session');
+  }
+  return await res.json();
+}
+
+export async function stopPilotV3Session(reason = 'User stopped') {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/session/stop?reason=${encodeURIComponent(reason)}`, { method: 'POST' });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to stop pilot session');
+  }
+  return await res.json();
+}
+
+export async function getPilotV3Status() {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/session/status`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to get pilot status');
+  }
+  return await res.json();
+}
+
+export async function recoverPilotV3Session(sessionId) {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/session/recover`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: sessionId }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to recover pilot session');
+  }
+  return await res.json();
+}
+
+export async function startPilotV3Trial() {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/trial/start`, { method: 'POST' });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to prepare pilot trial');
+  }
+  return await res.json();
+}
+
+export async function startPilotV3Countdown() {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/trial/countdown`, { method: 'POST' });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to start countdown');
+  }
+  return await res.json();
+}
+
+export async function startPilotV3Record() {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/trial/record_start`, { method: 'POST' });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to start recording');
+  }
+  return await res.json();
+}
+
+export async function sendPilotV3Frame({
+  landmarks = null,
+  handedness = 'Right',
+  tracking_confidence = null,
+  handedness_score = null,
+  client_capture_ts = null,
+}) {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/frame`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      landmarks,
+      handedness,
+      tracking_confidence,
+      handedness_score,
+      client_capture_ts,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to record frame');
+  }
+  return await res.json();
+}
+
+export async function finishPilotV3Trial(accept = true) {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/trial/finish`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accept }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to finish trial');
+  }
+  return await res.json();
+}
+
+export async function retryPilotV3Trial(reason = 'User requested retry') {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/trial/retry?reason=${encodeURIComponent(reason)}`, { method: 'POST' });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to retry trial');
+  }
+  return await res.json();
+}
+
+export async function skipPilotV3Trial(reason = 'User skipped') {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/trial/skip?reason=${encodeURIComponent(reason)}`, { method: 'POST' });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to skip trial');
+  }
+  return await res.json();
+}
+
+export async function getPilotV3Summary() {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/summary`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to fetch summary');
+  }
+  return await res.json();
+}
+
+export async function exportPilotV3Session() {
+  const res = await fetch(`${API_BASE_URL}/api/pilot/v3/export`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to export session');
+  }
+  return await res.json();
+}
+
 /**
- * Điều khiển bật/tắt ghi log chẩn đoán Controlled Webcam Pilot (Task 7F.5B / 7F.5D)
- * Tuyệt đối không truyền filepath qua HTTP API để bảo vệ an toàn đường dẫn.
+ * Điều khiển bật/tắt ghi log chẩn đoán Controlled Webcam Pilot (Legacy Compat)
  */
 export async function setPilotLogging(enabled, filepath_or_session_id = null, maybe_session_id = null) {
   const session_id = maybe_session_id || (typeof filepath_or_session_id === 'string' && !filepath_or_session_id.includes('/') && !filepath_or_session_id.includes('\\') ? filepath_or_session_id : null);

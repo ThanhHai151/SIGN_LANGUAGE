@@ -87,6 +87,16 @@ export default function Navbar({ activeTab, setActiveTab, backendStatus, ttsEnab
           <BookOpen size={16} />
           Từ Điển & Luyện Tập VSL
         </button>
+
+        <button
+          id="nav-tab-pilot-v3"
+          onClick={() => setActiveTab('pilot_v3')}
+          className={`btn ${activeTab === 'pilot_v3' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ padding: '8px 16px', fontSize: '13px' }}
+        >
+          <Activity size={16} />
+          Controlled Pilot V3 (29 Chữ)
+        </button>
       </nav>
 
       {/* Action Indicators & System Status */}

@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import CameraSignRecognizer from './components/CameraSignRecognizer';
 import TextToSignVisualizer from './components/TextToSignVisualizer';
 import VSLDictionaryExplorer from './components/VSLDictionaryExplorer';
+import ControlledPilotV3HUD from './components/ControlledPilotV3HUD';
 import { checkBackendHealth } from './services/api';
 
 export default function App() {
@@ -56,6 +57,12 @@ export default function App() {
               setActiveTab('text_to_sign');
             }}
           />
+        )}
+
+        {activeTab === 'pilot_v3' && (
+          <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px', width: '100%' }}>
+            <ControlledPilotV3HUD isActive={true} />
+          </div>
         )}
       </main>
 

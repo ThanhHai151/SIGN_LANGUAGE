@@ -126,13 +126,23 @@ def load_static_alphabet_head(weights_path: Optional[str] = None, device: str = 
     metadata = {}
     
     if os.path.exists(target_path):
-        safe_numpy_globals = [
-            (np._core.multiarray.scalar, "numpy.core.multiarray.scalar"),
-            (np.dtype, "numpy.dtype"),
-            (type(np.dtype(np.float64)), "numpy.dtypes.Float64DType"),
-        ]
-        with torch.serialization.safe_globals(safe_numpy_globals):
-            ckpt = torch.load(target_path, map_location=device, weights_only=True)
+        ckpt = None
+        if hasattr(torch.serialization, "safe_globals"):
+            numpy_core = getattr(np, "_core", getattr(np, "core", None))
+            scalar_type = getattr(numpy_core.multiarray, "scalar") if numpy_core else None
+            safe_numpy_globals = [
+                (np.dtype, "numpy.dtype"),
+                (type(np.dtype(np.float64)), "numpy.dtypes.Float64DType"),
+            ]
+            if scalar_type:
+                safe_numpy_globals.append((scalar_type, "numpy.core.multiarray.scalar"))
+            with torch.serialization.safe_globals(safe_numpy_globals):
+                ckpt = torch.load(target_path, map_location=device, weights_only=True)
+        else:
+            try:
+                ckpt = torch.load(target_path, map_location=device, weights_only=True)
+            except Exception:
+                ckpt = torch.load(target_path, map_location=device, weights_only=False)
         if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
             head.load_state_dict(ckpt["model_state_dict"])
             metadata = {k: v for k, v in ckpt.items() if k != "model_state_dict"}

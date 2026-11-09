@@ -10,7 +10,7 @@ import {
   clearCurrentSentence,
   speakVietnamese
 } from '../services/api';
-import PilotTestingHUD from './PilotTestingHUD';
+import ControlledPilotV3HUD from './ControlledPilotV3HUD';
 
 // Bảng ánh xạ phát âm TTS chuẩn cho từng chữ số (chỉ đọc tên số, không có tiền tố "số")
 const DIGIT_TTS_MAP = {
@@ -138,10 +138,9 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
     recognitionModeRef.current = recognitionMode;
   }, [recognitionMode]);
 
-  // Controlled Webcam Pilot State (Task 7F.5B / Task 11.2.2)
+  // Controlled Pilot V3 State
   const [showPilotHUD, setShowPilotHUD] = useState(false);
-  const pilotMetadataProviderRef = useRef(null);
-  const onPilotFrameResultRef = useRef(null);
+  const pilotFrameInterceptorRef = useRef(null);
   const [latestPilotResult, setLatestPilotResult] = useState(null);
 
   const handlePilotMetadataUpdate = ({ getFrameMetadata, onFrameResult }) => {
@@ -832,6 +831,13 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
         const requestMode = currentConversionMode;
         const primary = rightHand || leftHand;
         const rawPrimary = primary ? primary.map(lm => [lm.x, lm.y, lm.z]) : [];
+        if (pilotFrameInterceptorRef.current && showPilotHUD) {
+          try {
+            pilotFrameInterceptorRef.current(rawPrimary, { handedness: 'Right' });
+          } catch (e) {
+            // Ignore pilot intercept errors
+          }
+        }
         const multiHands = [];
         if (rightHand) multiHands.push({ handedness: 'Right', landmarks: rightHand.map(l => [l.x, l.y, l.z]) });
         if (leftHand) multiHands.push({ handedness: 'Left', landmarks: leftHand.map(l => [l.x, l.y, l.z]) });
@@ -1031,6 +1037,15 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
                 <Camera size={16} /> {cameraLoading ? 'Đang bật...' : 'Bật Camera'}
               </button>
             )}
+
+            <button
+              onClick={() => setShowPilotHUD(prev => !prev)}
+              className={`btn ${showPilotHUD ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ padding: '8px 14px' }}
+              title="Bật/Tắt Controlled Pilot V3 HUD"
+            >
+              <Gauge size={16} /> {showPilotHUD ? 'Đóng Pilot V3' : 'Controlled Pilot V3'}
+            </button>
           </div>
         </div>
 
@@ -1161,14 +1176,15 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
 
         </div>
 
-        {/* GIAO DIỆN KIỂM THỬ CONTROLLED WEBCAM PILOT HUD (TASK 7F.5B / TASK 11.2.2 / TASK 3.10) */}
-        <PilotTestingHUD
+        {/* GIAO DIỆN KIỂM THỬ CONTROLLED PILOT V3 (29 CHỮ CÁI TIẾNG VIỆT) */}
+        <ControlledPilotV3HUD
           isActive={showPilotHUD}
           onToggleActive={() => setShowPilotHUD(prev => !prev)}
-          onMetadataUpdate={handlePilotMetadataUpdate}
           cameraActive={cameraActive}
-          latestRecognition={latestPilotResult}
           videoElementRef={videoRef}
+          onFrameIntercept={(interceptor) => {
+            pilotFrameInterceptorRef.current = interceptor;
+          }}
         />
 
         {/* Khung hiển thị Video & Canvas */}
