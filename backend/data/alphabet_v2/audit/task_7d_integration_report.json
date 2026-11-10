@@ -1,0 +1,111 @@
+{
+  "task_id": "TASK-7D",
+  "task_title": "Tích hợp Diacritic State Machine vào luồng nhận diện camera VSLRecognizer",
+  "project": "VSL Connect AI",
+  "status": "COMPLETED",
+  "timestamp": "2026-10-31T00:05:00+07:00",
+  "target_alphabet": "29 chữ cái tiếng Việt đầy đủ (A, Ă, Â, B, C, D, Đ, E, Ê, G, H, I, K, L, M, N, O, Ô, Ơ, P, Q, R, S, T, U, Ư, V, X, Y)",
+  "modified_files": [
+    "backend/vision/recognizer.py"
+  ],
+  "created_module_files": [
+    "backend/vision/diacritic_state_machine.py"
+  ],
+  "created_test_files": [
+    "backend/tests/test_diacritic_state_machine.py",
+    "backend/tests/test_diacritic_camera_integration.py"
+  ],
+  "audit_report_files": [
+    "backend/data/alphabet_v2/audit/task_7d_integration_report.json",
+    "backend/data/alphabet_v2/audit/task_7d_integration_report.md"
+  ],
+  "architectural_hierarchy": {
+    "tier_1_geometric_rules": {
+      "priority": 1,
+      "classes": ["A", "B", "C", "D", "E", "I", "L", "O", "S", "T", "V", "Y"],
+      "count": 12,
+      "action": "Chạy đầu tiên trong mode == 'letters'. Nếu phát hiện, trả về kết quả ngay (confidence 0.90)."
+    },
+    "tier_2_static_head": {
+      "priority": 2,
+      "classes": ["G", "H", "K", "M", "N", "P", "Q", "R", "U", "X"],
+      "count": 10,
+      "action": "Nếu Tier 1 trả về None, static head (alphabet_static_head_v1.pt) được gọi với vector 72D và ngưỡng lọc từng lớp."
+    },
+    "tier_3_diacritic_state_machine": {
+      "priority": 3,
+      "target_base_groups": {
+        "A": ["A", "Ă", "Â"],
+        "E": ["E", "Ê"],
+        "O": ["O", "Ô", "Ơ"],
+        "U": ["U", "Ư"],
+        "D": ["D", "Đ"]
+      },
+      "pure_static_passthrough": {
+        "classes": ["B", "C", "G", "H", "I", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "V", "X", "Y"],
+        "count": 17,
+        "latency_impact": "< 5ms (Zero-lag passthrough, hoàn toàn bỏ qua FSM evaluation)"
+      },
+      "cross_group_transition_protection": "Nghiêm cấm tuyệt đối chuyển nhóm (VD: A không thể trở thành Ô, E không thể trở thành Ư)."
+    }
+  },
+  "session_isolation": {
+    "mechanism": "Dictionary self.diacritic_fsms[session_key] trên VSLRecognizer instance.",
+    "session_key_resolution": "str(session_id) if session_id is not None else '_default_'",
+    "reset_lifecycle": [
+      "reset_diacritic_fsm(session_id) khi kết thúc phiên hoặc đổi người ký",
+      "recognizer.reset() dọn sạch toàn bộ FSM sessions",
+      "Tự động reset khi camera chuyển mode khỏi 'letters'",
+      "Tự động chuyển về STATE_IDLE và reset kinematic baseline khi mất dấu bàn tay (no landmarks)"
+    ]
+  },
+  "confidence_handling": {
+    "separation": "Tách bạch base_confidence (từ geometric rules hoặc static head) và final_confidence (từ FSM kinematics).",
+    "fsm_confidence_estimation": "Confidence của chữ có dấu được nội suy bảo thủ dựa trên độ ổn định nền và biên độ động học (0.75 - 0.92), không tuyên bố xác suất chuẩn hóa đa người ký."
+  },
+  "smoothing_buffer_priming": {
+    "purpose": "Tránh độ trễ nuốt chữ khi chuyển từ base sang diacritic trong bộ đệm trượt collections.Counter.",
+    "implementation": "Khi FSM đạt STATE_DIACRITIC_CONFIRMED, nạp trước window//2 mẫu chữ có dấu vào prediction_history để phát sinh token tức thì."
+  },
+  "sha256_verification": {
+    "backend/models/weights.pt": {
+      "expected": "6965b4ffd9eed45c10317f0cc4eff453470ea4552c081f18ea997d74365907be",
+      "actual": "6965b4ffd9eed45c10317f0cc4eff453470ea4552c081f18ea997d74365907be",
+      "status": "UNTOUCHED"
+    },
+    "backend/models/weights/sign_sstcn_attention_model.pth": {
+      "expected": "2a8ddcc4d06c4f23aa7910caf77371848034dcdf8f4749d134c5894764cf9697",
+      "actual": "2a8ddcc4d06c4f23aa7910caf77371848034dcdf8f4749d134c5894764cf9697",
+      "status": "UNTOUCHED"
+    },
+    "backend/models/alphabet_static_head_v1.pt": {
+      "expected": "cab8123e23ed41a6088ba1c6e80a8aaaa9a382663418cc669eacff834795c254",
+      "actual": "cab8123e23ed41a6088ba1c6e80a8aaaa9a382663418cc669eacff834795c254",
+      "status": "UNTOUCHED"
+    }
+  },
+  "test_execution_results": {
+    "total_tests": 74,
+    "passed": 74,
+    "failed": 0,
+    "duration_seconds": 3.26,
+    "breakdown": {
+      "test_alphabet_classifier.py": 26,
+      "test_alphabet_recognition_integration.py": 9,
+      "test_alphabet_static_head_integration.py": 10,
+      "test_diacritic_state_machine.py": 15,
+      "test_diacritic_camera_integration.py": 14
+    }
+  },
+  "constraints_adherence": {
+    "no_retraining": true,
+    "weights_pt_untouched": true,
+    "sstcn_untouched": true,
+    "static_head_pt_untouched": true,
+    "geometric_rules_preserved": true,
+    "digits_mode_isolated": true,
+    "words_sentence_mode_isolated": true,
+    "cross_group_transition_blocked": true
+  }
+}
+

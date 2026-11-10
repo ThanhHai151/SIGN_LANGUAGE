@@ -1,0 +1,118 @@
+"""
+TASK 3.7.1 - Definitive Audit Summary Artifact
+File: scratch/task3_7_1_audit_summary.json
+"""
+
+import json
+
+audit_data = {
+    "audit_target": {
+        "task": "TASK 3.7.1",
+        "file": "backend/data/diagnostics/pilot_pilot_20261109_004312.jsonl",
+        "session_id": "pilot_20261109_004312",
+        "sha256": "9cba31b91bedb3e30297435f58e6a3f53d235c776f64ef960e6ad99fd85f7ec1",
+        "total_records": 436,
+        "active_records": 349,
+        "idle_records": 87
+    },
+    "geometry_audit": {
+        "active_frames": 349,
+        "matched_frames": 53,
+        "matched_rate": 0.1519,
+        "rejected_frames": 296,
+        "rejected_rate": 0.8481,
+        "non_exclusive_condition_violations": {
+            "idx_straight_le_max_violated": 200,
+            "d_ti_le_max_violated": 102,
+            "outer_gate_violated": 28,
+            "d_tm_le_max_violated": 0,
+            "d_iw_ge_min_violated": 0,
+            "d_mw_ge_min_violated": 0,
+            "d_rw_ge_min_violated": 0,
+            "d_pw_ge_min_violated": 0,
+            "d_tw_ge_min_violated": 0
+        },
+        "mece_partition_of_rejected_frames": [
+            {
+                "bucket": "idx_straight > 0.48 only",
+                "count": 167,
+                "percentage": 56.42
+            },
+            {
+                "bucket": "d_TI > 0.22 only",
+                "count": 93,
+                "percentage": 31.42
+            },
+            {
+                "bucket": "idx_straight > 0.48 + OuterGate",
+                "count": 24,
+                "percentage": 8.11
+            },
+            {
+                "bucket": "idx_straight > 0.48 + d_TI > 0.22",
+                "count": 8,
+                "percentage": 2.70
+            },
+            {
+                "bucket": "OuterGate only",
+                "count": 3,
+                "percentage": 1.01
+            },
+            {
+                "bucket": "idx_straight > 0.48 + d_TI > 0.22 + OuterGate",
+                "count": 1,
+                "percentage": 0.34
+            }
+        ],
+        "mece_total": 296
+    },
+    "statistical_reconciliation_by_denominator": {
+        "d_TI": {
+            "all_active_N349": {"mean": 0.2115, "median": 0.2021, "min": 0.1114, "max": 0.4873},
+            "matched_active_N53": {"mean": 0.1913, "median": 0.2025, "min": 0.1212, "max": 0.2197},
+            "all_unmatched_active_N296": {"mean": 0.2151, "median": 0.2009, "min": 0.1114, "max": 0.4873},
+            "violating_subset_N102": {"mean": 0.2783, "median": 0.2552, "min": 0.2214, "max": 0.4873},
+            "non_violating_unmatched_N194": {"mean": 0.1819, "median": 0.1870, "min": 0.1114, "max": 0.2155}
+        },
+        "idx_straight": {
+            "all_active_N349": {"mean": 0.5077, "median": 0.5217, "min": 0.0748, "max": 0.7904},
+            "matched_active_N53": {"mean": 0.4175, "median": 0.4226, "min": 0.3141, "max": 0.4755},
+            "all_unmatched_active_N296": {"mean": 0.5238, "median": 0.5494, "min": 0.0748, "max": 0.7904},
+            "violating_subset_N200": {"mean": 0.6084, "median": 0.6001, "min": 0.4809, "max": 0.7904},
+            "non_violating_unmatched_N96": {"mean": 0.3476, "median": 0.3802, "min": 0.0748, "max": 0.4639}
+        }
+    },
+    "trials_recalculation": [
+        {"trial": "rep01", "total": 32, "matched": 0, "rate": 0.000, "pass_70": False, "confirmed": False, "max_consecutive": 0},
+        {"trial": "rep02", "total": 49, "matched": 1, "rate": 0.020, "pass_70": False, "confirmed": False, "max_consecutive": 1},
+        {"trial": "rep03", "total": 41, "matched": 1, "rate": 0.024, "pass_70": False, "confirmed": False, "max_consecutive": 1},
+        {"trial": "rep04", "total": 37, "matched": 10, "rate": 0.270, "pass_70": False, "confirmed": True, "max_consecutive": 4},
+        {"trial": "rep05", "total": 36, "matched": 9, "rate": 0.250, "pass_70": False, "confirmed": False, "max_consecutive": 2},
+        {"trial": "rep06", "total": 29, "matched": 4, "rate": 0.138, "pass_70": False, "confirmed": False, "max_consecutive": 2},
+        {"trial": "rep07", "total": 36, "matched": 0, "rate": 0.000, "pass_70": False, "confirmed": False, "max_consecutive": 0},
+        {"trial": "rep08", "total": 36, "matched": 10, "rate": 0.278, "pass_70": False, "confirmed": True, "max_consecutive": 10},
+        {"trial": "rep09", "total": 27, "matched": 16, "rate": 0.593, "pass_70": False, "confirmed": True, "max_consecutive": 8},
+        {"trial": "rep10", "total": 26, "matched": 2, "rate": 0.077, "pass_70": False, "confirmed": False, "max_consecutive": 2}
+    ],
+    "idle_audit": {
+        "total_idle_records": 87,
+        "neutral_records": 75,
+        "o_records": 10,
+        "b_records": 2,
+        "o_details": "Pre/post trial gesture hold by tester: 1 frame in segment 5, 6 frames in segment 9, 3 frames in segment 10",
+        "b_details": "Resting hand open gesture: frames 168 & 175 in segment 10"
+    },
+    "conclusion": {
+        "frame_recall": "53 / 349 (15.19%)",
+        "trial_recall_ge_70": "0 / 10 (0.0%)",
+        "confirmed_token_rate": "3 / 10 (30.0%)",
+        "active_false_positives": "0 / 349 (0.00%)",
+        "status": "WEBCAM VERIFIED — FAIL (TASK 3.7: 0/10 TRIALS >= 70%, NOT FIXED)"
+    }
+}
+
+with open("scratch/task3_7_1_audit_summary.json", "w", encoding="utf-8") as f:
+    json.dump(audit_data, f, indent=2, ensure_ascii=False)
+
+print("Saved scratch/task3_7_1_audit_summary.json successfully.")
+

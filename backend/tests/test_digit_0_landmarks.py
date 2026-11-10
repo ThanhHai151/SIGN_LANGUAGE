@@ -18,6 +18,7 @@ import os
 import copy
 import json
 import hashlib
+# pyrefly: ignore[missing-import]
 import pytest
 from backend.training.extract_video_landmarks import validate_landmark_format
 from backend.vision.digit_classifier import digit_classifier, VSLDigitClassifier

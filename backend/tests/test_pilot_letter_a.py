@@ -11,6 +11,7 @@ Kiểm tra:
 
 import os
 import json
+# pyrefly: ignore[missing-import]
 import pytest
 from backend.training.extract_video_landmarks import validate_landmark_format
 from backend.vision.feature_extractor import _shift_and_scale, finger_curl_ratio

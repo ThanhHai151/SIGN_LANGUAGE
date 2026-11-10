@@ -1,0 +1,302 @@
+{
+  "Baseline (Rule 6)": {
+    "o_pilot_acc": 0.0,
+    "o_pilot_matches": 0,
+    "o_pilot_total": 92,
+    "trial_passes": 0,
+    "trial_details": {
+      "pilot_20261108_213800_O_rep01": "0/8 (0.0%)",
+      "pilot_20261108_213800_O_rep02": "0/8 (0.0%)",
+      "pilot_20261108_213800_O_rep03": "0/9 (0.0%)",
+      "pilot_20261108_213800_O_rep04": "0/8 (0.0%)",
+      "pilot_20261108_213800_O_rep05": "0/9 (0.0%)",
+      "pilot_20261108_213800_O_rep06": "0/10 (0.0%)",
+      "pilot_20261108_213800_O_rep07": "0/10 (0.0%)",
+      "pilot_20261108_213800_O_rep08": "0/9 (0.0%)",
+      "pilot_20261108_213800_O_rep09": "0/10 (0.0%)",
+      "pilot_20261108_213800_O_rep10": "0/11 (0.0%)"
+    },
+    "o_fix_acc": 60.0,
+    "o_fix_matches": 12,
+    "o_fix_total": 20,
+    "fp_stats": {
+      "A": {
+        "total": 87,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "C": {
+        "total": 40,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "S": {
+        "total": 31,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "T": {
+        "total": 43,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "E": {
+        "total": 55,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "P": {
+        "total": 43,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "X": {
+        "total": 73,
+        "fps": 0,
+        "fp_rate": 0.0
+      }
+    },
+    "p_holdout_fps": 0,
+    "x_holdout_fps": 0
+  },
+  "O-Candidate-01 (d_TM only)": {
+    "o_pilot_acc": 34.78260869565217,
+    "o_pilot_matches": 32,
+    "o_pilot_total": 92,
+    "trial_passes": 3,
+    "trial_details": {
+      "pilot_20261108_213800_O_rep01": "3/8 (37.5%)",
+      "pilot_20261108_213800_O_rep02": "8/8 (100.0%)",
+      "pilot_20261108_213800_O_rep03": "9/9 (100.0%)",
+      "pilot_20261108_213800_O_rep04": "8/8 (100.0%)",
+      "pilot_20261108_213800_O_rep05": "1/9 (11.1%)",
+      "pilot_20261108_213800_O_rep06": "2/10 (20.0%)",
+      "pilot_20261108_213800_O_rep07": "1/10 (10.0%)",
+      "pilot_20261108_213800_O_rep08": "0/9 (0.0%)",
+      "pilot_20261108_213800_O_rep09": "0/10 (0.0%)",
+      "pilot_20261108_213800_O_rep10": "0/11 (0.0%)"
+    },
+    "o_fix_acc": 60.0,
+    "o_fix_matches": 12,
+    "o_fix_total": 20,
+    "fp_stats": {
+      "A": {
+        "total": 87,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "C": {
+        "total": 40,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "S": {
+        "total": 31,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "T": {
+        "total": 43,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "E": {
+        "total": 55,
+        "fps": 1,
+        "fp_rate": 1.8181818181818181
+      },
+      "P": {
+        "total": 43,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "X": {
+        "total": 73,
+        "fps": 0,
+        "fp_rate": 0.0
+      }
+    },
+    "p_holdout_fps": 0,
+    "x_holdout_fps": 0
+  },
+  "O-Candidate-02A (d_TM=0.35, idx_str=0.48)": {
+    "o_pilot_acc": 95.65217391304348,
+    "o_pilot_matches": 88,
+    "o_pilot_total": 92,
+    "trial_passes": 10,
+    "trial_details": {
+      "pilot_20261108_213800_O_rep01": "4/8 (50.0%)",
+      "pilot_20261108_213800_O_rep02": "8/8 (100.0%)",
+      "pilot_20261108_213800_O_rep03": "9/9 (100.0%)",
+      "pilot_20261108_213800_O_rep04": "8/8 (100.0%)",
+      "pilot_20261108_213800_O_rep05": "9/9 (100.0%)",
+      "pilot_20261108_213800_O_rep06": "10/10 (100.0%)",
+      "pilot_20261108_213800_O_rep07": "10/10 (100.0%)",
+      "pilot_20261108_213800_O_rep08": "9/9 (100.0%)",
+      "pilot_20261108_213800_O_rep09": "10/10 (100.0%)",
+      "pilot_20261108_213800_O_rep10": "11/11 (100.0%)"
+    },
+    "o_fix_acc": 60.0,
+    "o_fix_matches": 12,
+    "o_fix_total": 20,
+    "fp_stats": {
+      "A": {
+        "total": 87,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "C": {
+        "total": 40,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "S": {
+        "total": 31,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "T": {
+        "total": 43,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "E": {
+        "total": 55,
+        "fps": 1,
+        "fp_rate": 1.8181818181818181
+      },
+      "P": {
+        "total": 43,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "X": {
+        "total": 73,
+        "fps": 0,
+        "fp_rate": 0.0
+      }
+    },
+    "p_holdout_fps": 0,
+    "x_holdout_fps": 0
+  },
+  "O-Candidate-02B (d_TI=0.25, d_TM=0.40, idx_str=0.48)": {
+    "o_pilot_acc": 95.65217391304348,
+    "o_pilot_matches": 88,
+    "o_pilot_total": 92,
+    "trial_passes": 10,
+    "trial_details": {
+      "pilot_20261108_213800_O_rep01": "4/8 (50.0%)",
+      "pilot_20261108_213800_O_rep02": "8/8 (100.0%)",
+      "pilot_20261108_213800_O_rep03": "9/9 (100.0%)",
+      "pilot_20261108_213800_O_rep04": "8/8 (100.0%)",
+      "pilot_20261108_213800_O_rep05": "9/9 (100.0%)",
+      "pilot_20261108_213800_O_rep06": "10/10 (100.0%)",
+      "pilot_20261108_213800_O_rep07": "10/10 (100.0%)",
+      "pilot_20261108_213800_O_rep08": "9/9 (100.0%)",
+      "pilot_20261108_213800_O_rep09": "10/10 (100.0%)",
+      "pilot_20261108_213800_O_rep10": "11/11 (100.0%)"
+    },
+    "o_fix_acc": 60.0,
+    "o_fix_matches": 12,
+    "o_fix_total": 20,
+    "fp_stats": {
+      "A": {
+        "total": 87,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "C": {
+        "total": 40,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "S": {
+        "total": 31,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "T": {
+        "total": 43,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "E": {
+        "total": 55,
+        "fps": 1,
+        "fp_rate": 1.8181818181818181
+      },
+      "P": {
+        "total": 43,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "X": {
+        "total": 73,
+        "fps": 0,
+        "fp_rate": 0.0
+      }
+    },
+    "p_holdout_fps": 0,
+    "x_holdout_fps": 0
+  },
+  "O-Candidate-02C (d_TI=0.22, d_TM=0.38, idx_str=0.48)": {
+    "o_pilot_acc": 95.65217391304348,
+    "o_pilot_matches": 88,
+    "o_pilot_total": 92,
+    "trial_passes": 10,
+    "trial_details": {
+      "pilot_20261108_213800_O_rep01": "4/8 (50.0%)",
+      "pilot_20261108_213800_O_rep02": "8/8 (100.0%)",
+      "pilot_20261108_213800_O_rep03": "9/9 (100.0%)",
+      "pilot_20261108_213800_O_rep04": "8/8 (100.0%)",
+      "pilot_20261108_213800_O_rep05": "9/9 (100.0%)",
+      "pilot_20261108_213800_O_rep06": "10/10 (100.0%)",
+      "pilot_20261108_213800_O_rep07": "10/10 (100.0%)",
+      "pilot_20261108_213800_O_rep08": "9/9 (100.0%)",
+      "pilot_20261108_213800_O_rep09": "10/10 (100.0%)",
+      "pilot_20261108_213800_O_rep10": "11/11 (100.0%)"
+    },
+    "o_fix_acc": 60.0,
+    "o_fix_matches": 12,
+    "o_fix_total": 20,
+    "fp_stats": {
+      "A": {
+        "total": 87,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "C": {
+        "total": 40,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "S": {
+        "total": 31,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "T": {
+        "total": 43,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "E": {
+        "total": 55,
+        "fps": 1,
+        "fp_rate": 1.8181818181818181
+      },
+      "P": {
+        "total": 43,
+        "fps": 0,
+        "fp_rate": 0.0
+      },
+      "X": {
+        "total": 73,
+        "fps": 0,
+        "fp_rate": 0.0
+      }
+    },
+    "p_holdout_fps": 0,
+    "x_holdout_fps": 0
+  }
+}

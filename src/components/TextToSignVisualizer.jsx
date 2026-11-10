@@ -60,10 +60,10 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   const timerRef = useRef(null);
   const recognitionRef = useRef(null);
 
-  // Bảng chữ cái ngón tay đầy đủ 26 chữ cái theo ảnh mẫu thực tế A-Z
+  // Bảng chữ cái ngón tay đầy đủ 29 chữ cái tiếng Việt chuẩn VSL (không có F, J, W, Z)
   const ALPHABET_LIST = [
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
-    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+    'A', 'Ă', 'Â', 'B', 'C', 'D', 'Đ', 'E', 'Ê', 'G', 'H', 'I', 'K', 'L', 'M', 
+    'N', 'O', 'Ô', 'Ơ', 'P', 'Q', 'R', 'S', 'T', 'U', 'Ư', 'V', 'X', 'Y'
   ];
   const VIETNAMESE_ALPHABET_LIST = [
     'A', 'Ă', 'Â', 'B', 'C', 'D', 'Đ', 'E', 'Ê', 'G', 'H', 'I', 'K', 'L', 'M',
@@ -698,7 +698,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
         <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
-              {viewModel === 'avatar' ? '🔤 Bảng chữ cái tiếng Việt' : '🎯 Chữ cái tiếng Anh A - Z (Robot)'}
+              {viewModel === 'avatar' ? '🔤 Bảng chữ cái tiếng Việt' : '🎯 Bảng chữ cái tiếng Việt (Robot)'}
             </span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '6px' }}>

@@ -1,0 +1,119 @@
+{
+  "status": "SUCCESS",
+  "task": "TASK_8_BUILD_CLEAN_SOUTH_DATASET",
+  "source_file": {
+    "path": "D:\\SIGN_LANGUAGE\\backend\\data\\alphabet_v2\\datasets\\vsl_alphabet_static_v2.npz",
+    "sha256": "0a254daadb4a5dee58d3b11b97071fa093ea2470df6e8a3d609b6d886bfc53b9",
+    "total_samples": 551,
+    "status": "UNTOUCHED"
+  },
+  "clean_file": {
+    "path": "D:\\SIGN_LANGUAGE\\backend\\data\\alphabet_v2\\datasets\\vsl_alphabet_static_south_clean_v1.npz",
+    "sha256": "78b10448b9d75c22d8338143c324d1fa235c702913c826ad744f25173a1d34c9",
+    "total_samples": 309,
+    "num_classes_in_classes_array": 22,
+    "num_classes_active": 17,
+    "classes_active": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "I",
+      "K",
+      "L",
+      "M",
+      "N",
+      "O",
+      "Q",
+      "R",
+      "S",
+      "U",
+      "V",
+      "Y"
+    ],
+    "classes_missing_0_samples": [
+      "G",
+      "H",
+      "P",
+      "T",
+      "X"
+    ],
+    "shapes": {
+      "X": [
+        309,
+        72
+      ],
+      "y": [
+        309
+      ],
+      "landmarks": [
+        309,
+        21,
+        3
+      ],
+      "classes": [
+        22
+      ]
+    },
+    "dtypes": {
+      "X": "float32",
+      "y": "int64",
+      "landmarks": "float32",
+      "classes": "<U1"
+    }
+  },
+  "sample_counts": {
+    "original_total": 551,
+    "clean_total": 309,
+    "eligible_shared": 293,
+    "eligible_south": 16,
+    "excluded_north": 193,
+    "excluded_pending_base_pose": 49
+  },
+  "class_distribution_17": {
+    "A": 22,
+    "B": 22,
+    "C": 20,
+    "D": 20,
+    "E": 15,
+    "I": 18,
+    "K": 17,
+    "L": 16,
+    "M": 19,
+    "N": 21,
+    "O": 20,
+    "Q": 19,
+    "R": 14,
+    "S": 15,
+    "U": 18,
+    "V": 17,
+    "Y": 16
+  },
+  "video_distribution": {
+    "D0489": 22,
+    "D0492": 22,
+    "D0493": 20,
+    "D0494": 20,
+    "D0496": 15,
+    "D0501": 18,
+    "D0502": 17,
+    "D0503": 16,
+    "D0504": 19,
+    "D0505": 21,
+    "D0506": 20,
+    "D0510": 19,
+    "D0511": 14,
+    "D0512": 15,
+    "D0514": 18,
+    "D0516": 17,
+    "D0518N": 16
+  },
+  "region_distribution": {
+    "REGION_SHARED": 293,
+    "REGION_SOUTH": 16
+  },
+  "source_type_distribution": {
+    "static_video": 309
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "task_id": "TASK_7C",
+  "title": "Thiết kế Máy trạng thái DiacriticStateMachine cho 7 chữ cái có dấu VSL",
+  "timestamp": "2026-10-30T23:55:00+07:00",
+  "module_path": "backend/vision/diacritic_state_machine.py",
+  "test_path": "backend/tests/test_diacritic_state_machine.py",
+  "status": "COMPLETED",
+  "architectural_principles": {
+    "isolation": "Module độc lập hoàn toàn, không tích hợp vào production VSLRecognizer hay camera runtime",
+    "base_groups_enforcement": {
+      "A": ["A", "Ă", "Â"],
+      "E": ["E", "Ê"],
+      "O": ["O", "Ô", "Ơ"],
+      "U": ["U", "Ư"],
+      "D": ["D", "Đ"]
+    },
+    "cross_group_prevention": "Tuyệt đối không cho phép chuyển nhãn giữa các nhóm nền khác nhau",
+    "non_base_letters_bypass": "17 chữ tĩnh thuần túy (B, C, G, H, I, K, L, M, N, P, Q, R, S, T, V, X, Y) đi thẳng qua, FSM ở IDLE (Zero-lag)"
+  },
+  "states_definition": {
+    "IDLE": "Chưa có bàn tay hoặc nhãn chữ cái không thuộc 5 nhóm nền",
+    "BASE_CANDIDATE": "Nhận diện được chữ cái nền, đang kiểm tra tính ổn định qua các frame liên tiếp",
+    "BASE_STABLE": "Tư thế nền đã ổn định >= 4 frames (~0.10-0.12s). Baseline Snapshot được đóng băng tại đây",
+    "DIACRITIC_CANDIDATE": "Phát hiện dấu hiệu động học (vận tốc lên, mở ngón V, vẩy ngón út, gập ngón trỏ)",
+    "DIACRITIC_CONFIRMED": "Dấu được xác nhận thành công sau khi tích lũy đủ bằng chứng",
+    "COOLDOWN": "Duy trì kết quả có dấu trong 0.3-0.4s để chống nhấp nháy (flicker) và debounce"
+  },
+  "history_management": {
+    "baseline_snapshot": {
+      "captured_at": "Thời điểm chuyển sang BASE_STABLE",
+      "preserved": "Không bao giờ bị motion buffer ghi đè trong suốt chu kỳ tìm kiếm dấu",
+      "fields": ["base_label", "wrist_y", "palm_center_y", "palm_scale", "d_index_middle_norm", "d_pinky_index_norm", "pinky_curl", "index_pip_angle"]
+    },
+    "motion_buffer": {
+      "type": "collections.deque(maxlen=15)",
+      "span_seconds": "~0.5 - 0.6s ở 24-30 FPS",
+      "content": "Raw landmarks (đo tịnh tiến Y), shifted landmarks (đo hình thái ngón), finger states, vy tức thời"
+    }
+  },
+  "formula_verifications_task7b": {
+    "letter_O_horn_verification": {
+      "task7b_formula": "d(ThumbTip 4, IndexMCP 5) / palm_scale",
+      "task7b_issue": "Nhầm lẫn nhãn tên: đo khoảng cách ngón cái tới gốc ngón trỏ thay vì phản ánh nét râu",
+      "task7c_corrected_formula": "d(PinkyTip 20, IndexTip 8) / palm_scale (hoặc d(20, 4))",
+      "empirical_evidence": "Trong video D0508N, chữ O khép có d(8, 20)/scale = 0.2219 (max 0.2598). Khi Ơ vẩy râu ngón út, d(8, 20)/scale vọt lên 1.1146 (min 0.3959, max 1.2407), tăng gấp 5 lần! Ngưỡng tối ưu: >= 0.50."
+    },
+    "letter_A_breve_verification": {
+      "formula": "d(IndexTip 8, MiddleTip 12) / palm_scale",
+      "empirical_evidence": "BASE A là 0.2424 (max 0.3341); DIAC Ă là 0.5403 (min 0.4571). Ngưỡng tối ưu: >= 0.40 kết hợp index_curl < 0.25."
+    },
+    "letter_U_horn_verification": {
+      "formula": "pinky_curl (tính qua tỉ lệ khoảng cách Tip-MCP so với tổng đoạn ngón út)",
+      "empirical_evidence": "BASE U là 0.7964 (min 0.4597); DIAC Ư là 0.2154 (max 0.2978). Ngưỡng tối ưu: <= 0.35 (hoặc pinky_extended == True)."
+    },
+    "letter_D_stroke_verification": {
+      "formula": "index_pip_angle (góc tạo bởi Index MCP 5 - PIP 6 - DIP 7)",
+      "empirical_evidence": "BASE D là 124.8 độ (min 115.3 độ); DIAC Đ gập xuống 91.5 độ (giảm > 33 độ). Ngưỡng tối ưu: <= 110 độ hoặc độ sụt giảm >= 15 độ. Thời lượng chỉ 9 frames, cần xác nhận xung 1-2 frames."
+    },
+    "circumflex_lift_verification": {
+      "letters": ["Â", "Ê", "Ô"],
+      "formula": "lift = baseline.wrist_y - current.wrist_y (tọa độ ảnh gốc MediaPipe)",
+      "empirical_evidence": "Độ nâng cực đại đạt 0.039 - 0.056 (7-9.5% màn hình) với vy <= -0.10/s. Ngưỡng tối ưu: lift >= 0.035 và vy <= -0.10/s."
+    }
+  },
+  "guards_implementation": {
+    "entry_guard": "Nếu cổ tay di chuyển vọt lên nhanh (|vy| > 0.70/s), không cho phép kích hoạt dấu mà bắt buộc phải qua BASE_CANDIDATE và ổn định 4 frames",
+    "exit_guard": "Nếu cổ tay rơi nhanh xuống dưới (vy > 0.65/s) hoặc wrist_y > 0.75, lập tức khóa nhận diện dấu và reset FSM",
+    "lost_landmarks_guard": "Khi landmarks là None, rỗng, NaN hoặc Inf, reset FSM về IDLE và trả về NEUTRAL (confidence: 0.0)",
+    "timestamp_guard": "Nếu timestamp nhảy lùi hoặc delta_t <= 0, reset FSM an toàn"
+  },
+  "unit_tests_results": {
+    "total_tests": 15,
+    "passed": 15,
+    "failed": 0,
+    "execution_time_seconds": 0.30,
+    "test_cases_covered": [
+      "test_case_1_base_a_static_hold",
+      "test_case_2_a_open_v_to_a_breve",
+      "test_case_3_a_lift_to_a_circumflex",
+      "test_case_4_e_lift_to_e_circumflex",
+      "test_case_5_o_lift_to_o_circumflex",
+      "test_case_6_o_horn_to_o_horn",
+      "test_case_7_u_pinky_extend_to_u_horn",
+      "test_case_8_d_stroke_to_d_stroke",
+      "test_case_9_entry_guard_rejects_premature_diacritic",
+      "test_case_10_exit_guard_rejects_dropping_hand",
+      "test_case_11_lost_landmarks_safe_neutral",
+      "test_case_12_base_switch_resets_cleanly",
+      "test_case_13_sub_threshold_motion_keeps_base",
+      "test_case_14_backwards_timestamp_safe_reset",
+      "test_case_15_pure_static_letters_passthrough"
+    ]
+  },
+  "limitations_and_disclaimer": "Bộ unit test trên kiểm thử logic máy trạng thái (FSM state transitions, boundary conditions, guards) bằng dữ liệu giả lập có kiểm soát. Đây KHÔNG PHẢI là kiểm định độ chính xác tổng quát hóa trên người dùng thực tế. Việc tinh chỉnh ngưỡng trên người thật cần được thực hiện qua thu thập camera đa người ký."
+}
+

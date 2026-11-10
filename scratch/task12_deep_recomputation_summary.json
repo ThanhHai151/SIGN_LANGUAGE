@@ -1,0 +1,1349 @@
+{
+  "file_sha256": "fb4f725757bcbc73b96748896c4149c21927461314c72e68a49310b7cd76429f",
+  "file_size": 115231156,
+  "total_records": 13341,
+  "active_trial_frames": 7456,
+  "inter_trial_frames": 5885,
+  "total_trials": 224,
+  "trial_summary": {
+    "correct": 132,
+    "neutral": 66,
+    "incorrect": 25,
+    "mixed": 1,
+    "accuracy_pct": 58.93
+  },
+  "trial_summary_by_letter": {
+    "A": {
+      "total_trials": 11,
+      "att01_trials": 10,
+      "att02_trials": 1,
+      "correct_trials": 11,
+      "incorrect_trials": 0,
+      "neutral_trials": 0,
+      "mixed_trials": 0,
+      "confirmed_trials": 11,
+      "att01_correct": 10,
+      "att02_correct": 1
+    },
+    "B": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 10,
+      "incorrect_trials": 0,
+      "neutral_trials": 0,
+      "mixed_trials": 0,
+      "confirmed_trials": 10,
+      "att01_correct": 10,
+      "att02_correct": 0
+    },
+    "C": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 10,
+      "incorrect_trials": 0,
+      "neutral_trials": 0,
+      "mixed_trials": 0,
+      "confirmed_trials": 8,
+      "att01_correct": 10,
+      "att02_correct": 0
+    },
+    "D": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 6,
+      "incorrect_trials": 2,
+      "neutral_trials": 2,
+      "mixed_trials": 0,
+      "confirmed_trials": 7,
+      "att01_correct": 6,
+      "att02_correct": 0
+    },
+    "E": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 2,
+      "incorrect_trials": 1,
+      "neutral_trials": 7,
+      "mixed_trials": 0,
+      "confirmed_trials": 1,
+      "att01_correct": 2,
+      "att02_correct": 0
+    },
+    "G": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 10,
+      "incorrect_trials": 0,
+      "neutral_trials": 0,
+      "mixed_trials": 0,
+      "confirmed_trials": 10,
+      "att01_correct": 10,
+      "att02_correct": 0
+    },
+    "H": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 0,
+      "incorrect_trials": 10,
+      "neutral_trials": 0,
+      "mixed_trials": 0,
+      "confirmed_trials": 0,
+      "att01_correct": 0,
+      "att02_correct": 0
+    },
+    "I": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 6,
+      "incorrect_trials": 1,
+      "neutral_trials": 3,
+      "mixed_trials": 0,
+      "confirmed_trials": 5,
+      "att01_correct": 6,
+      "att02_correct": 0
+    },
+    "K": {
+      "total_trials": 11,
+      "att01_trials": 10,
+      "att02_trials": 1,
+      "correct_trials": 10,
+      "incorrect_trials": 0,
+      "neutral_trials": 0,
+      "mixed_trials": 1,
+      "confirmed_trials": 10,
+      "att01_correct": 9,
+      "att02_correct": 1
+    },
+    "L": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 9,
+      "incorrect_trials": 0,
+      "neutral_trials": 1,
+      "mixed_trials": 0,
+      "confirmed_trials": 8,
+      "att01_correct": 9,
+      "att02_correct": 0
+    },
+    "M": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 1,
+      "incorrect_trials": 0,
+      "neutral_trials": 9,
+      "mixed_trials": 0,
+      "confirmed_trials": 0,
+      "att01_correct": 1,
+      "att02_correct": 0
+    },
+    "N": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 2,
+      "incorrect_trials": 0,
+      "neutral_trials": 8,
+      "mixed_trials": 0,
+      "confirmed_trials": 0,
+      "att01_correct": 2,
+      "att02_correct": 0
+    },
+    "O": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 1,
+      "incorrect_trials": 6,
+      "neutral_trials": 3,
+      "mixed_trials": 0,
+      "confirmed_trials": 0,
+      "att01_correct": 1,
+      "att02_correct": 0
+    },
+    "P": {
+      "total_trials": 11,
+      "att01_trials": 10,
+      "att02_trials": 1,
+      "correct_trials": 0,
+      "incorrect_trials": 0,
+      "neutral_trials": 11,
+      "mixed_trials": 0,
+      "confirmed_trials": 0,
+      "att01_correct": 0,
+      "att02_correct": 0
+    },
+    "Q": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 1,
+      "incorrect_trials": 1,
+      "neutral_trials": 8,
+      "mixed_trials": 0,
+      "confirmed_trials": 0,
+      "att01_correct": 1,
+      "att02_correct": 0
+    },
+    "R": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 5,
+      "incorrect_trials": 3,
+      "neutral_trials": 2,
+      "mixed_trials": 0,
+      "confirmed_trials": 5,
+      "att01_correct": 5,
+      "att02_correct": 0
+    },
+    "S": {
+      "total_trials": 11,
+      "att01_trials": 10,
+      "att02_trials": 1,
+      "correct_trials": 10,
+      "incorrect_trials": 1,
+      "neutral_trials": 0,
+      "mixed_trials": 0,
+      "confirmed_trials": 10,
+      "att01_correct": 9,
+      "att02_correct": 1
+    },
+    "T": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 8,
+      "incorrect_trials": 0,
+      "neutral_trials": 2,
+      "mixed_trials": 0,
+      "confirmed_trials": 8,
+      "att01_correct": 8,
+      "att02_correct": 0
+    },
+    "U": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 10,
+      "incorrect_trials": 0,
+      "neutral_trials": 0,
+      "mixed_trials": 0,
+      "confirmed_trials": 10,
+      "att01_correct": 10,
+      "att02_correct": 0
+    },
+    "V": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 10,
+      "incorrect_trials": 0,
+      "neutral_trials": 0,
+      "mixed_trials": 0,
+      "confirmed_trials": 10,
+      "att01_correct": 10,
+      "att02_correct": 0
+    },
+    "X": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 0,
+      "incorrect_trials": 0,
+      "neutral_trials": 10,
+      "mixed_trials": 0,
+      "confirmed_trials": 0,
+      "att01_correct": 0,
+      "att02_correct": 0
+    },
+    "Y": {
+      "total_trials": 10,
+      "att01_trials": 10,
+      "att02_trials": 0,
+      "correct_trials": 10,
+      "incorrect_trials": 0,
+      "neutral_trials": 0,
+      "mixed_trials": 0,
+      "confirmed_trials": 10,
+      "att01_correct": 10,
+      "att02_correct": 0
+    }
+  },
+  "letter_frame_stats": {
+    "A": {
+      "letter": "A",
+      "total_frames": 511,
+      "correct_frames": 457,
+      "incorrect_frames": 0,
+      "neutral_frames": 54,
+      "frame_accuracy_pct": 89.43,
+      "att01_frames": 471,
+      "att02_frames": 40,
+      "confirmed_frames": 39,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.0,
+      "conf_median_incorrect": 0.0,
+      "conf_percentiles": {
+        "p25": 0.95,
+        "p50": 0.95,
+        "p75": 0.95,
+        "p90": 0.95
+      },
+      "sources": {
+        "none": 54,
+        "geometric_rule": 457
+      },
+      "gatings": {
+        "rejected": 54,
+        "passed_geometric": 457
+      },
+      "top_confusions": {},
+      "trials_total": 11,
+      "trials_correct": 11,
+      "trials_neutral": 0,
+      "trials_incorrect": 0,
+      "trial_accuracy_pct": 100.0,
+      "att01_accuracy_pct": 100.0,
+      "att02_accuracy_pct": 100.0,
+      "confirmed_trials": 11
+    },
+    "B": {
+      "letter": "B",
+      "total_frames": 366,
+      "correct_frames": 362,
+      "incorrect_frames": 0,
+      "neutral_frames": 4,
+      "frame_accuracy_pct": 98.91,
+      "att01_frames": 366,
+      "att02_frames": 0,
+      "confirmed_frames": 40,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.0,
+      "conf_median_incorrect": 0.0,
+      "conf_percentiles": {
+        "p25": 0.95,
+        "p50": 0.95,
+        "p75": 0.95,
+        "p90": 0.95
+      },
+      "sources": {
+        "geometric_rule": 362,
+        "none": 4
+      },
+      "gatings": {
+        "passed_geometric": 362,
+        "rejected": 4
+      },
+      "top_confusions": {},
+      "trials_total": 10,
+      "trials_correct": 10,
+      "trials_neutral": 0,
+      "trials_incorrect": 0,
+      "trial_accuracy_pct": 100.0,
+      "att01_accuracy_pct": 100.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 10
+    },
+    "C": {
+      "letter": "C",
+      "total_frames": 258,
+      "correct_frames": 113,
+      "incorrect_frames": 0,
+      "neutral_frames": 145,
+      "frame_accuracy_pct": 43.8,
+      "att01_frames": 258,
+      "att02_frames": 0,
+      "confirmed_frames": 22,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.0,
+      "conf_median_incorrect": 0.0,
+      "conf_percentiles": {
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.95,
+        "p90": 0.95
+      },
+      "sources": {
+        "none": 145,
+        "geometric_rule": 113
+      },
+      "gatings": {
+        "rejected": 145,
+        "passed_geometric": 113
+      },
+      "top_confusions": {},
+      "trials_total": 10,
+      "trials_correct": 10,
+      "trials_neutral": 0,
+      "trials_incorrect": 0,
+      "trial_accuracy_pct": 100.0,
+      "att01_accuracy_pct": 100.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 8
+    },
+    "D": {
+      "letter": "D",
+      "total_frames": 315,
+      "correct_frames": 175,
+      "incorrect_frames": 23,
+      "neutral_frames": 117,
+      "frame_accuracy_pct": 55.56,
+      "att01_frames": 315,
+      "att02_frames": 0,
+      "confirmed_frames": 25,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.95,
+      "conf_median_incorrect": 0.95,
+      "conf_percentiles": {
+        "p25": 0.0,
+        "p50": 0.95,
+        "p75": 0.95,
+        "p90": 0.95
+      },
+      "sources": {
+        "none": 117,
+        "geometric_rule": 198
+      },
+      "gatings": {
+        "rejected": 117,
+        "passed_geometric": 198
+      },
+      "top_confusions": {
+        "P": 22,
+        "G": 1
+      },
+      "trials_total": 10,
+      "trials_correct": 6,
+      "trials_neutral": 2,
+      "trials_incorrect": 2,
+      "trial_accuracy_pct": 60.0,
+      "att01_accuracy_pct": 60.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 7
+    },
+    "E": {
+      "letter": "E",
+      "total_frames": 329,
+      "correct_frames": 10,
+      "incorrect_frames": 11,
+      "neutral_frames": 308,
+      "frame_accuracy_pct": 3.04,
+      "att01_frames": 329,
+      "att02_frames": 0,
+      "confirmed_frames": 2,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.95,
+      "conf_median_incorrect": 0.95,
+      "conf_percentiles": {
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0
+      },
+      "sources": {
+        "none": 308,
+        "geometric_rule": 21
+      },
+      "gatings": {
+        "rejected": 308,
+        "passed_geometric": 21
+      },
+      "top_confusions": {
+        "C": 11
+      },
+      "trials_total": 10,
+      "trials_correct": 2,
+      "trials_neutral": 7,
+      "trials_incorrect": 1,
+      "trial_accuracy_pct": 20.0,
+      "att01_accuracy_pct": 20.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 1
+    },
+    "G": {
+      "letter": "G",
+      "total_frames": 299,
+      "correct_frames": 242,
+      "incorrect_frames": 0,
+      "neutral_frames": 57,
+      "frame_accuracy_pct": 80.94,
+      "att01_frames": 299,
+      "att02_frames": 0,
+      "confirmed_frames": 35,
+      "conf_mean_correct": 0.945,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.0,
+      "conf_median_incorrect": 0.0,
+      "conf_percentiles": {
+        "p25": 0.95,
+        "p50": 0.95,
+        "p75": 0.95,
+        "p90": 0.95
+      },
+      "sources": {
+        "geometric_rule": 237,
+        "none": 57,
+        "static_head": 5
+      },
+      "gatings": {
+        "passed_geometric": 237,
+        "rejected": 57,
+        "passed_supplemental": 5
+      },
+      "top_confusions": {},
+      "trials_total": 10,
+      "trials_correct": 10,
+      "trials_neutral": 0,
+      "trials_incorrect": 0,
+      "trial_accuracy_pct": 100.0,
+      "att01_accuracy_pct": 100.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 10
+    },
+    "H": {
+      "letter": "H",
+      "total_frames": 455,
+      "correct_frames": 0,
+      "incorrect_frames": 164,
+      "neutral_frames": 291,
+      "frame_accuracy_pct": 0.0,
+      "att01_frames": 455,
+      "att02_frames": 0,
+      "confirmed_frames": 19,
+      "conf_mean_correct": 0.0,
+      "conf_median_correct": 0.0,
+      "conf_mean_incorrect": 0.95,
+      "conf_median_incorrect": 0.95,
+      "conf_percentiles": {
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.95,
+        "p90": 0.95
+      },
+      "sources": {
+        "geometric_rule": 164,
+        "none": 291
+      },
+      "gatings": {
+        "passed_geometric": 164,
+        "rejected": 291
+      },
+      "top_confusions": {
+        "V": 140,
+        "K": 22,
+        "R": 2
+      },
+      "trials_total": 10,
+      "trials_correct": 0,
+      "trials_neutral": 0,
+      "trials_incorrect": 10,
+      "trial_accuracy_pct": 0.0,
+      "att01_accuracy_pct": 0.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 0
+    },
+    "I": {
+      "letter": "I",
+      "total_frames": 362,
+      "correct_frames": 176,
+      "incorrect_frames": 19,
+      "neutral_frames": 167,
+      "frame_accuracy_pct": 48.62,
+      "att01_frames": 362,
+      "att02_frames": 0,
+      "confirmed_frames": 21,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.95,
+      "conf_median_incorrect": 0.95,
+      "conf_percentiles": {
+        "p25": 0.0,
+        "p50": 0.95,
+        "p75": 0.95,
+        "p90": 0.95
+      },
+      "sources": {
+        "geometric_rule": 195,
+        "none": 167
+      },
+      "gatings": {
+        "passed_geometric": 195,
+        "rejected": 167
+      },
+      "top_confusions": {
+        "Y": 19
+      },
+      "trials_total": 10,
+      "trials_correct": 6,
+      "trials_neutral": 3,
+      "trials_incorrect": 1,
+      "trial_accuracy_pct": 60.0,
+      "att01_accuracy_pct": 60.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 5
+    },
+    "K": {
+      "letter": "K",
+      "total_frames": 299,
+      "correct_frames": 240,
+      "incorrect_frames": 5,
+      "neutral_frames": 54,
+      "frame_accuracy_pct": 80.27,
+      "att01_frames": 266,
+      "att02_frames": 33,
+      "confirmed_frames": 37,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.95,
+      "conf_median_incorrect": 0.95,
+      "conf_percentiles": {
+        "p25": 0.95,
+        "p50": 0.95,
+        "p75": 0.95,
+        "p90": 0.95
+      },
+      "sources": {
+        "geometric_rule": 245,
+        "none": 54
+      },
+      "gatings": {
+        "passed_geometric": 245,
+        "rejected": 54
+      },
+      "top_confusions": {
+        "I": 2,
+        "V": 1,
+        "H": 1,
+        "S": 1
+      },
+      "trials_total": 11,
+      "trials_correct": 10,
+      "trials_neutral": 0,
+      "trials_incorrect": 0,
+      "trial_accuracy_pct": 90.91,
+      "att01_accuracy_pct": 90.0,
+      "att02_accuracy_pct": 100.0,
+      "confirmed_trials": 10
+    },
+    "L": {
+      "letter": "L",
+      "total_frames": 307,
+      "correct_frames": 190,
+      "incorrect_frames": 0,
+      "neutral_frames": 117,
+      "frame_accuracy_pct": 61.89,
+      "att01_frames": 307,
+      "att02_frames": 0,
+      "confirmed_frames": 26,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.0,
+      "conf_median_incorrect": 0.0,
+      "conf_percentiles": {
+        "p25": 0.0,
+        "p50": 0.95,
+        "p75": 0.95,
+        "p90": 0.95
+      },
+      "sources": {
+        "none": 117,
+        "geometric_rule": 190
+      },
+      "gatings": {
+        "rejected": 117,
+        "passed_geometric": 190
+      },
+      "top_confusions": {},
+      "trials_total": 10,
+      "trials_correct": 9,
+      "trials_neutral": 1,
+      "trials_incorrect": 0,
+      "trial_accuracy_pct": 90.0,
+      "att01_accuracy_pct": 90.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 8
+    },
+    "M": {
+      "letter": "M",
+      "total_frames": 323,
+      "correct_frames": 2,
+      "incorrect_frames": 0,
+      "neutral_frames": 321,
+      "frame_accuracy_pct": 0.62,
+      "att01_frames": 323,
+      "att02_frames": 0,
+      "confirmed_frames": 0,
+      "conf_mean_correct": 0.753,
+      "conf_median_correct": 0.753,
+      "conf_mean_incorrect": 0.0,
+      "conf_median_incorrect": 0.0,
+      "conf_percentiles": {
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0
+      },
+      "sources": {
+        "none": 321,
+        "static_head": 2
+      },
+      "gatings": {
+        "rejected": 321,
+        "passed_supplemental": 2
+      },
+      "top_confusions": {},
+      "trials_total": 10,
+      "trials_correct": 1,
+      "trials_neutral": 9,
+      "trials_incorrect": 0,
+      "trial_accuracy_pct": 10.0,
+      "att01_accuracy_pct": 10.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 0
+    },
+    "N": {
+      "letter": "N",
+      "total_frames": 328,
+      "correct_frames": 4,
+      "incorrect_frames": 0,
+      "neutral_frames": 324,
+      "frame_accuracy_pct": 1.22,
+      "att01_frames": 328,
+      "att02_frames": 0,
+      "confirmed_frames": 0,
+      "conf_mean_correct": 0.812,
+      "conf_median_correct": 0.807,
+      "conf_mean_incorrect": 0.0,
+      "conf_median_incorrect": 0.0,
+      "conf_percentiles": {
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0
+      },
+      "sources": {
+        "none": 324,
+        "static_head": 4
+      },
+      "gatings": {
+        "rejected": 324,
+        "passed_supplemental": 4
+      },
+      "top_confusions": {},
+      "trials_total": 10,
+      "trials_correct": 2,
+      "trials_neutral": 8,
+      "trials_incorrect": 0,
+      "trial_accuracy_pct": 20.0,
+      "att01_accuracy_pct": 20.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 0
+    },
+    "O": {
+      "letter": "O",
+      "total_frames": 324,
+      "correct_frames": 1,
+      "incorrect_frames": 25,
+      "neutral_frames": 298,
+      "frame_accuracy_pct": 0.31,
+      "att01_frames": 324,
+      "att02_frames": 0,
+      "confirmed_frames": 3,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.777,
+      "conf_median_incorrect": 0.781,
+      "conf_percentiles": {
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0
+      },
+      "sources": {
+        "none": 298,
+        "static_head_fallback": 25,
+        "geometric_rule": 1
+      },
+      "gatings": {
+        "rejected": 298,
+        "passed_fallback": 25,
+        "passed_geometric": 1
+      },
+      "top_confusions": {
+        "A": 25
+      },
+      "trials_total": 10,
+      "trials_correct": 1,
+      "trials_neutral": 3,
+      "trials_incorrect": 6,
+      "trial_accuracy_pct": 10.0,
+      "att01_accuracy_pct": 10.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 0
+    },
+    "P": {
+      "letter": "P",
+      "total_frames": 337,
+      "correct_frames": 0,
+      "incorrect_frames": 0,
+      "neutral_frames": 337,
+      "frame_accuracy_pct": 0.0,
+      "att01_frames": 305,
+      "att02_frames": 32,
+      "confirmed_frames": 0,
+      "conf_mean_correct": 0.0,
+      "conf_median_correct": 0.0,
+      "conf_mean_incorrect": 0.0,
+      "conf_median_incorrect": 0.0,
+      "conf_percentiles": {
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0
+      },
+      "sources": {
+        "none": 337
+      },
+      "gatings": {
+        "rejected": 337
+      },
+      "top_confusions": {},
+      "trials_total": 11,
+      "trials_correct": 0,
+      "trials_neutral": 11,
+      "trials_incorrect": 0,
+      "trial_accuracy_pct": 0.0,
+      "att01_accuracy_pct": 0.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 0
+    },
+    "Q": {
+      "letter": "Q",
+      "total_frames": 303,
+      "correct_frames": 1,
+      "incorrect_frames": 2,
+      "neutral_frames": 300,
+      "frame_accuracy_pct": 0.33,
+      "att01_frames": 303,
+      "att02_frames": 0,
+      "confirmed_frames": 0,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.95,
+      "conf_median_incorrect": 0.95,
+      "conf_percentiles": {
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0
+      },
+      "sources": {
+        "none": 300,
+        "geometric_rule": 3
+      },
+      "gatings": {
+        "rejected": 300,
+        "passed_geometric": 3
+      },
+      "top_confusions": {
+        "G": 2
+      },
+      "trials_total": 10,
+      "trials_correct": 1,
+      "trials_neutral": 8,
+      "trials_incorrect": 1,
+      "trial_accuracy_pct": 10.0,
+      "att01_accuracy_pct": 10.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 0
+    },
+    "R": {
+      "letter": "R",
+      "total_frames": 316,
+      "correct_frames": 81,
+      "incorrect_frames": 30,
+      "neutral_frames": 205,
+      "frame_accuracy_pct": 25.63,
+      "att01_frames": 316,
+      "att02_frames": 0,
+      "confirmed_frames": 14,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.95,
+      "conf_median_incorrect": 0.95,
+      "conf_percentiles": {
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.95,
+        "p90": 0.95
+      },
+      "sources": {
+        "none": 205,
+        "geometric_rule": 111
+      },
+      "gatings": {
+        "rejected": 205,
+        "passed_geometric": 111
+      },
+      "top_confusions": {
+        "H": 19,
+        "D": 9,
+        "U": 1,
+        "L": 1
+      },
+      "trials_total": 10,
+      "trials_correct": 5,
+      "trials_neutral": 2,
+      "trials_incorrect": 3,
+      "trial_accuracy_pct": 50.0,
+      "att01_accuracy_pct": 50.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 5
+    },
+    "S": {
+      "letter": "S",
+      "total_frames": 309,
+      "correct_frames": 288,
+      "incorrect_frames": 2,
+      "neutral_frames": 19,
+      "frame_accuracy_pct": 93.2,
+      "att01_frames": 278,
+      "att02_frames": 31,
+      "confirmed_frames": 39,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.95,
+      "conf_median_incorrect": 0.95,
+      "conf_percentiles": {
+        "p25": 0.95,
+        "p50": 0.95,
+        "p75": 0.95,
+        "p90": 0.95
+      },
+      "sources": {
+        "none": 19,
+        "geometric_rule": 290
+      },
+      "gatings": {
+        "rejected": 19,
+        "passed_geometric": 290
+      },
+      "top_confusions": {
+        "L": 2
+      },
+      "trials_total": 11,
+      "trials_correct": 10,
+      "trials_neutral": 0,
+      "trials_incorrect": 1,
+      "trial_accuracy_pct": 90.91,
+      "att01_accuracy_pct": 90.0,
+      "att02_accuracy_pct": 100.0,
+      "confirmed_trials": 10
+    },
+    "T": {
+      "letter": "T",
+      "total_frames": 306,
+      "correct_frames": 168,
+      "incorrect_frames": 1,
+      "neutral_frames": 137,
+      "frame_accuracy_pct": 54.9,
+      "att01_frames": 306,
+      "att02_frames": 0,
+      "confirmed_frames": 26,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.95,
+      "conf_median_incorrect": 0.95,
+      "conf_percentiles": {
+        "p25": 0.0,
+        "p50": 0.95,
+        "p75": 0.95,
+        "p90": 0.95
+      },
+      "sources": {
+        "geometric_rule": 169,
+        "none": 137
+      },
+      "gatings": {
+        "passed_geometric": 169,
+        "rejected": 137
+      },
+      "top_confusions": {
+        "B": 1
+      },
+      "trials_total": 10,
+      "trials_correct": 8,
+      "trials_neutral": 2,
+      "trials_incorrect": 0,
+      "trial_accuracy_pct": 80.0,
+      "att01_accuracy_pct": 80.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 8
+    },
+    "U": {
+      "letter": "U",
+      "total_frames": 396,
+      "correct_frames": 394,
+      "incorrect_frames": 0,
+      "neutral_frames": 2,
+      "frame_accuracy_pct": 99.49,
+      "att01_frames": 396,
+      "att02_frames": 0,
+      "confirmed_frames": 40,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.0,
+      "conf_median_incorrect": 0.0,
+      "conf_percentiles": {
+        "p25": 0.95,
+        "p50": 0.95,
+        "p75": 0.95,
+        "p90": 0.95
+      },
+      "sources": {
+        "geometric_rule": 394,
+        "none": 2
+      },
+      "gatings": {
+        "passed_geometric": 394,
+        "rejected": 2
+      },
+      "top_confusions": {},
+      "trials_total": 10,
+      "trials_correct": 10,
+      "trials_neutral": 0,
+      "trials_incorrect": 0,
+      "trial_accuracy_pct": 100.0,
+      "att01_accuracy_pct": 100.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 10
+    },
+    "V": {
+      "letter": "V",
+      "total_frames": 400,
+      "correct_frames": 362,
+      "incorrect_frames": 3,
+      "neutral_frames": 35,
+      "frame_accuracy_pct": 90.5,
+      "att01_frames": 400,
+      "att02_frames": 0,
+      "confirmed_frames": 37,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.795,
+      "conf_median_incorrect": 0.787,
+      "conf_percentiles": {
+        "p25": 0.95,
+        "p50": 0.95,
+        "p75": 0.95,
+        "p90": 0.95
+      },
+      "sources": {
+        "static_head": 3,
+        "geometric_rule": 362,
+        "none": 35
+      },
+      "gatings": {
+        "passed_supplemental": 3,
+        "passed_geometric": 362,
+        "rejected": 35
+      },
+      "top_confusions": {
+        "R": 3
+      },
+      "trials_total": 10,
+      "trials_correct": 10,
+      "trials_neutral": 0,
+      "trials_incorrect": 0,
+      "trial_accuracy_pct": 100.0,
+      "att01_accuracy_pct": 100.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 10
+    },
+    "X": {
+      "letter": "X",
+      "total_frames": 310,
+      "correct_frames": 0,
+      "incorrect_frames": 0,
+      "neutral_frames": 310,
+      "frame_accuracy_pct": 0.0,
+      "att01_frames": 310,
+      "att02_frames": 0,
+      "confirmed_frames": 0,
+      "conf_mean_correct": 0.0,
+      "conf_median_correct": 0.0,
+      "conf_mean_incorrect": 0.0,
+      "conf_median_incorrect": 0.0,
+      "conf_percentiles": {
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p90": 0.0
+      },
+      "sources": {
+        "none": 310
+      },
+      "gatings": {
+        "rejected": 310
+      },
+      "top_confusions": {},
+      "trials_total": 10,
+      "trials_correct": 0,
+      "trials_neutral": 10,
+      "trials_incorrect": 0,
+      "trial_accuracy_pct": 0.0,
+      "att01_accuracy_pct": 0.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 0
+    },
+    "Y": {
+      "letter": "Y",
+      "total_frames": 303,
+      "correct_frames": 303,
+      "incorrect_frames": 0,
+      "neutral_frames": 0,
+      "frame_accuracy_pct": 100.0,
+      "att01_frames": 303,
+      "att02_frames": 0,
+      "confirmed_frames": 39,
+      "conf_mean_correct": 0.95,
+      "conf_median_correct": 0.95,
+      "conf_mean_incorrect": 0.0,
+      "conf_median_incorrect": 0.0,
+      "conf_percentiles": {
+        "p25": 0.95,
+        "p50": 0.95,
+        "p75": 0.95,
+        "p90": 0.95
+      },
+      "sources": {
+        "geometric_rule": 303
+      },
+      "gatings": {
+        "passed_geometric": 303
+      },
+      "top_confusions": {},
+      "trials_total": 10,
+      "trials_correct": 10,
+      "trials_neutral": 0,
+      "trials_incorrect": 0,
+      "trial_accuracy_pct": 100.0,
+      "att01_accuracy_pct": 100.0,
+      "att02_accuracy_pct": 0.0,
+      "confirmed_trials": 10
+    }
+  },
+  "geometric_eval": {
+    "total": 7456,
+    "status_counts": {
+      "NO_MATCH": 3641,
+      "MATCH": 3815
+    },
+    "correct": 3558,
+    "incorrect": 257,
+    "no_match": 3641,
+    "confusions": {
+      "H->V": 140,
+      "D->P": 22,
+      "H->K": 22,
+      "I->Y": 19,
+      "R->H": 19,
+      "E->C": 11,
+      "R->D": 9,
+      "H->R": 2,
+      "K->I": 2,
+      "Q->G": 2
+    }
+  },
+  "mlp_eval": {
+    "invoked": 3641,
+    "not_invoked": 3815,
+    "raw_correct": 446,
+    "raw_incorrect": 3195,
+    "raw_accuracy_pct": 12.25,
+    "mean_conf_correct": 0.452,
+    "mean_conf_incorrect": 0.613,
+    "raw_preds_distribution": {
+      "V": 2806,
+      "N": 313,
+      "A": 220,
+      "D": 122,
+      "M": 99,
+      "R": 37,
+      "B": 19,
+      "I": 16,
+      "G": 5,
+      "K": 3,
+      "L": 1
+    },
+    "raw_confusions": {
+      "P->V": 335,
+      "E->V": 307,
+      "X->V": 307,
+      "Q->V": 300,
+      "H->V": 291,
+      "R->V": 192,
+      "O->A": 168,
+      "M->V": 164,
+      "O->V": 153,
+      "T->V": 137,
+      "C->V": 131,
+      "I->D": 122,
+      "L->V": 117,
+      "D->V": 116,
+      "G->V": 57
+    },
+    "top_k_ranks": {
+      "4": 114,
+      "not_in_top_k": 2441,
+      "2": 397,
+      "5": 38,
+      "3": 205,
+      "1": 446
+    }
+  },
+  "gating_eval": {
+    "passed_geometric": 3815,
+    "passed_fallback": 25,
+    "passed_supplemental": 14,
+    "rejected": 3602,
+    "gating_matrix": {
+      "true_accept": 11,
+      "false_accept": 28,
+      "true_reject": 3167,
+      "false_reject": 435
+    },
+    "reject_reasons": {
+      "Letter 'V' not in supplemental/fallback set": 2806,
+      "Letter 'B' not in supplemental/fallback set": 19,
+      "Confidence 0.51 < threshold 0.70": 17,
+      "Letter 'I' not in supplemental/fallback set": 16,
+      "Confidence 0.56 < threshold 0.70": 14,
+      "Confidence 0.30 < threshold 0.70": 14,
+      "Confidence 0.23 < threshold 0.70": 14,
+      "Confidence 0.48 < threshold 0.75": 14,
+      "Confidence 0.49 < threshold 0.75": 14,
+      "Confidence 0.43 < threshold 0.75": 14
+    }
+  },
+  "confusion_matrix": {
+    "A": {
+      "NEUTRAL": 54,
+      "A": 457
+    },
+    "B": {
+      "B": 362,
+      "NEUTRAL": 4
+    },
+    "C": {
+      "NEUTRAL": 145,
+      "C": 113
+    },
+    "D": {
+      "NEUTRAL": 117,
+      "P": 22,
+      "D": 175,
+      "G": 1
+    },
+    "E": {
+      "NEUTRAL": 308,
+      "C": 11,
+      "E": 10
+    },
+    "G": {
+      "G": 242,
+      "NEUTRAL": 57
+    },
+    "H": {
+      "V": 140,
+      "NEUTRAL": 291,
+      "K": 22,
+      "R": 2
+    },
+    "I": {
+      "Y": 19,
+      "NEUTRAL": 167,
+      "I": 176
+    },
+    "K": {
+      "I": 2,
+      "NEUTRAL": 54,
+      "V": 1,
+      "K": 240,
+      "H": 1,
+      "S": 1
+    },
+    "L": {
+      "NEUTRAL": 117,
+      "L": 190
+    },
+    "M": {
+      "NEUTRAL": 321,
+      "M": 2
+    },
+    "N": {
+      "NEUTRAL": 324,
+      "N": 4
+    },
+    "O": {
+      "NEUTRAL": 298,
+      "A": 25,
+      "O": 1
+    },
+    "P": {
+      "NEUTRAL": 337
+    },
+    "Q": {
+      "NEUTRAL": 300,
+      "G": 2,
+      "Q": 1
+    },
+    "R": {
+      "NEUTRAL": 205,
+      "D": 9,
+      "H": 19,
+      "U": 1,
+      "R": 81,
+      "L": 1
+    },
+    "S": {
+      "NEUTRAL": 19,
+      "L": 2,
+      "S": 288
+    },
+    "T": {
+      "B": 1,
+      "NEUTRAL": 137,
+      "T": 168
+    },
+    "U": {
+      "U": 394,
+      "NEUTRAL": 2
+    },
+    "V": {
+      "R": 3,
+      "V": 362,
+      "NEUTRAL": 35
+    },
+    "X": {
+      "NEUTRAL": 310
+    },
+    "Y": {
+      "Y": 303
+    }
+  }
+}

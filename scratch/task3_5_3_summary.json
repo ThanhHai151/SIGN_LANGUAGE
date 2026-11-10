@@ -1,0 +1,110 @@
+{
+  "task": "TASK 3.5.3 — READ-ONLY DATA GOVERNANCE CONSISTENCY AUDIT",
+  "audit_date": "2026-11-08T23:25:00+07:00",
+  "status": "AUDITED — PENDING USER APPROVAL",
+  "governance_policy_comparison": {
+    "task1_precedents": {
+      "K": {
+        "source_video": "D0502",
+        "frames": [46, 48],
+        "metadata_phase": "stable_pose",
+        "kinematic_phase": "exit / retract",
+        "evidence": "Signer relaxing hand downwards; ang_IM sụt giảm 0.1°-2.9° << 15.0°; d_RW > 1.75 >> 1.60",
+        "data_file_modification": "NONE (K.json kept 100% intact)",
+        "unit_test_handling": "Tested in test_p_two_branch_separation_k_q_d; blocked naturally by P-down geometric rules",
+        "positive_test_scope": "test_letter_k / separation tests restrict positive assertions to verified hold frames"
+      },
+      "D": {
+        "source_video": "D0494",
+        "frames": [54, 56],
+        "metadata_phase": "stable_pose",
+        "kinematic_phase": "exit / retract",
+        "evidence": "Signer relaxing hand downwards; idx_tip_y > 1.70; ang_IM < 3.0°; d_RW > 1.75 >> 1.60",
+        "data_file_modification": "NONE (D.json kept 100% intact)",
+        "unit_test_handling": "Tested in test_p_two_branch_separation_k_q_d; blocked naturally by P-down geometric rules",
+        "positive_test_scope": "test_d_vs_l_distinction restricts positive assertions to frames 35, 44"
+      },
+      "Q": {
+        "source_video": "D0510",
+        "frames": [60, 62, 64],
+        "metadata_phase": "stable_pose",
+        "kinematic_phase": "exit / retract",
+        "evidence": "Hand dropping downwards; d_RW > 2.30 >> 1.60; d_TW > 2.05",
+        "data_file_modification": "NONE (Q.json kept 100% intact)",
+        "unit_test_handling": "Tested in test_p_two_branch_separation_k_q_d; blocked naturally by P-down geometric rules",
+        "positive_test_scope": "test_letter_q restricts positive assertions to frames 32, 40"
+      },
+      "X_frame_144": {
+        "source_video": "D0517B",
+        "frames": [144],
+        "metadata_phase": "exit",
+        "kinematic_phase": "exit / retract",
+        "evidence": "Hand drop after hook; temporary d_PW = 1.4998 <= 1.50 (margin 0.0002); matched P-down rule",
+        "data_file_modification": "NONE (X.json kept 100% intact)",
+        "unit_test_handling": "No unit test altered; verified that runtime temporal smoothing (1/10 votes) blocked FP confirmation",
+        "action_taken": "Halted immediately under Stop Condition; source code and thresholds kept intact"
+      }
+    },
+    "b_frame_54": {
+      "source_video": "D0492",
+      "frame": 54,
+      "metadata_phase": "stable_pose (NPZ sample 39, is_representative=true)",
+      "kinematic_phase": "exit / retract (motion from frame 52 to 62; hand absent frame 64-72)",
+      "evidence": "33ms transient motion as signer curles 4 extended B fingers together while dropping hand to desk; delta_x = 0.0013, idx_horiz_ratio = 0.0651",
+      "artifact_cause": "Uniform 20%-60%-20% percentile slice applied by legacy QIPEDC extraction pipeline without hand tracking or velocity boundary check",
+      "classification": "VERIFIED — CÙNG LOẠI ANNOTATION ARTIFACT"
+    }
+  },
+  "overlap_and_denominator_audit": {
+    "denominator_228_audit": {
+      "raw_observations_reported": 228,
+      "breakdown": {
+        "npz_o_samples": 48,
+        "fixture_o_samples": 20,
+        "webcam_pilot_213800_frames": 92,
+        "webcam_pilot_211742_frames": 68
+      },
+      "overlap_finding": {
+        "fixture_d0506_frames": [16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54],
+        "npz_d0506_frames": [16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54],
+        "duplicate_count": 20,
+        "duplicate_percentage": "100% of Fixture O samples are identical observations of NPZ D0506"
+      },
+      "deduplicated_unique_frames": 208,
+      "unique_video_and_stream_sources": 5,
+      "video_sources_list": ["D0506 (NPZ)", "D0507B (NPZ)", "D0508N (NPZ)", "pilot_213800 (Webcam)", "pilot_211742 (Webcam)"],
+      "unique_signers": 2,
+      "signer_breakdown": "1 studio signer (qipedc_signer_01) + 1 webcam signer"
+    },
+    "denominator_925_audit": {
+      "raw_observations_reported": 925,
+      "breakdown": {
+        "npz_non_o_samples": 503,
+        "webcam_p_holdout_frames": 314,
+        "webcam_x_holdout_frames": 108
+      },
+      "overlap_finding": {
+        "duplicate_count": 0,
+        "unique_frames": 925
+      },
+      "unique_video_and_stream_sources": 23,
+      "video_sources_list": "21 NPZ dictionary video clips + 1 P webcam session + 1 X webcam session",
+      "unique_signers": 2,
+      "signer_breakdown": "1 studio signer (qipedc_signer_01) + 1 webcam signer",
+      "statistical_independence_warning": "925 represents frame-level observations across correlated time series, NOT 925 independent subjects or trials"
+    }
+  },
+  "proposed_test_policy": {
+    "recommendation": "If approved by user, apply minimal targeted exception in test_ospq_dataset_zero_false_positives",
+    "minimal_exception_scope": "video_id == 'D0492' and frame_index == 54 and check_letter == 'O' and true_label == 'B'",
+    "justification": "Verified transient 33ms exit-phase annotation artifact resulting from uniform percentile slicing in legacy QIPEDC pipeline",
+    "protection_against_masking": "All other 21 B samples (frames 16..50) and 502 non-O samples remain strictly tested for zero FP",
+    "data_file_integrity": "Zero edits to vsl_alphabet_static_v2.npz or B.json"
+  },
+  "unverified_limitations": [
+    "Raw video file D0492.mp4 is not present on disk; visual RGB validation relies on MediaPipe 3D coordinates and metadata timeline",
+    "Camera angle generalization: All tested samples are frontal view; sagittal / profile angle robustness of circular hand shape is unverified",
+    "Signer diversity: Only 2 unique signers across all datasets"
+  ]
+}
+
