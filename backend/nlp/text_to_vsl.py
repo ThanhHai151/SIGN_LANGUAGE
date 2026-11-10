@@ -150,6 +150,7 @@ def _vocab_item(token: str, entry: dict, available_motions: set = None) -> dict:
     motion_id = motion_id_of(entry, available_motions)
     legacy = VSL_VOCABULARY.get(entry.get("pose_key") or "", {})
     return {
+        **({"avatar_symbol": token.upper()} if len(token) == 1 and token.isalpha() else {}),
         "token": token,
         "gloss": gloss,
         "label": display_label(entry, token),
@@ -188,29 +189,34 @@ def _vocab_item(token: str, entry: dict, available_motions: set = None) -> dict:
 
 def _spell_items(word: str, lex: dict) -> list:
     items = []
-    for char in remove_accents(word).upper():
-        if char not in VSL_ALPHABET:
-            continue
-        alpha_item = VSL_ALPHABET[char]
-        entry = lex["by_key"].get(char.lower())
-        items.append({
-            "token": char,
-            "gloss": f"ALPHA_{char}",
-            "label": f"Chữ {char}",
-            "word": char,
-            "entry_id": entry["id"] if entry else None,
-            "type": "fingerspelling",
-            "duration_ms": 800,
-            "description": alpha_item["description"],
-            "video_url": None,  # đánh vần: robot diễn tư thế chữ cái, không cần video
-            "variants": [],
-            "pose_key": char,
-            "has_pose": True,
-            "motion_type": "static",
-            "fingers_state": alpha_item.get("fingers_state", {}),
-            "avatar_pose": {"right_arm": [35, 20, 0], "right_wrist": [15, 0, 0]},
-        })
+    for symbol in unicodedata.normalize("NFC", word).upper():
+        for char in remove_accents(symbol):
+            if char in VSL_ALPHABET:
+                items.append(_spell_item(char, symbol, lex))
     return items
+
+
+def _spell_item(char: str, symbol: str, lex: dict) -> dict:
+    alpha_item = VSL_ALPHABET[char]
+    entry = lex["by_key"].get(char.lower())
+    return {
+        "avatar_symbol": symbol,
+        "token": char,
+        "gloss": f"ALPHA_{char}",
+        "label": f"Chữ {char}",
+        "word": char,
+        "entry_id": entry["id"] if entry else None,
+        "type": "fingerspelling",
+        "duration_ms": 800,
+        "description": alpha_item["description"],
+        "video_url": None,  # đánh vần: robot diễn tư thế chữ cái, không cần video
+        "variants": [],
+        "pose_key": char,
+        "has_pose": True,
+        "motion_type": "static",
+        "fingers_state": alpha_item.get("fingers_state", {}),
+        "avatar_pose": {"right_arm": [35, 20, 0], "right_wrist": [15, 0, 0]},
+    }
 
 
 def text_to_vsl_glosses(text: str):

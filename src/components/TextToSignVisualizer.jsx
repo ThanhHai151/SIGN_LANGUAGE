@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, SkipBack, SkipForward, Mic, MicOff, Send, Sparkles, Info, Check, Layers } from 'lucide-react';
 import RobotSigner3D, { SPELL_LETTER_MS } from './RobotSigner3D';
 import MixamoAvatarSigner from './MixamoAvatarSigner';
+import { resolveVietnameseSign } from '../utils/MixamoPoseAdapter';
+import AvatarSequenceCaption from './AvatarSequenceCaption';
 import SignDescription from './SignDescription';
 import { convertTextToVSL, fetchMotion } from '../services/api';
 import { learnMotion } from '../services/motionLearner';
@@ -14,6 +16,33 @@ const VIETNAMESE_MARKED_LETTERS = {
   Ô: { base: 'O', mark: 'Dấu mũ (^): thêm tư thế dấu mũ tĩnh sau hình tay chữ O.' },
   Ơ: { base: 'O', mark: 'Dấu râu (’): thêm tư thế dấu râu tĩnh sau hình tay chữ O.' },
   Ư: { base: 'U', mark: 'Dấu râu (’): thêm tư thế dấu râu tĩnh sau hình tay chữ U.' }
+};
+
+// Nội dung Avatar theo các clip đã đối chiếu trong báo cáo bảng chữ cái.
+const AVATAR_FINGER_DESCRIPTIONS = {
+  A: ['Khép dọc cạnh ngón trỏ, đầu ngón nhô lên khỏi nắm tay', 'Gập ở gốc và hai đốt ngoài, thu đầu ngón về lòng bàn tay', 'Gập thành nắm tay, sát ngón trỏ', 'Gập thành nắm tay, sát ngón giữa', 'Gập vào lòng bàn tay, khép sát ngón áp út'],
+  B: ['Gập ngang vào lòng bàn tay, nằm dưới gốc bốn ngón duỗi', 'Duỗi từ gốc đến đầu ngón, khép sát ngón giữa', 'Duỗi lên, khép giữa ngón trỏ và ngón áp út', 'Duỗi lên, khép giữa ngón giữa và ngón út', 'Duỗi lên, khép sát ngón áp út'],
+  C: ['Cong đối diện bốn ngón, để hở khoảng trống hình chữ C', 'Gập nhẹ ở gốc và hai đốt ngoài, tạo mép trên của vòng cung', 'Khum theo vòng cung cùng ngón trỏ', 'Khum về phía ngón cái, cùng chiều với ngón giữa', 'Khum theo vòng cung, đầu ngón hướng về phía ngón cái'],
+  D: ['Hướng đầu ngón về nhóm ngón đang khum', 'Duỗi từ gốc đến đầu ngón và hướng lên', 'Khum hai đốt ngoài, hướng đầu ngón về ngón cái', 'Co theo ngón giữa về phía lòng bàn tay', 'Co vào lòng bàn tay, sát ngón áp út'],
+  Đ: ['Hướng đầu ngón về nhóm ngón đang co', 'Hướng lên ở gốc, gập hai đốt ngoài thành móc', 'Khum về phía ngón cái, thấp hơn đầu ngón trỏ', 'Co vào lòng bàn tay, sát ngón giữa', 'Co vào lòng bàn tay, sát ngón áp út'],
+  E: ['Gập ngang vào lòng bàn tay, nằm bên dưới bốn đầu ngón', 'Gập đốt giữa và đốt đầu, hướng đầu ngón xuống', 'Gập hai đốt ngoài cùng chiều ngón trỏ', 'Gập hai đốt ngoài, thu đầu ngón về lòng bàn tay', 'Gập hai đốt ngoài, khép cạnh ngón áp út'],
+  G: ['Nhô lên gần gốc ngón trỏ', 'Duỗi thẳng hướng lên', 'Ngón giữa, áp út và út gập về lòng bàn tay'],
+  H: ['Khép trước ngón áp út và ngón út đang co', 'Duỗi lên, hai đầu ngón tách nhẹ thành hai nhánh', 'Gập về lòng bàn tay và nằm dưới hai ngón duỗi'],
+  I: ['Khép về phía ngón trỏ, giữa và áp út đang gập', 'Duỗi từ gốc đến đầu ngón, hướng lên khỏi nắm tay', 'Ngón trỏ, giữa và áp út co về lòng bàn tay'],
+  K: ['Đặt đầu ngón gần chỗ tách giữa ngón trỏ và ngón giữa', 'Duỗi thẳng và hướng lên', 'Gập ở gốc để thân ngón hướng ngang', 'Gập về lòng bàn tay, nằm dưới hai ngón mở'],
+  L: ['Mở ngang sang bên, tạo nét ngang của chữ L', 'Duỗi lên tạo nét đứng của chữ L', 'Ngón giữa, áp út và út gập vào lòng bàn tay'],
+  M: [null, 'Gập ở gốc, giữ ba đầu ngón sát nhau và hướng xuống', 'Co vào lòng bàn tay, tách khỏi nhóm ba ngón hướng xuống'],
+  N: [null, 'Gập ở gốc, giữ hai đầu ngón sát nhau và hướng xuống', 'Co vào lòng bàn tay, tách khỏi hai ngón hướng xuống'],
+  O: ['Bốn ngón khum về phía ngón cái, tạo khoảng tròn nhỏ giữa các đầu ngón'],
+  P: ['Gập cổ tay, lòng bàn tay hướng xuống', 'Gập gần các ngón đang co', 'Duỗi ngang sang bên','Duỗi hướng xuống dưới','Gập vào lòng bàn tay','Gập vào lòng bàn tay'],
+  Q: ['Gập cổ tay, lòng bàn tay hướng xuống', 'Cong về phía ngón trỏ', 'Cong xuống, hướng về ngón cái', 'Gập vào lòng bàn tay'],
+  R: ['Duỗi và bắt chéo nhau', 'Ngón áp út và út co vào lòng bàn tay, ngón cái áp gần hai ngón co'],
+  S: ['Duỗi ngang ra bên cạnh nắm tay', 'Gập các đốt về lòng bàn tay để tạo nắm tay'],
+  T: ['Đầu ngón cái chụm với đầu ngón trỏ thành vòng', 'Ngón trỏ khum về ngón cái. Ngón giữa, áp út và út duỗi lên và hơi xòe'],
+  U: ['Duỗi lên song song, giữ hai ngón khép sát dọc theo thân ngón', 'Ngón áp út và út gập vào lòng bàn tay, ngón cái giữ gần hai ngón gập'],
+  V: ['Khép vào phía ngón áp út và út đang co', 'Duỗi lên và tách khỏi ngón giữa, tạo một nhánh chữ V', 'Duỗi lên và mở về phía đối diện ngón trỏ', 'Gập về lòng bàn tay, nằm dưới ngón cái'],
+  X: ['Giữ gốc ngón hướng lên, gập đốt giữa và đốt đầu thành móc'],
+  Y: ['Mở khỏi lòng bàn tay về phía đối diện ngón út', 'Gập vào lòng bàn tay, nằm giữa ngón cái và ngón giữa', 'Gập vào lòng bàn tay cùng ngón trỏ', 'Duỗi và mở sang phía đối diện ngón cái']
 };
 
 export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
@@ -108,7 +137,13 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     const spellMs = !currentStep?.motion_id && !currentStep?.pose_key && currentStep?.spell?.length
       ? currentStep.spell.length * SPELL_LETTER_MS + 300 : 0;
     const baseMs = currentStep ? (clipMs || spellMs || currentStep.duration_ms || 1400) : 1800;
-    const duration = baseMs / playbackSpeed;
+    const symbol = ((viewModel === 'avatar' && currentStep?.avatar_symbol) || currentStep?.gloss || currentStep?.token || '').trim().normalize('NFC').toUpperCase().replace(/^ALPHA_/, '');
+    // The Avatar plays these poses on its own clock. Let the mark finish before advancing.
+    const avatarMs = viewModel === 'avatar' && (currentStep?.avatar_symbol || ['Ô', 'Ă', 'Ơ'].includes(symbol))
+      ? resolveVietnameseSign(symbol, { hasNextStep: currentIndex < sequence.length - 1 })
+        .reduce((ms, action) => ms + action.duration * 1000, 0)
+      : 0;
+    const duration = Math.max(baseMs / playbackSpeed, avatarMs);
 
     timerRef.current = setTimeout(() => {
       if (currentIndex < sequence.length - 1) {
@@ -121,7 +156,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isPlaying, currentIndex, sequence, playbackSpeed]);
+  }, [isPlaying, currentIndex, sequence, playbackSpeed, viewModel]);
 
   // Tải trước chuyển động robot của cả câu để robot bắt đầu ngay khi tới lượt
   useEffect(() => {
@@ -205,7 +240,9 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const currentStep = sequence[currentIndex] || null;
-  const currentGloss = currentStep?.gloss || currentStep?.token || 'A';
+  const stepLabel = (step) => viewModel === 'avatar' && step?.avatar_symbol
+    ? `Chữ ${step.avatar_symbol}` : step?.label;
+  const currentGloss = (viewModel === 'avatar' && currentStep?.avatar_symbol) || currentStep?.gloss || currentStep?.token || 'A';
   const activeLetter = directSelectedLetter || (isPlaying && /^[a-z]$/i.test(currentGloss.trim()) ? currentGloss.trim() : '');
   const poseData = getHandPoseByGloss(currentGloss);
   const commonProps = {
@@ -422,7 +459,30 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     }
   };
 
-  const fingerDetails = getFingerStatesDescription(currentGloss);
+  const fingerSymbol = currentGloss.trim().normalize('NFC').toUpperCase().replace(/^ALPHA_/, '');
+  const baseSymbol = VIETNAMESE_MARKED_LETTERS[fingerSymbol]?.base ?? fingerSymbol;
+  const avatarDescriptions = viewModel === 'avatar' ? AVATAR_FINGER_DESCRIPTIONS[baseSymbol] : undefined;
+  const fingerRows = viewModel === 'avatar' && fingerSymbol === 'P'
+    ? [
+      { name: 'Cổ tay', color: 'var(--primary)' },
+      { name: 'Ngón cái', color: 'var(--accent-warning)' },
+      { name: 'Ngón trỏ', color: 'var(--accent-success)' },
+      { name: 'Ngón giữa', color: 'var(--accent-success)' },
+      { name: 'Ngón áp út', color: 'var(--accent-warning)' },
+      { name: 'Ngón út', color: 'var(--accent-warning)' }
+    ]
+    : viewModel === 'avatar' && fingerSymbol === 'Q'
+      ? [
+        { name: 'Cổ tay', color: 'var(--primary)' },
+        { name: 'Ngón cái', color: 'var(--primary)' },
+        { name: 'Ngón trỏ', color: 'var(--primary)' },
+        { name: 'Các ngón còn lại', color: 'var(--accent-warning)' }
+      ]
+      : getFingerStatesDescription(currentGloss);
+  const fingerDetails = fingerRows.map((detail, index) => ({
+    ...detail,
+    state: avatarDescriptions?.[index] ?? detail.state
+  }));
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.25fr) minmax(0, 1.2fr)', gap: '24px', padding: '24px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
@@ -469,6 +529,10 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
             <MixamoAvatarSigner {...commonProps} />
           )}
         </div>
+
+        {viewModel === 'avatar' && (
+          <AvatarSequenceCaption sequence={sequence} currentIndex={currentIndex} />
+        )}
 
         {/* Điều khiển Playback */}
         <div style={{
@@ -555,7 +619,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
         {currentStep && (
           <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
-              <strong style={{ fontSize: '20px', fontFamily: 'Outfit, sans-serif' }}>{currentStep.label}</strong>
+              <strong style={{ fontSize: '20px', fontFamily: 'Outfit, sans-serif' }}>{stepLabel(currentStep)}</strong>
               {currentStep.pos && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{currentStep.pos}</span>}
               <span style={{ flex: 1 }} />
               <span className="badge badge-emerald" style={{ fontSize: '10.5px' }}>Diễn tả ký hiệu</span>
@@ -593,7 +657,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h3 style={{ fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Layers size={18} style={{ color: 'var(--primary)' }} />
-              Trạng Thái Giải Phẫu Cơ Ngón Tay (Cử chỉ: {currentStep?.label})
+              Trạng Thái Giải Phẫu Cơ Ngón Tay (Cử chỉ: {stepLabel(currentStep)})
             </h3>
             <span className="badge badge-cyan" style={{ fontSize: '11px' }}>
               Khớp MCP / PIP / DIP
@@ -808,9 +872,9 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
                         cursor: 'pointer',
                         transition: 'all 0.2s ease'
                       }}
-                      title={`Bấm để nhảy đến: ${step.label}`}
+                      title={`Bấm để nhảy đến: ${stepLabel(step)}`}
                     >
-                      {idx + 1}. {step.label}
+                      {idx + 1}. {stepLabel(step)}
                     </button>
                   );
                 })}

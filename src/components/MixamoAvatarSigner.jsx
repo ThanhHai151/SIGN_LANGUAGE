@@ -2,29 +2,83 @@ import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { createRestPose, getPoseForLetter, MIXAMO_LETTER_ANIMATIONS } from '../utils/MixamoPoseAdapter';
+import { createRestPose, resolveVietnameseSign } from '../utils/MixamoPoseAdapter';
 import { setupHandGUI } from '../utils/handPoseTuner';
 
-function interpolatePoseTargets(keyframes, progress) {
+const TONE_LABELS = {
+  'DẤU SẮC': 'TONE_SAC', 'DẤU HUYỀN': 'TONE_HUYEN', 'DẤU HỎI': 'TONE_HOI',
+  'DẤU NGÃ': 'TONE_NGA', 'DẤU NẶNG': 'TONE_NANG'
+};
+
+function normalizeSignToken(value) {
+  if (typeof value !== 'string') return '';
+  const token = value.trim().normalize('NFC').toUpperCase().replace(/^ALPHA_/, '');
+  return TONE_LABELS[token] || token;
+}
+
+function findBone(bonesMap, name) {
+  return bonesMap.get(name) || bonesMap.get(`mixamorig${name}`) || bonesMap.get(name.replace(/^mixamorig/, '')) || null;
+}
+
+function interpolateTargets(fromTargets, toTargets, progress) {
+  const fromByBone = new Map(fromTargets.map((target) => [target.bone, target]));
+  return toTargets.map((to) => {
+    const from = fromByBone.get(to.bone) || to;
+    const fromEuler = new THREE.Euler(...from.rot, 'XYZ');
+    const toEuler = new THREE.Euler(...to.rot, 'XYZ');
+    const fromQuat = new THREE.Quaternion().setFromEuler(fromEuler);
+    const toQuat = new THREE.Quaternion().setFromEuler(toEuler);
+    fromQuat.slerp(toQuat, progress);
+    const result = {
+      ...to,
+      rot: new THREE.Euler().setFromQuaternion(fromQuat, 'XYZ').toArray().slice(0, 3)
+    };
+    if (from.pos || to.pos) {
+      const a = from.pos || [0, 0, 0];
+      const b = to.pos || [0, 0, 0];
+      result.pos = a.map((value, axis) => THREE.MathUtils.lerp(value, b[axis], progress));
+    }
+    return result;
+  });
+}
+
+function sampleKeyframes(keyframes, progress) {
+  if (!keyframes?.length) return [];
   if (progress <= keyframes[0].t) return keyframes[0].targets;
   for (let index = 0; index < keyframes.length - 1; index += 1) {
     const from = keyframes[index];
     const to = keyframes[index + 1];
     if (progress > to.t) continue;
     const fraction = (progress - from.t) / Math.max(0.001, to.t - from.t);
-    const toByBone = new Map(to.targets.map((target) => [target.bone, target]));
-    return from.targets.map((target) => {
-      const next = toByBone.get(target.bone) || target;
-      return {
-        bone: target.bone,
-        rot: target.rot.map((angle, axis) => THREE.MathUtils.lerp(angle, next.rot[axis], fraction))
-      };
-    });
+    return interpolateTargets(from.targets, to.targets, fraction);
   }
   return keyframes[keyframes.length - 1].targets;
 }
 
-export default function MixamoAvatarSigner({ activeLetter, currentStep, currentSign, isPlaying = false }) {
+function sampleAction(action, progress) {
+  if (action.type === 'keyframes') return sampleKeyframes(action.keyframes, progress);
+  if (action.type !== 'motion') return action.data || [];
+  const base = action.pose || [];
+  const frameTargets = sampleKeyframes(action.trajectory, progress);
+  const merged = new Map(base.map((target) => [target.bone, target]));
+  for (const target of frameTargets) {
+    const previous = merged.get(target.bone) || { bone: target.bone, rot: [0, 0, 0] };
+    merged.set(target.bone, { ...previous, ...target });
+  }
+  return [...merged.values()];
+}
+
+function sampleActionQueue(queue, elapsedMs) {
+  let elapsed = elapsedMs;
+  for (const action of queue) {
+    const durationMs = Math.max(1, (action.duration || 0.4) * 1000);
+    if (elapsed <= durationMs) return sampleAction(action, THREE.MathUtils.clamp(elapsed / durationMs, 0, 1));
+    elapsed -= durationMs;
+  }
+  return queue.length ? sampleAction(queue[queue.length - 1], 1) : createRestPose();
+}
+
+export default function MixamoAvatarSigner({ activeLetter, currentStep, currentSign, isPlaying = false, sequence = [], currentIndex = 0 }) {
   const mountRef = useRef(null);
   const bonesMapRef = useRef(new Map());
   const handGUIRef = useRef(null);
@@ -36,27 +90,27 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
   const viewTransitionRef = useRef(false);
   const poseTargetsRef = useRef(createRestPose());
   const poseAnimationRef = useRef(null);
-  const gloss = activeLetter || currentSign || currentStep?.gloss || currentStep?.token;
-  const letter = typeof gloss === 'string' && /^[a-z]$/i.test(gloss.trim()) ? gloss.trim() : '';
+  const restPositionsRef = useRef(new Map());
+  const signTokenRef = useRef('A');
+  const gloss = activeLetter || currentSign || currentStep?.avatar_symbol || currentStep?.gloss || currentStep?.token;
+  const signToken = normalizeSignToken(gloss);
+
+  const hasNextStep = currentIndex < sequence.length - 1;
+
+  useEffect(() => { signTokenRef.current = signToken || 'A'; }, [signToken]);
 
   useEffect(() => {
-    const hasActiveLetter = letter && (activeLetter || !currentStep || currentStep.type === 'fingerspelling' || isPlaying);
-    poseTargetsRef.current = hasActiveLetter ? getPoseForLetter(letter) : createRestPose();
-    const animation = hasActiveLetter ? MIXAMO_LETTER_ANIMATIONS[letter.toUpperCase()] : null;
-    poseAnimationRef.current = animation
-      ? { ...animation, startedAt: performance.now() }
-      : null;
-    if (modelLoaded && hasActiveLetter) {
-      handGUIRef.current?.setLetter(letter);
-    } else if (modelLoaded) {
-      for (const target of poseTargetsRef.current) {
-        if (!/^RightHand(?:Thumb|Index|Middle|Ring|Pinky)\d+$/.test(target.bone)) continue;
-        const bone = bonesMapRef.current.get(target.bone)
-          || bonesMapRef.current.get(`mixamorig${target.bone}`);
-        bone?.rotation?.set(target.rot[0], target.rot[1], target.rot[2]);
-      }
+    const actions = resolveVietnameseSign(signToken, { hasNextStep });
+
+    if (modelLoaded) handGUIRef.current?.setLetter(signToken, { apply: false });
+    if (actions.length) {
+      poseAnimationRef.current = { actions, startedAt: performance.now(), token: signToken };
+      poseTargetsRef.current = sampleActionQueue(actions, 0);
+    } else {
+      poseAnimationRef.current = null;
+      poseTargetsRef.current = createRestPose();
     }
-  }, [activeLetter, currentSign, currentStep, isPlaying, modelLoaded]);
+  }, [activeLetter, currentSign, currentStep, currentIndex, hasNextStep, isPlaying, modelLoaded, signToken]);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -74,14 +128,6 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
         position: new THREE.Vector3(0, 1.3, 4.5),
         target: new THREE.Vector3(0, 0.35, 0)
       },
-      rHand: {
-        position: new THREE.Vector3(-0.18, 1.35, 1.5),
-        target: new THREE.Vector3(-0.16, 1.30, 0.0)
-      },
-      lHand: {
-        position: new THREE.Vector3(0.18, 1.35, 1.5),
-        target: new THREE.Vector3(0.16, 1.30, 0.0)
-      }
     };
     viewPresetsRef.current = viewPresets;
     cameraTargetRef.current = viewPresets.half.position.clone();
@@ -214,6 +260,7 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
       model.traverse((object) => {
         if (object.isBone) {
           bonesMapRef.current.set(object.name, object);
+          restPositionsRef.current.set(object.name.replace(/^mixamorig/, ''), object.position.clone());
           if (/arm|forearm|hand|shoulder|thumb|index|middle|ring|pinky/i.test(object.name)) {
             boneNames.push(object.name);
           }
@@ -221,12 +268,21 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
       });
       handGUIRef.current?.destroy();
       handGUIRef.current = setupHandGUI(bonesMapRef.current, {
-        letter: /^[A-Z]$/i.test(letter) ? letter : 'A',
+        symbol: signTokenRef.current,
         onPoseChange: (pose) => {
+          poseAnimationRef.current = null;
           poseTargetsRef.current = pose;
+        },
+        onPreviewSequence: (actions, selectedToken) => {
+          if (!actions.length) return;
+          poseAnimationRef.current = {
+            actions,
+            startedAt: performance.now(),
+            token: selectedToken
+          };
+          poseTargetsRef.current = sampleActionQueue(actions, 0);
         }
       });
-      poseTargetsRef.current = createRestPose();
       setModelLoaded(true);
       console.info('Mixamo arm and finger bones:', boneNames);
     }, undefined, (error) => {
@@ -234,8 +290,12 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
     });
 
     let frameId;
+    let lastFrameTime = performance.now();
     const render = () => {
       frameId = requestAnimationFrame(render);
+      const now = performance.now();
+      const deltaSeconds = Math.min(0.05, Math.max(0.001, (now - lastFrameTime) / 1000));
+      lastFrameTime = now;
       if (viewTransitionRef.current) {
         camera.position.lerp(cameraTargetRef.current, 0.08);
         controls.target.lerp(lookTargetRef.current, 0.08);
@@ -246,23 +306,31 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
           viewTransitionRef.current = false;
         }
       }
-      // Ease each tracked joint toward the latest UI-selected pose.
+      // Action queue: pose / tone trajectory steps run in order. Replacing this
+      // ref on a new selection cancels the old sequence without leaving timers.
       const poseAnimation = poseAnimationRef.current;
       if (poseAnimation) {
-        const progress = THREE.MathUtils.clamp(
-          (performance.now() - poseAnimation.startedAt) / poseAnimation.durationMs,
-          0,
-          1
+        poseTargetsRef.current = sampleActionQueue(
+          poseAnimation.actions,
+          now - poseAnimation.startedAt
         );
-        poseTargetsRef.current = interpolatePoseTargets(poseAnimation.keyframes, progress);
       }
+      const easing = 1 - Math.exp(-deltaSeconds * 16);
       for (const target of poseTargetsRef.current) {
-        if (/^RightHand(?:Thumb|Index|Middle|Ring|Pinky)\d+$/.test(target.bone)) continue;
-        const bone = bonesMapRef.current.get(target.bone) || bonesMapRef.current.get(`mixamorig${target.bone}`);
+        const bone = findBone(bonesMapRef.current, target.bone);
         if (!bone?.rotation) continue;
-        bone.rotation.x = THREE.MathUtils.lerp(bone.rotation.x, target.rot[0], 0.12);
-        bone.rotation.y = THREE.MathUtils.lerp(bone.rotation.y, target.rot[1], 0.12);
-        bone.rotation.z = THREE.MathUtils.lerp(bone.rotation.z, target.rot[2], 0.12);
+        const targetQuaternion = new THREE.Quaternion().setFromEuler(
+          new THREE.Euler(target.rot[0], target.rot[1], target.rot[2], bone.rotation.order)
+        );
+        bone.quaternion.slerp(targetQuaternion, easing);
+        if (target.bone === 'RightHand') {
+          const restPosition = restPositionsRef.current.get('RightHand');
+          if (restPosition) {
+            const offset = target.pos || [0, 0, 0];
+            const targetPosition = restPosition.clone().add(new THREE.Vector3(...offset));
+            bone.position.lerp(targetPosition, easing);
+          }
+        }
       }
       controls.update();
       renderer.render(scene, camera);
@@ -308,8 +376,6 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
   const viewButtons = [
     { id: 'half', label: '👤 Bán thân' },
     { id: 'full', label: '🧍 Toàn thân' },
-    { id: 'rHand', label: '✋ Cận tay phải' },
-    { id: 'lHand', label: '🤚 Cận tay trái' }
   ];
 
   return (
