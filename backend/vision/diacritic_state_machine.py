@@ -99,9 +99,9 @@ class DiacriticStateMachine:
         a_breve_dist_threshold: float = 0.40,
         u_horn_pinky_curl_threshold: float = 0.35,
         o_horn_dist_threshold: float = 0.50,
-        circumflex_lift_threshold: float = 0.035,
-        circumflex_vy_threshold: float = -0.10,
-        d_stroke_angle_threshold: float = 110.0,
+        circumflex_lift_threshold: float = 0.020,
+        circumflex_vy_threshold: float = 0.05,
+        d_stroke_angle_threshold: float = 125.0,
         d_stroke_drop_threshold: float = 15.0,
         max_competing_frames: int = 3,
         min_switch_confirm_frames: int = 2,
@@ -302,7 +302,7 @@ class DiacriticStateMachine:
         elif base == "D":
             # Chữ Đ: Xung gập ngón trỏ vạch ngang
             angle_drop = baseline.index_pip_angle - curr_frame.index_pip_angle
-            if curr_frame.index_pip_angle <= self.d_stroke_angle_threshold or angle_drop >= self.d_stroke_drop_threshold:
+            if angle_drop >= self.d_stroke_drop_threshold and curr_frame.index_pip_angle <= self.d_stroke_angle_threshold:
                 return "Đ", f"Xung gập ngón trỏ (angle={curr_frame.index_pip_angle:.1f}deg, drop={angle_drop:.1f}deg)"
 
         return None
@@ -566,6 +566,8 @@ class DiacriticStateMachine:
             else:
                 self.diacritic_candidate = None
                 self.diacritic_candidate_count = 0
+                if self.state == STATE_BASE_STABLE and self.baseline is not None:
+                    self.baseline.stable_time = curr_time
                 return {
                     "final_label": self.current_base,
                     "base_label": self.current_base,

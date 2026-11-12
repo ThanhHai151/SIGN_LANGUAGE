@@ -146,17 +146,7 @@ export async function sendLandmarksForRecognition(
   try {
     const headers = {
       'Content-Type': 'application/json',
-      ...(mode ? { 'X-Conversion-Mode': mode } : {}),
-      ...(metadata?.expected_sign ? { 'X-Expected-Sign': metadata.expected_sign } : {}),
-      ...(metadata?.session_id ? { 'X-Session-Id': metadata.session_id } : {}),
-      ...(metadata?.trial_id ? { 'X-Trial-Id': metadata.trial_id } : {}),
-      ...(metadata?.frame_idx !== undefined && metadata?.frame_idx !== null ? { 'X-Frame-Idx': String(metadata.frame_idx) } : {}),
-      ...(metadata?.signer_id ? { 'X-Signer-Id': metadata.signer_id } : {}),
-      ...(metadata?.client_capture_ts ? { 'X-Client-Capture-Ts': String(metadata.client_capture_ts) } : {}),
-      ...(metadata?.landmark_extract_ts ? { 'X-Landmark-Extract-Ts': String(metadata.landmark_extract_ts) } : {}),
-      ...(metadata?.request_send_ts ? { 'X-Request-Send-Ts': String(metadata.request_send_ts) } : {}),
-      ...(metadata?.video_pts_sec !== undefined && metadata?.video_pts_sec !== null ? { 'X-Video-Pts-Sec': String(metadata.video_pts_sec) } : {}),
-      ...(metadata?.video_frame_idx !== undefined && metadata?.video_frame_idx !== null ? { 'X-Video-Frame-Idx': String(metadata.video_frame_idx) } : {})
+      ...(mode ? { 'X-Conversion-Mode': mode } : {})
     };
     const bodyPayload = {
       landmarks,

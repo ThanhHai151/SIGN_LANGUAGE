@@ -765,16 +765,6 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
             if (resp && resp.success && resp.data) {
               const data = resp.data;
               setLatestPilotResult(data);
-              if (onPilotFrameResultRef.current) {
-                try {
-                onPilotFrameResultRef.current(data, pilotMeta, {
-                  backendError: Boolean(resp.backend_error),
-                  backendErrorMessage: resp.error || null,
-                });
-                } catch (e) {
-                  // Ignore pilot subscriber errors
-                }
-              }
               setCurrentResult({
                 sign: data.sign,
                 label: data.label,
@@ -843,6 +833,8 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
             pilotMeta = pilotMetadataProviderRef.current();
             if (pilotMeta) {
               pilotMeta.request_send_ts = reqSendTs;
+              pilotMeta.has_hands = Boolean(hasHands);
+              pilotMeta.hand_detected = Boolean(hasHands);
               if (videoRef.current) {
                 pilotMeta.image_width = videoRef.current.videoWidth || 640;
                 pilotMeta.image_height = videoRef.current.videoHeight || 480;
@@ -862,23 +854,39 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
           return;
         }
 
-        sendLandmarksForRecognition(rawPrimary, multiHands, 'Right', requestMode, pilotMeta)
+        const requestPilotMeta = pilotMeta ? Object.freeze({ ...pilotMeta }) : null;
+
+        sendLandmarksForRecognition(rawPrimary, multiHands, 'Right', requestMode, requestPilotMeta)
           .then((resp) => {
             if (currentGen !== requestGenRef.current || conversionModeRef.current !== requestMode) {
-              if (pilotMeta && onPilotFrameResultRef.current) {
-                onPilotFrameResultRef.current({}, pilotMeta, {
-                  backendError: true,
-                  backendErrorMessage: 'Recognition response became stale during the pilot trial',
-                });
-              }
-              return; // Bỏ qua response stale khi mode đã chuyển sang mode khác
+              // Phản hồi đã quá hạn do đổi mode: Bỏ qua dứt điểm, không gửi frame rỗng vào HUD
+              return;
             }
+
+            // Xử lý lỗi backend hoặc local fallback: Báo lỗi minh bạch cho HUD, không coi fallback là dự đoán backend hợp lệ
+            if (resp && resp.backend_error) {
+              if (requestPilotMeta && onPilotFrameResultRef.current) {
+                try {
+                  onPilotFrameResultRef.current(null, requestPilotMeta, {
+                    backendError: true,
+                    backendErrorMessage: resp.error || 'Backend recognition error',
+                  });
+                } catch (e) {
+                  // Ignore pilot subscriber errors
+                }
+              }
+              return;
+            }
+
             if (resp && resp.success && resp.data) {
               const data = resp.data;
               setLatestPilotResult(data);
               if (onPilotFrameResultRef.current) {
                 try {
-                  onPilotFrameResultRef.current(data, pilotMeta);
+                  onPilotFrameResultRef.current(data, requestPilotMeta, {
+                    backendError: false,
+                    backendErrorMessage: null,
+                  });
                 } catch (e) {
                   // Ignore pilot subscriber errors
                 }
@@ -942,7 +950,19 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
               }
             }
           })
-          .catch((err) => console.warn('Lỗi suy luận tức thì:', err))
+          .catch((err) => {
+            console.warn('Lỗi suy luận tức thì:', err);
+            if (requestPilotMeta && onPilotFrameResultRef.current) {
+              try {
+                onPilotFrameResultRef.current(null, requestPilotMeta, {
+                  backendError: true,
+                  backendErrorMessage: err?.message || 'Network exception in recognition request',
+                });
+              } catch (e) {
+                // Ignore pilot subscriber errors
+              }
+            }
+          })
           .finally(() => {
             if (currentGen === requestGenRef.current) {
               isInferringRef.current = false;

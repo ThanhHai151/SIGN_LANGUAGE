@@ -215,8 +215,8 @@ class TestStaticHeadFallback(unittest.TestCase):
                 self.assertEqual(res["sign"], "NEUTRAL")
                 self.assertEqual(res["source"], "none")
 
-    def test_b2b_fallback_rejects_o_when_geometry_does_not_match(self):
-        """O remains outside both static-head fallback allowlists."""
+    def test_b2b_fallback_accepts_o_when_geometry_does_not_match(self):
+        """O được hỗ trợ qua cơ chế fallback khi confident (CP3 update)."""
         mock_no_match = {"letter": "UNKNOWN", "confidence": 0.0, "status": "NO_MATCH", "source": "none"}
         mock_head_o = {
             "letter": "O",
@@ -229,7 +229,27 @@ class TestStaticHeadFallback(unittest.TestCase):
         with patch.object(self.rec.alphabet_classifier, "classify_detailed", return_value=mock_no_match):
             with patch.object(self.rec.static_alphabet_head, "predict_feature", return_value=mock_head_o):
                 res = self.rec.predict_landmarks(
-                    make_dummy_landmarks(), mode="letters", session_id="test_rej_o", timestamp=65.0
+                    make_dummy_landmarks(), mode="letters", session_id="test_fallback_o", timestamp=65.0
+                )
+
+        self.assertEqual(res["sign"], "O")
+        self.assertEqual(res["source"], "static_head_fallback")
+
+    def test_b2c_fallback_rejects_o_when_low_confidence(self):
+        """O bị từ chối về NEUTRAL khi confidence < 0.70."""
+        mock_no_match = {"letter": "UNKNOWN", "confidence": 0.0, "status": "NO_MATCH", "source": "none"}
+        mock_head_o_low = {
+            "letter": "O",
+            "raw_predicted_letter": "O",
+            "confidence": 0.65,
+            "status": "LOW_CONFIDENCE",
+            "is_confident": False,
+            "top_k": [{"letter": "O", "confidence": 0.65}],
+        }
+        with patch.object(self.rec.alphabet_classifier, "classify_detailed", return_value=mock_no_match):
+            with patch.object(self.rec.static_alphabet_head, "predict_feature", return_value=mock_head_o_low):
+                res = self.rec.predict_landmarks(
+                    make_dummy_landmarks(), mode="letters", session_id="test_rej_o_low", timestamp=66.0
                 )
 
         self.assertEqual(res["sign"], "NEUTRAL")

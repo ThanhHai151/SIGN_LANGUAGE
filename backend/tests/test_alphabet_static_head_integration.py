@@ -173,12 +173,12 @@ class TestAlphabetStaticHeadIntegration(unittest.TestCase):
     def test_case_4_rejection_of_non_supplemental_head_predictions(self):
         """
         Nếu luật hình học trả về NO_MATCH, nhưng Static Head lại dự đoán ra một chữ
-        KHÔNG nằm trong 10 chữ cái bổ sung và KHÔNG thuộc 3 chữ nền fallback (A, D, E)
-        (vd: 'B', 'C', 'I', 'O', 'S', 'T', 'Y', 'Z'...),
+        KHÔNG nằm trong 10 chữ cái bổ sung và KHÔNG thuộc 4 chữ nền fallback (A, D, E, O)
+        (vd: 'B', 'C', 'I', 'S', 'T', 'Y', 'Z'...),
         hệ thống phải từ chối ngay lập tức và trả về NEUTRAL (conf=0.0).
-        (Cập nhật Task 7E.5B: A, D, E hiện được hỗ trợ qua cơ chế gated fallback).
+        (Cập nhật Task 7E.5B / CP3: A, D, E, O hiện được hỗ trợ qua cơ chế gated fallback).
         """
-        non_supplemental = ["B", "C", "I", "O", "S", "T", "Y", "Z"]
+        non_supplemental = ["B", "C", "I", "S", "T", "Y", "Z"]
 
         mock_no_match = {
             "letter": "UNKNOWN",
@@ -250,25 +250,45 @@ class TestAlphabetStaticHeadIntegration(unittest.TestCase):
                 self.assertEqual(res_g_high["source"], "static_head")
                 self.assertEqual(res_g_high["confidence"], 0.75)
 
-        # 3. Chữ Q với conf 0.80 (< ngưỡng 0.85) -> Bị từ chối
+        # 3. Chữ Q với conf 0.70 (< ngưỡng 0.75) -> Bị từ chối
+        with patch.object(self.rec.alphabet_classifier, "classify_detailed", return_value=mock_no_match):
+            with patch.object(self.rec.static_alphabet_head, "predict_feature", return_value={
+                "letter": "Q", "raw_predicted_letter": "Q", "confidence": 0.70, "status": "CONFIDENT", "is_confident": True, "top_k": []
+            }):
+                res_q_low1 = self.rec.predict_landmarks(dummy_lm, mode="letters")
+                self.assertEqual(res_q_low1["sign"], "NEUTRAL")
+                self.assertEqual(res_q_low1["confidence"], 0.0)
+                self.assertIn("0.75", res_q_low1["classifier_details"]["reject_reason"])
+
+        # 4. Chữ Q với conf 0.74 (< ngưỡng 0.75) -> Bị từ chối
+        with patch.object(self.rec.alphabet_classifier, "classify_detailed", return_value=mock_no_match):
+            with patch.object(self.rec.static_alphabet_head, "predict_feature", return_value={
+                "letter": "Q", "raw_predicted_letter": "Q", "confidence": 0.74, "status": "CONFIDENT", "is_confident": True, "top_k": []
+            }):
+                res_q_low2 = self.rec.predict_landmarks(dummy_lm, mode="letters")
+                self.assertEqual(res_q_low2["sign"], "NEUTRAL")
+                self.assertEqual(res_q_low2["confidence"], 0.0)
+                self.assertIn("0.75", res_q_low2["classifier_details"]["reject_reason"])
+
+        # 5. Chữ Q với conf 0.75 (>= ngưỡng 0.75) -> Chấp nhận
+        with patch.object(self.rec.alphabet_classifier, "classify_detailed", return_value=mock_no_match):
+            with patch.object(self.rec.static_alphabet_head, "predict_feature", return_value={
+                "letter": "Q", "raw_predicted_letter": "Q", "confidence": 0.75, "status": "CONFIDENT", "is_confident": True, "top_k": []
+            }):
+                res_q_high1 = self.rec.predict_landmarks(dummy_lm, mode="letters")
+                self.assertEqual(res_q_high1["sign"], "Q")
+                self.assertEqual(res_q_high1["source"], "static_head")
+                self.assertEqual(res_q_high1["confidence"], 0.75)
+
+        # 6. Chữ Q với conf 0.80 (>= ngưỡng 0.75) -> Chấp nhận
         with patch.object(self.rec.alphabet_classifier, "classify_detailed", return_value=mock_no_match):
             with patch.object(self.rec.static_alphabet_head, "predict_feature", return_value={
                 "letter": "Q", "raw_predicted_letter": "Q", "confidence": 0.80, "status": "CONFIDENT", "is_confident": True, "top_k": []
             }):
-                res_q_low = self.rec.predict_landmarks(dummy_lm, mode="letters")
-                self.assertEqual(res_q_low["sign"], "NEUTRAL")
-                self.assertEqual(res_q_low["confidence"], 0.0)
-                self.assertIn("0.85", res_q_low["classifier_details"]["reject_reason"])
-
-        # 4. Chữ Q với conf 0.88 (>= 0.85) -> Chấp nhận
-        with patch.object(self.rec.alphabet_classifier, "classify_detailed", return_value=mock_no_match):
-            with patch.object(self.rec.static_alphabet_head, "predict_feature", return_value={
-                "letter": "Q", "raw_predicted_letter": "Q", "confidence": 0.88, "status": "CONFIDENT", "is_confident": True, "top_k": []
-            }):
-                res_q_high = self.rec.predict_landmarks(dummy_lm, mode="letters")
-                self.assertEqual(res_q_high["sign"], "Q")
-                self.assertEqual(res_q_high["source"], "static_head")
-                self.assertEqual(res_q_high["confidence"], 0.88)
+                res_q_high2 = self.rec.predict_landmarks(dummy_lm, mode="letters")
+                self.assertEqual(res_q_high2["sign"], "Q")
+                self.assertEqual(res_q_high2["source"], "static_head")
+                self.assertEqual(res_q_high2["confidence"], 0.80)
 
     # -------------------------------------------------------------------------
     # Test 6: Suy thoái mềm (Graceful Degradation) khi thiếu hoặc hỏng checkpoint
@@ -340,7 +360,11 @@ class TestAlphabetStaticHeadIntegration(unittest.TestCase):
         # Đặt ngưỡng G rất cao: 0.98
         custom_rec = VSLRecognizer(supplemental_thresholds={"G": 0.98})
         self.assertEqual(custom_rec.supplemental_thresholds["G"], 0.98)
-        self.assertEqual(custom_rec.supplemental_thresholds["Q"], 0.85)  # Các ngưỡng khác giữ mặc định
+        self.assertEqual(custom_rec.supplemental_thresholds["Q"], 0.75)  # Các ngưỡng không override giữ giá trị mặc định (Q mặc định là 0.75)
+
+        # Kiểm tra explicit custom override cho chính chữ Q không bị giá trị default ghi đè
+        custom_rec_q = VSLRecognizer(supplemental_thresholds={"Q": 0.90})
+        self.assertEqual(custom_rec_q.supplemental_thresholds["Q"], 0.90)
 
         mock_no_match = {
             "letter": "UNKNOWN",

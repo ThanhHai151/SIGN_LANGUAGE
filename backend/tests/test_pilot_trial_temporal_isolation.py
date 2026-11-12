@@ -73,6 +73,52 @@ class TestPilotTrialTemporalIsolation(unittest.TestCase):
         self.assertTrue(second["confirmed"])
         self.assertEqual(list(self.rec.prediction_history), [("O", 0.95), ("O", 0.95)])
 
+    def test_fsm_state_is_isolated_between_consecutive_pilot_trials(self):
+        # Stop O patch to allow realistic FSM tracking with mock D
+        self.classifier_patch.stop()
+        try:
+            match_d = {
+                "letter": "D",
+                "confidence": 0.95,
+                "status": "MATCH",
+                "reason": "test D match",
+                "matched_candidates": [("D", 0.95)],
+                "features": {},
+            }
+            with patch.object(self.rec.alphabet_classifier, "classify_detailed", return_value=match_d):
+                # Trial 1: establish BASE_STABLE for D
+                for i in range(5):
+                    self.rec.predict_landmarks(
+                        [[0.5, 0.5, 0.0]] * 21,
+                        mode="letters",
+                        session_id="pilot-sess",
+                        trial_id="trial-D1",
+                        timestamp=10.0 + i * 0.04
+                    )
+                fsm_key1 = ("pilot-sess", "trial-D1", "letters")
+                self.assertIn(fsm_key1, self.rec.diacritic_fsms)
+                self.assertEqual(self.rec.diacritic_fsms[fsm_key1].state, "BASE_STABLE")
+                self.assertEqual(self.rec.diacritic_fsms[fsm_key1].current_base, "D")
+
+                # Trial 2: different trial_id must have fresh isolated FSM
+                res_t2 = self.rec.predict_landmarks(
+                    [[0.5, 0.5, 0.0]] * 21,
+                    mode="letters",
+                    session_id="pilot-sess",
+                    trial_id="trial-D2",
+                    timestamp=20.0
+                )
+                fsm_key2 = ("pilot-sess", "trial-D2", "letters")
+                self.assertIn(fsm_key2, self.rec.diacritic_fsms)
+                self.assertIsNot(self.rec.diacritic_fsms[fsm_key1], self.rec.diacritic_fsms[fsm_key2])
+                self.assertNotEqual(self.rec.diacritic_fsms[fsm_key2].state, "BASE_STABLE")
+                self.assertIsNone(self.rec.diacritic_fsms[fsm_key2].current_base)
+                # Ensure no false diacritic confirmation on trial 2 frame 0
+                fsm_det = res_t2.get("classifier_details", {}).get("diacritic_fsm")
+                self.assertIsNone(fsm_det)
+        finally:
+            self.classifier_patch.start()
+
 
 if __name__ == "__main__":
     unittest.main()

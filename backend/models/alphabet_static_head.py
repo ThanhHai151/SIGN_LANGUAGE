@@ -13,6 +13,7 @@ Kiến trúc:
 """
 
 import os
+import hashlib
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -31,6 +32,9 @@ IDX_TO_CLASS_22 = {i: c for i, c in enumerate(STATIC_CLASSES_22)}
 DEFAULT_HEAD_WEIGHTS_PATH = os.path.join(
     os.path.dirname(__file__), "alphabet_static_head_v1.pt"
 )
+
+# SHA-256 của checkpoint nội bộ đã xác minh provenance (Task 0.B / 0.C Safety Baseline)
+KNOWN_HEAD_CHECKPOINT_SHA256 = "cab8123e23ed41a6088ba1c6e80a8aaaa9a382663418cc669eacff834795c254"
 
 class VSLStaticAlphabetHead(nn.Module):
     """
@@ -120,19 +124,43 @@ class VSLStaticAlphabetHead(nn.Module):
 def load_static_alphabet_head(weights_path: Optional[str] = None, device: str = "cpu") -> Tuple[VSLStaticAlphabetHead, Dict[str, Any]]:
     """
     Tải mô-đun VSLStaticAlphabetHead kèm checkpoint đã huấn luyện.
+    Đảm bảo tương thích cả PyTorch >= 2.4 (safe_globals) và PyTorch < 2.4 (như 2.2.2 hiện tại).
+    Chỉ nạp weights_only=False khi checkpoint nội bộ đã xác minh provenance & SHA-256.
     """
     target_path = weights_path or DEFAULT_HEAD_WEIGHTS_PATH
     head = VSLStaticAlphabetHead(input_dim=72, hidden_dim1=64, hidden_dim2=32, num_classes=len(STATIC_CLASSES_22))
     metadata = {}
     
     if os.path.exists(target_path):
-        safe_numpy_globals = [
-            (np._core.multiarray.scalar, "numpy.core.multiarray.scalar"),
-            (np.dtype, "numpy.dtype"),
-            (type(np.dtype(np.float64)), "numpy.dtypes.Float64DType"),
-        ]
-        with torch.serialization.safe_globals(safe_numpy_globals):
-            ckpt = torch.load(target_path, map_location=device, weights_only=True)
+        if hasattr(torch.serialization, "safe_globals"):
+            multiarray_mod = getattr(getattr(np, "_core", None), "multiarray", None) or getattr(getattr(np, "core", None), "multiarray", None)
+            scalar_fn = getattr(multiarray_mod, "scalar", None) if multiarray_mod else None
+            safe_numpy_globals = []
+            if scalar_fn is not None:
+                safe_numpy_globals.append((scalar_fn, "numpy.core.multiarray.scalar"))
+            safe_numpy_globals.append((np.dtype, "numpy.dtype"))
+            if hasattr(np, "dtypes") and hasattr(np.dtypes, "Float64DType"):
+                safe_numpy_globals.append((np.dtypes.Float64DType, "numpy.dtypes.Float64DType"))
+            with torch.serialization.safe_globals(safe_numpy_globals):
+                ckpt = torch.load(target_path, map_location=device, weights_only=True)
+        else:
+            # PyTorch < 2.4: Chỉ cho phép weights_only=False đối với checkpoint nội bộ đã kiểm chứng
+            is_internal_default = (os.path.abspath(target_path) == os.path.abspath(DEFAULT_HEAD_WEIGHTS_PATH))
+            file_sha256 = ""
+            with open(target_path, "rb") as f:
+                file_sha256 = hashlib.sha256(f.read()).hexdigest()
+            
+            if is_internal_default and file_sha256 == KNOWN_HEAD_CHECKPOINT_SHA256:
+                ckpt = torch.load(target_path, map_location=device, weights_only=False)
+            else:
+                try:
+                    ckpt = torch.load(target_path, map_location=device, weights_only=True)
+                except Exception as exc:
+                    raise RuntimeError(
+                        f"Checkpoint không xác thực '{target_path}' (SHA-256: {file_sha256}) "
+                        f"không thể nạp an toàn trên PyTorch {torch.__version__} thiếu safe_globals: {exc}"
+                    ) from exc
+
         if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
             head.load_state_dict(ckpt["model_state_dict"])
             metadata = {k: v for k, v in ckpt.items() if k != "model_state_dict"}
