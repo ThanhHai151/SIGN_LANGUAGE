@@ -74,20 +74,20 @@ ALLOWED_LETTERS_AND_DIGITS = ALLOWED_LETTERS | ALLOWED_DIGITS
 # 10 chữ cái tĩnh bổ sung qua mạng nơ-ron VSLStaticAlphabetHead (Task 6B/6C)
 ALLOWED_SUPPLEMENTAL_LETTERS = {"G", "H", "K", "M", "N", "P", "Q", "R", "U", "X"}
 
-# 3 chữ cái nền tĩnh hỗ trợ fallback từ VSLStaticAlphabetHead khi geometric rules NO_MATCH (Task 7E.5B)
-ALLOWED_FALLBACK_BASE_LETTERS = {"A", "D", "E"}
+# 4 chữ cái nền tĩnh hỗ trợ fallback từ VSLStaticAlphabetHead khi geometric rules NO_MATCH (Task 7E.5B / CP3)
+ALLOWED_FALLBACK_BASE_LETTERS = {"A", "D", "E", "O"}
 DEFAULT_FALLBACK_BASE_THRESHOLD = 0.70
 
 # Ngưỡng tin cậy thực nghiệm (experimental thresholds) cho từng chữ cái bổ sung
-# Q được gán ngưỡng cao (0.85) để phòng ngừa dương tính giả do nhầm lẫn hình chiếu 2D với X
+# Q được gán ngưỡng 0.75; N hạ xuống 0.70 (CP3); M duy trì 0.70
 DEFAULT_SUPPLEMENTAL_THRESHOLDS = {
     "G": 0.70,
     "H": 0.70,
     "K": 0.75,
     "M": 0.70,
-    "N": 0.75,
+    "N": 0.70,
     "P": 0.70,
-    "Q": 0.85,
+    "Q": 0.75,
     "R": 0.75,
     "U": 0.70,
     "X": 0.70,
@@ -232,10 +232,15 @@ class VSLRecognizer:
                 return self.pilot_logger
 
             if session_id is not None:
+                sess_str = str(session_id)
                 with self._pilot_temporal_lock:
                     self._pilot_temporal_states = {
                         key: state for key, state in self._pilot_temporal_states.items()
-                        if key[0] != str(session_id)
+                        if key[0] != sess_str
+                    }
+                    self.diacritic_fsms = {
+                        key: fsm for key, fsm in self.diacritic_fsms.items()
+                        if not (isinstance(key, tuple) and len(key) > 0 and key[0] == sess_str)
                     }
             self.pilot_logging_enabled = True
             self.pilot_filepath = filepath
@@ -255,6 +260,10 @@ class VSLRecognizer:
                     self._pilot_temporal_states = {
                         key: state for key, state in self._pilot_temporal_states.items()
                         if key[0] != session_id
+                    }
+                    self.diacritic_fsms = {
+                        key: fsm for key, fsm in self.diacritic_fsms.items()
+                        if not (isinstance(key, tuple) and len(key) > 0 and key[0] == session_id)
                     }
             self.active_pilot_session_id = None
             self.pilot_filepath = None
@@ -1064,6 +1073,7 @@ class VSLRecognizer:
         # Nếu phiên làm việc đổi mode, xóa sạch lịch sử dự đoán của phiên trước đó
         # để tránh kết quả của chế độ cũ gây nhiễu cho chế độ mới.
         session_key = str(session_id) if session_id else "_default_"
+        fsm_key = (str(session_id), str(trial_id), mode) if (session_id is not None and trial_id is not None and mode == "letters") else session_key
         if not hasattr(self, "_session_last_modes"):
             self._session_last_modes = {}
         current_time = time.time() if timestamp is None else float(timestamp)
@@ -1074,8 +1084,8 @@ class VSLRecognizer:
             self._session_last_modes[session_key] = mode
             if hasattr(self, "digit_10_detector"):
                 self.digit_10_detector.reset()
-            if session_key in self.diacritic_fsms:
-                self.diacritic_fsms[session_key].reset()
+            if fsm_key in self.diacritic_fsms:
+                self.diacritic_fsms[fsm_key].reset()
 
         p_prim = None
         p_sec = None
@@ -1095,8 +1105,8 @@ class VSLRecognizer:
             self.prediction_history.append(("NEUTRAL", 0.0))
             if is_digits_mode and hasattr(self, "digit_10_detector"):
                 self.digit_10_detector.reset()
-            if session_key in self.diacritic_fsms:
-                self.diacritic_fsms[session_key].reset()
+            if fsm_key in self.diacritic_fsms:
+                self.diacritic_fsms[fsm_key].reset()
 
             if self.pilot_logging_enabled and self.pilot_logger is not None:
                 tracking_status = "NO_HAND" if (not p_prim or len(p_prim) == 0) else "INVALID_SHAPE"
@@ -1469,8 +1479,15 @@ class VSLRecognizer:
                                         "top_k": head_top_k,
                                     }
 
-                    # 2a. Gated Static Head Fallback cho 3 chữ cái nền A, D, E (Task 7E.5B)
-                    if head_letter in ALLOWED_FALLBACK_BASE_LETTERS and head_conf >= self.fallback_base_threshold:
+                    # 2a. Gated Static Head Fallback cho 4 chữ cái nền A, D, E, O (Task 7E.5B / CP3)
+                    # Chặn ngón tay tạo vòng khép O lỏng không cho fallback nhầm sang A
+                    is_loop_blocking_a = (
+                        head_letter == "A"
+                        and isinstance(geom_feat, dict)
+                        and float(geom_feat.get("d_TI", 1.0)) <= 0.30
+                        and float(geom_feat.get("d_TW", 2.0)) <= 1.05
+                    )
+                    if head_letter in ALLOWED_FALLBACK_BASE_LETTERS and head_conf >= self.fallback_base_threshold and not is_loop_blocking_a:
                         final_sign = head_letter
                         final_conf = head_conf
                         recognition_source = "static_head_fallback"
@@ -1546,11 +1563,208 @@ class VSLRecognizer:
                 alpha_res["source"] = "none"
 
             # -------------------------------------------------------------
-            # Chế độ letters: Nhận diện bảng 29 chữ cái tiếng Việt chuẩn VSL
-            # Chưa kích hoạt lại DiacriticStateMachine trong nhiệm vụ này
+            # Bước 3: Phân giải dấu qua DiacriticStateMachine cho 5 nhóm chữ nền (Task 7C/7D / CP5)
             # -------------------------------------------------------------
-            if session_key in self.diacritic_fsms:
-                self.diacritic_fsms[session_key].reset()
+            base_sign = final_sign
+            base_conf = final_conf
+
+            if fsm_key not in self.diacritic_fsms:
+                if isinstance(fsm_key, tuple):
+                    pilot_fsm_keys = [k for k in self.diacritic_fsms if isinstance(k, tuple)]
+                    if len(pilot_fsm_keys) >= 100:
+                        for old_k in pilot_fsm_keys[:50]:
+                            self.diacritic_fsms.pop(old_k, None)
+                self.diacritic_fsms[fsm_key] = DiacriticStateMachine()
+            fsm = self.diacritic_fsms[fsm_key]
+
+            has_valid_landmarks = (p_prim is not None and len(p_prim) >= 21)
+
+            if base_sign in BASE_GROUPS and has_valid_landmarks:
+                fsm_res = fsm.update(
+                    base_label=base_sign,
+                    base_confidence=base_conf,
+                    landmarks_raw=p_prim,
+                    timestamp=current_time,
+                    source=recognition_source,
+                )
+                resolved_sign = fsm_res.get("final_label", base_sign)
+                diacritic_detected = fsm_res.get("diacritic_detected")
+                base_key = fsm_res.get("base_label", base_sign)
+
+                if diacritic_detected and base_key in BASE_GROUPS and resolved_sign in BASE_GROUPS[base_key]["variants"]:
+                    final_sign = resolved_sign
+                    final_conf = fsm_res.get("confidence", base_conf)
+                    recognition_source = fsm_res.get("source", "diacritic_fsm")
+                    alpha_res["diacritic_fsm"] = {
+                        "state": fsm_res.get("state"),
+                        "base_label": base_key,
+                        "diacritic_detected": diacritic_detected,
+                        "reason": fsm_res.get("reason"),
+                        "source": recognition_source,
+                    }
+                    # Prime prediction history khi dấu vừa được xác nhận để hiển thị mượt mà
+                    if fsm_res.get("state") == STATE_DIACRITIC_CONFIRMED:
+                        for _ in range(max(1, self.smoothing_window // 2)):
+                            self.prediction_history.append((final_sign, final_conf))
+                else:
+                    final_sign = resolved_sign
+                    final_conf = fsm_res.get("confidence", base_conf)
+                    if self.debug_diacritic or self.diagnostic_enabled:
+                        alpha_res["diacritic_fsm"] = {
+                            "state": fsm_res.get("state"),
+                            "base_label": base_key,
+                            "diacritic_detected": None,
+                            "reason": fsm_res.get("reason"),
+                        }
+
+                if self.debug_diacritic:
+                    print(
+                        f"[DiacriticFSM] session={session_key} base={base_sign} -> final={final_sign} "
+                        f"state={fsm_res.get('state')} diac={diacritic_detected} reason={fsm_res.get('reason')}"
+                    )
+
+            elif base_sign in ("NEUTRAL", "UNKNOWN") and has_valid_landmarks and fsm.state in (STATE_BASE_STABLE, STATE_DIACRITIC_CANDIDATE, STATE_COOLDOWN) and fsm.baseline is not None:
+                # TÌNH HUỐNG B: Mất nhãn nền tạm thời nhưng landmarks vẫn tồn tại và FSM đang có baseline snapshot
+                fsm_res = fsm.update_transient(
+                    landmarks_raw=p_prim,
+                    timestamp=current_time,
+                )
+                diacritic_detected = fsm_res.get("diacritic_detected")
+                current_fsm_base = fsm.current_base
+
+                if diacritic_detected and current_fsm_base in BASE_GROUPS and fsm_res.get("final_label") in BASE_GROUPS[current_fsm_base]["variants"]:
+                    final_sign = fsm_res["final_label"]
+                    final_conf = fsm_res.get("confidence", 0.90)
+                    recognition_source = fsm_res.get("source", "diacritic_fsm")
+                    alpha_res["diacritic_fsm"] = {
+                        "state": fsm_res.get("state"),
+                        "base_label": current_fsm_base,
+                        "diacritic_detected": diacritic_detected,
+                        "reason": fsm_res.get("reason"),
+                        "source": recognition_source,
+                    }
+                    if fsm_res.get("state") == STATE_DIACRITIC_CONFIRMED:
+                        for _ in range(max(1, self.smoothing_window // 2)):
+                            self.prediction_history.append((final_sign, final_conf))
+                elif fsm_res.get("state") == STATE_COOLDOWN and current_fsm_base in BASE_GROUPS:
+                    final_sign = fsm_res.get("final_label", "NEUTRAL")
+                    final_conf = fsm_res.get("confidence", 0.90)
+                    recognition_source = "diacritic_fsm"
+                else:
+                    # Trong transient chưa xác nhận dấu: giữ nguyên kết quả NEUTRAL hiện tại (không tạo nhãn nền giả)
+                    final_sign = "NEUTRAL"
+                    final_conf = 0.0
+                    recognition_source = "none"
+                    if self.debug_diacritic or self.diagnostic_enabled:
+                        alpha_res["diacritic_fsm"] = {
+                            "state": fsm_res.get("state"),
+                            "base_label": current_fsm_base,
+                            "diacritic_detected": None,
+                            "reason": fsm_res.get("reason"),
+                        }
+
+                if self.debug_diacritic:
+                    print(
+                        f"[DiacriticFSM-Transient] session={session_key} base={current_fsm_base} -> final={final_sign} "
+                        f"state={fsm_res.get('state')} diac={diacritic_detected} reason={fsm_res.get('reason')}"
+                    )
+
+            elif has_valid_landmarks and fsm.baseline is not None and fsm.state in (STATE_BASE_STABLE, STATE_DIACRITIC_CANDIDATE, STATE_COOLDOWN) and fsm.is_competing_label(base_sign):
+                # TÌNH HUỐNG D: Nhãn cạnh tranh I/V trong lúc FSM đang theo dõi cử chỉ tạo dấu (Task 7E.4A)
+                fsm_res = fsm.update_competing(
+                    competing_label=base_sign,
+                    competing_confidence=base_conf,
+                    landmarks_raw=p_prim,
+                    timestamp=current_time,
+                )
+                diacritic_detected = fsm_res.get("diacritic_detected")
+                current_fsm_base = fsm.current_base
+
+                if diacritic_detected and current_fsm_base in BASE_GROUPS and fsm_res.get("final_label") in BASE_GROUPS[current_fsm_base]["variants"]:
+                    final_sign = fsm_res["final_label"]
+                    final_conf = fsm_res.get("confidence", 0.90)
+                    recognition_source = fsm_res.get("source", "diacritic_fsm")
+                    alpha_res["diacritic_fsm"] = {
+                        "state": fsm_res.get("state"),
+                        "base_label": current_fsm_base,
+                        "diacritic_detected": diacritic_detected,
+                        "reason": fsm_res.get("reason"),
+                        "source": recognition_source,
+                    }
+                    if fsm_res.get("state") == STATE_DIACRITIC_CONFIRMED:
+                        for _ in range(max(1, self.smoothing_window // 2)):
+                            self.prediction_history.append((final_sign, final_conf))
+                elif fsm_res.get("state") == STATE_COOLDOWN and current_fsm_base in BASE_GROUPS:
+                    final_sign = fsm_res.get("final_label", "NEUTRAL")
+                    final_conf = fsm_res.get("confidence", 0.90)
+                    recognition_source = "diacritic_fsm"
+                    alpha_res["diacritic_fsm"] = {
+                        "state": fsm_res.get("state"),
+                        "base_label": current_fsm_base,
+                        "diacritic_detected": fsm_res.get("diacritic_detected"),
+                        "reason": fsm_res.get("reason"),
+                        "source": recognition_source,
+                    }
+                elif fsm_res.get("suppressed"):
+                    final_sign = "NEUTRAL"
+                    final_conf = 0.0
+                    recognition_source = "diacritic_fsm"
+                    if self.debug_diacritic or self.diagnostic_enabled:
+                        alpha_res["diacritic_fsm"] = {
+                            "state": fsm_res.get("state"),
+                            "base_label": current_fsm_base,
+                            "diacritic_detected": None,
+                            "reason": fsm_res.get("reason"),
+                            "source": "diacritic_fsm",
+                        }
+                else:
+                    # Người ký chủ động chuyển sang I/V hoặc hết timeout tìm kiếm dấu
+                    final_sign = fsm_res.get("final_label", base_sign)
+                    final_conf = fsm_res.get("confidence", base_conf)
+                    if self.debug_diacritic or self.diagnostic_enabled:
+                        alpha_res["diacritic_fsm"] = {
+                            "state": fsm_res.get("state"),
+                            "base_label": current_fsm_base,
+                            "diacritic_detected": None,
+                            "reason": fsm_res.get("reason"),
+                            "source": "classifier",
+                        }
+
+                if self.debug_diacritic:
+                    print(
+                        f"[DiacriticFSM-Competing] session={session_key} competing={base_sign} -> final={final_sign} "
+                        f"state={fsm_res.get('state')} diac={diacritic_detected} reason={fsm_res.get('reason')}"
+                    )
+
+            elif has_valid_landmarks and fsm.baseline is not None and fsm.state in (STATE_BASE_STABLE, STATE_DIACRITIC_CANDIDATE, STATE_COOLDOWN):
+                # TÌNH HUỐNG E (Task 7E.4B): Chữ tĩnh ngoài BASE_GROUPS (B, C, G...) nhưng landmarks hợp lệ và FSM đang có baseline snapshot -> dùng switch candidate tolerance
+                fsm_res = fsm.update(
+                    base_label=base_sign,
+                    base_confidence=base_conf,
+                    landmarks_raw=p_prim,
+                    timestamp=current_time,
+                    source=recognition_source,
+                )
+                final_sign = fsm_res.get("final_label", base_sign)
+                final_conf = fsm_res.get("confidence", base_conf)
+                if self.debug_diacritic or self.diagnostic_enabled:
+                    alpha_res["diacritic_fsm"] = {
+                        "state": fsm_res.get("state"),
+                        "base_label": fsm.current_base,
+                        "diacritic_detected": None,
+                        "reason": fsm_res.get("reason"),
+                        "source": "classifier",
+                    }
+                if self.debug_diacritic:
+                    print(
+                        f"[DiacriticFSM-SwitchCandidate] session={session_key} base={fsm.current_base} new={base_sign} -> final={final_sign} "
+                        f"state={fsm_res.get('state')} reason={fsm_res.get('reason')}"
+                    )
+
+            else:
+                # TÌNH HUỐNG C: Mất landmarks thực sự (has_valid_landmarks == False),
+                # hoặc FSM chưa từng đạt BASE_STABLE: reset FSM ngay lập tức
+                fsm.reset()
 
             # Chặn tuyệt đối: chế độ letters chỉ cho phép 29 chữ cái tiếng Việt trong ALLOWED_LETTERS (không chứa F, J, W, Z)
             if final_sign not in ALLOWED_LETTERS:
@@ -2163,3 +2377,6 @@ class VSLRecognizer:
             session_key = str(session_id)
             if session_key in self.diacritic_fsms:
                 self.diacritic_fsms[session_key].reset()
+            for k, fsm in list(self.diacritic_fsms.items()):
+                if isinstance(k, tuple) and len(k) > 0 and k[0] == session_key:
+                    fsm.reset()

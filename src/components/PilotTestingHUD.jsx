@@ -16,7 +16,9 @@ import {
   createPilotSessionId,
   createPilotTrialId,
   evaluateTrialFrames,
-  buildEvaluationReport
+  buildEvaluationReport,
+  phaseAtElapsedSeconds,
+  DYNAMIC_DIACRITICS
 } from './pilotProtocol';
 
 export { VSL_ALPHABET_29 };
@@ -76,12 +78,22 @@ export default function PilotTestingHUD({
   const sessionIdRef = useRef(sessionId);
   sessionIdRef.current = sessionId;
 
+  const trialGenerationRef = useRef(0);
+
   const trialFramesRef = useRef([]);
   const recordingStartTimeRef = useRef(0);
   const timerRafRef = useRef(null);
   const countdownIntervalRef = useRef(null);
   const autoAdvanceTimeoutRef = useRef(null);
+  const handleNextTrialRef = useRef(null);
   const frameCounterRef = useRef(0);
+
+  // Chuyển đổi trạng thái lượt thử đồng bộ kèm tăng generation để hủy bỏ triệt để in-flight requests cũ
+  const transitionTrialState = useCallback((newState) => {
+    trialStateRef.current = newState;
+    trialGenerationRef.current += 1;
+    setTrialState(newState);
+  }, []);
 
   // Gửi metadata sang CameraSignRecognizer
   useEffect(() => {
@@ -91,54 +103,157 @@ export default function PilotTestingHUD({
       if (trialStateRef.current !== 'RECORDING') return null;
 
       frameCounterRef.current += 1;
-      const trialId = createPilotTrialId(sessionIdRef.current, selectedLetterRef.current, currentRepRef.current);
+      const currentSessId = sessionIdRef.current;
+      const currentLetter = selectedLetterRef.current;
+      const currentRep = currentRepRef.current;
+      const currentGen = trialGenerationRef.current;
+      const trialId = createPilotTrialId(currentSessId, currentLetter, currentRep);
 
       return {
-        session_id: sessionIdRef.current,
+        session_id: currentSessId,
         trial_id: trialId,
-        expected_sign: selectedLetterRef.current,
+        expected_sign: currentLetter,
+        rep_idx: currentRep,
+        trial_generation: currentGen,
         frame_idx: frameCounterRef.current,
         client_capture_ts: performance.now() / 1000,
         signer_id: 'signer_01'
       };
     };
 
-    const onFrameResult = (data, pilotMeta) => {
+    const onFrameResult = (data, requestMeta, errorOptions = {}) => {
+      // Gate 1: Chỉ chấp nhận frame khi HUD đang ở trạng thái RECORDING
       if (trialStateRef.current !== 'RECORDING') return;
 
-      const expected = selectedLetterRef.current;
-      const predicted = data?.sign || 'NEUTRAL';
-      const conf = Number(data?.confidence || 0);
-      const isMatch = (predicted === expected);
+      // Gate 2: Bắt buộc request phải mang snapshot pilot metadata hợp lệ được tạo trong pha RECORDING
+      if (!requestMeta) return;
 
-      const frameRecord = {
-        frame_idx: pilotMeta?.frame_idx || trialFramesRef.current.length + 1,
-        expected_sign: expected,
-        predicted_sign: predicted,
-        confidence: conf,
-        timestamp: performance.now() / 1000,
-        is_match: isMatch,
-        landmarks: data?.landmarks || null
-      };
+      // Gate 3: Đối chiếu generation của request với generation của trial đang chạy
+      if (requestMeta.trial_generation !== trialGenerationRef.current) return;
+
+      // Gate 4: Đối chiếu session_id với phiên kiểm thử hiện tại
+      if (requestMeta.session_id !== sessionIdRef.current) return;
+
+      // Gate 5: Đối chiếu rep_idx và chữ cái mục tiêu
+      if (requestMeta.rep_idx !== currentRepRef.current) return;
+      if (requestMeta.expected_sign !== selectedLetterRef.current) return;
+
+      // Gate 6: Đối chiếu trial_id chuẩn xác
+      const expectedTrialId = createPilotTrialId(sessionIdRef.current, selectedLetterRef.current, currentRepRef.current);
+      if (requestMeta.trial_id !== expectedTrialId) return;
+
+      const expected = selectedLetterRef.current;
+
+      // Tính toán thời gian trôi qua và phase cho lượt thử hiện tại (đo từ thời điểm bắt đầu lượt)
+      const elapsedSec = recordingStartTimeRef.current > 0
+        ? (performance.now() - recordingStartTimeRef.current) / 1000
+        : 0.0;
+      const phase = phaseAtElapsedSeconds(elapsedSec);
+
+      // Tracking bàn tay từ snapshot bất biến của request (true / false)
+      let handDetected = null;
+      if (typeof requestMeta.hand_detected === 'boolean') {
+        handDetected = requestMeta.hand_detected;
+      } else if (typeof requestMeta.has_hands === 'boolean') {
+        handDetected = requestMeta.has_hands;
+      }
+
+      // Xác định trạng thái lỗi backend / network exception (Task 1.3G)
+      const isBackendError = Boolean(errorOptions?.backendError || data?.backend_error);
+      const backendErrorMessage = errorOptions?.backendErrorMessage || data?.backend_error_message || data?.error || null;
+
+      let frameRecord;
+      if (isBackendError) {
+        // Nhánh Backend Error: ghi nhận lỗi minh bạch, không tính là match, không tạo confirmed giả
+        frameRecord = {
+          frame_idx: trialFramesRef.current.length + 1,
+          expected_sign: expected,
+          predicted_sign: 'NEUTRAL',
+          confidence: 0.0,
+          timestamp: performance.now() / 1000,
+          is_match: false,
+          landmarks: null,
+          hand_detected: handDetected,
+          prediction_source: 'none',
+          gating_status: null,
+          classifier_status: 'BACKEND_ERROR',
+          reject_reason: backendErrorMessage || 'Backend recognition error',
+          head_confidence: null,
+          confirmed: false,
+          new_token: null,
+          phase: phase,
+          elapsed_sec: Number(elapsedSec.toFixed(3)),
+          backend_error: true,
+          backend_error_message: backendErrorMessage,
+          frame_status: 'BACKEND_ERROR'
+        };
+      } else {
+        // Nhánh Valid Prediction bình thường từ backend
+        const predicted = data?.sign || 'NEUTRAL';
+        const conf = Number(data?.confidence || 0);
+        const isMatch = (predicted === expected);
+
+        // Nguồn dự đoán và trạng thái phân loại
+        const predictionSource = data?.prediction_source ?? data?.source ?? null;
+        const gatingStatus = data?.gating_status ?? data?.classifier_details?.gating_status ?? null;
+        const classifierStatus = data?.classifier_details?.status ?? null;
+        const rejectReason = data?.classifier_details?.reject_reason ?? null;
+
+        // Độ tin cậy thô của static head nếu có
+        let headConfidence = null;
+        if (typeof data?.classifier_details?.head_confidence === 'number') {
+          headConfidence = data.classifier_details.head_confidence;
+        } else if (predictionSource === 'static_head' || data?.classifier_details?.source === 'static_head') {
+          if (typeof data?.classifier_details?.confidence === 'number') {
+            headConfidence = data.classifier_details.confidence;
+          } else if (typeof data?.confidence === 'number') {
+            headConfidence = data.confidence;
+          }
+        }
+
+        frameRecord = {
+          frame_idx: trialFramesRef.current.length + 1,
+          expected_sign: expected,
+          predicted_sign: predicted,
+          confidence: conf,
+          timestamp: performance.now() / 1000,
+          is_match: isMatch,
+          landmarks: data?.landmarks || null,
+          hand_detected: handDetected,
+          prediction_source: predictionSource,
+          gating_status: gatingStatus,
+          classifier_status: classifierStatus,
+          reject_reason: rejectReason,
+          head_confidence: headConfidence,
+          confirmed: Boolean(data?.confirmed),
+          new_token: data?.new_token ?? null,
+          phase: phase,
+          elapsed_sec: Number(elapsedSec.toFixed(3)),
+          backend_error: false,
+          backend_error_message: null,
+          frame_status: 'VALID'
+        };
+      }
 
       trialFramesRef.current.push(frameRecord);
 
       setCurrentFrameStats(prev => {
-        const isNeutral = (predicted === 'NEUTRAL' || predicted === 'unknown');
+        const isNeutral = (frameRecord.predicted_sign === 'NEUTRAL' || frameRecord.predicted_sign === 'unknown');
         return {
           totalFrames: prev.totalFrames + 1,
-          matchFrames: prev.matchFrames + (isMatch ? 1 : 0),
-          mismatchFrames: prev.mismatchFrames + (!isMatch && !isNeutral ? 1 : 0),
+          matchFrames: prev.matchFrames + (frameRecord.is_match ? 1 : 0),
+          mismatchFrames: prev.mismatchFrames + (!frameRecord.is_match && !isNeutral && !isBackendError ? 1 : 0),
           neutralFrames: prev.neutralFrames + (isNeutral ? 1 : 0),
-          lastSign: predicted,
-          lastConfidence: conf,
-          isMatch
+          backendErrorFrames: (prev.backendErrorFrames || 0) + (isBackendError ? 1 : 0),
+          lastSign: frameRecord.predicted_sign,
+          lastConfidence: frameRecord.confidence,
+          isMatch: frameRecord.is_match
         };
       });
     };
 
     onMetadataUpdate({ getFrameMetadata, onFrameResult });
-  }, [onMetadataUpdate]);
+  }, [onMetadataUpdate, transitionTrialState]);
 
   // Clean-up timers on unmount
   useEffect(() => {
@@ -163,8 +278,18 @@ export default function PilotTestingHUD({
     summary.letter = letter;
     summary.frames = frames;
 
+    // Hạch toán chỉ số Trial Validity độc lập (Task 1.3G)
+    const validFrames = frames.filter(f => f.frame_status === 'VALID');
+    const backendErrorFrames = frames.filter(f => f.backend_error === true);
+    summary.valid_frames = validFrames.length;
+    summary.backend_error_frames = backendErrorFrames.length;
+    summary.validity_ratio = frames.length > 0
+      ? Number((validFrames.length / frames.length).toFixed(4))
+      : 0.0;
+    summary.is_trial_valid = (validFrames.length >= 5 && backendErrorFrames.length === 0);
+
     setLastTrialSummary(summary);
-    setTrialState('TRIAL_REVIEW');
+    transitionTrialState('TRIAL_REVIEW');
 
     // Cập nhật kết quả vào store
     setResultsByLetter(prev => {
@@ -174,13 +299,15 @@ export default function PilotTestingHUD({
       return { ...prev, [letter]: updated };
     });
 
-    // Auto advance nếu bật
+    // Auto advance nếu bật (tự động chuyển lượt và quay tiếp sau 500ms)
     if (autoAdvance) {
       autoAdvanceTimeoutRef.current = setTimeout(() => {
-        handleNextTrial(summary);
-      }, 2500);
+        if (handleNextTrialRef.current) {
+          handleNextTrialRef.current(summary);
+        }
+      }, 500);
     }
-  }, [trialDurationSec, autoAdvance]);
+  }, [trialDurationSec, autoAdvance, transitionTrialState]);
 
   // --- Bắt đầu 5.0s Recording ---
   const startRecordingPeriod = useCallback(() => {
@@ -196,7 +323,7 @@ export default function PilotTestingHUD({
       isMatch: false
     });
     setRecordingElapsedSec(0.0);
-    setTrialState('RECORDING');
+    transitionTrialState('RECORDING');
 
     recordingStartTimeRef.current = performance.now();
 
@@ -212,9 +339,9 @@ export default function PilotTestingHUD({
     };
 
     timerRafRef.current = requestAnimationFrame(loop);
-  }, [trialDurationSec, handleCompleteTrial]);
+  }, [trialDurationSec, handleCompleteTrial, transitionTrialState]);
 
-  // --- Bắt đầu Trial (Đếm ngược 3s chuẩn bị) ---
+  // --- Bắt đầu Trial (Bỏ qua đếm ngược 3s, quay liền luôn) ---
   const handleStartTrial = () => {
     if (!cameraActive) {
       alert('Vui lòng bật Camera trước khi bắt đầu kiểm thử!');
@@ -222,25 +349,12 @@ export default function PilotTestingHUD({
     }
 
     if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
-    setSaveStatus(null);
-    setTrialState('COUNTDOWN');
-    setCountdownRemaining(3);
-
-    let count = 3;
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-
-    countdownIntervalRef.current = setInterval(() => {
-      count -= 1;
-      if (count > 0) {
-        setCountdownRemaining(count);
-      } else {
-        clearInterval(countdownIntervalRef.current);
-        startRecordingPeriod();
-      }
-    }, 1000);
+    setSaveStatus(null);
+    startRecordingPeriod();
   };
 
-  // --- Chuyển sang lượt thử tiếp theo ---
+  // --- Chuyển sang lượt thử tiếp theo (Tự động quay tiếp cho tới 10 lượt) ---
   const handleNextTrial = (prevSummary = null) => {
     if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
 
@@ -248,9 +362,11 @@ export default function PilotTestingHUD({
     const rep = currentRepRef.current;
 
     if (rep < totalReps) {
-      // Tiếp tục lượt tiếp theo của chữ hiện tại
-      setCurrentRep(rep + 1);
-      setTrialState('IDLE');
+      // Tiếp tục lượt tiếp theo của chữ hiện tại và quay liền luôn
+      const nextRep = rep + 1;
+      currentRepRef.current = nextRep;
+      setCurrentRep(nextRep);
+      startRecordingPeriod();
     } else {
       // Đã xong 10 lượt của chữ này
       if (testMode === 'all_29_letters') {
@@ -258,26 +374,29 @@ export default function PilotTestingHUD({
         if (currIdx < VSL_ALPHABET_29.length - 1) {
           // Sang chữ tiếp theo
           const nextLetter = VSL_ALPHABET_29[currIdx + 1];
+          selectedLetterRef.current = nextLetter;
           setSelectedLetter(nextLetter);
+          currentRepRef.current = 1;
           setCurrentRep(1);
-          setTrialState('IDLE');
+          transitionTrialState('IDLE');
         } else {
           // Hoàn thành cả 29 chữ!
-          setTrialState('SESSION_COMPLETE');
+          transitionTrialState('SESSION_COMPLETE');
           setShowScoreboard(true);
         }
       } else {
         // Hoàn thành 10 lượt của chữ đơn
-        setTrialState('SESSION_COMPLETE');
+        transitionTrialState('SESSION_COMPLETE');
         setShowScoreboard(true);
       }
     }
   };
+  handleNextTrialRef.current = handleNextTrial;
 
   // --- Thử lại lượt này (Retry) ---
   const handleRetryTrial = () => {
     if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
-    setTrialState('IDLE');
+    transitionTrialState('IDLE');
     handleStartTrial();
   };
 
@@ -302,7 +421,11 @@ export default function PilotTestingHUD({
       status: 'SKIPPED',
       isPassed: false,
       durationSec: 0,
-      frames: []
+      frames: [],
+      valid_frames: 0,
+      backend_error_frames: 0,
+      validity_ratio: 0.0,
+      is_trial_valid: false
     };
 
     setResultsByLetter(prev => {
@@ -319,22 +442,24 @@ export default function PilotTestingHUD({
     if (timerRafRef.current) cancelAnimationFrame(timerRafRef.current);
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
-    setTrialState('IDLE');
+    transitionTrialState('IDLE');
   };
 
   // --- Tạo lại phiên mới ---
   const handleResetSession = () => {
     handleStopSession();
     const newSessId = createPilotSessionId();
+    sessionIdRef.current = newSessId;
     setSessionId(newSessId);
     setResultsByLetter({});
+    currentRepRef.current = 1;
     setCurrentRep(1);
     setLastTrialSummary(null);
     setShowScoreboard(false);
     setSaveStatus(null);
   };
 
-  // --- Lưu file JSON vào backend\data\diagnostics ---
+  // --- Lưu file JSON vào backend\data\diagnostics & tự động tải về máy ---
   const handleSaveDiagnostics = async () => {
     setSaveStatus({ type: 'loading', message: 'Đang lưu báo cáo JSON vào backend/data/diagnostics...' });
 
@@ -358,44 +483,99 @@ export default function PilotTestingHUD({
         });
       }
 
+      // Bổ sung chỉ số kiểm định chất lượng phiên (Task 1.3G Session Validity Audit)
+      let totalValidFrames = 0;
+      let totalBackendErrorFrames = 0;
+      allFrames.forEach(f => {
+        if (f.frame_status === 'VALID') totalValidFrames += 1;
+        if (f.backend_error) totalBackendErrorFrames += 1;
+      });
+      report.validity = {
+        total_recorded_frames: allFrames.length,
+        valid_frames: totalValidFrames,
+        backend_error_frames: totalBackendErrorFrames,
+        session_validity_ratio: allFrames.length > 0 ? Number((totalValidFrames / allFrames.length).toFixed(4)) : 0.0,
+        is_clean_holdout: (allFrames.length >= 10 && totalBackendErrorFrames === 0)
+      };
+
       const res = await savePilotEvaluation(sessionId, report, allFrames.length ? allFrames : null);
 
-      if (res.success) {
+      if (res && res.success) {
         setSaveStatus({
           type: 'success',
           message: `Đã lưu thành công vào: backend/data/diagnostics/${res.filename}`,
-          filepath: res.filepath
+          filepath: res.filepath,
+          filename: res.filename
         });
+
+        // Đồng thời tự động kích hoạt tải file JSON về máy người dùng
+        try {
+          const jsonStr = JSON.stringify(report, null, 2);
+          const blob = new Blob([jsonStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const downloadAnchor = document.createElement('a');
+          downloadAnchor.href = url;
+          downloadAnchor.download = res.filename || `pilot_eval_29_${sessionId}.json`;
+          document.body.appendChild(downloadAnchor);
+          downloadAnchor.click();
+          setTimeout(() => {
+            if (document.body.contains(downloadAnchor)) {
+              document.body.removeChild(downloadAnchor);
+            }
+            URL.revokeObjectURL(url);
+          }, 500);
+        } catch (downloadErr) {
+          console.warn('[HUD] Không thể tự động kích hoạt tải trình duyệt:', downloadErr);
+        }
       } else {
         setSaveStatus({
           type: 'error',
-          message: res.error || 'Lỗi khi lưu vào backend'
+          message: res?.error || 'Lỗi khi lưu vào backend'
         });
       }
     } catch (err) {
       setSaveStatus({
         type: 'error',
-        message: err.message
+        message: err.message || 'Lỗi kết nối khi gửi dữ liệu lưu'
       });
     }
   };
 
-  // --- Tải file JSON về máy trực tiếp ---
+  // --- Tải file JSON về máy trực tiếp (Dùng Blob URL chuẩn browser) ---
   const handleDownloadJSON = () => {
-    const report = buildEvaluationReport(sessionId, resultsByLetter, {
-      trialsPerLetter: totalReps,
-      trialDurationSec,
-      mode: testMode,
-      testedTarget: testMode === 'single_letter' ? selectedLetter : 'ALL_29'
-    });
+    try {
+      const report = buildEvaluationReport(sessionId, resultsByLetter, {
+        trialsPerLetter: totalReps,
+        trialDurationSec,
+        mode: testMode,
+        testedTarget: testMode === 'single_letter' ? selectedLetter : 'ALL_29'
+      });
 
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(report, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `pilot_eval_29_${sessionId}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+      const jsonStr = JSON.stringify(report, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.href = url;
+      downloadAnchor.download = `pilot_eval_29_${sessionId}.json`;
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      setTimeout(() => {
+        if (document.body.contains(downloadAnchor)) {
+          document.body.removeChild(downloadAnchor);
+        }
+        URL.revokeObjectURL(url);
+      }, 500);
+
+      setSaveStatus({
+        type: 'success',
+        message: `Đã tải file JSON về máy: pilot_eval_29_${sessionId}.json`
+      });
+    } catch (err) {
+      setSaveStatus({
+        type: 'error',
+        message: `Lỗi khi tải file JSON: ${err.message}`
+      });
+    }
   };
 
   // Nếu HUD chưa được bật mở từ nút ngoài Camera
@@ -435,11 +615,22 @@ export default function PilotTestingHUD({
 
   const letterTrials = resultsByLetter[selectedLetter] || [];
   const completedLetterTrials = letterTrials.filter(t => t.status !== 'SKIPPED');
+  const isSelectedDynamic = Boolean(DYNAMIC_DIACRITICS[selectedLetter]);
+  const letterPassedTrials = completedLetterTrials.filter(t => t.status === 'PASS').length;
+  const letterFailedTrials = completedLetterTrials.filter(t => t.status === 'NEEDS_FIX').length;
+  const letterInsufficientTrials = completedLetterTrials.filter(t => t.status === 'INSUFFICIENT_DATA').length;
+  const letterValidTrials = completedLetterTrials.filter(t => t.status !== 'INSUFFICIENT_DATA' && t.status !== 'NO_HAND').length;
+
   const letterMatchFrames = completedLetterTrials.reduce((sum, t) => sum + (t.matchFrames || 0), 0);
   const letterActiveFrames = completedLetterTrials.reduce((sum, t) => sum + (t.activeFrames || 0), 0);
-  const letterAccuracyPct = letterActiveFrames > 0
-    ? ((letterMatchFrames / letterActiveFrames) * 100).toFixed(1)
-    : '0.0';
+
+  const letterAccuracyPct = isSelectedDynamic
+    ? (completedLetterTrials.length > 0
+        ? ((letterPassedTrials / completedLetterTrials.length) * 100).toFixed(1)
+        : '0.0')
+    : (letterActiveFrames > 0
+        ? ((letterMatchFrames / letterActiveFrames) * 100).toFixed(1)
+        : '0.0');
 
   return (
     <div style={{
@@ -557,9 +748,12 @@ export default function PilotTestingHUD({
 
         {/* Thông tin tiến độ tổng thể */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '16px', fontSize: '12px' }}>
-          <span>Chữ đang kiểm thử: <strong style={{ fontSize: '16px', color: '#38bdf8' }}>{selectedLetter}</strong></span>
-          <span>Lượt: <strong style={{ color: '#f8fafc' }}>{currentRep} / {totalReps}</strong></span>
-          <span>Độ chính xác chữ {selectedLetter}: <strong style={{ color: Number(letterAccuracyPct) >= 70 ? '#4ade80' : '#f87171' }}>{letterAccuracyPct}%</strong></span>
+          <span>Chữ đang kiểm thử: <strong style={{ fontSize: '16px', color: '#38bdf8' }}>{selectedLetter}</strong>{isSelectedDynamic ? ' (Ký hiệu động)' : ''}</span>
+          <span>Lượt: <strong style={{ color: '#f8fafc' }}>{currentRep} / {totalReps}</strong> (Đã xong: {completedLetterTrials.length})</span>
+          {isSelectedDynamic && (
+            <span>Kết quả: <strong style={{ color: '#4ade80' }}>{letterPassedTrials} PASS</strong> / <strong style={{ color: '#f87171' }}>{letterFailedTrials} FAIL</strong>{letterInsufficientTrials > 0 ? ` / ${letterInsufficientTrials} thiếu data` : ''}</span>
+          )}
+          <span>{isSelectedDynamic ? 'Tỷ lệ PASS động' : 'Độ chính xác frame'} chữ {selectedLetter}: <strong style={{ color: Number(letterAccuracyPct) >= 70 ? '#4ade80' : '#f87171' }}>{letterAccuracyPct}%</strong></span>
         </div>
       </div>
 
@@ -577,7 +771,7 @@ export default function PilotTestingHUD({
           const count = trials.length;
           const isSelected = letter === selectedLetter;
           const passedCount = trials.filter(t => t.status === 'PASS').length;
-          const hasPassed = count > 0 && passedCount >= Math.ceil(count * 0.7);
+          const hasPassed = count >= totalReps && passedCount >= Math.ceil(totalReps * 0.7);
           const needsFix = count > 0 && !hasPassed;
 
           let bg = 'rgba(30, 41, 59, 0.5)';
@@ -604,9 +798,12 @@ export default function PilotTestingHUD({
               type="button"
               disabled={trialState === 'RECORDING' || trialState === 'COUNTDOWN'}
               onClick={() => {
+                selectedLetterRef.current = letter;
                 setSelectedLetter(letter);
-                setCurrentRep((resultsByLetter[letter]?.length || 0) + 1);
-                setTrialState('IDLE');
+                const nextRep = (resultsByLetter[letter]?.length || 0) + 1;
+                currentRepRef.current = nextRep;
+                setCurrentRep(nextRep);
+                transitionTrialState('IDLE');
               }}
               style={{
                 width: '42px',
@@ -666,14 +863,26 @@ export default function PilotTestingHUD({
           <div style={{ display: 'grid', gap: '10px' }}>
             {/* Thanh tiến độ 5.0s */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', marginBottom: '4px' }}>
                 <span style={{ color: '#ef4444', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', animation: 'pulse 1s infinite' }} />
-                  ĐANG THU THẬP DỮ LIỆU WEBCAM
+                  ĐANG THU THẬP DỮ LIỆU WEBCAM (LƯỢT {currentRep} / {totalReps})
                 </span>
-                <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 'bold' }}>
-                  {recordingElapsedSec.toFixed(1)}s / {trialDurationSec.toFixed(1)}s
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 'bold' }}>
+                    {recordingElapsedSec.toFixed(1)}s / {trialDurationSec.toFixed(1)}s
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleStopSession}
+                    className="btn btn-secondary"
+                    style={{ fontSize: '11px', padding: '2px 8px', background: 'rgba(239,68,68,0.2)', border: '1px solid #ef4444', color: '#f87171', cursor: 'pointer' }}
+                    title="Dừng phiên kiểm thử hiện tại"
+                  >
+                    <Square size={11} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                    Dừng
+                  </button>
+                </div>
               </div>
               <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
                 <div style={{
@@ -746,13 +955,25 @@ export default function PilotTestingHUD({
                 <div>
                   <h3 style={{ margin: 0, fontSize: '15px', color: lastTrialSummary.isPassed ? '#4ade80' : '#f87171' }}>
                     {lastTrialSummary.isPassed
-                      ? `LƯỢT ${lastTrialSummary.rep} ĐẠT — Khớp ${lastTrialSummary.matchPct}% chữ ${selectedLetter}`
-                      : `LƯỢT ${lastTrialSummary.rep} CẦN FIX — Chỉ khớp ${lastTrialSummary.matchPct}% chữ ${selectedLetter}`}
+                      ? (lastTrialSummary.isDynamic
+                          ? `LƯỢT ${lastTrialSummary.rep} ĐẠT — Đã xác nhận ký hiệu động ${selectedLetter}`
+                          : `LƯỢT ${lastTrialSummary.rep} ĐẠT — Khớp ${lastTrialSummary.matchPct}% chữ ${selectedLetter}`)
+                      : (lastTrialSummary.isDynamic
+                          ? (lastTrialSummary.status === 'NO_HAND'
+                              ? `LƯỢT ${lastTrialSummary.rep} — KHÔNG PHÁT HIỆN TAY`
+                              : (lastTrialSummary.status === 'INSUFFICIENT_DATA'
+                                  ? `LƯỢT ${lastTrialSummary.rep} — DỮ LIỆU KHÔNG ĐỦ (<5 frames)`
+                                  : `LƯỢT ${lastTrialSummary.rep} CẦN FIX — Chưa hoàn thành dấu ${selectedLetter}`))
+                          : `LƯỢT ${lastTrialSummary.rep} CẦN FIX — Chỉ khớp ${lastTrialSummary.matchPct}% chữ ${selectedLetter}`)}
                   </h3>
                   <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
-                    {lastTrialSummary.topConfusion
-                      ? `⚠️ Thường bị nhận diện nhầm sang chữ: "${lastTrialSummary.topConfusion}" (${lastTrialSummary.confusions[lastTrialSummary.topConfusion]} frames)`
-                      : 'Không có nhầm lẫn đáng kể.'}
+                    {lastTrialSummary.isDynamic ? (
+                      <span>Bằng chứng: Nền <strong>{lastTrialSummary.hasBaseEvidence ? 'ĐẠT' : 'THIẾU'}</strong> | Dấu <strong>{lastTrialSummary.hasDiacriticConfirmation ? 'ĐÃ XÁC NHẬN' : 'CHƯA XÁC NHẬN'}</strong></span>
+                    ) : (
+                      lastTrialSummary.topConfusion
+                        ? `⚠️ Thường bị nhận diện nhầm sang chữ: "${lastTrialSummary.topConfusion}" (${lastTrialSummary.confusions[lastTrialSummary.topConfusion]} frames)`
+                        : 'Không có nhầm lẫn đáng kể.'
+                    )}
                   </div>
                 </div>
               </div>
@@ -812,7 +1033,7 @@ export default function PilotTestingHUD({
             <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 12px' }}>
               Đã thu thập dữ liệu webcam cho các chữ cái được chỉ định. Vui lòng lưu file JSON vào backend/data/diagnostics.
             </p>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 onClick={() => setShowScoreboard(true)}
@@ -825,12 +1046,60 @@ export default function PilotTestingHUD({
                 type="button"
                 onClick={handleSaveDiagnostics}
                 className="btn btn-secondary"
-                style={{ fontSize: '12px', padding: '6px 14px', background: '#1e3a8a', color: '#93c5fd' }}
+                style={{
+                  fontSize: '12px',
+                  padding: '6px 14px',
+                  background: saveStatus?.type === 'success' ? '#15803d' : '#1e3a8a',
+                  borderColor: saveStatus?.type === 'success' ? '#22c55e' : '#3b82f6',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
               >
-                <Save size={13} style={{ marginRight: 4 }} />
-                Lưu vào backend/data/diagnostics
+                {saveStatus?.type === 'loading' ? (
+                  <span>Đang lưu...</span>
+                ) : saveStatus?.type === 'success' ? (
+                  <>
+                    <CheckCircle2 size={14} color="#4ade80" />
+                    Đã lưu thành công!
+                  </>
+                ) : (
+                  <>
+                    <Save size={13} />
+                    Lưu vào backend/data/diagnostics
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadJSON}
+                className="btn btn-secondary"
+                style={{ fontSize: '12px', padding: '6px 14px', background: '#0f766e', borderColor: '#14b8a6', color: '#ccfbf1', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Download size={13} />
+                Tải file JSON về máy
               </button>
             </div>
+
+            {saveStatus && (
+              <div style={{
+                marginTop: '12px',
+                padding: '8px 14px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                background: saveStatus.type === 'success' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                border: `1px solid ${saveStatus.type === 'success' ? '#22c55e' : '#ef4444'}`,
+                color: saveStatus.type === 'success' ? '#4ade80' : '#f87171',
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}>
+                <span>{saveStatus.message}</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -935,7 +1204,7 @@ export default function PilotTestingHUD({
             style={{ fontSize: '11px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}
           >
             <Download size={13} />
-            Tải JSON
+            Tải file JSON về máy
           </button>
           <button
             type="button"
@@ -947,13 +1216,24 @@ export default function PilotTestingHUD({
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              background: '#1e3a8a',
-              borderColor: '#3b82f6',
-              color: '#bfdbfe'
+              background: saveStatus?.type === 'success' ? '#15803d' : '#1e3a8a',
+              borderColor: saveStatus?.type === 'success' ? '#22c55e' : '#3b82f6',
+              color: '#fff'
             }}
           >
-            <Save size={13} />
-            Lưu vào backend\data\diagnostics
+            {saveStatus?.type === 'loading' ? (
+              <span>Đang lưu...</span>
+            ) : saveStatus?.type === 'success' ? (
+              <>
+                <Check size={13} />
+                Đã lưu thành công!
+              </>
+            ) : (
+              <>
+                <Save size={13} />
+                Lưu vào backend\data\diagnostics
+              </>
+            )}
           </button>
         </div>
       </footer>
@@ -1164,38 +1444,82 @@ export default function PilotTestingHUD({
               padding: '14px 20px',
               borderTop: '1px solid rgba(255,255,255,0.1)',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
+              flexDirection: 'column',
+              gap: '10px',
               background: 'rgba(0,0,0,0.2)'
             }}>
-              <button
-                type="button"
-                onClick={() => setShowScoreboard(false)}
-                className="btn btn-secondary"
-                style={{ fontSize: '12px', padding: '6px 14px' }}
-              >
-                Đóng
-              </button>
+              {saveStatus && (
+                <div style={{
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  background: saveStatus.type === 'success' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                  border: `1px solid ${saveStatus.type === 'success' ? '#22c55e' : '#ef4444'}`,
+                  color: saveStatus.type === 'success' ? '#4ade80' : '#f87171',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <span>{saveStatus.message}</span>
+                  <button
+                    type="button"
+                    onClick={() => setSaveStatus(null)}
+                    style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
 
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                 <button
                   type="button"
-                  onClick={handleDownloadJSON}
+                  onClick={() => setShowScoreboard(false)}
                   className="btn btn-secondary"
-                  style={{ fontSize: '12px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  style={{ fontSize: '12px', padding: '6px 14px' }}
                 >
-                  <Download size={14} />
-                  Tải file JSON
+                  Đóng
                 </button>
-                <button
-                  type="button"
-                  onClick={handleSaveDiagnostics}
-                  className="btn btn-primary"
-                  style={{ fontSize: '12px', padding: '6px 16px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                >
-                  <Save size={14} />
-                  Lưu vào backend\data\diagnostics
-                </button>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={handleDownloadJSON}
+                    className="btn btn-secondary"
+                    style={{ fontSize: '12px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Download size={14} />
+                    Tải file JSON về máy
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveDiagnostics}
+                    className="btn btn-primary"
+                    style={{
+                      fontSize: '12px',
+                      padding: '6px 16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: saveStatus?.type === 'success' ? '#15803d' : '#2563eb',
+                      borderColor: saveStatus?.type === 'success' ? '#22c55e' : '#3b82f6'
+                    }}
+                  >
+                    {saveStatus?.type === 'loading' ? (
+                      <span>Đang lưu...</span>
+                    ) : saveStatus?.type === 'success' ? (
+                      <>
+                        <Check size={14} />
+                        Đã lưu thành công!
+                      </>
+                    ) : (
+                      <>
+                        <Save size={14} />
+                        Lưu vào backend\data\diagnostics
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

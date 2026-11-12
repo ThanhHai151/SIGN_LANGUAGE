@@ -186,11 +186,51 @@ export function trialIsValid({ completed, durationSec, loggingInterrupted, stabl
     queuedFrameCount === loggedFrameCount && queuedFrameCount === submittedFrameCount;
 }
 
+export const DYNAMIC_DIACRITICS = Object.freeze({
+  'Ă': { base: 'A' },
+  'Â': { base: 'A' },
+  'Ê': { base: 'E' },
+  'Đ': { base: 'D' },
+  'Ơ': { base: 'O' },
+  'Ô': { base: 'O' },
+  'Ư': { base: 'U' }
+});
+
+/**
+ * Kiểm tra xem một frame có phát hiện bàn tay hay không
+ * Đảm bảo tương thích ngược: boolean hand_detected -> has_hands -> landmarks -> predicted letter
+ */
+export function isHandDetectedInFrame(frame) {
+  if (!frame) return false;
+  if (typeof frame.hand_detected === 'boolean') {
+    return frame.hand_detected;
+  }
+  if (typeof frame.has_hands === 'boolean') {
+    return frame.has_hands;
+  }
+  if (Array.isArray(frame.landmarks) && frame.landmarks.length > 0) {
+    return true;
+  }
+  const sign = frame.sign || frame.predicted_sign;
+  if (sign && sign !== 'NEUTRAL' && sign !== 'WAIT' && sign !== 'unknown' && Number(frame.confidence || 0) > 0) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Đánh giá chi tiết các frame thu được trong 1 lượt thử (5.0s)
+ * - 22 chữ cái tĩnh: Đánh giá theo tỷ lệ khớp khung hình matchPct >= 60.0% (giữ nguyên tuyệt đối)
+ * - 7 chữ cái động có dấu (Ă, Â, Ê, Đ, Ơ, Ư, Ô): Đánh giá dựa trên bằng chứng chữ nền + xác nhận dấu FSM
  */
 export function evaluateTrialFrames(frames, expectedSign, durationSec = 5.0) {
+  const isDynamic = Boolean(DYNAMIC_DIACRITICS[expectedSign]);
+  const expectedBase = isDynamic ? DYNAMIC_DIACRITICS[expectedSign].base : null;
+
   const totalFrames = frames.length;
+  const validFrames = frames.filter(f => !f.backend_error && f.frame_status !== 'BACKEND_ERROR');
+  const handFrames = validFrames.filter(isHandDetectedInFrame);
+
   let matchFrames = 0;
   let mismatchFrames = 0;
   let neutralFrames = 0;
@@ -198,7 +238,7 @@ export function evaluateTrialFrames(frames, expectedSign, durationSec = 5.0) {
   let totalConfidence = 0;
   let matchConfidence = 0;
 
-  frames.forEach(frame => {
+  handFrames.forEach(frame => {
     const sign = frame.sign || frame.predicted_sign || 'NEUTRAL';
     const conf = Number(frame.confidence || 0);
     totalConfidence += conf;
@@ -209,21 +249,84 @@ export function evaluateTrialFrames(frames, expectedSign, durationSec = 5.0) {
     } else if (sign === 'NEUTRAL' || sign === 'WAIT' || sign === 'unknown') {
       neutralFrames += 1;
     } else {
-      mismatchFrames += 1;
-      confusions[sign] = (confusions[sign] || 0) + 1;
+      // Đối với chữ động: frame thể hiện chữ nền hợp lệ không tính là mismatch nhầm lẫn
+      if (isDynamic && sign === expectedBase) {
+        // Frame chuẩn bị chữ nền hợp lệ
+      } else {
+        mismatchFrames += 1;
+        confusions[sign] = (confusions[sign] || 0) + 1;
+      }
     }
   });
 
-  const activeFrames = matchFrames + mismatchFrames;
-  const matchPct = activeFrames > 0 ? Number(((matchFrames / activeFrames) * 100).toFixed(1)) : 0.0;
+  let status = 'NEEDS_FIX';
+  let hasBaseEvidence = false;
+  let hasDiacriticConfirmation = false;
+  let activeFrames = 0;
+  let matchPct = 0.0;
   const avgConf = matchFrames > 0 ? Number((matchConfidence / matchFrames).toFixed(2)) : 0.0;
 
-  // Xác định trạng thái của trial
-  let status = 'NEEDS_FIX';
-  if (activeFrames === 0) {
-    status = 'NO_HAND';
-  } else if (matchPct >= 60.0) {
-    status = 'PASS';
+  if (isDynamic) {
+    // --- ĐÁNH GIÁ CHỮ ĐỘNG (Ă, Â, Ê, Đ, Ơ, Ư, Ô) ---
+    activeFrames = matchFrames + mismatchFrames;
+    matchPct = activeFrames > 0 ? Number(((matchFrames / activeFrames) * 100).toFixed(1)) : 0.0;
+
+    if (frames.length === 0 || validFrames.length === 0) {
+      status = 'INSUFFICIENT_DATA';
+    } else if (handFrames.length === 0) {
+      status = 'NO_HAND';
+    } else if (validFrames.length < 5) {
+      status = 'INSUFFICIENT_DATA';
+    } else {
+      // 1. Kiểm tra bằng chứng chữ nền hợp lệ (ít nhất 2 frames chữ nền hoặc FSM base)
+      const baseFrames = validFrames.filter(f => {
+        const sign = f.sign || f.predicted_sign;
+        const fsmBase = f.diacritic_fsm?.base_label;
+        return sign === expectedBase || fsmBase === expectedBase;
+      });
+      hasBaseEvidence = baseFrames.length >= 2;
+
+      // 2. Kiểm tra sự kiện xác nhận dấu động học chuẩn xác (token hoặc FSM confirmation)
+      const diacriticConfirmFrames = validFrames.filter(f => {
+        const sign = f.sign || f.predicted_sign;
+        const isTarget = (sign === expectedSign);
+        const tokenMatch = (f.new_token === expectedSign);
+        const fsmConfirmed = Boolean(f.confirmed && isTarget);
+        const fsmDetails = f.classifier_details?.diacritic_fsm || f.diacritic_fsm;
+        const fsmStateConfirmed = Boolean(
+          fsmDetails &&
+          fsmDetails.state === 'DIACRITIC_CONFIRMED' &&
+          (isTarget || fsmDetails.diacritic_detected === expectedSign)
+        );
+
+        // Chốt chặn an toàn: Tuyệt đối KHÔNG chấp nhận chỉ riêng fsmSource && isTarget nếu FSM chưa thực sự xác nhận
+        return !f.backend_error && (tokenMatch || fsmConfirmed || fsmStateConfirmed);
+      });
+      hasDiacriticConfirmation = diacriticConfirmFrames.length >= 1;
+
+      // 3. Phân định PASS vs NEEDS_FIX vs INSUFFICIENT_DATA
+      if (hasDiacriticConfirmation && hasBaseEvidence) {
+        status = 'PASS';
+      } else {
+        status = 'NEEDS_FIX';
+      }
+    }
+  } else {
+    // --- ĐÁNH GIÁ 22 CHỮ TĨNH (CP7-HN-FIX: MẪU SỐ LÀ TOÀN BỘ HAND FRAMES) ---
+    activeFrames = matchFrames + mismatchFrames + neutralFrames;
+    matchPct = activeFrames > 0 ? Number(((matchFrames / activeFrames) * 100).toFixed(1)) : 0.0;
+
+    if (frames.length === 0 || validFrames.length === 0) {
+      status = 'INSUFFICIENT_DATA';
+    } else if (handFrames.length === 0) {
+      status = 'NO_HAND';
+    } else if (activeFrames < 5) {
+      status = 'INSUFFICIENT_DATA';
+    } else if (matchPct >= 60.0) {
+      status = 'PASS';
+    } else {
+      status = 'NEEDS_FIX';
+    }
   }
 
   // Chữ cái bị nhầm lẫn nhiều nhất
@@ -248,7 +351,10 @@ export function evaluateTrialFrames(frames, expectedSign, durationSec = 5.0) {
     topConfusion,
     status,
     isPassed: status === 'PASS',
-    durationSec
+    durationSec,
+    isDynamic,
+    hasBaseEvidence: isDynamic ? hasBaseEvidence : undefined,
+    hasDiacriticConfirmation: isDynamic ? hasDiacriticConfirmation : undefined
   };
 }
 
@@ -264,6 +370,7 @@ export function buildEvaluationReport(sessionId, resultsByTarget, config = {}) {
   let passedTrials = 0;
   let totalAccuracySum = 0;
   let evaluatedLetterCount = 0;
+  const requiredTrials = config.trialsPerLetter || PILOT_REPETITIONS;
 
   VSL_ALPHABET_29.forEach(letter => {
     const trials = resultsByTarget[letter] || [];
@@ -282,11 +389,25 @@ export function buildEvaluationReport(sessionId, resultsByTarget, config = {}) {
 
     const completed = trials.filter(t => t && t.status !== 'SKIPPED');
     const passed = completed.filter(t => t.status === 'PASS');
+    const failed = completed.filter(t => t.status === 'NEEDS_FIX');
+    const insufficient = completed.filter(t => t.status === 'INSUFFICIENT_DATA');
+    const noHand = completed.filter(t => t.status === 'NO_HAND');
+    const valid = completed.filter(t => t.status !== 'INSUFFICIENT_DATA' && t.status !== 'NO_HAND');
+
+    const isDynamic = Boolean(DYNAMIC_DIACRITICS[letter]);
+    const dynamicPassRate = completed.length > 0
+      ? Number(((passed.length / completed.length) * 100).toFixed(1))
+      : 0.0;
+
     const totalMatchFrames = completed.reduce((sum, t) => sum + (t.matchFrames || 0), 0);
     const totalActiveFrames = completed.reduce((sum, t) => sum + (t.activeFrames || 0), 0);
-    const accuracyPct = totalActiveFrames > 0
+    const frameAccuracyPct = totalActiveFrames > 0
       ? Number(((totalMatchFrames / totalActiveFrames) * 100).toFixed(1))
       : 0.0;
+
+    // Đối với 7 chữ động: Thước đo độ chính xác cốt lõi là tỷ lệ số lượt PASS (Dynamic Pass Rate)
+    // Đối với 22 chữ tĩnh: Giữ nguyên tỷ lệ frame khớp trên tổng số active frames
+    const accuracyPct = isDynamic ? dynamicPassRate : frameAccuracyPct;
 
     // Tổng hợp confusions
     const mergedConfusions = {};
@@ -297,9 +418,11 @@ export function buildEvaluationReport(sessionId, resultsByTarget, config = {}) {
     });
 
     let status = 'NEEDS_FIX';
-    if (totalActiveFrames === 0 && completed.some(t => t.status === 'NO_HAND')) {
+    if (completed.length === 0) {
+      status = 'UNTESTED';
+    } else if (completed.every(t => t.status === 'NO_HAND')) {
       status = 'NO_HAND';
-    } else if (accuracyPct >= 70.0 || (completed.length >= 5 && (passed.length / completed.length) >= 0.7)) {
+    } else if (completed.length >= requiredTrials && (passed.length / completed.length) >= 0.7) {
       status = 'PASS';
       lettersPassed.push(letter);
     } else {
@@ -314,8 +437,14 @@ export function buildEvaluationReport(sessionId, resultsByTarget, config = {}) {
 
     letters[letter] = {
       letter,
+      isDynamic,
       totalTrials: completed.length,
       passedTrials: passed.length,
+      failedTrials: failed.length,
+      validTrials: valid.length,
+      insufficientDataTrials: insufficient.length,
+      noHandTrials: noHand.length,
+      dynamicPassRate: isDynamic ? dynamicPassRate : undefined,
       accuracyPct,
       status,
       topConfusions: mergedConfusions,
@@ -325,7 +454,10 @@ export function buildEvaluationReport(sessionId, resultsByTarget, config = {}) {
         status: t.status,
         matchFrames: t.matchFrames,
         mismatchFrames: t.mismatchFrames,
-        confusions: t.confusions
+        confusions: t.confusions,
+        isDynamic: t.isDynamic,
+        hasBaseEvidence: t.hasBaseEvidence,
+        hasDiacriticConfirmation: t.hasDiacriticConfirmation
       }))
     };
   });

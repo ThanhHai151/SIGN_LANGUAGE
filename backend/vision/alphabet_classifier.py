@@ -174,8 +174,8 @@ H_HORIZ_D_RW_MAX = 1.48
 H_HORIZ_D_PW_MAX = 1.48
 H_HORIZ_R_CURL_MIN = 0.20
 H_HORIZ_P_CURL_MIN = 0.18
-H_HORIZ_RATIO_MIN = 0.50
-H_HORIZ_ANG_IM_MAX = 28.0
+H_HORIZ_RATIO_MIN = 0.45
+H_HORIZ_ANG_IM_MAX = 35.0
 H_HORIZ_D_IM_MAX = 0.72
 H_HORIZ_TIP_Y_MAX = 0.85
 
@@ -544,6 +544,8 @@ class VSLAlphabetClassifier:
         p_curl = feat["pinky_curl"]
         mcp_width_2d = feat.get("mcp_width_2d")
         thumb_ring_dist = feat.get("thumb_ring_dist")
+        idx_dx = float(feat.get("idx_dx", 0.0))
+        idx_dy = float(feat.get("idx_dy", 0.0))
 
         # -------------------------------------------------------------------
         # 1. Chữ B (4 ngón duỗi thẳng khép sát, ngón cái khép)
@@ -621,9 +623,12 @@ class VSLAlphabetClassifier:
 
         mcp_width_2d = feat.get("mcp_width_2d")
         thumb_ring_dist = feat.get("thumb_ring_dist")
+        idx_dx = float(feat.get("idx_dx", 0.0))
+        idx_dy = float(feat.get("idx_dy", 0.0))
 
         v_width_ok = (mcp_width_2d is not None and mcp_width_2d >= V_MCP_WIDTH_MIN)
         v_thumb_ok = (thumb_ring_dist is None or thumb_ring_dist >= V_THUMB_RING_MIN)
+        v_vertical_dominant = (abs(idx_dy) >= abs(idx_dx))
 
         if i_ext and m_ext and not r_ext and not p_ext:
             if (
@@ -638,6 +643,7 @@ class VSLAlphabetClassifier:
                 and idx_tip_y <= V_IDX_TIP_Y_MAX
                 and v_width_ok
                 and v_thumb_ok
+                and v_vertical_dominant
             ):
                 matches.append((
                     "V",
@@ -765,6 +771,8 @@ class VSLAlphabetClassifier:
         ang_im_dir = float(feat.get("ang_IM_dir", 180.0))
         mcp_width_2d = feat.get("mcp_width_2d")
         thumb_ring_dist = feat.get("thumb_ring_dist")
+        idx_dx = float(feat.get("idx_dx", 0.0))
+        idx_dy = float(feat.get("idx_dy", 0.0))
         thumb_mid_dist = feat.get("thumb_mid_dist")
 
         is_b_match = (
