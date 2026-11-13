@@ -1,0 +1,16 @@
+{
+  "n_holistic": 233,
+  "n_fallback": 268,
+  "holistic_duration_mean_ms": 2517.8,
+  "holistic_duration_median_ms": 2449.0,
+  "fallback_duration_mean_ms": 1198.8,
+  "fallback_duration_median_ms": 1189.0,
+  "holistic_fps_mean": 13.6,
+  "fallback_fps_mean": 26.1,
+  "fallback_near_default_pct": 100.0,
+  "fallback_avg_sh_l_std": 0.271825,
+  "fallback_avg_sh_r_std": 0.192931,
+  "fallback_avg_static_joints": 29.0,
+  "holistic_avg_sh_l_std": 0.5722114,
+  "holistic_avg_static_joints": 0.0
+}

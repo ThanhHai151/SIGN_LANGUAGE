@@ -1,0 +1,1363 @@
+﻿{
+  "S01": {
+    "benchmark_id": "S01",
+    "sstcn_index": 52,
+    "code_label": "ChĂ o",
+    "term": "ChĂ o",
+    "category": "BĂ i 3 - Giao tiáº¿p cÆ¡ báº£n vĂ  Cáº£m xĂºc",
+    "description": "Tay pháº£i khĂ©p, lĂ²ng bĂ n tay hÆ°á»›ng vá» phĂ­a trÆ°á»›c, Ä‘áº§u ngĂ³n tay hÆ°á»›ng lĂªn trĂªn, Ä‘áº·t bĂªn pháº£i, ngang táº§m vá»›i máº·t, Ä‘Æ°a nháº¹ tay sang hai bĂªn (láº·p láº¡i 1 â€“ 2 láº§n).",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_052%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Hi.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9IaS5wbmciLCJpYXQiOjE3NjE2NTc2OTgsImV4cCI6MTc2Njg0MTY5OH0.KCP_qDQinS-ZNAN9sOjt-rvNPiYZkDJCgT8iwelGdFc",
+    "lexicon_entries": [
+      {
+        "id": "q-chao",
+        "word": "chĂ o",
+        "keys": [
+          "chĂ o",
+          "xin chĂ o",
+          "chĂ o báº¡n",
+          "xin chao"
+        ],
+        "pos": "Äá»™ng tá»«",
+        "definition": "Tá» thĂ¡i Ä‘á»™ kĂ­nh trá»ng hoáº·c quan tĂ¢m Ä‘á»‘i vá»›i ai báº±ng lá»i nĂ³i hay cá»­ chá»‰, khi gáº·p nhau hoáº·c khi tá»« biá»‡t.",
+        "how_to": "Tay pháº£i khĂ©p, lĂ²ng bĂ n tay hÆ°á»›ng vá» phĂ­a trÆ°á»›c, Ä‘áº§u ngĂ³n tay hÆ°á»›ng lĂªn trĂªn, Ä‘áº·t bĂªn pháº£i, ngang táº§m vá»›i máº·t, Ä‘Æ°a nháº¹ tay sang hai bĂªn (láº·p láº¡i 1 â€“ 2 láº§n).",
+        "source": "QIPEDC",
+        "category": "BĂ i 3 - Giao tiáº¿p cÆ¡ báº£n vĂ  Cáº£m xĂºc",
+        "video_url": "https://qipedc.moet.gov.vn/videos/W00489.mp4",
+        "thumb_url": "https://qipedc.moet.gov.vn/thumbs/W00489.png",
+        "image_url": "https://qipedc.moet.gov.vn/Anh/W0048.png",
+        "variants": [
+          {
+            "region": "",
+            "label": "CĂ¡ch thá»ƒ hiá»‡n",
+            "url": "https://qipedc.moet.gov.vn/videos/W00489.mp4"
+          },
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_052%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 52,
+        "pose_key": "XIN_CHAO",
+        "proper_noun": false,
+        "score": 31674.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 50
+      }
+    ]
+  },
+  "S02": {
+    "benchmark_id": "S02",
+    "sstcn_index": 53,
+    "code_label": "Xin lá»—i",
+    "term": "Xin lá»—i",
+    "category": "BĂ i 3 - Giao tiáº¿p cÆ¡ báº£n vĂ  Cáº£m xĂºc",
+    "description": "Tay trĂ¡i khĂ©p, lĂ²ng bĂ n tay ngá»­a, Ä‘áº§u ngĂ³n tay hÆ°á»›ng cháº¿ch sang pháº£i, Ä‘áº·t trÆ°á»›c ngá»±c. Tay pháº£i khĂ©p, lĂ²ng bĂ n tay Ăºp, Ä‘áº§u ngĂ³n tay hÆ°á»›ng cháº¿ch sang trĂ¡i, Ä‘áº·t cĂ¡c Ä‘áº§u ngĂ³n tay vĂ o lĂ²ng bĂ n tay trĂ¡i, Ä‘Æ°a tay dá»c trong lĂ²ng bĂ n tay trĂ¡i (láº­p láº¡i 2 â€“ 3 láº§n).",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_053%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Sorry.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9Tb3JyeS5wbmciLCJpYXQiOjE3NjE2NTc2NDYsImV4cCI6MTc2Njg0MTY0Nn0.U10gqiNQO1APDIqJAkQ_hVJeUUiS-e3eTD-6jFX8JTA",
+    "lexicon_entries": [
+      {
+        "id": "q-xin-loi",
+        "word": "xin lá»—i",
+        "keys": [
+          "xin lá»—i",
+          "lá»—i",
+          "thá»© lá»—i",
+          "xin loi"
+        ],
+        "pos": "Äá»™ng tá»«",
+        "definition": "Xin Ä‘Æ°á»£c tha thá»© vĂ¬ Ä‘Ă£ biáº¿t lá»—i.",
+        "how_to": "Tay trĂ¡i khĂ©p, lĂ²ng bĂ n tay ngá»­a, Ä‘áº§u ngĂ³n tay hÆ°á»›ng cháº¿ch sang pháº£i, Ä‘áº·t trÆ°á»›c ngá»±c. Tay pháº£i khĂ©p, lĂ²ng bĂ n tay Ăºp, Ä‘áº§u ngĂ³n tay hÆ°á»›ng cháº¿ch sang trĂ¡i, Ä‘áº·t cĂ¡c Ä‘áº§u ngĂ³n tay vĂ o lĂ²ng bĂ n tay trĂ¡i, Ä‘Æ°a tay dá»c trong lĂ²ng bĂ n tay trĂ¡i (láº­p láº¡i 2 â€“ 3 láº§n).",
+        "source": "QIPEDC",
+        "category": "BĂ i 3 - Giao tiáº¿p cÆ¡ báº£n vĂ  Cáº£m xĂºc",
+        "video_url": "https://qipedc.moet.gov.vn/videos/W03990.mp4",
+        "thumb_url": "https://qipedc.moet.gov.vn/thumbs/W03990.png",
+        "image_url": "https://qipedc.moet.gov.vn/Anh/W0399.png",
+        "variants": [
+          {
+            "region": "",
+            "label": "CĂ¡ch thá»ƒ hiá»‡n",
+            "url": "https://qipedc.moet.gov.vn/videos/W03990.mp4"
+          },
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_053%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 53,
+        "pose_key": "XIN_LOI",
+        "proper_noun": false,
+        "score": 11172.9,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 117
+      }
+    ]
+  },
+  "S03": {
+    "benchmark_id": "S03",
+    "sstcn_index": 51,
+    "code_label": "TĂ´i",
+    "term": "TĂ´i",
+    "category": "BĂ i 3 - Giao tiáº¿p cÆ¡ báº£n vĂ  Cáº£m xĂºc",
+    "description": "NgĂ³n trá» duá»—i, cĂ¡c ngĂ³n cĂ²n láº¡i náº¯m, di chuyá»ƒn tá»« ngoĂ i vĂ o giá»¯a ngá»±c sao cho ngĂ³n trá» cháº¡m vĂ o ngá»±c.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_051%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "",
+    "lexicon_entries": [
+      {
+        "id": "gt-toi",
+        "word": "tĂ´i",
+        "keys": [
+          "tĂ´i",
+          "cá»§a tĂ´i",
+          "mĂ¬nh"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "NgĂ³n trá» duá»—i, cĂ¡c ngĂ³n cĂ²n láº¡i náº¯m, di chuyá»ƒn tá»« ngoĂ i vĂ o giá»¯a ngá»±c sao cho ngĂ³n trá» cháº¡m vĂ o ngá»±c.",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 3 - Giao tiáº¿p cÆ¡ báº£n vĂ  Cáº£m xĂºc",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_051%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_051%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 51,
+        "pose_key": "TOI",
+        "proper_noun": false,
+        "score": 711535.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 1
+      }
+    ]
+  },
+  "S04": {
+    "benchmark_id": "S04",
+    "sstcn_index": 60,
+    "code_label": "Báº¡n",
+    "term": "Báº¡n",
+    "category": "BĂ i 3 - Giao tiáº¿p cÆ¡ báº£n vĂ  Cáº£m xĂºc",
+    "description": "Hai tay khĂ©p, ngĂ³n cĂ¡i má»Ÿ ra, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o nhau, Ä‘áº§u ngĂ³n tay trĂ¡i hÆ°á»›ng sang pháº£i, Ä‘áº§u ngĂ³n tay pháº£i hÆ°á»›ng vá» trÆ°á»›c, Ä‘áº·t trÆ°á»›c ngá»±c, tay pháº£i á»Ÿ trĂªn tay trĂ¡i, báº¯t hai tay vĂ o nhau.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_060%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Friend.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9GcmllbmQucG5nIiwiaWF0IjoxNzYxNjU3NzIyLCJleHAiOjE3NjY4NDE3MjJ9.Bm9_rzfTmuB1MpdOVomEYKOsAnIHKY9aQiGTZ_dmfE8",
+    "lexicon_entries": [
+      {
+        "id": "q-ban",
+        "word": "báº¡n",
+        "keys": [
+          "báº¡n",
+          "ngÆ°á»i áº¥y",
+          "cáº­u",
+          "chá»‹",
+          "Ă´ng",
+          "bĂ ",
+          "báº¡n bĂ¨",
+          "báº¡n thĂ¢n",
+          "ban be",
+          "ban than"
+        ],
+        "pos": "Danh tá»«",
+        "definition": "NgÆ°á»i quen biáº¿t vĂ  cĂ³ quan há»‡ gáº§n gÅ©i, thĂ¢n thiá»‡n vá»›i nhau .",
+        "how_to": "Hai tay khĂ©p, ngĂ³n cĂ¡i má»Ÿ ra, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o nhau, Ä‘áº§u ngĂ³n tay trĂ¡i hÆ°á»›ng sang pháº£i, Ä‘áº§u ngĂ³n tay pháº£i hÆ°á»›ng vá» trÆ°á»›c, Ä‘áº·t trÆ°á»›c ngá»±c, tay pháº£i á»Ÿ trĂªn tay trĂ¡i, báº¯t hai tay vĂ o nhau.",
+        "source": "QIPEDC",
+        "category": "BĂ i 3 - Giao tiáº¿p cÆ¡ báº£n vĂ  Cáº£m xĂºc",
+        "video_url": "https://qipedc.moet.gov.vn/videos/W00110B.mp4",
+        "thumb_url": "https://qipedc.moet.gov.vn/thumbs/W00110B.png",
+        "image_url": null,
+        "variants": [
+          {
+            "region": "B",
+            "label": "Miá»n Báº¯c",
+            "url": "https://qipedc.moet.gov.vn/videos/W00110B.mp4"
+          },
+          {
+            "region": "T",
+            "label": "Miá»n Trung",
+            "url": "https://qipedc.moet.gov.vn/videos/W00110T.mp4"
+          },
+          {
+            "region": "N",
+            "label": "Miá»n Nam",
+            "url": "https://qipedc.moet.gov.vn/videos/W00110N.mp4"
+          },
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_060%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 60,
+        "pose_key": "BAN",
+        "proper_noun": false,
+        "score": 49923.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 23
+      }
+    ]
+  },
+  "S05": {
+    "benchmark_id": "S05",
+    "sstcn_index": 55,
+    "code_label": "Vui",
+    "term": "Vui",
+    "category": "BĂ i 3 - Giao tiáº¿p cÆ¡ báº£n vĂ  Cáº£m xĂºc",
+    "description": "Hai tay khĂ©p, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº§u ngĂ³n tay cá»§a hai tay cháº¡m vĂ o nhau, Ä‘áº·t sĂ¡t ngá»±c, Ä‘Æ°a nháº¹ Ä‘á»“ng thá»i cáº£ hai tay lĂªn trĂªn vĂ  vá» hai bĂªn (láº·p láº¡i 2 láº§n).",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_055%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Happy.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9IYXBweS5wbmciLCJpYXQiOjE3NjE3MDA5NzMsImV4cCI6MTc2Njg4NDk3M30._b3OUtX0MKnesG-hLJzynGdniZCX7zSfGp95b707zEY",
+    "lexicon_entries": [
+      {
+        "id": "gt-vui",
+        "word": "vui",
+        "keys": [
+          "vui"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Hai tay khĂ©p, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº§u ngĂ³n tay cá»§a hai tay cháº¡m vĂ o nhau, Ä‘áº·t sĂ¡t ngá»±c, Ä‘Æ°a nháº¹ Ä‘á»“ng thá»i cáº£ hai tay lĂªn trĂªn vĂ  vá» hai bĂªn (láº·p láº¡i 2 láº§n).",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 3 - Giao tiáº¿p cÆ¡ báº£n vĂ  Cáº£m xĂºc",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_055%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_055%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 55,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 19428.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 74
+      }
+    ]
+  },
+  "S06": {
+    "benchmark_id": "S06",
+    "sstcn_index": 56,
+    "code_label": "Buá»“n",
+    "term": "Buá»“n",
+    "category": "BĂ i 3 - Giao tiáº¿p cÆ¡ báº£n vĂ  Cáº£m xĂºc",
+    "description": "Tay pháº£i náº¯m, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº·t Ă¡p vĂ o giá»¯a ngá»±c, Ä‘Æ°a tay pháº£i xoay trĂ²n theo chiá»u kim Ä‘á»“ng há»“.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_056%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Sad.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9TYWQucG5nIiwiaWF0IjoxNzYxNzAxMDY2LCJleHAiOjE3NjY4ODUwNjZ9.6gPkLA_FiLFaf75aibXiUzY5_3H1DfSKfo_IDeFvHp8",
+    "lexicon_entries": [
+      {
+        "id": "gt-buon",
+        "word": "buá»“n",
+        "keys": [
+          "buá»“n",
+          "Ä‘au buá»“n",
+          "buá»“n bĂ£",
+          "tháº¥t vá»ng"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Tay pháº£i náº¯m, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº·t Ă¡p vĂ o giá»¯a ngá»±c, Ä‘Æ°a tay pháº£i xoay trĂ²n theo chiá»u kim Ä‘á»“ng há»“.",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 3 - Giao tiáº¿p cÆ¡ báº£n vĂ  Cáº£m xĂºc",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_056%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_056%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 56,
+        "pose_key": "BUON",
+        "proper_noun": false,
+        "score": 5266.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 284
+      }
+    ]
+  },
+  "S07": {
+    "benchmark_id": "S07",
+    "sstcn_index": 58,
+    "code_label": "Khá»e",
+    "term": "Khá»e",
+    "category": "BĂ i 3 - Giao tiáº¿p cÆ¡ báº£n vĂ  Cáº£m xĂºc",
+    "description": "Hai tay náº¯m, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o nhau, Ä‘áº·t á»Ÿ hai bĂªn, ngang táº§m vá»›i vai, gáº­p máº¡nh Ä‘á»“ng thá»i cáº£ hai tay vĂ o trong vĂ  xuá»‘ng dÆ°á»›i.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_058%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Strong.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9TdHJvbmcucG5nIiwiaWF0IjoxNzYxNzAxMDg3LCJleHAiOjE3NjY4ODUwODd9.EKqdvNQZJ_WSiVkrRWQHM7yHunsQjOSXU2KUD1M8Cek",
+    "lexicon_entries": [
+      {
+        "id": "gt-khoe",
+        "word": "khá»e",
+        "keys": [
+          "khá»e",
+          "khá»e máº¡nh",
+          "sá»©c khá»e",
+          "máº¡nh máº½",
+          "khoe manh"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Hai tay náº¯m, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o nhau, Ä‘áº·t á»Ÿ hai bĂªn, ngang táº§m vá»›i vai, gáº­p máº¡nh Ä‘á»“ng thá»i cáº£ hai tay vĂ o trong vĂ  xuá»‘ng dÆ°á»›i.",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 3 - Giao tiáº¿p cÆ¡ báº£n vĂ  Cáº£m xĂºc",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_058%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_058%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 58,
+        "pose_key": "KHOE_MANH",
+        "proper_noun": false,
+        "score": 5775.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 246
+      }
+    ]
+  },
+  "S08": {
+    "benchmark_id": "S08",
+    "sstcn_index": 94,
+    "code_label": "YĂªu",
+    "term": "YĂªu",
+    "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+    "description": "tay pháº£i ngĂ³n Ăºt vĂ  ngĂ³n cĂ¡i má»Ÿ, cĂ¡c ngĂ³n cĂ²n láº¡i náº¯m Ä‘áº·t trÆ°á»›c ngá»±c, sau Ä‘Ă³ cĂ¡c ngĂ³n náº¯m láº¡i, chá»‰ riĂªng ngĂ³n trá» má»Ÿ, Ä‘áº·t ngĂ³n trá» cháº¡m vĂ o nhĂ¢n trung xoay nháº¹ ra ngoĂ i.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_094%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Love.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9Mb3ZlLnBuZyIsImlhdCI6MTc2MTcwMjczMiwiZXhwIjoxNzY2ODg2NzMyfQ.Oj7ZZvRYghtFTEmwMEYRR050Jj1Uvb_GlrFdZYf-0Q4",
+    "lexicon_entries": [
+      {
+        "id": "gt-yeu",
+        "word": "yĂªu",
+        "keys": [
+          "yĂªu",
+          "yĂªu thÆ°Æ¡ng",
+          "thÆ°Æ¡ng",
+          "thĂ­ch"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "tay pháº£i ngĂ³n Ăºt vĂ  ngĂ³n cĂ¡i má»Ÿ, cĂ¡c ngĂ³n cĂ²n láº¡i náº¯m Ä‘áº·t trÆ°á»›c ngá»±c, sau Ä‘Ă³ cĂ¡c ngĂ³n náº¯m láº¡i, chá»‰ riĂªng ngĂ³n trá» má»Ÿ, Ä‘áº·t ngĂ³n trá» cháº¡m vĂ o nhĂ¢n trung xoay nháº¹ ra ngoĂ i.",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_094%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_094%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 94,
+        "pose_key": "YEU_THUONG",
+        "proper_noun": false,
+        "score": 34009.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 42
+      }
+    ]
+  },
+  "S09": {
+    "benchmark_id": "S09",
+    "sstcn_index": 44,
+    "code_label": "HĂ´m nay",
+    "term": "HĂ´m nay",
+    "category": "BĂ i 2 - Sá»‘ Ä‘áº¿m vĂ  Thá»i gian",
+    "description": "Hai tay khĂ©p, lĂ²ng bĂ n tay ngá»­a, Ä‘áº§u ngĂ³n tay hÆ°á»›ng vá» phĂ­a trÆ°á»›c, Ä‘áº·t á»Ÿ hai bĂªn, ngang táº§m ngá»±c, Ä‘Æ°a nháº¹ Ä‘á»“ng thá»i cáº£ hai tay xuá»‘ng dÆ°á»›i.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_044%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Today.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9Ub2RheS5wbmciLCJpYXQiOjE3NjE3MDIxOTIsImV4cCI6MTc2Njg4NjE5Mn0.VlHepvzkYsRXSI8ns9gHovc89jYsN6rcMfFT0Tc0ocI",
+    "lexicon_entries": [
+      {
+        "id": "gt-hom-nay",
+        "word": "hĂ´m nay",
+        "keys": [
+          "hĂ´m nay"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Hai tay khĂ©p, lĂ²ng bĂ n tay ngá»­a, Ä‘áº§u ngĂ³n tay hÆ°á»›ng vá» phĂ­a trÆ°á»›c, Ä‘áº·t á»Ÿ hai bĂªn, ngang táº§m ngá»±c, Ä‘Æ°a nháº¹ Ä‘á»“ng thá»i cáº£ hai tay xuá»‘ng dÆ°á»›i.",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 2 - Sá»‘ Ä‘áº¿m vĂ  Thá»i gian",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_044%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_044%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 44,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 4780.8,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 308
+      }
+    ]
+  },
+  "S10": {
+    "benchmark_id": "S10",
+    "sstcn_index": 67,
+    "code_label": "Äi",
+    "term": "Äi",
+    "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+    "description": "Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"V\", lĂ²ng bĂ n tay Ăºp, Ä‘áº§u ngĂ³n tay hÆ°á»›ng xuá»‘ng dÆ°á»›i, Ä‘áº·t trÆ°á»›c ngá»±c, Ä‘Æ°a tay vá» phĂ­a trÆ°á»›c Ä‘á»“ng thá»i cá»­ Ä‘á»™ng 2 ngĂ³n tay láº§n lÆ°á»£t ra â€“ vĂ o.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_067%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Walk.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9XYWxrLnBuZyIsImlhdCI6MTc2MTcwMTI4NSwiZXhwIjoxNzY2ODg1Mjg1fQ.GVdGopctvil0sK0wOw-JSTw2jPETRFni_nn21pWxuC4",
+    "lexicon_entries": [
+      {
+        "id": "q-di",
+        "word": "Ä‘i",
+        "keys": [
+          "Ä‘i"
+        ],
+        "pos": "Äá»™ng tá»«",
+        "definition": "(NgÆ°á»i, Ä‘á»™ng váº­t) tá»± di chuyá»ƒn tá»« chá»— naá»³ Ä‘áº¿n chá»— khĂ¡c báº±ng nhá»¯ng bÆ°á»›c chĂ¢n nháº¥c lĂªn, Ä‘áº·t xuá»‘ng liĂªn tiáº¿p.",
+        "how_to": "Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"V\", lĂ²ng bĂ n tay Ăºp, Ä‘áº§u ngĂ³n tay hÆ°á»›ng xuá»‘ng dÆ°á»›i, Ä‘áº·t trÆ°á»›c ngá»±c, Ä‘Æ°a tay vá» phĂ­a trÆ°á»›c Ä‘á»“ng thá»i cá»­ Ä‘á»™ng 2 ngĂ³n tay láº§n lÆ°á»£t ra â€“ vĂ o.",
+        "source": "QIPEDC",
+        "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+        "video_url": "https://qipedc.moet.gov.vn/videos/W01190.mp4",
+        "thumb_url": "https://qipedc.moet.gov.vn/thumbs/W01190.png",
+        "image_url": null,
+        "variants": [
+          {
+            "region": "",
+            "label": "CĂ¡ch thá»ƒ hiá»‡n",
+            "url": "https://qipedc.moet.gov.vn/videos/W01190.mp4"
+          },
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_067%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 67,
+        "pose_key": "DI",
+        "proper_noun": false,
+        "score": 254203.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 2
+      }
+    ]
+  },
+  "S11": {
+    "benchmark_id": "S11",
+    "sstcn_index": 68,
+    "code_label": "Äá»©ng",
+    "term": "Äá»©ng",
+    "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+    "description": "Tay trĂ¡i duá»—i tháº³ng, khĂ©p kĂ­n, lĂ²ng bĂ n tay hÆ°á»›ng lĂªn trĂªn, Ä‘áº§u cĂ¡c ngĂ³n tay hÆ°á»›ng ra ngoĂ i.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_068%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Stand.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9TdGFuZC5wbmciLCJpYXQiOjE3NjE3MDEzMDUsImV4cCI6MTc2Njg4NTMwNX0.WX4eToajBrD6U_u_ZJdRx3dWKqivcckEkiDf0UzVXEs",
+    "lexicon_entries": [
+      {
+        "id": "gt-dung",
+        "word": "Ä‘á»©ng",
+        "keys": [
+          "Ä‘á»©ng"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Tay trĂ¡i duá»—i tháº³ng, khĂ©p kĂ­n, lĂ²ng bĂ n tay hÆ°á»›ng lĂªn trĂªn, Ä‘áº§u cĂ¡c ngĂ³n tay hÆ°á»›ng ra ngoĂ i.",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_068%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_068%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 68,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 11887.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 112
+      }
+    ]
+  },
+  "S12": {
+    "benchmark_id": "S12",
+    "sstcn_index": 69,
+    "code_label": "Ngá»“i",
+    "term": "Ngá»“i",
+    "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+    "description": "Tay trĂ¡i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"U\", lĂ²ng bĂ n tay Ăºp, Ä‘áº§u ngĂ³n tay hÆ°á»›ng sang bĂªn pháº£i, Ä‘áº·t trÆ°á»›c ngá»±c. Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"V\", lĂ²ng bĂ n tay Ăºp, Ä‘áº§u ngĂ³n tay hÆ°á»›ng xuá»‘ng dÆ°á»›i, Ă´m láº¥y ngĂ³n trá» vĂ  ngĂ³n giá»¯a tay trĂ¡i.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_069%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Sit.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9TaXQucG5nIiwiaWF0IjoxNzYxNzAxMzIxLCJleHAiOjE3NjY4ODUzMjF9.qU4DlXuP9YsFVz8gQGku5uDyHuzomhYOfWvkSkaKAPc",
+    "lexicon_entries": [
+      {
+        "id": "q-ngoi-2",
+        "word": "ngá»“i",
+        "keys": [
+          "ngá»“i"
+        ],
+        "pos": "Äá»™ng tá»«",
+        "definition": "á» tÆ° tháº¿ Ä‘Ă­t Ä‘áº·t trĂªn máº·t ná»n hoáº·c chĂ¢n gáº­p láº¡i Ä‘á»ƒ Ä‘á»¡ toĂ n thĂ¢n.",
+        "how_to": "Tay trĂ¡i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"U\", lĂ²ng bĂ n tay Ăºp, Ä‘áº§u ngĂ³n tay hÆ°á»›ng sang bĂªn pháº£i, Ä‘áº·t trÆ°á»›c ngá»±c. Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"V\", lĂ²ng bĂ n tay Ăºp, Ä‘áº§u ngĂ³n tay hÆ°á»›ng xuá»‘ng dÆ°á»›i, Ă´m láº¥y ngĂ³n trá» vĂ  ngĂ³n giá»¯a tay trĂ¡i.",
+        "source": "QIPEDC",
+        "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+        "video_url": "https://qipedc.moet.gov.vn/videos/W02400B.mp4",
+        "thumb_url": "https://qipedc.moet.gov.vn/thumbs/W02400B.png",
+        "image_url": null,
+        "variants": [
+          {
+            "region": "B",
+            "label": "Miá»n Báº¯c",
+            "url": "https://qipedc.moet.gov.vn/videos/W02400B.mp4"
+          },
+          {
+            "region": "T",
+            "label": "Miá»n Trung",
+            "url": "https://qipedc.moet.gov.vn/videos/W02400T.mp4"
+          },
+          {
+            "region": "N",
+            "label": "Miá»n Nam",
+            "url": "https://qipedc.moet.gov.vn/videos/W02400N.mp4"
+          },
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_069%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 69,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 11851.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 113
+      }
+    ]
+  },
+  "S13": {
+    "benchmark_id": "S13",
+    "sstcn_index": 71,
+    "code_label": "Cháº¡y",
+    "term": "Cháº¡y",
+    "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+    "description": "Hai tay náº¯m, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o nhau, Ä‘áº·t song song trÆ°á»›c bá»¥ng, di chuyá»ƒn láº§n lÆ°á»£t hai tay ra - vĂ o (láº·p láº¡i 2 láº§n).",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_071%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Lay.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9MYXkucG5nIiwiaWF0IjoxNzYxNzAxMzU0LCJleHAiOjE3NjY4ODUzNTR9.BBR8rcuwd8z1i5ocF1CwB3GP1ClcZ3WjS2f7e170HIg",
+    "lexicon_entries": [
+      {
+        "id": "q-chay-2",
+        "word": "cháº¡y",
+        "keys": [
+          "cháº¡y"
+        ],
+        "pos": "Äá»™ng tá»«",
+        "definition": "Di chuyá»ƒn thĂ¢n thá»ƒ báº±ng nhá»¯ng bÆ°á»›c nhanh, máº¡nh vĂ  liĂªn tiáº¿p.",
+        "how_to": "Hai tay náº¯m, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o nhau, Ä‘áº·t song song trÆ°á»›c bá»¥ng, di chuyá»ƒn láº§n lÆ°á»£t hai tay ra - vĂ o (láº·p láº¡i 2 láº§n).",
+        "source": "QIPEDC",
+        "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+        "video_url": "https://qipedc.moet.gov.vn/videos/W00501.mp4",
+        "thumb_url": "https://qipedc.moet.gov.vn/thumbs/W00501.png",
+        "image_url": "https://qipedc.moet.gov.vn/Anh/W0050.png",
+        "variants": [
+          {
+            "region": "",
+            "label": "CĂ¡ch thá»ƒ hiá»‡n",
+            "url": "https://qipedc.moet.gov.vn/videos/W00501.mp4"
+          },
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_071%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 71,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 13550.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 95
+      }
+    ]
+  },
+  "S14": {
+    "benchmark_id": "S14",
+    "sstcn_index": 73,
+    "code_label": "Ngá»§",
+    "term": "Ngá»§",
+    "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+    "description": "Tay pháº£i khĂ©p, hÆ¡i khum láº¡i, lĂ²ng bĂ n tay hÆ°á»›ng sang trĂ¡i, Ä‘áº§u ngĂ³n tay hÆ°á»›ng lĂªn trĂªn, Ä‘áº·t Ă¡p vĂ o mĂ¡ pháº£i, Ä‘áº¥u hÆ¡i ngáº£ sang pháº£i.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_073%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Sleep.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9TbGVlcC5wbmciLCJpYXQiOjE3NjE3MDE0MTAsImV4cCI6MTc2Njg4NTQxMH0._fEJ1gnEpe-QaUF-_FLzQlDnnb0WkiEBOiY69QLMJHc",
+    "lexicon_entries": [
+      {
+        "id": "gt-ngu",
+        "word": "ngá»§",
+        "keys": [
+          "ngá»§",
+          "Ä‘i ngá»§",
+          "ngá»§ say",
+          "buá»“n ngá»§",
+          "di ngu"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Tay pháº£i khĂ©p, hÆ¡i khum láº¡i, lĂ²ng bĂ n tay hÆ°á»›ng sang trĂ¡i, Ä‘áº§u ngĂ³n tay hÆ°á»›ng lĂªn trĂªn, Ä‘áº·t Ă¡p vĂ o mĂ¡ pháº£i, Ä‘áº¥u hÆ¡i ngáº£ sang pháº£i.",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_073%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_073%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 73,
+        "pose_key": "DI_NGU",
+        "proper_noun": false,
+        "score": 13347.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 98
+      }
+    ]
+  },
+  "S15": {
+    "benchmark_id": "S15",
+    "sstcn_index": 75,
+    "code_label": "Ä‚n",
+    "term": "Ä‚n",
+    "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+    "description": "Tay pháº£i chá»¥m, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº·t trÆ°á»›c cá»•, di chuyá»ƒn tay lĂªn sĂ¡t miá»‡ng.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_075%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Eat.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9FYXQucG5nIiwiaWF0IjoxNzYxNzAxNDY2LCJleHAiOjE3NjY4ODU0NjZ9.Pk-sNi9QhYR2oN7TLhVnLumPsXyseIpEhFYfqK-YWT8",
+    "lexicon_entries": [
+      {
+        "id": "gt-an",
+        "word": "Äƒn",
+        "keys": [
+          "Äƒn",
+          "Äƒn cÆ¡m"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Tay pháº£i chá»¥m, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº·t trÆ°á»›c cá»•, di chuyá»ƒn tay lĂªn sĂ¡t miá»‡ng.",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_075%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_075%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 75,
+        "pose_key": "AN",
+        "proper_noun": false,
+        "score": 29738.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 52
+      }
+    ]
+  },
+  "S16": {
+    "benchmark_id": "S16",
+    "sstcn_index": 76,
+    "code_label": "Uá»‘ng",
+    "term": "Uá»‘ng",
+    "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+    "description": "Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay â€œCâ€, lĂ²ng bĂ n tay hÆ°á»›ng sang trĂ¡i, Ä‘áº·t trÆ°á»›c ngá»±c, Ä‘Æ°a tay lĂªn sĂ¡t miá»‡ng.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_076%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Drink.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9Ecmluay5wbmciLCJpYXQiOjE3NjE3MDE0NTYsImV4cCI6MTc2Njg4NTQ1Nn0.8TerXuWKDnpEGZy-kuor88A37sIvoJch9l1RyUAG_AY",
+    "lexicon_entries": [
+      {
+        "id": "gt-uong",
+        "word": "uá»‘ng",
+        "keys": [
+          "uá»‘ng",
+          "uá»‘ng nÆ°á»›c"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay â€œCâ€, lĂ²ng bĂ n tay hÆ°á»›ng sang trĂ¡i, Ä‘áº·t trÆ°á»›c ngá»±c, Ä‘Æ°a tay lĂªn sĂ¡t miá»‡ng.",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_076%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_076%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 76,
+        "pose_key": "UONG",
+        "proper_noun": false,
+        "score": 10762.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 120
+      }
+    ]
+  },
+  "S17": {
+    "benchmark_id": "S17",
+    "sstcn_index": 77,
+    "code_label": "Táº¯m",
+    "term": "Táº¯m",
+    "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+    "description": "Hai tay má»Ÿ xoĂ¨, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº§u ngĂ³n tay hÆ°á»›ng sang hai bĂªn, Ä‘áº·t Ă¡p vĂ o ngÆ°á»i, tay trĂ¡i Ä‘áº·t trĂªn, tay pháº£i Ä‘áº·t dÆ°á»›i, di chuyá»ƒn Ä‘á»“ng thá»i cáº£ hai tay sang hai bĂªn ngÆ°á»£c chiá»u nhau (láº·p láº¡i 2 â€“ 3 láº§n).",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_077%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Bathe.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9CYXRoZS5wbmciLCJpYXQiOjE3NjE3MDE2MDEsImV4cCI6MTc2Njg4NTYwMX0.6Z1ikprrWDpl0OEoPW_Mx7J9UY0EiztXfRGZEF5bd3E",
+    "lexicon_entries": [
+      {
+        "id": "gt-tam",
+        "word": "táº¯m",
+        "keys": [
+          "táº¯m"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Hai tay má»Ÿ xoĂ¨, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº§u ngĂ³n tay hÆ°á»›ng sang hai bĂªn, Ä‘áº·t Ă¡p vĂ o ngÆ°á»i, tay trĂ¡i Ä‘áº·t trĂªn, tay pháº£i Ä‘áº·t dÆ°á»›i, di chuyá»ƒn Ä‘á»“ng thá»i cáº£ hai tay sang hai bĂªn ngÆ°á»£c chiá»u nhau (láº·p láº¡i 2 â€“ 3 láº§n).",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 4 - Hoáº¡t Ä‘á»™ng hĂ ng ngĂ y",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_077%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_077%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 77,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 3090.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 472
+      }
+    ]
+  },
+  "S18": {
+    "benchmark_id": "S18",
+    "sstcn_index": 80,
+    "code_label": "Gia Ä‘Ă¬nh",
+    "term": "Gia Ä‘Ă¬nh",
+    "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+    "description": "Hai tay giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"G\"; lĂ²ng bĂ n tay hÆ°á»›ng vĂ o nhau, Ä‘áº§u ngĂ³n tay hÆ°á»›ng lĂªn trĂªn, Ä‘áº·t song song trÆ°á»›c ngá»±c, di chuyá»ƒn Ä‘á»“ng thá»i cáº£ hai tay theo Ä‘Æ°á»ng vĂ²ng cung vá» phĂ­a trÆ°á»›c vĂ  cháº¡m vĂ o nhau, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_080%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Family.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9GYW1pbHkucG5nIiwiaWF0IjoxNzYxNjU2NDQyLCJleHAiOjE3NjY4NDA0NDJ9.P_daCKmxoXViGF82e9KLUtMneH_OvfRR0SL_SNvmwis",
+    "lexicon_entries": [
+      {
+        "id": "gt-gia-dinh",
+        "word": "gia Ä‘Ă¬nh",
+        "keys": [
+          "gia Ä‘Ă¬nh",
+          "nhĂ ",
+          "gia dinh"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Hai tay giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"G\"; lĂ²ng bĂ n tay hÆ°á»›ng vĂ o nhau, Ä‘áº§u ngĂ³n tay hÆ°á»›ng lĂªn trĂªn, Ä‘áº·t song song trÆ°á»›c ngá»±c, di chuyá»ƒn Ä‘á»“ng thá»i cáº£ hai tay theo Ä‘Æ°á»ng vĂ²ng cung vá» phĂ­a trÆ°á»›c vĂ  cháº¡m vĂ o nhau, lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong.",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_080%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_080%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 80,
+        "pose_key": "GIA_DINH",
+        "proper_noun": false,
+        "score": 3189.9,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 454
+      }
+    ]
+  },
+  "S19": {
+    "benchmark_id": "S19",
+    "sstcn_index": 81,
+    "code_label": "Ă”ng",
+    "term": "Ă”ng",
+    "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+    "description": "Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"C\", lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº·t phĂ­a dÆ°á»›i sĂ¡t cáº§m, di chuyá»ƒn tay xuá»‘ng dÆ°á»›i, Ä‘á»“ng thá»i náº¯m tay láº¡i.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_081%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Grandpa.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9HcmFuZHBhLnBuZyIsImlhdCI6MTc2MTY1NjQ4NiwiZXhwIjoxNzY2ODQwNDg2fQ.imoDIDO1pKPJkIveudykvZsWw00-Kl5b1EFDzqTjSqo",
+    "lexicon_entries": [
+      {
+        "id": "gt-ong",
+        "word": "Ă´ng",
+        "keys": [
+          "Ă´ng"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"C\", lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº·t phĂ­a dÆ°á»›i sĂ¡t cáº§m, di chuyá»ƒn tay xuá»‘ng dÆ°á»›i, Ä‘á»“ng thá»i náº¯m tay láº¡i.",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_081%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_081%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 81,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 155744.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 4
+      }
+    ]
+  },
+  "S20": {
+    "benchmark_id": "S20",
+    "sstcn_index": 82,
+    "code_label": "BĂ ",
+    "term": "BĂ ",
+    "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+    "description": "Tay pháº£i náº¯m, ngĂ³n cĂ¡i vĂ  ngĂ³n trá» má»Ÿ ra, giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"C\", lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº·t vĂ o hai khoĂ© miá»‡ng, Ä‘Æ°a nháº¹ tay xuá»‘ng dÆ°á»›i Ä‘á»“ng thá»i hai ngĂ³n tay cháº¡m vĂ o nhau.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_082%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Grandma.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9HcmFuZG1hLnBuZyIsImlhdCI6MTc2MTY1NjQ3NSwiZXhwIjoxNzY2ODQwNDc1fQ.4tGwLi3yHDaHvrZlY6UyDIAKfIuj6IHMMBtTyytq5p8",
+    "lexicon_entries": [
+      {
+        "id": "gt-ba",
+        "word": "bĂ ",
+        "keys": [
+          "bĂ "
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Tay pháº£i náº¯m, ngĂ³n cĂ¡i vĂ  ngĂ³n trá» má»Ÿ ra, giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"C\", lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº·t vĂ o hai khoĂ© miá»‡ng, Ä‘Æ°a nháº¹ tay xuá»‘ng dÆ°á»›i Ä‘á»“ng thá»i hai ngĂ³n tay cháº¡m vĂ o nhau.",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_082%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_082%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 82,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 41271.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 29
+      }
+    ]
+  },
+  "S21": {
+    "benchmark_id": "S21",
+    "sstcn_index": 83,
+    "code_label": "Bá»‘",
+    "term": "Bá»‘",
+    "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+    "description": "Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"B\", lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº·t cháº¡m cĂ¡c Ä‘áº§u ngĂ³n tay vĂ o cáº§m.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_083%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Father.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9GYXRoZXIucG5nIiwiaWF0IjoxNzYxNjU2NDY0LCJleHAiOjE3NjY4NDA0NjR9.8JZqt-4QQwZ9zrg9z84_h-akDA8KerEmLPUbjbhg-6M",
+    "lexicon_entries": [
+      {
+        "id": "q-bo-2",
+        "word": "bá»‘",
+        "keys": [
+          "bá»‘"
+        ],
+        "pos": "Danh tá»«",
+        "definition": "Cha (cĂ³ thá»ƒ dĂ¹ng Ä‘á»ƒ xÆ°ng gá»i).",
+        "how_to": "Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"B\", lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº·t cháº¡m cĂ¡c Ä‘áº§u ngĂ³n tay vĂ o cáº§m.",
+        "source": "QIPEDC",
+        "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+        "video_url": "https://qipedc.moet.gov.vn/videos/W00325.mp4",
+        "thumb_url": "https://qipedc.moet.gov.vn/thumbs/W00325.png",
+        "image_url": null,
+        "variants": [
+          {
+            "region": "",
+            "label": "CĂ¡ch thá»ƒ hiá»‡n",
+            "url": "https://qipedc.moet.gov.vn/videos/W00325.mp4"
+          },
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_083%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 83,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 39165.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 30
+      }
+    ]
+  },
+  "S22": {
+    "benchmark_id": "S22",
+    "sstcn_index": 84,
+    "code_label": "Máº¹",
+    "term": "Máº¹",
+    "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+    "description": "Tay pháº£i khĂ©p, lĂ²ng bĂ n tay hÆ°á»›ng sang trĂ¡i, Ä‘áº§u ngĂ³n tay hÆ°á»›ng lĂªn trĂªn, Ä‘áº·t Ă¡p vĂ o mĂ¡ pháº£i.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_084%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Mother.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9Nb3RoZXIucG5nIiwiaWF0IjoxNzYxNjU2NDk5LCJleHAiOjE3NjY4NDA0OTl9.3OCFYKtGx3RO2tv_G_8ZfQoPo8uAryorCe34wwQCkR4",
+    "lexicon_entries": [
+      {
+        "id": "q-ma-giong-me",
+        "word": "mĂ¡ (giá»‘ng: máº¹)",
+        "keys": [
+          "mĂ¡",
+          "máº¹"
+        ],
+        "pos": "Danh tá»«",
+        "definition": "Máº¹ (thÆ°á»ng chá»‰ dĂ¹ng Ä‘á»ƒ xÆ°ng gá»i).",
+        "how_to": "Tay pháº£i khĂ©p, lĂ²ng bĂ n tay hÆ°á»›ng sang trĂ¡i, Ä‘áº§u ngĂ³n tay hÆ°á»›ng lĂªn trĂªn, Ä‘áº·t Ă¡p vĂ o mĂ¡ pháº£i.",
+        "source": "QIPEDC",
+        "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+        "video_url": "https://qipedc.moet.gov.vn/videos/W02110.mp4",
+        "thumb_url": "https://qipedc.moet.gov.vn/thumbs/W02110.png",
+        "image_url": "https://qipedc.moet.gov.vn/Anh/W0211.png",
+        "variants": [
+          {
+            "region": "",
+            "label": "CĂ¡ch thá»ƒ hiá»‡n",
+            "url": "https://qipedc.moet.gov.vn/videos/W02110.mp4"
+          },
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_084%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 84,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 983.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 1167
+      }
+    ]
+  },
+  "S23": {
+    "benchmark_id": "S23",
+    "sstcn_index": 91,
+    "code_label": "Anh trai",
+    "term": "Anh trai",
+    "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+    "description": "Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"N\", lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº§u ngĂ³n tay hÆ°á»›ng lĂªn trĂªn, Ä‘áº·t cháº¡m Ä‘áº§u ngĂ³n tay vĂ o cáº£m.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_091%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/ElderBrother.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9FbGRlckJyb3RoZXIucG5nIiwiaWF0IjoxNzYxNjU3NDYyLCJleHAiOjE3NjY4NDE0NjJ9.RtA_VIva9NfnW-yipru60kTvQEefUcNNZLuRx-JnOPo",
+    "lexicon_entries": [
+      {
+        "id": "gt-anh-trai",
+        "word": "anh trai",
+        "keys": [
+          "anh trai"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"N\", lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº§u ngĂ³n tay hÆ°á»›ng lĂªn trĂªn, Ä‘áº·t cháº¡m Ä‘áº§u ngĂ³n tay vĂ o cáº£m.",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_091%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_091%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 91,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 5457.9,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 274
+      }
+    ]
+  },
+  "S24": {
+    "benchmark_id": "S24",
+    "sstcn_index": 92,
+    "code_label": "Chá»‹ gĂ¡i",
+    "term": "Chá»‹ gĂ¡i",
+    "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+    "description": "Tay pháº£i náº¯m, ngĂ³n cĂ¡i vĂ  ngĂ³n trá» má»Ÿ ra, nÄƒm nháº¹ vĂ o tai (vá»‹ trĂ­ Ä‘eo khuyĂªn tai).",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_092%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/ElderSister.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9FbGRlclNpc3Rlci5wbmciLCJpYXQiOjE3NjE2NTc0NzMsImV4cCI6MTc2Njg0MTQ3M30.1DVfkwgjUk3VKIfn_PwzsuBltGsT0L-Vvk29rTjR5mU",
+    "lexicon_entries": [
+      {
+        "id": "gt-chi-gai",
+        "word": "chá»‹ gĂ¡i",
+        "keys": [
+          "chá»‹ gĂ¡i"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Tay pháº£i náº¯m, ngĂ³n cĂ¡i vĂ  ngĂ³n trá» má»Ÿ ra, nÄƒm nháº¹ vĂ o tai (vá»‹ trĂ­ Ä‘eo khuyĂªn tai).",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_092%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_092%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 92,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 6640.5,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 200
+      }
+    ]
+  },
+  "S25": {
+    "benchmark_id": "S25",
+    "sstcn_index": 86,
+    "code_label": "Em gĂ¡i",
+    "term": "Em gĂ¡i",
+    "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+    "description": "Tay pháº£i khĂ©p, lĂ²ng bĂ n tay Ăºp, Ä‘áº§u ngĂ³n tay hÆ°á»›ng sang trĂ¡i, Ä‘áº·t sĂ¡t giá»¯a ngá»±c, di chuyá»ƒn xuá»‘ng dÆ°á»›i.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_086%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/YoungerBrother.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9Zb3VuZ2VyQnJvdGhlci5wbmciLCJpYXQiOjE3NjE2NTY2NjAsImV4cCI6MTc2Njg0MDY2MH0.hT59o09dNlvqvgG1g7548ZfU4e3b20tjZlKELWtGl6c",
+    "lexicon_entries": [
+      {
+        "id": "q-em-gai",
+        "word": "em gĂ¡i",
+        "keys": [
+          "em gĂ¡i"
+        ],
+        "pos": "Danh tá»«",
+        "definition": "Em ruá»™t, thuá»™c ná»¯ giá»›i, phĂ¢n biá»‡t vá»›i em há», em dĂ¢u.",
+        "how_to": "Tay pháº£i khĂ©p, lĂ²ng bĂ n tay Ăºp, Ä‘áº§u ngĂ³n tay hÆ°á»›ng sang trĂ¡i, Ä‘áº·t sĂ¡t giá»¯a ngá»±c, di chuyá»ƒn xuá»‘ng dÆ°á»›i.",
+        "source": "QIPEDC",
+        "category": "BĂ i 5 - Gia Ä‘Ă¬nh",
+        "video_url": "https://qipedc.moet.gov.vn/videos/W01350.mp4",
+        "thumb_url": "https://qipedc.moet.gov.vn/thumbs/W01350.png",
+        "image_url": null,
+        "variants": [
+          {
+            "region": "",
+            "label": "CĂ¡ch thá»ƒ hiá»‡n",
+            "url": "https://qipedc.moet.gov.vn/videos/W01350.mp4"
+          },
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_086%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 86,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 6826.2,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 193
+      }
+    ]
+  },
+  "S26": {
+    "benchmark_id": "S26",
+    "sstcn_index": 95,
+    "code_label": "CĂ´ giĂ¡o",
+    "term": "CĂ´ giĂ¡o",
+    "category": "BĂ i 6 - Nghá» nghiá»‡p",
+    "description": "Tay pháº£i náº¯m, ngĂ³n cĂ¡i vĂ  ngĂ³n trá» má»Ÿ ra, náº¯m nháº¹ vĂ o tai (vá»‹ trĂ­ Ä‘eo khuyĂªn tai).",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_095%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Teacher.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9UZWFjaGVyLnBuZyIsImlhdCI6MTc2MTcwMTc2MSwiZXhwIjoxNzY2ODg1NzYxfQ.g0BvkqV5VDoangj2kAQNGj1s7pICdULMnBF98iU64zY",
+    "lexicon_entries": [
+      {
+        "id": "q-co-giao",
+        "word": "cĂ´ giĂ¡o",
+        "keys": [
+          "cĂ´ giĂ¡o"
+        ],
+        "pos": "Danh tá»«",
+        "definition": "NgÆ°á»i phá»¥ ná»¯ lĂ m nghá» dáº¡y há»c.",
+        "how_to": "Tay pháº£i náº¯m, ngĂ³n cĂ¡i vĂ  ngĂ³n trá» má»Ÿ ra, náº¯m nháº¹ vĂ o tai (vá»‹ trĂ­ Ä‘eo khuyĂªn tai).",
+        "source": "QIPEDC",
+        "category": "BĂ i 6 - Nghá» nghiá»‡p",
+        "video_url": "https://qipedc.moet.gov.vn/videos/W00812B.mp4",
+        "thumb_url": "https://qipedc.moet.gov.vn/thumbs/W00812B.png",
+        "image_url": null,
+        "variants": [
+          {
+            "region": "B",
+            "label": "Miá»n Báº¯c",
+            "url": "https://qipedc.moet.gov.vn/videos/W00812B.mp4"
+          },
+          {
+            "region": "T",
+            "label": "Miá»n Trung",
+            "url": "https://qipedc.moet.gov.vn/videos/W00812T.mp4"
+          },
+          {
+            "region": "N",
+            "label": "Miá»n Nam",
+            "url": "https://qipedc.moet.gov.vn/videos/W00812N.mp4"
+          },
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_095%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 95,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 2111.7,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 681
+      }
+    ]
+  },
+  "S27": {
+    "benchmark_id": "S27",
+    "sstcn_index": 98,
+    "code_label": "BĂ¡c sÄ©",
+    "term": "BĂ¡c sÄ©",
+    "category": "BĂ i 6 - Nghá» nghiá»‡p",
+    "description": "Tay pháº£i giá»‘ng sá»‘ tá»± nhiĂªn \"1\", lĂ²ng bĂ n tay Ăºp, Ä‘áº§u ngĂ³n tay hÆ°á»›ng sang trĂ¡i, Ä‘áº·t sĂ¡t giá»¯a trĂ¡n, Ä‘Æ°a tay theo hĂ¬nh dáº¥u \"+\".",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_098%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Doctor.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9Eb2N0b3IucG5nIiwiaWF0IjoxNzYxNzAxODIxLCJleHAiOjE3NjY4ODU4MjF9.Llyftv7_ccWG38lYEYsu3naWtcE0cFlklF2QPa_x4M4",
+    "lexicon_entries": [
+      {
+        "id": "gt-bac-si",
+        "word": "bĂ¡c sÄ©",
+        "keys": [
+          "bĂ¡c sÄ©"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Tay pháº£i giá»‘ng sá»‘ tá»± nhiĂªn \"1\", lĂ²ng bĂ n tay Ăºp, Ä‘áº§u ngĂ³n tay hÆ°á»›ng sang trĂ¡i, Ä‘áº·t sĂ¡t giá»¯a trĂ¡n, Ä‘Æ°a tay theo hĂ¬nh dáº¥u \"+\".",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 6 - Nghá» nghiá»‡p",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_098%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_098%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 98,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 4428.6,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 328
+      }
+    ]
+  },
+  "S28": {
+    "benchmark_id": "S28",
+    "sstcn_index": 100,
+    "code_label": "CĂ´ng an",
+    "term": "CĂ´ng an",
+    "category": "BĂ i 6 - Nghá» nghiá»‡p",
+    "description": "Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"C\", lĂ²ng bĂ n tay hÆ°á»›ng sang trĂ¡i, Ä‘áº·t cháº¡m vĂ o giá»¯a trĂ¡n, sau Ä‘Ă³ thay Ä‘á»•i tay giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"A\".",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_100%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Police.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9Qb2xpY2UucG5nIiwiaWF0IjoxNzYxNzAxODYzLCJleHAiOjE3NjY4ODU4NjN9.pV27CJxEJR0ly-vWPz3zoSJDBYevy5ZCvjCwNPXcyvc",
+    "lexicon_entries": [
+      {
+        "id": "gt-cong-an",
+        "word": "cĂ´ng an",
+        "keys": [
+          "cĂ´ng an"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"C\", lĂ²ng bĂ n tay hÆ°á»›ng sang trĂ¡i, Ä‘áº·t cháº¡m vĂ o giá»¯a trĂ¡n, sau Ä‘Ă³ thay Ä‘á»•i tay giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"A\".",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 6 - Nghá» nghiá»‡p",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_100%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_100%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 100,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 3843.6,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 388
+      }
+    ]
+  },
+  "S29": {
+    "benchmark_id": "S29",
+    "sstcn_index": 96,
+    "code_label": "CĂ´ng nhĂ¢n",
+    "term": "CĂ´ng nhĂ¢n",
+    "category": "BĂ i 6 - Nghá» nghiá»‡p",
+    "description": "Tay pháº£i náº¯m, ngĂ³n cĂ¡i vĂ  ngĂ³n trá» tay pháº£i cong láº¡i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"C\", lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº·t cháº¡m vĂ o ngá»±c trĂ¡i, Ä‘Æ°a nháº¹ tay sang pháº£i.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_096%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Teacher.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9UZWFjaGVyLnBuZyIsImlhdCI6MTc2MTcwMTc2MSwiZXhwIjoxNzY2ODg1NzYxfQ.g0BvkqV5VDoangj2kAQNGj1s7pICdULMnBF98iU64zY",
+    "lexicon_entries": [
+      {
+        "id": "gt-cong-nhan",
+        "word": "cĂ´ng nhĂ¢n",
+        "keys": [
+          "cĂ´ng nhĂ¢n"
+        ],
+        "pos": "",
+        "definition": "",
+        "how_to": "Tay pháº£i náº¯m, ngĂ³n cĂ¡i vĂ  ngĂ³n trá» tay pháº£i cong láº¡i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay \"C\", lĂ²ng bĂ n tay hÆ°á»›ng vĂ o trong, Ä‘áº·t cháº¡m vĂ o ngá»±c trĂ¡i, Ä‘Æ°a nháº¹ tay sang pháº£i.",
+        "source": "GiĂ¡o trĂ¬nh VSL (102 tá»«)",
+        "category": "BĂ i 6 - Nghá» nghiá»‡p",
+        "video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_096%20-%20LOOP%20-%20Videobolt.net.mp4",
+        "thumb_url": null,
+        "image_url": null,
+        "variants": [
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_096%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 96,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 8368.2,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 153
+      }
+    ]
+  },
+  "S30": {
+    "benchmark_id": "S30",
+    "sstcn_index": 101,
+    "code_label": "Bá»™ Ä‘á»™i",
+    "term": "Bá»™ Ä‘á»™i",
+    "category": "BĂ i 6 - Nghá» nghiá»‡p",
+    "description": "Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay â€œUâ€, lĂ²ng bĂ n tay hÆ°á»›ng sang trĂ¡i, Ä‘áº·t cháº¡m vĂ o trĂ¡n bĂªn pháº£i, Ä‘Æ°a tay xuá»‘ng cháº¡m vĂ o vai pháº£i.",
+    "supabase_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_101%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "image_url": "https://ffqmgqkauhwfxinatqol.supabase.co/storage/v1/object/sign/Sign_images/Soldier.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMTMzZjYwYi1mMjdiLTQ3M2UtODgzMS1mNTQxNzhmNTk5YjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJTaWduX2ltYWdlcy9Tb2xkaWVyLnBuZyIsImlhdCI6MTc2MTcwMTg5MiwiZXhwIjoxNzY2ODg1ODkyfQ.hbFg0mfm08UkAM3LFfpUULlsOKPIg7n1u-cEVl_0Qok",
+    "lexicon_entries": [
+      {
+        "id": "q-bo-doi",
+        "word": "bá»™ Ä‘á»™i",
+        "keys": [
+          "bá»™ Ä‘á»™i"
+        ],
+        "pos": "Danh tá»«",
+        "definition": "NgÆ°á»i trong quĂ¢n Ä‘á»™i (Viá»‡t Nam).",
+        "how_to": "Tay pháº£i giá»‘ng chá»¯ cĂ¡i ngĂ³n tay â€œUâ€, lĂ²ng bĂ n tay hÆ°á»›ng sang trĂ¡i, Ä‘áº·t cháº¡m vĂ o trĂ¡n bĂªn pháº£i, Ä‘Æ°a tay xuá»‘ng cháº¡m vĂ o vai pháº£i.",
+        "source": "QIPEDC",
+        "category": "BĂ i 6 - Nghá» nghiá»‡p",
+        "video_url": "https://qipedc.moet.gov.vn/videos/W00328B.mp4",
+        "thumb_url": "https://qipedc.moet.gov.vn/thumbs/W00328B.png",
+        "image_url": null,
+        "variants": [
+          {
+            "region": "B",
+            "label": "Miá»n Báº¯c",
+            "url": "https://qipedc.moet.gov.vn/videos/W00328B.mp4"
+          },
+          {
+            "region": "T",
+            "label": "Miá»n Trung",
+            "url": "https://qipedc.moet.gov.vn/videos/W00328T.mp4"
+          },
+          {
+            "region": "N",
+            "label": "Miá»n Nam",
+            "url": "https://qipedc.moet.gov.vn/videos/W00328N.mp4"
+          },
+          {
+            "region": "GT",
+            "label": "GiĂ¡o trĂ¬nh 102",
+            "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_101%20-%20LOOP%20-%20Videobolt.net.mp4"
+          }
+        ],
+        "sstcn_index": 101,
+        "pose_key": null,
+        "proper_noun": false,
+        "score": 4098.0,
+        "common": true,
+        "fingerspelling": false,
+        "rank": 365
+      }
+    ]
+  }
+}

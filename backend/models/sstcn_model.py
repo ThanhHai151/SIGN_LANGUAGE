@@ -6,6 +6,7 @@ Tương thích với bộ trọng số 102 lớp VSL được huấn luyện t�
 """
 
 import os
+import hashlib
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -97,6 +98,42 @@ class SSTCN_Attention(nn.Module):
         out = self.fc(x)               # [B, num_classes]
         return out
 
+def _inspect_checkpoint_metadata(path, ckpt):
+    """Trích xuất định danh và phân loại checkpoint thực tế."""
+    try:
+        h = hashlib.sha256()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(1024 * 1024), b""):
+                h.update(chunk)
+        sha256_hash = h.hexdigest()
+    except Exception:
+        sha256_hash = "unknown"
+
+    filename = os.path.basename(path)
+    epoch = None
+    schema_version = None
+    if isinstance(ckpt, dict):
+        epoch = ckpt.get("epoch")
+        schema_version = ckpt.get("schema_version")
+
+    # Phân loại checkpoint_type nghiêm ngặt (không suy đoán):
+    if sha256_hash == "2a8ddcc4d06c4f23aa7910caf77371848034dcdf8f4749d134c5894764cf9697" or (filename == "sign_sstcn_attention_model.pth" and epoch == 32):
+        ckpt_type = "historical"
+    elif sha256_hash == "370c5edcadfbc2b0b2476b6fb7dfe7ca3d53f68f3a2fcb13036e5b7ebabf9fad" or (schema_version == 1 and epoch == 10 and "reconstructed" in filename):
+        ckpt_type = "reconstructed_best"
+    elif sha256_hash == "301dc6bcf0d282acf029ad9c8c921766de6da51d5167f7becafbba630ae319ec" or (schema_version == 1 and epoch == 11 and "reconstructed" in filename):
+        ckpt_type = "reconstructed_last"
+    else:
+        ckpt_type = "unknown"
+
+    return {
+        "checkpoint_type": ckpt_type,
+        "checkpoint_filename": filename,
+        "checkpoint_sha256": sha256_hash,
+        "checkpoint_epoch": epoch,
+        "weights_path": os.path.abspath(path),
+    }
+
 def load_sstcn_model(weights_path=None, device='cpu', allow_untrained=False):
     """
     Tải và khởi tạo mô hình SSTCN_Attention với trọng số pretrained.
@@ -126,12 +163,20 @@ def load_sstcn_model(weights_path=None, device='cpu', allow_untrained=False):
                 loaded = True
                 model.has_weights = True
                 model.weights_path = os.path.abspath(path)
+                model.checkpoint_metadata = _inspect_checkpoint_metadata(path, ckpt)
                 break
             except Exception as e:
                 print(f"[SSTCN] Cảnh báo lỗi tải trọng số từ {path}: {e}")
 
     if not loaded:
         model.has_weights = False
+        model.checkpoint_metadata = {
+            "checkpoint_type": "unknown",
+            "checkpoint_filename": "none",
+            "checkpoint_sha256": "unknown",
+            "checkpoint_epoch": None,
+            "weights_path": "",
+        }
         if not allow_untrained:
             raise RuntimeError(f"Không tải được checkpoint SSTCN hợp lệ: {default_candidates}")
         

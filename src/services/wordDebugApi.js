@@ -47,11 +47,17 @@ export function fetchWordDebugStatus() {
   return request('/api/debug/word/status');
 }
 
-export function startWordDebugSession(targetClass, targetWord, trial) {
+export function startWordDebugSession(targetClass, targetWord, trial, sessionPrefix = 'A01_1_T01') {
   return request('/api/debug/word/session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'start', target_class: targetClass, target_word: targetWord, trial })
+    body: JSON.stringify({
+      action: 'start',
+      target_class: targetClass,
+      target_word: targetWord,
+      trial,
+      session_prefix: sessionPrefix
+    })
   });
 }
 
@@ -64,19 +70,32 @@ export function stopWordDebugSession() {
 }
 
 /**
- * Ghi nhận buffer frame bị reset (fire-and-forget, không chặn luồng camera).
- * Chỉ gọi được khi có phiên test đang chạy.
+ * Ghi nhận sự kiện debug từ frontend (fire-and-forget, không chặn luồng camera).
+ * Hỗ trợ: SEQUENCE_RESET, HOLISTIC_UNAVAILABLE, ENGINE_FALLBACK_BLOCKED, POSE_TRACKING_LOST.
  */
-export function logWordDebugReset(framesBeforeReset, reason) {
+export function logWordDebugEvent(eventType, payload = {}) {
   if (!wordDebugActive) return;
   fetch(`${API_BASE_URL}/api/debug/word/event`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      event_type: 'SEQUENCE_RESET',
-      frames_before_reset: framesBeforeReset,
-      reason
+      event_type: eventType,
+      ...payload
     })
   }).catch(() => {});
+}
+
+/**
+ * Ghi nhận buffer frame bị reset (fire-and-forget, không chặn luồng camera).
+ * Chỉ gọi được khi có phiên test đang chạy.
+ */
+export function logWordDebugReset(framesBeforeReset, reason, consecutiveMissing = 0, trackerEngine = 'unknown', debounceThreshold = 4) {
+  logWordDebugEvent('SEQUENCE_RESET', {
+    frames_before_reset: framesBeforeReset,
+    reason,
+    consecutive_missing_frames: consecutiveMissing,
+    tracker_engine: trackerEngine,
+    debounce_threshold: debounceThreshold
+  });
 }
 

@@ -1,0 +1,593 @@
+[
+  {
+    "stt": 1,
+    "proposed": "Xin chào",
+    "status": "ALIAS",
+    "sstcn_index": 52,
+    "code_label": "Chào",
+    "display_name": "Chào",
+    "q_entry_id": "q-chao",
+    "q_word": "chào",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W00489.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W00489.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_052%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Trong code là 'Chào' (index 52)"
+  },
+  {
+    "stt": 2,
+    "proposed": "Cảm ơn",
+    "status": "NO",
+    "sstcn_index": null,
+    "code_label": "NOT FOUND",
+    "display_name": "NOT FOUND",
+    "q_entry_id": null,
+    "q_word": null,
+    "q_video_url": null,
+    "variants_count": 0,
+    "variants": [],
+    "note": "Không tồn tại trong 63 output từ vựng của SSTCN_Attention."
+  },
+  {
+    "stt": 3,
+    "proposed": "Xin lỗi",
+    "status": "YES",
+    "sstcn_index": 53,
+    "code_label": "Xin lỗi",
+    "display_name": "Xin lỗi",
+    "q_entry_id": "q-xin-loi",
+    "q_word": "xin lỗi",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W03990.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W03990.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_053%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 4,
+    "proposed": "Vui",
+    "status": "YES",
+    "sstcn_index": 55,
+    "code_label": "Vui",
+    "display_name": "Vui",
+    "q_entry_id": "gt-vui",
+    "q_word": "vui",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_055%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_055%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 5,
+    "proposed": "Buồn",
+    "status": "YES",
+    "sstcn_index": 56,
+    "code_label": "Buồn",
+    "display_name": "Buồn",
+    "q_entry_id": "gt-buon",
+    "q_word": "buồn",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_056%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_056%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 6,
+    "proposed": "Yêu",
+    "status": "YES",
+    "sstcn_index": 94,
+    "code_label": "Yêu",
+    "display_name": "Yêu",
+    "q_entry_id": "gt-yeu",
+    "q_word": "yêu",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_094%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_094%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 7,
+    "proposed": "Ăn",
+    "status": "YES",
+    "sstcn_index": 75,
+    "code_label": "Ăn",
+    "display_name": "Ăn",
+    "q_entry_id": "gt-an",
+    "q_word": "ăn",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_075%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_075%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 8,
+    "proposed": "Uống",
+    "status": "YES",
+    "sstcn_index": 76,
+    "code_label": "Uống",
+    "display_name": "Uống",
+    "q_entry_id": "gt-uong",
+    "q_word": "uống",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_076%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_076%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 9,
+    "proposed": "Ngủ",
+    "status": "YES",
+    "sstcn_index": 73,
+    "code_label": "Ngủ",
+    "display_name": "Ngủ",
+    "q_entry_id": "gt-ngu",
+    "q_word": "ngủ",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_073%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_073%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 10,
+    "proposed": "Đi",
+    "status": "YES",
+    "sstcn_index": 67,
+    "code_label": "Đi",
+    "display_name": "Đi",
+    "q_entry_id": "q-di",
+    "q_word": "đi",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W01190.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W01190.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_067%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 11,
+    "proposed": "Về",
+    "status": "NO",
+    "sstcn_index": null,
+    "code_label": "NOT FOUND",
+    "display_name": "NOT FOUND",
+    "q_entry_id": null,
+    "q_word": null,
+    "q_video_url": null,
+    "variants_count": 0,
+    "variants": [],
+    "note": "Không tồn tại trong 63 output từ vựng của SSTCN_Attention."
+  },
+  {
+    "stt": 12,
+    "proposed": "Học",
+    "status": "NO",
+    "sstcn_index": null,
+    "code_label": "NOT FOUND",
+    "display_name": "NOT FOUND",
+    "q_entry_id": null,
+    "q_word": null,
+    "q_video_url": null,
+    "variants_count": 0,
+    "variants": [],
+    "note": "Không tồn tại trong 63 output từ vựng của SSTCN_Attention."
+  },
+  {
+    "stt": 13,
+    "proposed": "Làm việc",
+    "status": "NO",
+    "sstcn_index": null,
+    "code_label": "NOT FOUND",
+    "display_name": "NOT FOUND",
+    "q_entry_id": null,
+    "q_word": null,
+    "q_video_url": null,
+    "variants_count": 0,
+    "variants": [],
+    "note": "Không tồn tại trong 63 output từ vựng của SSTCN_Attention."
+  },
+  {
+    "stt": 14,
+    "proposed": "Chơi",
+    "status": "NO",
+    "sstcn_index": null,
+    "code_label": "NOT FOUND",
+    "display_name": "NOT FOUND",
+    "q_entry_id": null,
+    "q_word": null,
+    "q_video_url": null,
+    "variants_count": 0,
+    "variants": [],
+    "note": "Không tồn tại trong 63 output từ vựng của SSTCN_Attention."
+  },
+  {
+    "stt": 15,
+    "proposed": "Đọc",
+    "status": "NO",
+    "sstcn_index": null,
+    "code_label": "NOT FOUND",
+    "display_name": "NOT FOUND",
+    "q_entry_id": null,
+    "q_word": null,
+    "q_video_url": null,
+    "variants_count": 0,
+    "variants": [],
+    "note": "Không tồn tại trong 63 output từ vựng của SSTCN_Attention."
+  },
+  {
+    "stt": 16,
+    "proposed": "Viết",
+    "status": "NO",
+    "sstcn_index": null,
+    "code_label": "NOT FOUND",
+    "display_name": "NOT FOUND",
+    "q_entry_id": null,
+    "q_word": null,
+    "q_video_url": null,
+    "variants_count": 0,
+    "variants": [],
+    "note": "Không tồn tại trong 63 output từ vựng của SSTCN_Attention."
+  },
+  {
+    "stt": 17,
+    "proposed": "Bố",
+    "status": "YES",
+    "sstcn_index": 83,
+    "code_label": "Bố",
+    "display_name": "Bố",
+    "q_entry_id": "q-bo-2",
+    "q_word": "bố",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W00325.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W00325.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_083%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 18,
+    "proposed": "Mẹ",
+    "status": "YES",
+    "sstcn_index": 84,
+    "code_label": "Mẹ",
+    "display_name": "Mẹ",
+    "q_entry_id": "q-ma-giong-me",
+    "q_word": "má (giống: mẹ)",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W02110.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W02110.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_084%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 19,
+    "proposed": "Anh",
+    "status": "ALIAS",
+    "sstcn_index": 91,
+    "code_label": "Anh trai",
+    "display_name": "Anh trai",
+    "q_entry_id": "gt-anh-trai",
+    "q_word": "anh trai",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_091%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_091%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Trong code là 'Anh trai' (index 91)"
+  },
+  {
+    "stt": 20,
+    "proposed": "Chị",
+    "status": "ALIAS",
+    "sstcn_index": 92,
+    "code_label": "Chị gái",
+    "display_name": "Chị gái",
+    "q_entry_id": "gt-chi-gai",
+    "q_word": "chị gái",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_092%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_092%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Trong code là 'Chị gái' (index 92)"
+  },
+  {
+    "stt": 21,
+    "proposed": "Em",
+    "status": "ALIAS",
+    "sstcn_index": 93,
+    "code_label": "Em út",
+    "display_name": "Em út",
+    "q_entry_id": "q-em-ut",
+    "q_word": "em út",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W01353.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W01353.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_093%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Trong code phân tách thành 'Em út' (index 93)"
+  },
+  {
+    "stt": 22,
+    "proposed": "Ông",
+    "status": "YES",
+    "sstcn_index": 81,
+    "code_label": "Ông",
+    "display_name": "Ông",
+    "q_entry_id": "gt-ong",
+    "q_word": "ông",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_081%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_081%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 23,
+    "proposed": "Bà",
+    "status": "YES",
+    "sstcn_index": 82,
+    "code_label": "Bà",
+    "display_name": "Bà",
+    "q_entry_id": "gt-ba",
+    "q_word": "bà",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_082%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_082%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 24,
+    "proposed": "Gia đình",
+    "status": "YES",
+    "sstcn_index": 80,
+    "code_label": "Gia đình",
+    "display_name": "Gia đình",
+    "q_entry_id": "gt-gia-dinh",
+    "q_word": "gia đình",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_080%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_080%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 25,
+    "proposed": "Giáo viên",
+    "status": "ALIAS",
+    "sstcn_index": 95,
+    "code_label": "Cô giáo",
+    "display_name": "Cô giáo",
+    "q_entry_id": "q-co-giao",
+    "q_word": "cô giáo",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W00812B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/W00812B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/W00812T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/W00812N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_095%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Trong code là 'Cô giáo' (index 95)"
+  },
+  {
+    "stt": 26,
+    "proposed": "Học sinh",
+    "status": "NO",
+    "sstcn_index": null,
+    "code_label": "NOT FOUND",
+    "display_name": "NOT FOUND",
+    "q_entry_id": null,
+    "q_word": null,
+    "q_video_url": null,
+    "variants_count": 0,
+    "variants": [],
+    "note": "Không tồn tại trong 63 output từ vựng của SSTCN_Attention."
+  },
+  {
+    "stt": 27,
+    "proposed": "Bác sĩ",
+    "status": "YES",
+    "sstcn_index": 98,
+    "code_label": "Bác sĩ",
+    "display_name": "Bác sĩ",
+    "q_entry_id": "gt-bac-si",
+    "q_word": "bác sĩ",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_098%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_098%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 28,
+    "proposed": "Công an",
+    "status": "YES",
+    "sstcn_index": 100,
+    "code_label": "Công an",
+    "display_name": "Công an",
+    "q_entry_id": "gt-cong-an",
+    "q_word": "công an",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_100%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_100%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 29,
+    "proposed": "Công nhân",
+    "status": "YES",
+    "sstcn_index": 96,
+    "code_label": "Công nhân",
+    "display_name": "Công nhân",
+    "q_entry_id": "gt-cong-nhan",
+    "q_word": "công nhân",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_096%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_096%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ],
+    "note": "Khớp chính xác nhãn trong code."
+  },
+  {
+    "stt": 30,
+    "proposed": "Nghề nghiệp",
+    "status": "NO",
+    "sstcn_index": null,
+    "code_label": "NOT FOUND",
+    "display_name": "NOT FOUND",
+    "q_entry_id": null,
+    "q_word": null,
+    "q_video_url": null,
+    "variants_count": 0,
+    "variants": [],
+    "note": "Không tồn tại trong 63 output từ vựng của SSTCN_Attention."
+  }
+]

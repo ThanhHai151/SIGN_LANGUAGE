@@ -74,7 +74,20 @@ class VSLRecognizer:
         self._diag_lock = threading.Lock()
         self._diag_frame_counter = 0
 
-    def predict_sequence(self, sequence_data, threshold=None, mode=None):
+    def get_sstcn_checkpoint_info(self) -> dict:
+        """Truy xuất metadata định danh checkpoint SSTCN thực tế đã nạp thành công ở backend."""
+        meta = getattr(self.sstcn_model, "checkpoint_metadata", {}) or {}
+        device_str = "gpu" if getattr(self, "device", torch.device("cpu")).type == "cuda" else "cpu"
+        return {
+            "checkpoint_type": meta.get("checkpoint_type", "unknown"),
+            "checkpoint_filename": meta.get("checkpoint_filename", "unknown"),
+            "checkpoint_sha256": meta.get("checkpoint_sha256", "unknown"),
+            "checkpoint_epoch": meta.get("checkpoint_epoch"),
+            "model_device": device_str,
+            "weights_path": meta.get("weights_path", ""),
+        }
+
+    def predict_sequence(self, sequence_data, threshold=None, mode=None, debug_meta=None):
         """
         Nhận diện chuỗi chuyển động 30 frames qua SSTCN_Attention.
         sequence_data: List hoặc np.ndarray kích thước (30, 75, 3) hoặc flattened
@@ -101,12 +114,62 @@ class VSLRecognizer:
                     "error": f"Kích thước chuỗi không hợp lệ: {arr.shape}. Yêu cầu: (30, 75, 3)"
                 }
 
+            # Làm sạch NaN/Inf nếu có từ dữ liệu biên
+            if not np.all(np.isfinite(arr)):
+                arr = np.nan_to_num(arr, nan=0.0, posinf=0.0, neginf=0.0)
+
+            # A01.1: Chốt chặn cho mode 'words' — Không đưa Pose giả (hands_fallback_pose)
+            # hoặc chuỗi mất toàn bộ Pose/2 bàn tay vào mô hình SSTCN_Attention
+            if mode == "words":
+                from backend.vision.word_debugger import analyze_sequence_landmarks, word_debugger
+                lm_stats = analyze_sequence_landmarks(arr, debug_meta=debug_meta)
+                if not lm_stats["is_valid_for_words_sstcn"]:
+                    blocked_reason = lm_stats["blocked_reason"] or "invalid_landmarks"
+                    word_debugger.record_blocked_sequence(
+                        arr_input=arr,
+                        blocked_reason=blocked_reason,
+                        debug_meta=debug_meta,
+                        checkpoint_info=self.get_sstcn_checkpoint_info(),
+                        landmark_stats=lm_stats,
+                    )
+                    if blocked_reason == "hands_fallback_pose_blocked":
+                        label_msg = "Đã chặn Pose giả (Yêu cầu MediaPipe Holistic)"
+                        desc_msg = "Chế độ Từ vựng không nhận diện trên Pose giả từ Hands fallback. Vui lòng bật Toàn thân (Holistic 75 khớp)."
+                    elif blocked_reason == "holistic_pose_missing":
+                        label_msg = "Tạm mất khung xương thân trên (Pose) — Ngừng dự đoán"
+                        desc_msg = "MediaPipe Holistic chưa phát hiện đủ khớp vai/khuỷu tay trong chuỗi. Vui lòng giữ nửa thân trên trong khung hình."
+                    else:
+                        label_msg = "Không phát hiện bàn tay — Tạm ngừng dự đoán"
+                        desc_msg = "Cả hai bàn tay đều trống trong chuỗi 30 frame."
+                    return {
+                        "success": True,
+                        "fallback_blocked": True,
+                        "blocked_reason": blocked_reason,
+                        "landmarks_source": lm_stats["landmarks_source"],
+                        "sign": "NEUTRAL",
+                        "label": label_msg,
+                        "index": 102,
+                        "confidence": 0.0,
+                        "category": "Kiểm soát Landmark",
+                        "description": desc_msg,
+                        "video_url": "",
+                        "image_url": "",
+                        "entry_id": None,
+                        "variants": [],
+                        "confirmed": False,
+                        "new_token": None,
+                        "sentence": " ".join(self.sentence_tokens),
+                        "top_k": [],
+                        "inference_time_ms": 0.0
+                    }
+
             # Chuyển đổi sang định dạng đầu vào của SSTCN: (Batch=1, Channels=3, Time=30, Joints=75)
             # arr: (30, 75, 3) -> transpose(2, 0, 1) -> (3, 30, 75)
             tensor_seq = arr.transpose(2, 0, 1)
             tensor_seq = tensor_seq[np.newaxis, ...]  # (1, 3, 30, 75)
             tensor_input = torch.tensor(tensor_seq, dtype=torch.float32).to(self.device)
 
+            t_infer_start = time.time()
             with torch.no_grad():
                 logits = self.sstcn_model(tensor_input)
                 if mode == "words":
@@ -125,6 +188,8 @@ class VSLRecognizer:
 
                 max_prob = float(top_k_probs[0])
                 pred_idx = int(top_k_indices[0])
+
+            inference_latency_ms = round((time.time() - t_infer_start) * 1000, 2)
 
             confirmed = False
             new_token_added = None
@@ -173,7 +238,16 @@ class VSLRecognizer:
 
             from backend.vision.word_debugger import word_debugger
             if mode == "words":
-                word_debugger.record_prediction(arr, top_k_list, max_prob, sign_info["term"], threshold=threshold)
+                word_debugger.record_prediction(
+                    arr_input=arr,
+                    top_k_list=top_k_list,
+                    max_prob=max_prob,
+                    pred_term=sign_info["term"],
+                    threshold=threshold,
+                    inference_latency_ms=inference_latency_ms,
+                    debug_meta=debug_meta,
+                    checkpoint_info=self.get_sstcn_checkpoint_info()
+                )
 
             return {
                 "success": True,
@@ -190,7 +264,8 @@ class VSLRecognizer:
                 "confirmed": confirmed,
                 "new_token": new_token_added,
                 "sentence": " ".join(self.sentence_tokens),
-                "top_k": top_k_list
+                "top_k": top_k_list,
+                "inference_time_ms": inference_latency_ms
             }
 
         except Exception as e:

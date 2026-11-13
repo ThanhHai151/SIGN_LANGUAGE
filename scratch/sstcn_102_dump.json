@@ -1,0 +1,2480 @@
+[
+  {
+    "index": 0,
+    "term": "A",
+    "label": "A",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Nắm bàn tay lại, ngón cái duỗi ra, hướng lên trên.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_000%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-a",
+    "q_word": "a",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0489.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0489.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_000%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 1,
+    "term": "Ă",
+    "label": "Ă",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Nắm bàn tay lại, ngón cái duỗi ra, hướng lên trên. Sau đó, lòng bàn tay ngửa, ngón trỏ và ngón giữa xòe ra, gập ở đốt thứ hai, các ngón khác nắm.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_001%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-a-2",
+    "q_word": "ă",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0490B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/D0490B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/D0490T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/D0490N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_001%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 2,
+    "term": "Â",
+    "label": "Â",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Nắm bàn tay lại, ngón cái duỗi ra, hướng lên trên. Sau đó, lòng bàn tay úp, ngón trỏ và ngón giữa xòe ra, gập ở đốt thứ hai, các ngón khác nắm.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_002%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-a-3",
+    "q_word": "â",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0491B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/D0491B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/D0491T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/D0491N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_002%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 3,
+    "term": "B",
+    "label": "B",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Mở bàn tay, các ngón khép sát nhau, lòng bàn tay hướng ra ngoài, ngón cái cụp lại.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_003%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-b",
+    "q_word": "b",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0492.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0492.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_003%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 4,
+    "term": "C",
+    "label": "C",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Các ngón tay cong lại tạo thành hình vòng tròn giống chữ C.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_004%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-c",
+    "q_word": "c",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0493.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0493.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_004%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 5,
+    "term": "D",
+    "label": "D",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Duỗi ngón trỏ thẳng lên, các ngón khác nắm lại.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_005%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-d",
+    "q_word": "d",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0494.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0494.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_005%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 6,
+    "term": "Đ",
+    "label": "Đ",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Giống chữ D nhưng ngón trỏ cong lại.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_006%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-d-2",
+    "q_word": "đ",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0495.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0495.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_006%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 7,
+    "term": "E",
+    "label": "E",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Các ngón uốn cong vào, đầu ngón gần chạm lòng bàn tay.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_007%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-e",
+    "q_word": "e",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0496.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0496.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_007%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 8,
+    "term": "Ê",
+    "label": "Ê",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Các ngón uốn cong vào, đầu ngón gần chạm lòng bàn tay. Sau đó, lòng bàn tay úp, ngón trỏ và ngón giữa xòe ra, gập ở đốt thứ hai, các ngón khác nắm.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_008%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-e-2",
+    "q_word": "ê",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0497B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/D0497B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/D0497T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/D0497N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_008%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 9,
+    "term": "G",
+    "label": "G",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Ngón trỏ và ngón cái duỗi ngang song song, các ngón khác nắm lại.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_009%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-g",
+    "q_word": "g",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0498B.mp4",
+    "variants_count": 3,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/D0498B.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/D0498N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_009%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 10,
+    "term": "H",
+    "label": "H",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "ngón giữa và ngón cái chạm vào nhau, các ngón còn lại duỗi.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_010%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-h",
+    "q_word": "h",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0500B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/D0500B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/D0500T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/D0500N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_010%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 11,
+    "term": "I",
+    "label": "I",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Chỉ duỗi ngón út, các ngón khác nắm lại.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_011%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-i",
+    "q_word": "i",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0501.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0501.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_011%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 12,
+    "term": "K",
+    "label": "K",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Duỗi ngón trỏ và ngón giữa tạo hình chữ V, ngón cái chạm vào giữa hai ngón đó, các ngón còn lại nắm.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_012%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-k",
+    "q_word": "k",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0502.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0502.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_012%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 13,
+    "term": "L",
+    "label": "L",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Duỗi ngón trỏ và ngón cái vuông góc nhau tạo hình chữ L, các ngón còn lại nắm.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_013%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-l",
+    "q_word": "l",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0503.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0503.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_013%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 14,
+    "term": "M",
+    "label": "M",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Gập ngón cái và ngón út lại, ba ngón còn lại úp xuống, đưa mu bàn tay ra ngoài.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_014%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-m",
+    "q_word": "m",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0504.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0504.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_014%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 15,
+    "term": "N",
+    "label": "N",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Giống chữ M nhưng chỉ có ngón trỏ và ngón giữa úp xuống.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_015%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-n",
+    "q_word": "n",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0505.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0505.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_015%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 16,
+    "term": "O",
+    "label": "O",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Các ngón tay cong lại chạm đầu ngón tạo thành vòng tròn giống chữ O.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_016%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-o",
+    "q_word": "o",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0506.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0506.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_016%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 17,
+    "term": "Ô",
+    "label": "Ô",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Các ngón tay cong lại chạm đầu ngón tạo thành vòng tròn giống chữ O. Sau đó, lòng bàn tay úp, ngón trỏ và ngón giữa xòe ra, gập ở đốt thứ hai, các ngón khác nắm.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_017%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-o-2",
+    "q_word": "ô",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0507B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/D0507B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/D0507T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/D0507N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_017%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 18,
+    "term": "Ơ",
+    "label": "Ơ",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Các ngón tay cong lại chạm đầu ngón tạo thành vòng tròn giống chữ O. Đồng thời từ từ mở ngón út, cong lại ở đốt thứ hai, lắc nhẹ cổ tay từ trái sang phải",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_018%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-o-3",
+    "q_word": "ơ",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0508N.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/D0508N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_018%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 19,
+    "term": "P",
+    "label": "P",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Giống ký hiệu chữ K nhưng tay hướng xuống dưới, sao cho thành hình chữ V nằm ngang.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_019%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-p",
+    "q_word": "p",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0509B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/D0509B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/D0509T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/D0509N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_019%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 20,
+    "term": "Q",
+    "label": "Q",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Ngón trỏ và ngón cái tạo duỗi thẳng song song nhau, các ngón còn lại nắm, tay hướng xuống.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_020%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-q",
+    "q_word": "q",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0510.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0510.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_020%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 21,
+    "term": "R",
+    "label": "R",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Ngón giữa bắt chéo qua sau ngón trỏ, các ngón khác nắm lại, đưa lòng bàn tay về phía trước.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_021%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-r",
+    "q_word": "r",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0511.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0511.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_021%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 22,
+    "term": "S",
+    "label": "S",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "4 ngón chụm vào nhau, chạm vào khủy đốt ngón tay cái.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_022%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-s",
+    "q_word": "s",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0512.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0512.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_022%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 23,
+    "term": "T",
+    "label": "T",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "ngón trỏ bắt chéo qua ngón cái, các ngón còn lại duỗi, đưa lòng bàn tay về phía trước.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_023%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-t",
+    "q_word": "t",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0513B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/D0513B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/D0513T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/D0513N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_023%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 24,
+    "term": "U",
+    "label": "U",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Duỗi thẳng ngón trỏ và ngón giữa, khép vào nhau, các ngón còn lại nắm lại.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_024%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-u",
+    "q_word": "u",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0514.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0514.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_024%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 25,
+    "term": "Ư",
+    "label": "Ư",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Duỗi thẳng ngón trỏ và ngón giữa, khép vào nhau, các ngón còn lại nắm lại. ngón út mở, cong lại ở đốt thứ hai, các ngón khác nắm, di chuyển cả bàn tay từ trái sang phải",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_025%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-u-2",
+    "q_word": "ư",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0515N.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/D0515N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_025%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 26,
+    "term": "V",
+    "label": "V",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Duỗi ngón trỏ và ngón giữa tạo hình chữ V,, các ngón còn lại nắm lại.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_026%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-v",
+    "q_word": "v",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0516.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0516.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_026%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 27,
+    "term": "X",
+    "label": "X",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "ngón trỏ cong lại chạm vào ngón cái duỗi thẳng, các ngón còn lại nắm",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_027%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-x",
+    "q_word": "x",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0517B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/D0517B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/D0517T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/D0517N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_027%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 28,
+    "term": "Y",
+    "label": "Y",
+    "category": "Bài 1 - Bảng chữ cái",
+    "description": "Duỗi ngón cái và ngón út, các ngón còn lại nắm lại.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_028%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-y",
+    "q_word": "y",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0518N.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/D0518N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_028%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 29,
+    "term": "Số 1",
+    "label": "Số 1",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Duỗi ngón trỏ thẳng lên, các ngón còn lại nắm lại.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_029%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-1",
+    "q_word": "1",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0530.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0530.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_029%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 30,
+    "term": "Số 2",
+    "label": "Số 2",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Duỗi ngón trỏ và ngón giữa tạo hình chữ V.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_030%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-2",
+    "q_word": "2",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0531.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0531.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_030%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 31,
+    "term": "Số 3",
+    "label": "Số 3",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Duỗi ngón trỏ, ngón giữa và ngón đeo nhẫn.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_031%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-3",
+    "q_word": "3",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0532.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0532.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_031%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 32,
+    "term": "Số 4",
+    "label": "Số 4",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Duỗi bốn ngón tay (trừ ngón cái).",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_032%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-4",
+    "q_word": "4",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0533.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0533.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_032%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 33,
+    "term": "Số 5",
+    "label": "Số 5",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Xòe rộng cả năm ngón tay.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_033%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-5",
+    "q_word": "5",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0534.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0534.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_033%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 34,
+    "term": "Số 6",
+    "label": "Số 6",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Duỗi ngón cái và ngón út, các ngón còn lại nắm lại.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_034%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-6",
+    "q_word": "6",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0535B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/D0535B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/D0535T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/D0535N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_034%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 35,
+    "term": "Số 7",
+    "label": "Số 7",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Duỗi ngón trỏ và ngón cái vuông góc nhau, tạo hình chữ L.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_035%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-7",
+    "q_word": "7",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0536.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0536.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_035%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 36,
+    "term": "Số 8",
+    "label": "Số 8",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Duỗi ngón cái và ngón giữa, các ngón khác nắm lại.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_036%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-8",
+    "q_word": "8",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0537.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0537.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_036%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 37,
+    "term": "Số 9",
+    "label": "Số 9",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Duỗi ngón trỏ cong lại chạm đầu ngón cái, tạo hình tròn nhỏ.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_037%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-9",
+    "q_word": "9",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0538.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0538.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_037%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 38,
+    "term": "Số 10",
+    "label": "Số 10",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Duỗi ngón trỏ hướng lên, xoay cổ tay qua lại (hoặc duỗi ngón trỏ hai lần liên tiếp để biểu thị \"10\").",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_038%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-10",
+    "q_word": "10",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0539.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0539.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_038%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 39,
+    "term": "Thời gian",
+    "label": "Thời gian",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Tay trái khép, lòng bàn tay úp, đầu ngón tay hướng xuống dưới, đặt trước ngực. Tay phải giống số tự nhiên “1”, lòng bàn tay úp, đầu ngón tay hướng xuống dưới, đưa tay chuyển động vòng tròn theo chiều kim đồng hồ.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_039%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-thoi-gian",
+    "q_word": "thời gian",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_039%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_039%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 40,
+    "term": "Hỏi giờ",
+    "label": "Hỏi giờ",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Tay phải nắm, lòng bàn tay ngửa, đặt trước ngực, giữ nguyên cánh tay, mở xoè bàn tay ra (2 lần).",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_040%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-hoi-gio",
+    "q_word": "hỏi giờ",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_040%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_040%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 41,
+    "term": "Ngày",
+    "label": "Ngày",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Tay phải giống số tự nhiên \"1\", lòng bàn tay úp, đầu ngón tay hướng chếch sang trái, đặt trước ngực trái, đưa tay theo đường vòng cung sang phải đồng thời lòng bàn tay ngửa, đầu ngón tay hướng sang phải.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_041%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-ngay",
+    "q_word": "ngày",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_041%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_041%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 42,
+    "term": "Tháng",
+    "label": "Tháng",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Tay trái khép, lòng bàn tay hướng sang phải, đầu ngón tay hướng về phía trước, đặt trước ngực. Tay phải nắm, lòng bàn tay hướng sang trái, đặt áp vào lòng bàn tay phải, đưa tay xuống dưới.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_042%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-thang",
+    "q_word": "tháng",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W03167B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/W03167B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/W03167T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/W03167N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_042%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 43,
+    "term": "Năm",
+    "label": "Năm",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Hai tay nắm, lòng bàn tay hướng vào trong, đầu ngón tay hướng sang hai bên, đặt trước ngực, tay phải đặt trên tay trái, giữ nguyên tay trái, đưa tay phải theo một vòng tròn từ ngoài vào trong rồi đặt chạm trên tay trái.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_043%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-nam",
+    "q_word": "năm",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_043%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_043%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 44,
+    "term": "Hôm nay",
+    "label": "Hôm nay",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Hai tay khép, lòng bàn tay ngửa, đầu ngón tay hướng về phía trước, đặt ở hai bên, ngang tầm ngực, đưa nhẹ đồng thời cả hai tay xuống dưới.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_044%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-hom-nay",
+    "q_word": "hôm nay",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_044%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_044%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 45,
+    "term": "Hôm qua",
+    "label": "Hôm qua",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Tay phải nắm, ngón tay cái mở ra hướng thẳng lên trên, lòng bàn tay hướng sang trái, đặt phía trên vai phải, đưa tay gập về phía sau.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_045%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-hom-qua",
+    "q_word": "hôm qua",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_045%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_045%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 46,
+    "term": "Buổi sáng",
+    "label": "Buổi sáng",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Hai tay khép, lòng bàn tay hướng vào trong, đầu ngón tay hướng chếch về hai phía, đặt trước ngực, tay trái ở ngoài, tay phải ở trong, giữ nguyên tay trái, đưa tay phải theo đường vòng cung lên trên – sang phải.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_046%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-buoi-sang",
+    "q_word": "buổi sáng",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W00368B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/W00368B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/W00368T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/W00368N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_046%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 47,
+    "term": "Buổi trưa",
+    "label": "Buổi trưa",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Tay trái khép, lòng bàn tay ngửa, đặt ngang trước bụng. Tay phải giống chữ cái ngón tay \"T\", lòng bàn tay hướng sang trái, đầu ngón tay hướng lên trên, đặt chạm khuỷu tay vào lòng bàn tay trái.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_047%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-buoi-trua",
+    "q_word": "buổi trưa",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W00370B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/W00370B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/W00370T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/W00370N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_047%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 48,
+    "term": "Buổi chiều",
+    "label": "Buổi chiều",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Tay trái khép, lòng bàn tay úp, đầu ngón tay hướng sang phải, đặt trước ngực. Tay phải khép, hơi khum lại, lòng bàn tay úp, đầu ngón tay hướng về phía trước, đặt bên trên tay trái, đưa tay qua tay trái xuống dưới theo đường vòng cung.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_048%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-buoi-chieu",
+    "q_word": "buổi chiều",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W00366.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W00366.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_048%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 49,
+    "term": "Buổi tối",
+    "label": "Buổi tối",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Hai tay khép, lòng bàn tay hướng vào trong, đầu ngón tay hướng lên trên, đặt song song trước mặt, đưa đồng thời hai tay lại gần và chạm hai mép bàn tay vào nhau.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_049%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-buoi-toi",
+    "q_word": "buổi tối",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W00369B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/W00369B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/W00369T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/W00369N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_049%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 50,
+    "term": "Đêm",
+    "label": "Đêm",
+    "category": "Bài 2 - Số đếm và Thời gian",
+    "description": "Hai tay khép, lòng bàn tay hướng vào trong, đầu các ngón tay hướng lên trên, đặt song song trước ngực, đưa đồng thời hai tay bắt chéo vào nhau qua mặt.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_050%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-dem",
+    "q_word": "đêm",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_050%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_050%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 51,
+    "term": "Tôi",
+    "label": "Tôi",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Ngón trỏ duỗi, các ngón còn lại nắm, di chuyển từ ngoài vào giữa ngực sao cho ngón trỏ chạm vào ngực.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_051%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-toi",
+    "q_word": "tôi",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_051%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_051%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 52,
+    "term": "Chào",
+    "label": "Chào",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Tay phải khép, lòng bàn tay hướng về phía trước, đầu ngón tay hướng lên trên, đặt bên phải, ngang tầm với mặt, đưa nhẹ tay sang hai bên (lặp lại 1 – 2 lần).",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_052%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-chao",
+    "q_word": "chào",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W00489.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W00489.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_052%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 53,
+    "term": "Xin lỗi",
+    "label": "Xin lỗi",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Tay trái khép, lòng bàn tay ngửa, đầu ngón tay hướng chếch sang phải, đặt trước ngực. Tay phải khép, lòng bàn tay úp, đầu ngón tay hướng chếch sang trái, đặt các đầu ngón tay vào lòng bàn tay trái, đưa tay dọc trong lòng bàn tay trái (lập lại 2 – 3 lần).",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_053%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-xin-loi",
+    "q_word": "xin lỗi",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W03990.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W03990.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_053%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 54,
+    "term": "Xin phép",
+    "label": "Xin phép",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Tay phải khép, lòng bàn tay ngửa, đầu ngón tay hướng về phía trước, đặt trước ngực, di chuyển tay áp vào giữa ngực, lòng bàn tay hướng sang trái, đầu ngón tay hướng lên trên.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_054%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-xin-phep",
+    "q_word": "xin phép",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_054%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_054%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 55,
+    "term": "Vui",
+    "label": "Vui",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Hai tay khép, lòng bàn tay hướng vào trong, đầu ngón tay của hai tay chạm vào nhau, đặt sát ngực, đưa nhẹ đồng thời cả hai tay lên trên và về hai bên (lặp lại 2 lần).",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_055%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-vui",
+    "q_word": "vui",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_055%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_055%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 56,
+    "term": "Buồn",
+    "label": "Buồn",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Tay phải nắm, lòng bàn tay hướng vào trong, đặt áp vào giữa ngực, đưa tay phải xoay tròn theo chiều kim đồng hồ.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_056%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-buon",
+    "q_word": "buồn",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_056%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_056%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 57,
+    "term": "Mệt",
+    "label": "Mệt",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Tay phải mở xoè, lòng bàn tay hướng vào trong, đầu ngón tay hướng “M' sang trái, đặt áp vào giữa ngực, đưa nhẹ tay, tay xuống dưới 1 – 2 lần.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_057%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-met",
+    "q_word": "mệt",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_057%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_057%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 58,
+    "term": "Khỏe",
+    "label": "Khỏe",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Hai tay nắm, lòng bàn tay hướng vào nhau, đặt ở hai bên, ngang tầm với vai, gập mạnh đồng thời cả hai tay vào trong và xuống dưới.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_058%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-khoe",
+    "q_word": "khỏe",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_058%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_058%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 59,
+    "term": "Yếu",
+    "label": "Yếu",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Hai tay giống chữ cái ngón tay \"Y\", lòng bàn tay úp, đầu ngón tay hướng về phía trước, đặt song song trước ngực, di chuyển đồng thời hai tay theo đường vòng cung từ ngoài vào trong, đồng thời khuôn mặt thể hiện sự mệt mỏi.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_059%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-yeu",
+    "q_word": "yếu",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W04059B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/W04059B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/W04059T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/W04059N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_059%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 60,
+    "term": "Bạn",
+    "label": "Bạn",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Hai tay khép, ngón cái mở ra, lòng bàn tay hướng vào nhau, đầu ngón tay trái hướng sang phải, đầu ngón tay phải hướng về trước, đặt trước ngực, tay phải ở trên tay trái, bắt hai tay vào nhau.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_060%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-ban",
+    "q_word": "bạn",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W00110B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/W00110B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/W00110T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/W00110N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_060%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 61,
+    "term": "Tên là gì",
+    "label": "Tên là gì",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Hai tay giống số tự nhiên \"1\", lòng bàn tay hướng vào nhau, đặt chéo ngón trỏ phải bên trên ngón trỏ trái, trước ngực, đưa ngón trỏ phải vào ngón trỏ trái (lặp lại 2 lần).",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_061%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-ten-la-gi",
+    "q_word": "tên là gì?",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W03129T.mp4",
+    "variants_count": 3,
+    "variants": [
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/W03129T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/W03129N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_061%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 62,
+    "term": "Tuổi",
+    "label": "Tuổi",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Tay trái nắm, lòng bàn tay hướng vào trong, đặt trước ngực. Tay phải khép, hơi khum lại, lòng bàn tay hướng ra ngoài, đầu ngón tay hướng chếch lên trên, đặt trên tay trái, giữ nguyên cánh tay, xoay cổ tay một vòng từ ngoài vào trong đồng thời nắm tay lại rồi chạm vào tay trái.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_062%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-tuoi",
+    "q_word": "tuổi",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_062%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_062%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 63,
+    "term": "Thế nào",
+    "label": "Thế nào",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Hai tay mở, lòng bàn tay úp, đầu ngón tay hướng về phía trước, đặt song song, trước ngực, đưa nhẹ cả hai tay lên trên và về hai phía, đồng thời mở xoè các ngón tay ra, lòng bàn tay ngừa.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_063%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-the-nao",
+    "q_word": "thế nào?",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W03239B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/W03239B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/W03239T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/W03239N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_063%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 64,
+    "term": "Bao nhiêu",
+    "label": "Bao nhiêu",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Tay phải nắm, lòng bàn tay ngửa, đặt trước ngực, giữ nguyên cánh tay, mở xoè bàn tay ra (lặp lại 2 lần).",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_064%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-bao-nhieu",
+    "q_word": "bao nhiêu?",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W00147.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W00147.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_064%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 65,
+    "term": "Ở đâu",
+    "label": "Ở đâu",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Hai tay nắm, ngón cái duỗi thẳng, lòng bàn tay hướng xuống dưới, đặt trước ngực, đầu ngón cái tay phải đặt chéo trên đầu ngón cái tay trái, đưa nhẹ tay xuống dưới, sau đó đưa hai tay về hai phía đồng thời các ngón tay mở xoè ra, lòng bàn tay ngửa.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_065%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-o-dau",
+    "q_word": "ở đâu",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_065%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_065%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 66,
+    "term": "Làm gì",
+    "label": "Làm gì",
+    "category": "Bài 3 - Giao tiếp cơ bản và Cảm xúc",
+    "description": "Hai tay nắm, lòng bàn tay hướng vào trong, đặt trước ngực, tay phải đặt trên tay trái, di chuyển tay phải lên - xuống chạm vào tay trái (lặp lại 2 lần).",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_066%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-lam-gi",
+    "q_word": "làm gì",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_066%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_066%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 67,
+    "term": "Đi",
+    "label": "Đi",
+    "category": "Bài 4 - Hoạt động hàng ngày",
+    "description": "Tay phải giống chữ cái ngón tay \"V\", lòng bàn tay úp, đầu ngón tay hướng xuống dưới, đặt trước ngực, đưa tay về phía trước đồng thời cử động 2 ngón tay lần lượt ra – vào.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_067%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-di",
+    "q_word": "đi",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W01190.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W01190.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_067%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 68,
+    "term": "Đứng",
+    "label": "Đứng",
+    "category": "Bài 4 - Hoạt động hàng ngày",
+    "description": "Tay trái duỗi thẳng, khép kín, lòng bàn tay hướng lên trên, đầu các ngón tay hướng ra ngoài.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_068%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-dung",
+    "q_word": "đứng",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_068%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_068%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 69,
+    "term": "Ngồi",
+    "label": "Ngồi",
+    "category": "Bài 4 - Hoạt động hàng ngày",
+    "description": "Tay trái giống chữ cái ngón tay \"U\", lòng bàn tay úp, đầu ngón tay hướng sang bên phải, đặt trước ngực. Tay phải giống chữ cái ngón tay \"V\", lòng bàn tay úp, đầu ngón tay hướng xuống dưới, ôm lấy ngón trỏ và ngón giữa tay trái.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_069%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-ngoi-2",
+    "q_word": "ngồi",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W02400B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/W02400B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/W02400T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/W02400N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_069%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 70,
+    "term": "Nằm",
+    "label": "Nằm",
+    "category": "Bài 4 - Hoạt động hàng ngày",
+    "description": "Hai tay khép, lòng bàn tay hướng về phía trước, đặt chồng vào nhau, áp vào sau gáy, đầu hơi ngả ra phía sau.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_070%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-nam",
+    "q_word": "nằm",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W02295.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W02295.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_070%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 71,
+    "term": "Chạy",
+    "label": "Chạy",
+    "category": "Bài 4 - Hoạt động hàng ngày",
+    "description": "Hai tay nắm, lòng bàn tay hướng vào nhau, đặt song song trước bụng, di chuyển lần lượt hai tay ra - vào (lặp lại 2 lần).",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_071%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-chay-2",
+    "q_word": "chạy",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W00501.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W00501.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_071%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 72,
+    "term": "Nhảy",
+    "label": "Nhảy",
+    "category": "Bài 4 - Hoạt động hàng ngày",
+    "description": "Tay trái khép, lòng bàn tay ngửa, đầu ngón tay hướng về phía trước, đặt trước ngực. Tay phải giống chữ cái ngón tay \"V\", lòng bàn tay hướng vào trong, đầu ngón tay hướng xuống dưới, đặt chạm đầu ngón tay vào gắn cổ tay trái, di chuyển theo đường vòng cung đến đấu các ngón tay trái.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_072%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-nhay",
+    "q_word": "nhảy",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_072%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_072%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 73,
+    "term": "Ngủ",
+    "label": "Ngủ",
+    "category": "Bài 4 - Hoạt động hàng ngày",
+    "description": "Tay phải khép, hơi khum lại, lòng bàn tay hướng sang trái, đầu ngón tay hướng lên trên, đặt áp vào má phải, đấu hơi ngả sang phải.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_073%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-ngu",
+    "q_word": "ngủ",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_073%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_073%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 74,
+    "term": "Đi vệ sinh",
+    "label": "Đi vệ sinh",
+    "category": "Bài 4 - Hoạt động hàng ngày",
+    "description": "Tay phải giống chữ cái ngón tay \"V\", lòng bàn tay úp, đầu ngón tay hướng xuống dưới, gập hai ngón tay lần lượt ra vào và đưa tay về phía trước.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_074%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-di-ve-sinh",
+    "q_word": "đi vệ sinh",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/D0486.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/D0486.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_074%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 75,
+    "term": "Ăn",
+    "label": "Ăn",
+    "category": "Bài 4 - Hoạt động hàng ngày",
+    "description": "Tay phải chụm, lòng bàn tay hướng vào trong, đặt trước cổ, di chuyển tay lên sát miệng.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_075%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-an",
+    "q_word": "ăn",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_075%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_075%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 76,
+    "term": "Uống",
+    "label": "Uống",
+    "category": "Bài 4 - Hoạt động hàng ngày",
+    "description": "Tay phải giống chữ cái ngón tay “C”, lòng bàn tay hướng sang trái, đặt trước ngực, đưa tay lên sát miệng.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_076%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-uong",
+    "q_word": "uống",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_076%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_076%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 77,
+    "term": "Tắm",
+    "label": "Tắm",
+    "category": "Bài 4 - Hoạt động hàng ngày",
+    "description": "Hai tay mở xoè, lòng bàn tay hướng vào trong, đầu ngón tay hướng sang hai bên, đặt áp vào người, tay trái đặt trên, tay phải đặt dưới, di chuyển đồng thời cả hai tay sang hai bên ngược chiều nhau (lặp lại 2 – 3 lần).",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_077%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-tam",
+    "q_word": "tắm",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_077%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_077%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 78,
+    "term": "Khóc",
+    "label": "Khóc",
+    "category": "Bài 4 - Hoạt động hàng ngày",
+    "description": "Tay phải giống chữ cái ngón tay \"B\", lòng bàn tay úp, đầu ngón tay hướng sang trái, đặt gần phía trước mắt, di chuyển tay qua lại (2 lần).",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_078%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-khoc",
+    "q_word": "khóc",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W01821.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W01821.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_078%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 79,
+    "term": "Cười",
+    "label": "Cười",
+    "category": "Bài 4 - Hoạt động hàng ngày",
+    "description": "Tay phải giống chữ cái ngón tay \"C\", lòng bàn tay hướng sang trái, đặt gần khoé miệng phải, di chuyển tay qua lại (2 lần).",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_079%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-cuoi",
+    "q_word": "cười",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_079%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_079%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 80,
+    "term": "Gia đình",
+    "label": "Gia đình",
+    "category": "Bài 5 - Gia đình",
+    "description": "Hai tay giống chữ cái ngón tay \"G\"; lòng bàn tay hướng vào nhau, đầu ngón tay hướng lên trên, đặt song song trước ngực, di chuyển đồng thời cả hai tay theo đường vòng cung về phía trước và chạm vào nhau, lòng bàn tay hướng vào trong.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_080%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-gia-dinh",
+    "q_word": "gia đình",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_080%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_080%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 81,
+    "term": "Ông",
+    "label": "Ông",
+    "category": "Bài 5 - Gia đình",
+    "description": "Tay phải giống chữ cái ngón tay \"C\", lòng bàn tay hướng vào trong, đặt phía dưới sát cầm, di chuyển tay xuống dưới, đồng thời nắm tay lại.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_081%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-ong",
+    "q_word": "ông",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_081%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_081%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 82,
+    "term": "Bà",
+    "label": "Bà",
+    "category": "Bài 5 - Gia đình",
+    "description": "Tay phải nắm, ngón cái và ngón trỏ mở ra, giống chữ cái ngón tay \"C\", lòng bàn tay hướng vào trong, đặt vào hai khoé miệng, đưa nhẹ tay xuống dưới đồng thời hai ngón tay chạm vào nhau.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_082%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-ba",
+    "q_word": "bà",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_082%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_082%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 83,
+    "term": "Bố",
+    "label": "Bố",
+    "category": "Bài 5 - Gia đình",
+    "description": "Tay phải giống chữ cái ngón tay \"B\", lòng bàn tay hướng vào trong, đặt chạm các đầu ngón tay vào cầm.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_083%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-bo-2",
+    "q_word": "bố",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W00325.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W00325.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_083%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 84,
+    "term": "Mẹ",
+    "label": "Mẹ",
+    "category": "Bài 5 - Gia đình",
+    "description": "Tay phải khép, lòng bàn tay hướng sang trái, đầu ngón tay hướng lên trên, đặt áp vào má phải.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_084%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-ma-giong-me",
+    "q_word": "má (giống: mẹ)",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W02110.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W02110.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_084%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 85,
+    "term": "Em trai",
+    "label": "Em trai",
+    "category": "Bài 5 - Gia đình",
+    "description": "Tay phải khép, lòng bàn tay úp, đầu ngón tay hướng sang trái, đặt sát giữa ngực, di chuyển xuống dưới.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_085%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-em-trai",
+    "q_word": "em trai",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W01352B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/W01352B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/W01352T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/W01352N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_085%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 86,
+    "term": "Em gái",
+    "label": "Em gái",
+    "category": "Bài 5 - Gia đình",
+    "description": "Tay phải khép, lòng bàn tay úp, đầu ngón tay hướng sang trái, đặt sát giữa ngực, di chuyển xuống dưới.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_086%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-em-gai",
+    "q_word": "em gái",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W01350.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W01350.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_086%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 87,
+    "term": "Con trai",
+    "label": "Con trai",
+    "category": "Bài 5 - Gia đình",
+    "description": "Tay phải khép, khum lại, đặt trước bụng, lòng bàn tay hướng vào trong, đặt chạm các đầu ngón tay vào bụng, đưa tay xuống dưới và lắc nhẹ cổ tay ra ngoài.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_087%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-con-trai",
+    "q_word": "con trai",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W04068.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W04068.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_087%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 88,
+    "term": "Con gái",
+    "label": "Con gái",
+    "category": "Bài 5 - Gia đình",
+    "description": "Tay phải khép, khum lại, đặt trước bụng, lòng bàn tay hướng vào trong, đặt chạm các đầu ngón tay vào bụng, đưa tay xuống dưới và lắc nhẹ cổ tay ra ngoài.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_088%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-con-gai",
+    "q_word": "con gái",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W00760.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W00760.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_088%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 89,
+    "term": "Vợ",
+    "label": "Vợ",
+    "category": "Bài 5 - Gia đình",
+    "description": "Tay phải nắm, ngón cái và ngón trỏ mở ra, nắm nhẹ vào tai (vị trí đeo khuyên tai).",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_089%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-vo",
+    "q_word": "vợ",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_089%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_089%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 90,
+    "term": "Chồng",
+    "label": "Chồng",
+    "category": "Bài 5 - Gia đình",
+    "description": "Tay phải khép, hơi khum lại, lòng bàn tay hướng vào trong, đặt chạm các đầu ngón tay vào cầm.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_090%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-chong",
+    "q_word": "chồng",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_090%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_090%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 91,
+    "term": "Anh trai",
+    "label": "Anh trai",
+    "category": "Bài 5 - Gia đình",
+    "description": "Tay phải giống chữ cái ngón tay \"N\", lòng bàn tay hướng vào trong, đầu ngón tay hướng lên trên, đặt chạm đầu ngón tay vào cảm.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_091%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-anh-trai",
+    "q_word": "anh trai",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_091%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_091%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 92,
+    "term": "Chị gái",
+    "label": "Chị gái",
+    "category": "Bài 5 - Gia đình",
+    "description": "Tay phải nắm, ngón cái và ngón trỏ mở ra, năm nhẹ vào tai (vị trí đeo khuyên tai).",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_092%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-chi-gai",
+    "q_word": "chị gái",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_092%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_092%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 93,
+    "term": "Em út",
+    "label": "Em út",
+    "category": "Bài 5 - Gia đình",
+    "description": "Tay phải khép, lòng bàn tay úp, đầu ngón tay hướng sang trái, đặt áp vào giữa ngực,",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_093%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-em-ut",
+    "q_word": "em út",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W01353.mp4",
+    "variants_count": 2,
+    "variants": [
+      {
+        "region": "",
+        "label": "Cách thể hiện",
+        "url": "https://qipedc.moet.gov.vn/videos/W01353.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_093%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 94,
+    "term": "Yêu",
+    "label": "Yêu",
+    "category": "Bài 5 - Gia đình",
+    "description": "tay phải ngón út và ngón cái mở, các ngón còn lại nắm đặt trước ngực, sau đó các ngón nắm lại, chỉ riêng ngón trỏ mở, đặt ngón trỏ chạm vào nhân trung xoay nhẹ ra ngoài.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_094%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-yeu",
+    "q_word": "yêu",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_094%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_094%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 95,
+    "term": "Cô giáo",
+    "label": "Cô giáo",
+    "category": "Bài 6 - Nghề nghiệp",
+    "description": "Tay phải nắm, ngón cái và ngón trỏ mở ra, nắm nhẹ vào tai (vị trí đeo khuyên tai).",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_095%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-co-giao",
+    "q_word": "cô giáo",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W00812B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/W00812B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/W00812T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/W00812N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_095%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 96,
+    "term": "Công nhân",
+    "label": "Công nhân",
+    "category": "Bài 6 - Nghề nghiệp",
+    "description": "Tay phải nắm, ngón cái và ngón trỏ tay phải cong lại giống chữ cái ngón tay \"C\", lòng bàn tay hướng vào trong, đặt chạm vào ngực trái, đưa nhẹ tay sang phải.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_096%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-cong-nhan",
+    "q_word": "công nhân",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_096%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_096%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 97,
+    "term": "Nông dân",
+    "label": "Nông dân",
+    "category": "Bài 6 - Nghề nghiệp",
+    "description": "Tay phải giống chữ cái ngón tay \"S\", lòng bàn tay hướng vào trong, đặt gần ngực trái, đưa tay sang ngực phải.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_097%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-nong-dan",
+    "q_word": "nông dân",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_097%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_097%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 98,
+    "term": "Bác sĩ",
+    "label": "Bác sĩ",
+    "category": "Bài 6 - Nghề nghiệp",
+    "description": "Tay phải giống số tự nhiên \"1\", lòng bàn tay úp, đầu ngón tay hướng sang trái, đặt sát giữa trán, đưa tay theo hình dấu \"+\".",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_098%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-bac-si",
+    "q_word": "bác sĩ",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_098%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_098%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 99,
+    "term": "Y tá",
+    "label": "Y tá",
+    "category": "Bài 6 - Nghề nghiệp",
+    "description": "Tay phải giống số tự nhiên \"1\", lòng bàn tay hướng vào trong, đầu ngón tay hướng vào trong, đưa chạm đầu ngón trỏ vào bắp tay trái.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_099%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-y-ta",
+    "q_word": "y tá",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_099%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_099%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 100,
+    "term": "Công an",
+    "label": "Công an",
+    "category": "Bài 6 - Nghề nghiệp",
+    "description": "Tay phải giống chữ cái ngón tay \"C\", lòng bàn tay hướng sang trái, đặt chạm vào giữa trán, sau đó thay đổi tay giống chữ cái ngón tay \"A\".",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_100%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "gt-cong-an",
+    "q_word": "công an",
+    "q_video_url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_100%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "variants_count": 1,
+    "variants": [
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_100%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  },
+  {
+    "index": 101,
+    "term": "Bộ đội",
+    "label": "Bộ đội",
+    "category": "Bài 6 - Nghề nghiệp",
+    "description": "Tay phải giống chữ cái ngón tay “U”, lòng bàn tay hướng sang trái, đặt chạm vào trán bên phải, đưa tay xuống chạm vào vai phải.",
+    "video_url_meta": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_101%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "q_entry_id": "q-bo-doi",
+    "q_word": "bộ đội",
+    "q_video_url": "https://qipedc.moet.gov.vn/videos/W00328B.mp4",
+    "variants_count": 4,
+    "variants": [
+      {
+        "region": "B",
+        "label": "Miền Bắc",
+        "url": "https://qipedc.moet.gov.vn/videos/W00328B.mp4"
+      },
+      {
+        "region": "T",
+        "label": "Miền Trung",
+        "url": "https://qipedc.moet.gov.vn/videos/W00328T.mp4"
+      },
+      {
+        "region": "N",
+        "label": "Miền Nam",
+        "url": "https://qipedc.moet.gov.vn/videos/W00328N.mp4"
+      },
+      {
+        "region": "GT",
+        "label": "Giáo trình 102",
+        "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_101%20-%20LOOP%20-%20Videobolt.net.mp4"
+      }
+    ]
+  }
+]

@@ -64,6 +64,7 @@ class SequenceRequest(BaseModel):
     sequence: List[List[List[float]]]  # Chuỗi 30 frames x 75 joints x 3 coords
     threshold: Optional[float] = 0.65
     mode: Optional[str] = None
+    debug_meta: Optional[Dict[str, Any]] = None
 
 class TextToSignRequest(BaseModel):
     text: str
@@ -268,7 +269,8 @@ def recognize_sequence(req: SequenceRequest, request: Request):
         result = recognizer.predict_sequence(
             sequence_data=req.sequence,
             threshold=req.threshold,
-            mode=req.mode or request.headers.get("x-conversion-mode")
+            mode=req.mode or request.headers.get("x-conversion-mode"),
+            debug_meta=req.debug_meta
         )
         return {"success": True, "data": result}
     except Exception as e:
@@ -399,6 +401,7 @@ class WordDebugSessionRequest(BaseModel):
     target_class: Optional[int] = None
     target_word: Optional[str] = None
     trial: Optional[int] = 1
+    session_prefix: Optional[str] = "A01_1_T01"
 
 
 class WordDebugEventRequest(BaseModel):
@@ -406,6 +409,16 @@ class WordDebugEventRequest(BaseModel):
     frame_count: Optional[int] = None
     frames_before_reset: Optional[int] = None
     reason: Optional[str] = None
+    consecutive_missing_frames: Optional[int] = None
+    tracker_engine: Optional[str] = None
+    active_instance_engine: Optional[str] = None
+    requested_engine: Optional[str] = None
+    landmarks_source: Optional[str] = None
+    debounce_threshold: Optional[int] = None
+    pose_zero_frames: Optional[int] = None
+    left_hand_zero_frames: Optional[int] = None
+    right_hand_zero_frames: Optional[int] = None
+    detail: Optional[str] = None
 
 
 @app.get("/api/debug/word/targets")
@@ -421,14 +434,18 @@ def manage_word_debug_session(req: WordDebugSessionRequest):
     from backend.vision.word_debugger import word_debugger
     if req.action == "start":
         result = word_debugger.start_session(
-            target_class=req.target_class, target_word=req.target_word, trial=req.trial if req.trial is not None else 1
+            target_class=req.target_class,
+            target_word=req.target_word,
+            trial=req.trial if req.trial is not None else 1,
+            checkpoint_info=recognizer.get_sstcn_checkpoint_info(),
+            session_prefix=req.session_prefix or "A01_1_T01"
         )
         if not result.get("success"):
-            raise HTTPException(status_code=400, detail=result.get("message", "Kh?ng th? b?t ??u phi?n"))
+            raise HTTPException(status_code=400, detail=result.get("message", "Không thể bắt đầu phiên"))
         return result
     if req.action == "stop":
         return word_debugger.stop_session()
-    raise HTTPException(status_code=400, detail="action ph?i l? 'start' ho?c 'stop'")
+    raise HTTPException(status_code=400, detail="action phải là 'start' hoặc 'stop'")
 
 
 @app.post("/api/debug/word/event")

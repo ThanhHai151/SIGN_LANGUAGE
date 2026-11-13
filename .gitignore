@@ -43,3 +43,10 @@ backend/data/sstcn/prepared*/
 backend/data/sstcn/demo_videos/
 backend/runs/
 .venv-sstcn/
+
+# Debug logs, test archives & staging bundles
+debug/archive/
+debug/words/*_trial_*
+scratch/kaggle_bundle_staging/
+*.zip
+*.rar
