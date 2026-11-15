@@ -42,7 +42,8 @@ def make_dummy_landmarks(
     pinky_tip_y=0.45,
     index_tip_x=0.48,
     middle_tip_x=0.52,
-    pinky_tip_x=0.51
+    pinky_tip_x=0.51,
+    index_pip_x=0.47
 ):
     """Tạo bộ 21 landmarks giả lập có thể điều chỉnh tọa độ các ngón."""
     lm = []
@@ -55,7 +56,7 @@ def make_dummy_landmarks(
     lm.append([0.45, wrist_y - 0.16, 0.0])
     # 5-8: Index
     lm.append([0.47, wrist_y - 0.15, 0.0])
-    lm.append([0.47, wrist_y - 0.22, 0.0])
+    lm.append([index_pip_x, wrist_y - 0.22, 0.0])
     lm.append([0.47, wrist_y - 0.28, 0.0])
     lm.append([index_tip_x, index_tip_y, 0.0])
     # 9-12: Middle
@@ -81,9 +82,9 @@ class TestDiacriticCameraIntegration(unittest.TestCase):
         self.rec = VSLRecognizer(confidence_threshold=0.70, smoothing_window=4, cooldown_sec=0.4)
         self.rec.reset()
 
-    # 1. Test A -> Ă
+    # 1. Test A -> Ă (QIPEDC Miền Nam D0490N: chỉ bật ngón trỏ, ngón giữa giữ gập)
     def test_case_1_a_to_a_breve_integration(self):
-        """Luồng nhận diện camera: thế tay A ổn định sau đó mở xòe ngón V -> thăng cấp thành Ă."""
+        """Luồng nhận diện camera: thế tay A ổn định sau đó bật duỗi 1 ngón trỏ -> thăng cấp thành Ă."""
         session_id = "test_cam_a_breve"
         t = 100.0
 
@@ -96,8 +97,8 @@ class TestDiacriticCameraIntegration(unittest.TestCase):
                 t += 0.04
                 self.assertEqual(res["sign"], "A")
 
-            # Frame 6 & 7: Người ký mở ngón xòe V (Ă)
-            lm_breve = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.38, middle_tip_x=0.62, index_tip_y=0.30, middle_tip_y=0.30)
+            # Frame 6 & 7: Bật ngón trỏ đứng lên (Ă D0490N), ngón giữa giữ gập
+            lm_breve = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.47, middle_tip_x=0.50, index_tip_y=0.25, middle_tip_y=0.45)
             self.rec.predict_landmarks(lm_breve, mode="letters", session_id=session_id, timestamp=t)
             t += 0.04
             res_confirmed = self.rec.predict_landmarks(lm_breve, mode="letters", session_id=session_id, timestamp=t)
@@ -150,20 +151,21 @@ class TestDiacriticCameraIntegration(unittest.TestCase):
 
     # 4. Test O -> Ô
     def test_case_4_o_to_o_circumflex_integration(self):
-        """Luồng nhận diện camera: thế tay O nâng tay vẽ nón -> thăng cấp thành Ô."""
+        """Luồng nhận diện camera: thế tay O mở tách trỏ-giữa tạo nón -> thăng cấp thành Ô."""
         session_id = "test_cam_o_circumflex"
         t = 400.0
 
         mock_res_o = {"letter": "O", "confidence": 0.95, "status": "MATCH", "source": "geometric_rule"}
         with patch.object(self.rec.alphabet_classifier, "classify_detailed", return_value=mock_res_o):
             for _ in range(5):
-                res = self.rec.predict_landmarks(make_dummy_landmarks(wrist_y=0.58, index_tip_x=0.48, pinky_tip_x=0.51, index_tip_y=0.45, pinky_tip_y=0.45), mode="letters", session_id=session_id, timestamp=t)
+                res = self.rec.predict_landmarks(make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.48, middle_tip_x=0.50, pinky_tip_x=0.51, index_tip_y=0.45, middle_tip_y=0.45, pinky_tip_y=0.48), mode="letters", session_id=session_id, timestamp=t)
                 t += 0.04
                 self.assertEqual(res["sign"], "O")
 
-            self.rec.predict_landmarks(make_dummy_landmarks(wrist_y=0.53, index_tip_x=0.48, pinky_tip_x=0.51, index_tip_y=0.40, pinky_tip_y=0.40), mode="letters", session_id=session_id, timestamp=t)
+            lm_hat = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.40, middle_tip_x=0.60, pinky_tip_x=0.51, index_tip_y=0.42, middle_tip_y=0.42, pinky_tip_y=0.48, index_pip_x=0.42)
+            self.rec.predict_landmarks(lm_hat, mode="letters", session_id=session_id, timestamp=t)
             t += 0.04
-            res_confirmed = self.rec.predict_landmarks(make_dummy_landmarks(wrist_y=0.52, index_tip_x=0.48, pinky_tip_x=0.51, index_tip_y=0.39, pinky_tip_y=0.39), mode="letters", session_id=session_id, timestamp=t)
+            res_confirmed = self.rec.predict_landmarks(lm_hat, mode="letters", session_id=session_id, timestamp=t)
 
             self.assertEqual(res_confirmed["sign"], "Ô")
             self.assertEqual(res_confirmed["source"], "diacritic_fsm")

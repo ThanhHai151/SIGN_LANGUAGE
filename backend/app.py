@@ -73,6 +73,9 @@ class LandmarkRequest(BaseModel):
     image_height: Optional[int] = None
     handedness_score: Optional[float] = None
     tracking_confidence: Optional[float] = None
+    mediapipe_model_complexity: Optional[int] = None
+    processing_resolution: Optional[str] = None
+    camera_fps: Optional[float] = None
     video_pts_sec: Optional[Union[float, str]] = None
     video_frame_idx: Optional[Union[int, str]] = None
     phase: Optional[Literal["PRE_IDLE", "ENTRY", "STABLE_HOLD", "EXIT", "POST_IDLE"]] = None
@@ -109,6 +112,8 @@ class PilotEvaluationRequest(BaseModel):
 class SequenceRequest(BaseModel):
     sequence: List[List[List[float]]]  # Chuỗi 30 frames x 75 joints x 3 coords
     threshold: Optional[float] = 0.65
+    mode: Optional[str] = None
+    debug_meta: Optional[Dict[str, Any]] = None
 
 class TextToSignRequest(BaseModel):
     text: str
@@ -365,6 +370,9 @@ def recognize_landmarks(req: LandmarkRequest, request: Request):
             image_height=req.image_height,
             handedness_score=req.handedness_score,
             tracking_confidence=req.tracking_confidence,
+            mediapipe_model_complexity=req.mediapipe_model_complexity,
+            processing_resolution=req.processing_resolution,
+            camera_fps=req.camera_fps,
             phase=req.phase,
         )
         return {"success": True, "data": result}
@@ -796,7 +804,7 @@ def list_pilot_evaluations():
 
 
 @app.post("/api/recognize_sequence")
-def recognize_sequence(req: SequenceRequest):
+def recognize_sequence(req: SequenceRequest, request: Request):
     """
     Nhận diện chuỗi chuyển động ký hiệu VSL qua mô hình SSTCN_Attention (30 frames x 75 joints).
     Độ chính xác cao vượt trội (93.87%) trên 102 lớp từ vựng VSL.
@@ -804,7 +812,9 @@ def recognize_sequence(req: SequenceRequest):
     try:
         result = recognizer.predict_sequence(
             sequence_data=req.sequence,
-            threshold=req.threshold
+            threshold=req.threshold,
+            mode=req.mode or request.headers.get("x-conversion-mode"),
+            debug_meta=req.debug_meta
         )
         return {"success": True, "data": result}
     except Exception as e:
@@ -926,6 +936,75 @@ def trigger_training():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# ==========================================================
+# API WORD DEBUG (chỉ dùng để test Word Mode, không ảnh hưởng nhận diện)
+# ==========================================================
+class WordDebugSessionRequest(BaseModel):
+    action: str  # "start" | "stop"
+    target_class: Optional[int] = None
+    target_word: Optional[str] = None
+    trial: Optional[int] = 1
+    session_prefix: Optional[str] = "A01_1_T01"
+
+
+class WordDebugEventRequest(BaseModel):
+    event_type: str
+    frame_count: Optional[int] = None
+    frames_before_reset: Optional[int] = None
+    reason: Optional[str] = None
+    consecutive_missing_frames: Optional[int] = None
+    tracker_engine: Optional[str] = None
+    active_instance_engine: Optional[str] = None
+    requested_engine: Optional[str] = None
+    landmarks_source: Optional[str] = None
+    debounce_threshold: Optional[int] = None
+    pose_zero_frames: Optional[int] = None
+    left_hand_zero_frames: Optional[int] = None
+    right_hand_zero_frames: Optional[int] = None
+    detail: Optional[str] = None
+
+
+@app.get("/api/debug/word/targets")
+def get_word_debug_targets():
+    """63 từ Word Mode (class 39..101) lấy từ SIGN_DICT_102, cùng nguồn với recognizer."""
+    from backend.vision.word_debugger import get_word_targets
+    targets = get_word_targets()
+    return {"success": True, "total": len(targets), "targets": targets}
+
+
+@app.post("/api/debug/word/session")
+def manage_word_debug_session(req: WordDebugSessionRequest):
+    from backend.vision.word_debugger import word_debugger
+    if req.action == "start":
+        result = word_debugger.start_session(
+            target_class=req.target_class,
+            target_word=req.target_word,
+            trial=req.trial if req.trial is not None else 1,
+            checkpoint_info=recognizer.get_sstcn_checkpoint_info(),
+            session_prefix=req.session_prefix or "A01_1_T01"
+        )
+        if not result.get("success"):
+            raise HTTPException(status_code=400, detail=result.get("message", "Không thể bắt đầu phiên"))
+        return result
+    if req.action == "stop":
+        return word_debugger.stop_session()
+    raise HTTPException(status_code=400, detail="action phải là 'start' hoặc 'stop'")
+
+
+@app.post("/api/debug/word/event")
+def log_word_debug_event(req: WordDebugEventRequest):
+    from backend.vision.word_debugger import word_debugger
+    data = req.model_dump(exclude_none=True) if hasattr(req, "model_dump") else req.dict(exclude_none=True)
+    event_type = data.pop("event_type")
+    return {"success": word_debugger.log_frontend_event(event_type, data)}
+
+
+@app.get("/api/debug/word/status")
+def get_word_debug_status():
+    from backend.vision.word_debugger import word_debugger
+    return word_debugger.get_status()
+
 
 if __name__ == "__main__":
     import uvicorn

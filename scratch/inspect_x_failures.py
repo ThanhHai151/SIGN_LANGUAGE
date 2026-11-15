@@ -1,23 +1,20 @@
 import json
 import sys
-sys.path.insert(0, "d:/SIGN_LANGUAGE")
-from backend.vision.alphabet_classifier import VSLAlphabetClassifier
+sys.path.insert(0, ".")
 
-c = VSLAlphabetClassifier()
+import backend.vision.alphabet_classifier as ac
 
-with open("backend/data/alphabet_v2/static_landmarks/X.json", "r", encoding="utf-8") as f:
-    data = json.load(f)
+with open("scratch/d0517n_extracted_raw.json", encoding="utf-8") as f:
+    samples_x = json.load(f)
 
-stable = [s for s in data["samples"] if s.get("phase") == "stable_pose" and s.get("quality_status") == "ok"]
-
-print(f"{'Idx':<4} {'Frame':<6} {'Pred':<8} {'d_IW':<7} {'d_TI':<7} {'d_TW':<7} {'idx_y':<7} {'idx_dy':<7} {'idx_c':<7} {'idx_s':<7} {'d_rw':<7} {'d_pw':<7} {'Failed Conds'}")
-print("-" * 125)
-
-for i, s in enumerate(stable):
-    lms = s["landmarks"]
-    feat = c.extract_features(lms)
-    pred, _ = c.classify(lms)
-    diag = c.evaluate_rule_x_diagnostics(feat)
-    fails = diag.get("failed_conditions", [])
-    print(f"{i:<4} {s['frame_index']:<6} {pred:<8} {feat['d_IW']:<7.2f} {feat['d_TI']:<7.2f} {feat['d_TW']:<7.2f} {feat['idx_tip_y']:<7.2f} {feat['idx_dy']:<7.2f} {feat.get('index_curl',0):<7.2f} {feat['idx_straight']:<7.2f} {feat['d_RW']:<7.2f} {feat['d_PW']:<7.2f} {fails}")
-
+for fidx in range(30, 65, 3):
+    lm = samples_x[fidx]["landmarks"]
+    res = ac.alphabet_classifier.classify_detailed(lm)
+    feat = res.get("features", {})
+    diag = ac.alphabet_classifier.evaluate_rule_x_diagnostics(feat)
+    print(f"\n--- X Frame {samples_x[fidx]['frame_index']} ---")
+    print(f"geom: status={res['status']}, letter={res['letter']}")
+    print(f"diag: matched={diag.get('matched')} failed={diag.get('failed_conditions')}")
+    print(f"feat: d_IW={feat.get('d_IW'):.2f}, d_MW={feat.get('d_MW'):.2f}, d_RW={feat.get('d_RW'):.2f}, d_PW={feat.get('d_PW'):.2f}")
+    print(f"      d_TI={feat.get('d_TI'):.2f}, d_TM={feat.get('d_TM'):.2f}, d_TW={feat.get('d_TW'):.2f}")
+    print(f"      idx_curl={feat.get('index_curl'):.2f}, idx_straight={feat.get('idx_straight'):.2f}, idx_tip_y={feat.get('idx_tip_y'):.2f}")

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   FlaskConical, Play, Square, RotateCcw, Save, AlertTriangle,
   CheckCircle2, XCircle, Download, BarChart3, SkipForward, Pause,
-  FileJson, Sparkles, Check, ChevronRight, X, Clock, HelpCircle
+  FileJson, Sparkles, Check, ChevronRight, X, Clock, HelpCircle,
+  Eye, EyeOff, Video, Info, ShieldAlert, Activity
 } from 'lucide-react';
 import {
   savePilotEvaluation,
@@ -18,8 +19,11 @@ import {
   evaluateTrialFrames,
   buildEvaluationReport,
   phaseAtElapsedSeconds,
-  DYNAMIC_DIACRITICS
-} from './pilotProtocol';
+  DYNAMIC_DIACRITICS,
+  computePinkyMetrics,
+  getEpochSecondsNow
+} from './pilotProtocol.js';
+import { SIGN_CONVENTIONS } from './signConventions.js';
 
 export { VSL_ALPHABET_29 };
 
@@ -36,7 +40,7 @@ export default function PilotTestingHUD({
   const [testMode, setTestMode] = useState('single_letter'); // 'single_letter' | 'all_29_letters'
   const [selectedLetter, setSelectedLetter] = useState('A');
   const [currentRep, setCurrentRep] = useState(1);
-  const totalReps = PILOT_REPETITIONS; // 10 lượt
+  const [totalReps, setTotalReps] = useState(5); // 5 lượt thăm dò hoặc 10 lượt tiêu chuẩn
   const trialDurationSec = PILOT_DURATION_SEC; // 5.0s
 
   // --- Trial States ---
@@ -46,6 +50,9 @@ export default function PilotTestingHUD({
   const [recordingElapsedSec, setRecordingElapsedSec] = useState(0.0);
   const [autoAdvance, setAutoAdvance] = useState(true);
   const [saveFrameLogs, setSaveFrameLogs] = useState(true);
+  const [showConventionGuide, setShowConventionGuide] = useState(true);
+  const [showPinkyDiagnostics, setShowPinkyDiagnostics] = useState(false);
+  const [latestPinkyMetrics, setLatestPinkyMetrics] = useState(() => computePinkyMetrics(null));
 
   // --- Realtime Frame & Prediction Buffer ---
   const [currentFrameStats, setCurrentFrameStats] = useState({
@@ -75,6 +82,9 @@ export default function PilotTestingHUD({
   const currentRepRef = useRef(currentRep);
   currentRepRef.current = currentRep;
 
+  const totalRepsRef = useRef(totalReps);
+  totalRepsRef.current = totalReps;
+
   const sessionIdRef = useRef(sessionId);
   sessionIdRef.current = sessionId;
 
@@ -87,6 +97,9 @@ export default function PilotTestingHUD({
   const autoAdvanceTimeoutRef = useRef(null);
   const handleNextTrialRef = useRef(null);
   const frameCounterRef = useRef(0);
+  const backendFrameCountRef = useRef(0);
+  const lastBackendFpsTimeRef = useRef(performance.now());
+  const backendFpsRef = useRef(0);
 
   // Chuyển đổi trạng thái lượt thử đồng bộ kèm tăng generation để hủy bỏ triệt để in-flight requests cũ
   const transitionTrialState = useCallback((newState) => {
@@ -116,7 +129,7 @@ export default function PilotTestingHUD({
         rep_idx: currentRep,
         trial_generation: currentGen,
         frame_idx: frameCounterRef.current,
-        client_capture_ts: performance.now() / 1000,
+        client_capture_ts: getEpochSecondsNow(),
         signer_id: 'signer_01'
       };
     };
@@ -170,7 +183,7 @@ export default function PilotTestingHUD({
           expected_sign: expected,
           predicted_sign: 'NEUTRAL',
           confidence: 0.0,
-          timestamp: performance.now() / 1000,
+          timestamp: requestMeta.timestamp ?? requestMeta.landmark_extract_ts ?? requestMeta.client_capture_ts ?? getEpochSecondsNow(),
           is_match: false,
           landmarks: null,
           hand_detected: handDetected,
@@ -211,14 +224,58 @@ export default function PilotTestingHUD({
           }
         }
 
+        const rawLms = requestMeta?.raw_landmarks || data?.landmarks || null;
+        const features = data?.classifier_details?.features || null;
+        const pinkyMetrics = computePinkyMetrics(rawLms, features);
+        if (rawLms || features) {
+          setLatestPinkyMetrics(pinkyMetrics);
+        }
+
+        // Tính toán Backend FPS thực tế đồng bộ trước khi ghi bản ghi frame
+        backendFrameCountRef.current += 1;
+        const nowMs = performance.now();
+        const fpsWindowMs = nowMs - lastBackendFpsTimeRef.current;
+        if (fpsWindowMs >= 1000) {
+          backendFpsRef.current = Math.round((backendFrameCountRef.current * 1000) / fpsWindowMs);
+          backendFrameCountRef.current = 0;
+          lastBackendFpsTimeRef.current = nowMs;
+        } else if (backendFpsRef.current === 0 && fpsWindowMs >= 200) {
+          backendFpsRef.current = Math.round((backendFrameCountRef.current * 1000) / fpsWindowMs);
+        }
+
+        const frameTimestamp = requestMeta.timestamp ?? requestMeta.landmark_extract_ts ?? requestMeta.client_capture_ts ?? getEpochSecondsNow();
+        const pinkyExtVal = typeof features?.pinky_ext === 'boolean'
+          ? features.pinky_ext
+          : (rawLms && rawLms.length >= 21 ? rawLms[20][1] < rawLms[18][1] : null);
+        const pinkyCurlVal = features?.pinky_curl !== undefined
+          ? Number(features.pinky_curl)
+          : (pinkyMetrics.hasData ? Number(pinkyMetrics.curl.toFixed(4)) : null);
+        const dPinkyWristNormVal = features?.d_PW !== undefined
+          ? Number(features.d_PW)
+          : (pinkyMetrics.hasData ? Number(pinkyMetrics.d_pw.toFixed(4)) : null);
+
         frameRecord = {
           frame_idx: trialFramesRef.current.length + 1,
           expected_sign: expected,
           predicted_sign: predicted,
           confidence: conf,
-          timestamp: performance.now() / 1000,
+          timestamp: frameTimestamp,
+          client_capture_ts: requestMeta.client_capture_ts ?? null,
+          landmark_extract_ts: requestMeta.landmark_extract_ts ?? null,
+          request_send_ts: requestMeta.request_send_ts ?? null,
           is_match: isMatch,
-          landmarks: data?.landmarks || null,
+          landmarks: rawLms,
+          handedness: requestMeta.handedness ?? (handDetected ? 'Right' : null),
+          handedness_score: requestMeta.handedness_score ?? null,
+          mediapipe_model_complexity: requestMeta.mediapipe_model_complexity ?? null,
+          processing_resolution: requestMeta.processing_resolution ?? null,
+          camera_fps: requestMeta.camera_fps ?? null,
+          backend_fps: backendFpsRef.current,
+          pinky_pip_angle: pinkyMetrics.hasData ? pinkyMetrics.pipAngle : null,
+          pinky_dip_angle: pinkyMetrics.hasData ? pinkyMetrics.dipAngle : null,
+          pinky_curl: pinkyCurlVal,
+          pinky_extended: pinkyExtVal,
+          d_pinky_wrist_norm: dPinkyWristNormVal,
           hand_detected: handDetected,
           prediction_source: predictionSource,
           gating_status: gatingStatus,
@@ -227,6 +284,10 @@ export default function PilotTestingHUD({
           head_confidence: headConfidence,
           confirmed: Boolean(data?.confirmed),
           new_token: data?.new_token ?? null,
+          replaced_token: data?.replaced_token ?? null,
+          tts_speak: data?.tts_speak ?? null,
+          classifier_details: data?.classifier_details || null,
+          diacritic_fsm: data?.classifier_details?.diacritic_fsm || null,
           phase: phase,
           elapsed_sec: Number(elapsedSec.toFixed(3)),
           backend_error: false,
@@ -236,6 +297,11 @@ export default function PilotTestingHUD({
       }
 
       trialFramesRef.current.push(frameRecord);
+
+      const fsmDetails = data?.classifier_details?.diacritic_fsm;
+      const baseLabel = fsmDetails?.base_label ||
+        (['A', 'E', 'O', 'U', 'D'].includes(data?.classifier_details?.letter) ? data?.classifier_details?.letter : '—');
+      const fsmStateLabel = fsmDetails?.state || (data?.confirmed ? 'CONFIRMED' : 'IDLE');
 
       setCurrentFrameStats(prev => {
         const isNeutral = (frameRecord.predicted_sign === 'NEUTRAL' || frameRecord.predicted_sign === 'unknown');
@@ -247,7 +313,13 @@ export default function PilotTestingHUD({
           backendErrorFrames: (prev.backendErrorFrames || 0) + (isBackendError ? 1 : 0),
           lastSign: frameRecord.predicted_sign,
           lastConfidence: frameRecord.confidence,
-          isMatch: frameRecord.is_match
+          isMatch: frameRecord.is_match,
+          cameraFps: requestMeta?.camera_fps || prev.cameraFps || 0,
+          backendFps: backendFpsRef.current || prev.backendFps || 0,
+          baseSign: baseLabel,
+          fsmState: fsmStateLabel,
+          trackingStatus: handDetected ? 'VALID' : 'NO_HAND',
+          logStatus: trialStateRef.current === 'RECORDING' ? 'LOGGING' : 'IDLE'
         };
       });
     };
@@ -313,6 +385,9 @@ export default function PilotTestingHUD({
   const startRecordingPeriod = useCallback(() => {
     trialFramesRef.current = [];
     frameCounterRef.current = 0;
+    backendFrameCountRef.current = 0;
+    backendFpsRef.current = 0;
+    lastBackendFpsTimeRef.current = performance.now();
     setCurrentFrameStats({
       totalFrames: 0,
       matchFrames: 0,
@@ -326,14 +401,21 @@ export default function PilotTestingHUD({
     transitionTrialState('RECORDING');
 
     recordingStartTimeRef.current = performance.now();
+    let lastUiTickMs = -100;
 
     const loop = () => {
-      const elapsed = (performance.now() - recordingStartTimeRef.current) / 1000;
-      setRecordingElapsedSec(Math.min(elapsed, trialDurationSec));
+      const nowMs = performance.now();
+      const elapsed = (nowMs - recordingStartTimeRef.current) / 1000;
 
       if (elapsed >= trialDurationSec) {
+        setRecordingElapsedSec(trialDurationSec);
         handleCompleteTrial();
       } else {
+        // Điều tiết cập nhật DOM đồng hồ đếm 0.1s/lần (10Hz) để tránh re-render 60fps tranh CPU với MediaPipe
+        if (nowMs - lastUiTickMs >= 100) {
+          lastUiTickMs = nowMs;
+          setRecordingElapsedSec(Number(Math.min(elapsed, trialDurationSec).toFixed(1)));
+        }
         timerRafRef.current = requestAnimationFrame(loop);
       }
     };
@@ -361,7 +443,7 @@ export default function PilotTestingHUD({
     const letter = selectedLetterRef.current;
     const rep = currentRepRef.current;
 
-    if (rep < totalReps) {
+    if (rep < totalRepsRef.current) {
       // Tiếp tục lượt tiếp theo của chữ hiện tại và quay liền luôn
       const nextRep = rep + 1;
       currentRepRef.current = nextRep;
@@ -744,6 +826,52 @@ export default function PilotTestingHUD({
           >
             Chạy toàn bộ 29 chữ
           </button>
+
+          {/* Chọn số lượt thử: 5 lượt (Thăm dò) hoặc 10 lượt (Tiêu chuẩn) */}
+          <div style={{ display: 'flex', gap: '4px', marginLeft: '12px', borderLeft: '1px solid rgba(148, 163, 184, 0.2)', paddingLeft: '12px' }}>
+            <button
+              type="button"
+              disabled={trialState === 'RECORDING' || trialState === 'COUNTDOWN'}
+              onClick={() => {
+                setTotalReps(5);
+                totalRepsRef.current = 5;
+              }}
+              style={{
+                padding: '4px 8px',
+                fontSize: '11px',
+                borderRadius: '4px',
+                border: totalReps === 5 ? '1px solid #38bdf8' : '1px solid rgba(148, 163, 184, 0.2)',
+                background: totalReps === 5 ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
+                color: totalReps === 5 ? '#38bdf8' : '#94a3b8',
+                fontWeight: totalReps === 5 ? 'bold' : 'normal',
+                cursor: 'pointer'
+              }}
+              title="Thiết lập 5 lượt thử thăm dò"
+            >
+              5 lượt (Thăm dò)
+            </button>
+            <button
+              type="button"
+              disabled={trialState === 'RECORDING' || trialState === 'COUNTDOWN'}
+              onClick={() => {
+                setTotalReps(10);
+                totalRepsRef.current = 10;
+              }}
+              style={{
+                padding: '4px 8px',
+                fontSize: '11px',
+                borderRadius: '4px',
+                border: totalReps === 10 ? '1px solid #38bdf8' : '1px solid rgba(148, 163, 184, 0.2)',
+                background: totalReps === 10 ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
+                color: totalReps === 10 ? '#38bdf8' : '#94a3b8',
+                fontWeight: totalReps === 10 ? 'bold' : 'normal',
+                cursor: 'pointer'
+              }}
+              title="Thiết lập 10 lượt thử tiêu chuẩn"
+            >
+              10 lượt (Tiêu chuẩn)
+            </button>
+          </div>
         </div>
 
         {/* Thông tin tiến độ tổng thể */}
@@ -770,6 +898,7 @@ export default function PilotTestingHUD({
           const trials = resultsByLetter[letter] || [];
           const count = trials.length;
           const isSelected = letter === selectedLetter;
+          const isBlocked = SIGN_CONVENTIONS[letter]?.status === 'BLOCKED_SOURCE';
           const passedCount = trials.filter(t => t.status === 'PASS').length;
           const hasPassed = count >= totalReps && passedCount >= Math.ceil(totalReps * 0.7);
           const needsFix = count > 0 && !hasPassed;
@@ -782,6 +911,10 @@ export default function PilotTestingHUD({
             bg = 'rgba(56, 189, 248, 0.25)';
             borderColor = '#38bdf8';
             textColor = '#38bdf8';
+          } else if (isBlocked) {
+            bg = 'rgba(245, 158, 11, 0.12)';
+            borderColor = 'rgba(245, 158, 11, 0.45)';
+            textColor = '#fbbf24';
           } else if (hasPassed) {
             bg = 'rgba(34, 197, 94, 0.15)';
             borderColor = 'rgba(34, 197, 94, 0.4)';
@@ -821,7 +954,7 @@ export default function PilotTestingHUD({
                 justifyContent: 'center',
                 position: 'relative'
               }}
-              title={`Chữ ${letter} (${count}/${totalReps} lượt)`}
+              title={isBlocked ? `Chữ ${letter} (BLOCKED_SOURCE — Thiếu video Toàn quốc/Miền Nam)` : `Chữ ${letter} (${count}/${totalReps} lượt)`}
             >
               <span>{letter}</span>
               {count > 0 && (
@@ -831,6 +964,289 @@ export default function PilotTestingHUD({
           );
         })}
       </div>
+
+      {/* --- QUICK TOOLBAR: SOI KHỚP NGÓN ÚT 17-20 --- */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+          Đang chọn: <strong style={{ color: '#38bdf8', fontSize: '14px' }}>Chữ {selectedLetter}</strong>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowPinkyDiagnostics(prev => !prev)}
+          className="btn btn-secondary"
+          style={{
+            fontSize: '11px',
+            padding: '4px 10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: showPinkyDiagnostics ? 'rgba(244, 114, 182, 0.15)' : 'rgba(255,255,255,0.05)',
+            borderColor: showPinkyDiagnostics ? '#f472b6' : 'rgba(255,255,255,0.15)',
+            color: showPinkyDiagnostics ? '#f472b6' : '#cbd5e1',
+            cursor: 'pointer'
+          }}
+        >
+          <Activity size={13} color={showPinkyDiagnostics ? '#f472b6' : '#94a3b8'} />
+          {showPinkyDiagnostics ? 'Ẩn Soi Khớp Ngón Út (17-20)' : 'Soi Khớp Ngón Út (17-20)'}
+        </button>
+      </div>
+
+      {/* --- REALTIME PINKY DIAGNOSTICS CARD --- */}
+      {showPinkyDiagnostics && (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(30, 20, 35, 0.95), rgba(20, 15, 30, 0.9))',
+          border: '1px solid rgba(244, 114, 182, 0.45)',
+          borderRadius: '10px',
+          padding: '12px',
+          display: 'grid',
+          gap: '10px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f472b6', fontWeight: 'bold', fontSize: '13px' }}>
+              <Activity size={16} />
+              CHẨN ĐOÁN THỜI GIAN THỰC KHỚP NGÓN ÚT (17 — 20)
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                padding: '2px 8px',
+                borderRadius: '4px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                background: latestPinkyMetrics.status === 'STRAIGHT' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                color: latestPinkyMetrics.status === 'STRAIGHT' ? '#4ade80' : '#f87171',
+                border: `1px solid ${latestPinkyMetrics.status === 'STRAIGHT' ? '#22c55e' : '#ef4444'}`
+              }}>
+                {latestPinkyMetrics.status === 'STRAIGHT' ? 'DUỖI (STRAIGHT)' : (latestPinkyMetrics.status === 'CURLED' ? 'GẬP (CURLED)' : 'CHƯA CÓ TAY')}
+              </span>
+            </div>
+          </div>
+
+          {/* Metric Grid: PIP Angle, DIP Angle, Pinky Curl, d_PW */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '8px' }}>
+            <div style={{ background: 'rgba(15,23,42,0.8)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: '10px', color: '#94a3b8' }}>Góc PIP (17-18-19)</div>
+              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#38bdf8' }}>{latestPinkyMetrics.pipAngle}°</div>
+              <div style={{ fontSize: '9px', color: '#64748b' }}>Thẳng: ≥140°</div>
+            </div>
+            <div style={{ background: 'rgba(15,23,42,0.8)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: '10px', color: '#94a3b8' }}>Góc DIP (18-19-20)</div>
+              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#a78bfa' }}>{latestPinkyMetrics.dipAngle}°</div>
+              <div style={{ fontSize: '9px', color: '#64748b' }}>Thẳng: ≥140°</div>
+            </div>
+            <div style={{ background: 'rgba(15,23,42,0.8)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: '10px', color: '#94a3b8' }}>pinky_curl</div>
+              <div style={{ fontSize: '18px', fontWeight: 'bold', color: latestPinkyMetrics.curl <= 0.20 ? '#4ade80' : '#f87171' }}>
+                {latestPinkyMetrics.curl.toFixed(3)}
+              </div>
+              <div style={{ fontSize: '9px', color: '#64748b' }}>Thẳng: ≤0.20</div>
+            </div>
+            <div style={{ background: 'rgba(15,23,42,0.8)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: '10px', color: '#94a3b8' }}>d_PW (Út - Cổ tay)</div>
+              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#facc15' }}>{latestPinkyMetrics.d_pw.toFixed(2)}</div>
+              <div style={{ fontSize: '9px', color: '#64748b' }}>Gập: ≤0.85</div>
+            </div>
+          </div>
+
+          {/* Raw Landmark Coordinates 17, 18, 19, 20 */}
+          <div style={{ fontSize: '10px', color: '#cbd5e1', background: 'rgba(0,0,0,0.4)', padding: '8px 10px', borderRadius: '6px', fontFamily: 'monospace', display: 'grid', gap: '3px' }}>
+            <div>17 (PINKY_MCP): x={latestPinkyMetrics.lm17[0]} y={latestPinkyMetrics.lm17[1]} z={latestPinkyMetrics.lm17[2]}</div>
+            <div>18 (PINKY_PIP): x={latestPinkyMetrics.lm18[0]} y={latestPinkyMetrics.lm18[1]} z={latestPinkyMetrics.lm18[2]}</div>
+            <div>19 (PINKY_DIP): x={latestPinkyMetrics.lm19[0]} y={latestPinkyMetrics.lm19[1]} z={latestPinkyMetrics.lm19[2]}</div>
+            <div>20 (PINKY_TIP): x={latestPinkyMetrics.lm20[0]} y={latestPinkyMetrics.lm20[1]} z={latestPinkyMetrics.lm20[2]}</div>
+          </div>
+
+          {/* Live Validation Checklist (Raw Landmarks · Bù trễ = 0 · Hands 640x480 Complexity 1) */}
+          <div style={{ fontSize: '10px', color: '#e2e8f0', background: 'rgba(15, 23, 42, 0.75)', padding: '8px 10px', borderRadius: '6px', border: '1px dashed rgba(244, 114, 182, 0.35)', display: 'grid', gap: '4px' }}>
+            <div style={{ color: '#f472b6', fontWeight: 600 }}>
+              Chế độ chẩn đoán: Raw Landmarks (Bù trễ = 0) · Hands 640×480 · modelComplexity=1
+            </div>
+            <div style={{ color: '#cbd5e1' }}>
+              Bài thử webcam ngắn (5 tư thế kiểm tra khớp 17–20):
+              1) Ngón út duỗi · 2) Ngón út gập · 3) Bàn tay nắm · 4) Bàn tay nghiêng · 5) Tư thế O và U.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- SIGN CONVENTION GUIDE CARD (TOÀN QUỐC -> MIỀN NAM) --- */}
+      {SIGN_CONVENTIONS[selectedLetter] && (
+        <div style={{
+          background: SIGN_CONVENTIONS[selectedLetter].status === 'BLOCKED_SOURCE'
+            ? 'linear-gradient(135deg, rgba(30, 27, 20, 0.95), rgba(45, 26, 14, 0.9))'
+            : 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 30, 50, 0.9))',
+          border: `1px solid ${SIGN_CONVENTIONS[selectedLetter].status === 'BLOCKED_SOURCE' ? 'rgba(245, 158, 11, 0.5)' : 'rgba(56, 189, 248, 0.35)'}`,
+          borderRadius: '10px',
+          padding: '14px',
+          display: 'grid',
+          gap: '12px'
+        }}>
+          {/* Header with Title, Badges, and Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{
+                fontSize: '18px',
+                fontWeight: 'bold',
+                color: SIGN_CONVENTIONS[selectedLetter].status === 'BLOCKED_SOURCE' ? '#fbbf24' : '#38bdf8',
+                background: 'rgba(255,255,255,0.06)',
+                padding: '2px 10px',
+                borderRadius: '6px',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}>
+                Chữ {selectedLetter}
+              </span>
+              <span style={{
+                fontSize: '11px',
+                fontWeight: 'bold',
+                padding: '3px 8px',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                background: SIGN_CONVENTIONS[selectedLetter].status === 'VERIFIED_NATIONAL'
+                  ? 'rgba(34, 197, 94, 0.2)'
+                  : (SIGN_CONVENTIONS[selectedLetter].status === 'VERIFIED_SOUTHERN'
+                      ? 'rgba(6, 182, 212, 0.2)'
+                      : 'rgba(239, 68, 68, 0.2)'),
+                color: SIGN_CONVENTIONS[selectedLetter].status === 'VERIFIED_NATIONAL'
+                  ? '#4ade80'
+                  : (SIGN_CONVENTIONS[selectedLetter].status === 'VERIFIED_SOUTHERN'
+                      ? '#22d3ee'
+                      : '#f87171'),
+                border: `1px solid ${SIGN_CONVENTIONS[selectedLetter].status === 'VERIFIED_NATIONAL'
+                  ? 'rgba(34, 197, 94, 0.4)'
+                  : (SIGN_CONVENTIONS[selectedLetter].status === 'VERIFIED_SOUTHERN'
+                      ? 'rgba(6, 182, 212, 0.4)'
+                      : 'rgba(239, 68, 68, 0.4)')}`
+              }}>
+                {SIGN_CONVENTIONS[selectedLetter].status === 'BLOCKED_SOURCE' ? <ShieldAlert size={12} /> : <CheckCircle2 size={12} />}
+                Nguồn: {SIGN_CONVENTIONS[selectedLetter].statusLabel}
+              </span>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                Chữ nền: <strong style={{ color: '#f8fafc' }}>{SIGN_CONVENTIONS[selectedLetter].baseLetter}</strong>
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowConventionGuide(prev => !prev)}
+              className="btn btn-secondary"
+              style={{ fontSize: '11px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '5px' }}
+            >
+              {showConventionGuide ? <EyeOff size={13} /> : <Eye size={13} />}
+              {showConventionGuide ? 'Ẩn Hướng Dẫn' : 'Xem Hướng Dẫn Chi Tiết'}
+            </button>
+          </div>
+
+          {/* Guide Details (Expanded) */}
+          {showConventionGuide && (
+            <div style={{ display: 'grid', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px' }}>
+              {/* If BLOCKED_SOURCE: prominent caution box */}
+              {SIGN_CONVENTIONS[selectedLetter].status === 'BLOCKED_SOURCE' ? (
+                <div style={{
+                  background: 'rgba(245, 158, 11, 0.1)',
+                  border: '1px solid rgba(245, 158, 11, 0.4)',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  display: 'grid',
+                  gap: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fbbf24', fontWeight: 'bold', fontSize: '13px' }}>
+                    <AlertTriangle size={16} />
+                    QUY ƯỚC CHƯA ĐƯỢC XÁC MINH — KHÓA KIỂM THỬ ĐẠT CHUẨN
+                  </div>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#fef3c7', lineHeight: '1.5' }}>
+                    {SIGN_CONVENTIONS[selectedLetter].blockedReason}
+                  </p>
+                  <div style={{ fontSize: '11px', color: '#fde68a', background: 'rgba(0,0,0,0.25)', padding: '8px', borderRadius: '6px' }}>
+                    <strong>Mô tả lý thuyết trong QIPEDC:</strong> {SIGN_CONVENTIONS[selectedLetter].description}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#fca5a5', fontWeight: '600' }}>
+                    ⚠️ Lưu ý: Mọi lượt thử nghiệm webcam đối với chữ {selectedLetter} sẽ được ghi nhận với trạng thái <code>BLOCKED_SOURCE</code>, tuyệt đối không cấp chứng nhận PASS giả định.
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'auto 1fr',
+                  gap: '14px',
+                  alignItems: 'start'
+                }}>
+                  {/* Left: Video Player */}
+                  <div style={{
+                    background: 'rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px',
+                    padding: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '6px',
+                    width: '180px'
+                  }}>
+                    <div style={{ fontSize: '10px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Video size={12} color="#38bdf8" />
+                      Video chuẩn ({SIGN_CONVENTIONS[selectedLetter].videoId})
+                    </div>
+                    <video
+                      key={SIGN_CONVENTIONS[selectedLetter].videoUrl}
+                      src={SIGN_CONVENTIONS[selectedLetter].videoUrl}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      controls
+                      style={{
+                        width: '164px',
+                        height: '110px',
+                        objectFit: 'cover',
+                        borderRadius: '6px',
+                        background: '#000'
+                      }}
+                    />
+                    <span style={{ fontSize: '9px', color: '#64748b', textAlign: 'center' }}>
+                      Nguồn: {SIGN_CONVENTIONS[selectedLetter].provenancePolicy}
+                    </span>
+                  </div>
+
+                  {/* Right: 5 Steps */}
+                  <div style={{ display: 'grid', gap: '8px' }}>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>
+                      {SIGN_CONVENTIONS[selectedLetter].description}
+                    </div>
+
+                    <div style={{ display: 'grid', gap: '6px', fontSize: '11px' }}>
+                      <div style={{ background: 'rgba(15,23,42,0.6)', padding: '6px 10px', borderRadius: '6px', borderLeft: '3px solid #38bdf8' }}>
+                        <strong style={{ color: '#38bdf8' }}>1. Tư thế bắt đầu (Chữ nền {SIGN_CONVENTIONS[selectedLetter].baseLetter}):</strong>{' '}
+                        <span style={{ color: '#cbd5e1' }}>{SIGN_CONVENTIONS[selectedLetter].steps.startingPose}</span>
+                      </div>
+
+                      <div style={{ background: 'rgba(15,23,42,0.6)', padding: '6px 10px', borderRadius: '6px', borderLeft: '3px solid #64748b' }}>
+                        <strong style={{ color: '#94a3b8' }}>2. Ngón tay giữ nguyên:</strong>{' '}
+                        <span style={{ color: '#cbd5e1' }}>{SIGN_CONVENTIONS[selectedLetter].steps.fingersHeld}</span>
+                      </div>
+
+                      <div style={{ background: 'rgba(15,23,42,0.6)', padding: '6px 10px', borderRadius: '6px', borderLeft: '3px solid #22c55e' }}>
+                        <strong style={{ color: '#4ade80' }}>3. Động tác chuyển động:</strong>{' '}
+                        <span style={{ color: '#cbd5e1' }}>{SIGN_CONVENTIONS[selectedLetter].steps.movement}</span>
+                      </div>
+
+                      <div style={{ background: 'rgba(15,23,42,0.6)', padding: '6px 10px', borderRadius: '6px', borderLeft: '3px solid #f59e0b' }}>
+                        <strong style={{ color: '#fbbf24' }}>4. Tư thế kết thúc:</strong>{' '}
+                        <span style={{ color: '#cbd5e1' }}>{SIGN_CONVENTIONS[selectedLetter].steps.endingPose}</span>
+                      </div>
+
+                      <div style={{ background: 'rgba(15,23,42,0.6)', padding: '6px 10px', borderRadius: '6px', borderLeft: '3px solid #f87171' }}>
+                        <strong style={{ color: '#f87171' }}>5. Lưu ý chống nhầm lẫn:</strong>{' '}
+                        <span style={{ color: '#cbd5e1' }}>{SIGN_CONVENTIONS[selectedLetter].steps.antiConfusion}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Main Testing Stage */}
       <div style={{
@@ -894,41 +1310,97 @@ export default function PilotTestingHUD({
               </div>
             </div>
 
-            {/* Thông số nhận diện trực tiếp */}
+            {/* Thông số nhận diện thời gian thực đầy đủ 9 trường Telemetry */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-              gap: '10px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(115px, 1fr))',
+              gap: '8px',
               marginTop: '4px'
             }}>
-              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize: '11px', color: '#94a3b8' }}>Mục tiêu (Expected)</div>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#38bdf8' }}>{selectedLetter}</div>
+              {/* 1. Mục tiêu */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>Mục tiêu (Target)</div>
+                <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#38bdf8' }}>{selectedLetter}</div>
               </div>
 
+              {/* 2. AI Dự đoán */}
               <div style={{
                 background: currentFrameStats.isMatch ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-                padding: '10px',
+                padding: '8px 10px',
                 borderRadius: '8px',
                 border: `1px solid ${currentFrameStats.isMatch ? '#22c55e' : '#ef4444'}`
               }}>
-                <div style={{ fontSize: '11px', color: '#94a3b8' }}>AI Dự đoán (Predicted)</div>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: currentFrameStats.isMatch ? '#4ade80' : '#f87171' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>AI Dự đoán (Final)</div>
+                <div style={{ fontSize: '22px', fontWeight: 'bold', color: currentFrameStats.isMatch ? '#4ade80' : '#f87171' }}>
                   {currentFrameStats.lastSign}
                 </div>
               </div>
 
-              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize: '11px', color: '#94a3b8' }}>Độ tin cậy</div>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#cbd5e1' }}>
+              {/* 3. Chữ nền đang nhận diện */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>Chữ nền (Base)</div>
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#facc15' }}>
+                  {currentFrameStats.baseSign || '—'}
+                </div>
+              </div>
+
+              {/* 4. Trạng thái FSM */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>FSM State</div>
+                <div style={{
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  marginTop: '4px',
+                  color: currentFrameStats.fsmState === 'DIACRITIC_CONFIRMED' || currentFrameStats.fsmState === 'CONFIRMED'
+                    ? '#4ade80'
+                    : (currentFrameStats.fsmState === 'BASE_STABLE' || currentFrameStats.fsmState === 'DIACRITIC_CANDIDATE' ? '#38bdf8' : '#cbd5e1')
+                }}>
+                  {currentFrameStats.fsmState || 'IDLE'}
+                </div>
+              </div>
+
+              {/* 5. Độ tin cậy */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>Độ tin cậy</div>
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#cbd5e1' }}>
                   {(currentFrameStats.lastConfidence * 100).toFixed(0)}%
                 </div>
               </div>
 
-              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize: '11px', color: '#94a3b8' }}>Khớp lượt này</div>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#facc15' }}>
-                  {currentFrameStats.matchFrames} / {currentFrameStats.totalFrames}
+              {/* 6. Camera FPS */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>Camera FPS</div>
+                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#a78bfa' }}>
+                  {currentFrameStats.cameraFps || 0}
+                </div>
+              </div>
+
+              {/* 7. Backend FPS */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>Backend FPS</div>
+                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#38bdf8' }}>
+                  {currentFrameStats.backendFps || 0}
+                </div>
+              </div>
+
+              {/* 8. Tracking status */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>Tracking</div>
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  marginTop: '4px',
+                  color: currentFrameStats.trackingStatus === 'VALID' ? '#4ade80' : '#f87171'
+                }}>
+                  {currentFrameStats.trackingStatus || '—'}
+                </div>
+              </div>
+
+              {/* 9. Trạng thái lưu log */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>Trạng thái log</div>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', marginTop: '4px', color: '#38bdf8' }}>
+                  {currentFrameStats.logStatus || 'IDLE'}
                 </div>
               </div>
             </div>
@@ -938,8 +1410,12 @@ export default function PilotTestingHUD({
         {/* Post-Trial Review */}
         {trialState === 'TRIAL_REVIEW' && lastTrialSummary && (
           <div style={{
-            background: lastTrialSummary.isPassed ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-            border: `1px solid ${lastTrialSummary.isPassed ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'}`,
+            background: lastTrialSummary.status === 'BLOCKED_SOURCE'
+              ? 'rgba(245, 158, 11, 0.12)'
+              : (lastTrialSummary.isPassed ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)'),
+            border: `1px solid ${lastTrialSummary.status === 'BLOCKED_SOURCE'
+              ? 'rgba(245, 158, 11, 0.5)'
+              : (lastTrialSummary.isPassed ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)')}`,
             borderRadius: '8px',
             padding: '14px',
             display: 'grid',
@@ -947,14 +1423,18 @@ export default function PilotTestingHUD({
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {lastTrialSummary.isPassed ? (
+                {lastTrialSummary.status === 'BLOCKED_SOURCE' ? (
+                  <AlertTriangle size={24} color="#fbbf24" />
+                ) : lastTrialSummary.isPassed ? (
                   <CheckCircle2 size={24} color="#4ade80" />
                 ) : (
                   <XCircle size={24} color="#f87171" />
                 )}
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '15px', color: lastTrialSummary.isPassed ? '#4ade80' : '#f87171' }}>
-                    {lastTrialSummary.isPassed
+                  <h3 style={{ margin: 0, fontSize: '15px', color: lastTrialSummary.status === 'BLOCKED_SOURCE' ? '#fbbf24' : (lastTrialSummary.isPassed ? '#4ade80' : '#f87171') }}>
+                    {lastTrialSummary.status === 'BLOCKED_SOURCE'
+                      ? `LƯỢT ${lastTrialSummary.rep} — BLOCKED_SOURCE (Quy ước chưa xác minh, thiếu video đối chứng)`
+                      : lastTrialSummary.isPassed
                       ? (lastTrialSummary.isDynamic
                           ? `LƯỢT ${lastTrialSummary.rep} ĐẠT — Đã xác nhận ký hiệu động ${selectedLetter}`
                           : `LƯỢT ${lastTrialSummary.rep} ĐẠT — Khớp ${lastTrialSummary.matchPct}% chữ ${selectedLetter}`)
@@ -967,8 +1447,19 @@ export default function PilotTestingHUD({
                           : `LƯỢT ${lastTrialSummary.rep} CẦN FIX — Chỉ khớp ${lastTrialSummary.matchPct}% chữ ${selectedLetter}`)}
                   </h3>
                   <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
-                    {lastTrialSummary.isDynamic ? (
-                      <span>Bằng chứng: Nền <strong>{lastTrialSummary.hasBaseEvidence ? 'ĐẠT' : 'THIẾU'}</strong> | Dấu <strong>{lastTrialSummary.hasDiacriticConfirmation ? 'ĐÃ XÁC NHẬN' : 'CHƯA XÁC NHẬN'}</strong></span>
+                    {lastTrialSummary.status === 'BLOCKED_SOURCE' ? (
+                      <span style={{ color: '#fde68a' }}>
+                        Chữ {selectedLetter} chưa có video Toàn quốc hoặc Miền Nam hợp lệ. Đã loại bỏ video Miền Bắc B; không cấp kết quả PASS giả.
+                      </span>
+                    ) : lastTrialSummary.isDynamic ? (
+                      <span>
+                        Bằng chứng: Nền <strong>{lastTrialSummary.hasBaseEvidence ? 'ĐẠT' : 'THIẾU'}</strong> | Dấu <strong>{lastTrialSummary.hasDiacriticConfirmation ? 'ĐÃ XÁC NHẬN' : 'CHƯA XÁC NHẬN'}</strong>
+                        {lastTrialSummary.root_cause && lastTrialSummary.root_cause !== 'NONE' && (
+                          <span style={{ marginLeft: '8px', color: '#f87171' }}>
+                            [Nguyên nhân: <strong>{lastTrialSummary.root_cause}</strong>]
+                          </span>
+                        )}
+                      </span>
                     ) : (
                       lastTrialSummary.topConfusion
                         ? `⚠️ Thường bị nhận diện nhầm sang chữ: "${lastTrialSummary.topConfusion}" (${lastTrialSummary.confusions[lastTrialSummary.topConfusion]} frames)`
@@ -1316,6 +1807,13 @@ export default function PilotTestingHUD({
                   </div>
                 </div>
 
+                <div style={{ background: 'rgba(245,158,11,0.12)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(245,158,11,0.3)' }}>
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>BLOCKED_SOURCE</span>
+                  <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#fbbf24' }}>
+                    {currentReport.summary.letters_blocked_source?.length || 0}
+                  </div>
+                </div>
+
                 <div style={{ background: 'rgba(15,23,42,0.8)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <span style={{ fontSize: '11px', color: '#94a3b8' }}>Độ chính xác TB</span>
                   <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#facc15' }}>
@@ -1323,6 +1821,24 @@ export default function PilotTestingHUD({
                   </div>
                 </div>
               </div>
+
+              {/* Danh sách chữ BLOCKED_SOURCE */}
+              {currentReport.summary.letters_blocked_source && currentReport.summary.letters_blocked_source.length > 0 && (
+                <div style={{
+                  background: 'rgba(245, 158, 11, 0.08)',
+                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  borderRadius: '8px',
+                  padding: '12px'
+                }}>
+                  <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#fbbf24', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ShieldAlert size={15} />
+                    CHỮ KHÓA NGUỒN BLOCKED_SOURCE ({currentReport.summary.letters_blocked_source.length} chữ: {currentReport.summary.letters_blocked_source.join(', ')}):
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.5' }}>
+                    Các chữ này chưa có video nguồn Toàn quốc hoặc Miền Nam (hậu tố N) trên đĩa cache. Video Miền Bắc B bị loại bỏ hoàn toàn theo quy tắc TOÀN QUỐC → MIỀN NAM. Quy ước chưa được xác minh định lượng nên hệ thống không cấp kết quả PASS giả định.
+                  </div>
+                </div>
+              )}
 
               {/* Danh sách chữ cần FIX */}
               {currentReport.summary.letters_needing_fix.length > 0 && (
@@ -1421,14 +1937,18 @@ export default function PilotTestingHUD({
                                 borderRadius: '4px',
                                 fontSize: '10px',
                                 fontWeight: 'bold',
-                                background: lData.status === 'PASS' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)',
-                                color: lData.status === 'PASS' ? '#4ade80' : '#f87171'
+                                background: lData.status === 'PASS'
+                                  ? 'rgba(34,197,94,0.2)'
+                                  : (lData.status === 'BLOCKED_SOURCE' ? 'rgba(245,158,11,0.2)' : 'rgba(239,68,68,0.2)'),
+                                color: lData.status === 'PASS'
+                                  ? '#4ade80'
+                                  : (lData.status === 'BLOCKED_SOURCE' ? '#fbbf24' : '#f87171')
                               }}>
                                 {lData.status}
                               </span>
                             </td>
-                            <td style={{ padding: '8px 12px', color: '#fca5a5' }}>
-                              {confs || 'Không có'}
+                            <td style={{ padding: '8px 12px', color: lData.status === 'BLOCKED_SOURCE' ? '#fde68a' : '#fca5a5' }}>
+                              {lData.status === 'BLOCKED_SOURCE' ? 'Thiếu video nguồn N' : (confs || 'Không có')}
                             </td>
                           </tr>
                         );

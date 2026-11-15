@@ -118,12 +118,16 @@ export function fetchMotion(id) {
   return motionCache.get(id);
 }
 
-export async function sendSequenceForRecognition(sequence, threshold = 0.65) {
+export async function sendSequenceForRecognition(sequence, threshold = 0.65, mode = 'words', debugMeta = null) {
   try {
+    const payload = { sequence, threshold, mode };
+    if (debugMeta) {
+      payload.debug_meta = debugMeta;
+    }
     const res = await fetch(`${API_BASE_URL}/api/recognize_sequence`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sequence, threshold })
+      body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error('Sequence recognition failed');
     return await res.json();
@@ -148,26 +152,37 @@ export async function sendLandmarksForRecognition(
       'Content-Type': 'application/json',
       ...(mode ? { 'X-Conversion-Mode': mode } : {})
     };
+    const resolvedTimestamp =
+      metadata?.timestamp !== undefined && metadata?.timestamp !== null
+        ? Number(metadata.timestamp)
+        : (metadata?.landmark_extract_ts !== undefined && metadata?.landmark_extract_ts !== null
+            ? Number(metadata.landmark_extract_ts)
+            : null);
+
     const bodyPayload = {
       landmarks,
       multi_hands,
       handedness,
       mode,
+      ...(resolvedTimestamp !== null && Number.isFinite(resolvedTimestamp) ? { timestamp: resolvedTimestamp } : {}),
       ...(metadata?.expected_sign ? { expected_sign: metadata.expected_sign } : {}),
       ...(metadata?.session_id ? { session_id: metadata.session_id } : {}),
       ...(metadata?.trial_id ? { trial_id: metadata.trial_id } : {}),
       ...(metadata?.frame_idx !== undefined && metadata?.frame_idx !== null ? { frame_idx: Number(metadata.frame_idx) } : {}),
       ...(metadata?.signer_id ? { signer_id: metadata.signer_id } : {}),
-      ...(metadata?.client_capture_ts ? { client_capture_ts: Number(metadata.client_capture_ts) } : {}),
-      ...(metadata?.landmark_extract_ts ? { landmark_extract_ts: Number(metadata.landmark_extract_ts) } : {}),
-      ...(metadata?.request_send_ts ? { request_send_ts: Number(metadata.request_send_ts) } : {}),
+      ...(metadata?.client_capture_ts !== undefined && metadata?.client_capture_ts !== null ? { client_capture_ts: Number(metadata.client_capture_ts) } : {}),
+      ...(metadata?.landmark_extract_ts !== undefined && metadata?.landmark_extract_ts !== null ? { landmark_extract_ts: Number(metadata.landmark_extract_ts) } : {}),
+      ...(metadata?.request_send_ts !== undefined && metadata?.request_send_ts !== null ? { request_send_ts: Number(metadata.request_send_ts) } : {}),
       ...(metadata?.video_pts_sec !== undefined && metadata?.video_pts_sec !== null ? { video_pts_sec: metadata.video_pts_sec } : {}),
       ...(metadata?.video_frame_idx !== undefined && metadata?.video_frame_idx !== null ? { video_frame_idx: metadata.video_frame_idx } : {}),
       ...(metadata?.phase ? { phase: metadata.phase } : {}),
       ...(metadata?.image_width ? { image_width: Number(metadata.image_width) } : {}),
       ...(metadata?.image_height ? { image_height: Number(metadata.image_height) } : {}),
       ...(metadata?.handedness_score !== undefined && metadata?.handedness_score !== null ? { handedness_score: Number(metadata.handedness_score) } : {}),
-      ...(metadata?.tracking_confidence !== undefined && metadata?.tracking_confidence !== null ? { tracking_confidence: Number(metadata.tracking_confidence) } : {})
+      ...(metadata?.tracking_confidence !== undefined && metadata?.tracking_confidence !== null ? { tracking_confidence: Number(metadata.tracking_confidence) } : {}),
+      ...(metadata?.mediapipe_model_complexity !== undefined && metadata?.mediapipe_model_complexity !== null ? { mediapipe_model_complexity: Number(metadata.mediapipe_model_complexity) } : {}),
+      ...(metadata?.processing_resolution ? { processing_resolution: String(metadata.processing_resolution) } : {}),
+      ...(metadata?.camera_fps !== undefined && metadata?.camera_fps !== null ? { camera_fps: Number(metadata.camera_fps) } : {})
     };
     const res = await fetch(`${API_BASE_URL}/api/recognize_landmarks`, {
       method: 'POST',

@@ -925,8 +925,11 @@ class TestHSouthGeometricRuleAndDisambiguation:
 
     @pytest.fixture(scope="module")
     def h_north_data(self):
-        """Tải dữ liệu landmark trích xuất từ video QIPEDC D0500B (H Miền Bắc)."""
-        path = os.path.join(
+        """Tải dữ liệu landmark trích xuất từ video QIPEDC D0500B (H Miền Bắc legacy)."""
+        legacy_path = os.path.join(
+            os.path.dirname(__file__), "..", "data", "alphabet_v2", "static_landmarks", "H_D0500B_legacy.json"
+        )
+        path = legacy_path if os.path.exists(legacy_path) else os.path.join(
             os.path.dirname(__file__), "..", "data", "alphabet_v2", "static_landmarks", "H.json"
         )
         assert os.path.exists(path), f"File không tồn tại: {path}"

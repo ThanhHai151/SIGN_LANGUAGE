@@ -30,6 +30,8 @@ import {
   pilotLoggingInterrupted,
   PILOT_DURATION_SEC,
   PILOT_REPETITIONS,
+  getEpochSecondsNow,
+  createMonotonicTimestampGenerator,
 } from './pilotProtocol.js';
 
 test('phase boundaries follow the fixed six second protocol', () => {
@@ -229,4 +231,22 @@ test('safe session rotation requires a verified flush with no pending, mismatch,
   assert.equal(pilotFlushVerified(before, { ...flush, stats: { ...flush.stats, dropped_io_error: 1 } }, after, 'pilot_a'), false);
   assert.equal(pilotFlushVerified(before, { ...flush, stats: { ...flush.stats, pending_in_queue: 1 } }, after, 'pilot_a'), false);
   assert.equal(pilotFlushVerified(before, flush, { ...after, pilot_logging_enabled: false }, 'pilot_a'), false);
+});
+
+test('Checkpoint D epoch-second timestamp contract is monotonic under duplicates and jitter', () => {
+  const nowSec = getEpochSecondsNow();
+  assert.ok(Number.isFinite(nowSec) && nowSec > 1_700_000_000, `Expected Unix-epoch seconds, got ${nowSec}`);
+
+  const gen = createMonotonicTimestampGenerator();
+  const t1 = gen.next(1763250000.1);
+  const t2 = gen.next(1763250000.1); // duplicate
+  const t3 = gen.next(1763250000.05); // slight backwards jitter
+  assert.equal(t1, 1763250000.1);
+  assert.ok(t2 > t1);
+  assert.ok(t3 > t2);
+
+  gen.reset(0);
+  assert.equal(gen.current(), 0);
+  const t4 = gen.next(1763250005.0);
+  assert.equal(t4, 1763250005.0);
 });
