@@ -9,31 +9,40 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "Ă": {
     "letter": "Ă",
-    "video_id": "D0490B",
-    "filename": "D0490B.mp4",
-    "total_frames": 89,
+    "video_id": "D0490N",
+    "filename": "D0490N.mp4",
+    "total_frames": 128,
     "fps": 23.976,
-    "duration_sec": 3.712,
+    "duration_sec": 5.339,
     "resolution": "1280x720",
     "is_dynamic": true,
     "stride": 1,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Miền Nam",
+    "source_status": "VERIFIED_SOUTHERN",
+    "provenance_policy": "TOÀN QUỐC -> MIỀN NAM"
   },
   "Â": {
     "letter": "Â",
-    "video_id": "D0491B",
-    "filename": "D0491B.mp4",
-    "total_frames": 108,
+    "video_id": "D0491N",
+    "filename": "D0491N.mp4",
+    "total_frames": 111,
     "fps": 23.976,
-    "duration_sec": 4.504,
+    "duration_sec": 4.63,
     "resolution": "1280x720",
     "is_dynamic": true,
     "stride": 1,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Miền Nam",
+    "source_status": "VERIFIED_SOUTHERN",
+    "provenance_policy": "TOÀN QUỐC -> MIỀN NAM"
   },
   "B": {
     "letter": "B",
@@ -45,7 +54,10 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "C": {
     "letter": "C",
@@ -57,7 +69,10 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "D": {
     "letter": "D",
@@ -69,7 +84,10 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "Đ": {
     "letter": "Đ",
@@ -81,7 +99,10 @@
     "resolution": "1280x720",
     "is_dynamic": true,
     "stride": 1,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "E": {
     "letter": "E",
@@ -93,43 +114,53 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "Ê": {
     "letter": "Ê",
-    "video_id": "D0497B",
-    "filename": "D0497B.mp4",
-    "total_frames": 76,
+    "video_id": "D0497N",
+    "filename": "D0497N.mp4",
+    "total_frames": 129,
     "fps": 23.976,
-    "duration_sec": 3.17,
+    "duration_sec": 5.38,
     "resolution": "1280x720",
     "is_dynamic": true,
     "stride": 1,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Miền Nam",
+    "source_status": "VERIFIED_SOUTHERN",
+    "provenance_policy": "TOÀN QUỐC -> MIỀN NAM"
   },
   "G": {
-    "letter": "G",
-    "video_id": "D0498B",
-    "filename": "D0498B.mp4",
-    "total_frames": 158,
+    "video_id": "D0498N",
+    "filename": "D0498N.mp4",
+    "total_frames": 90,
     "fps": 23.976,
-    "duration_sec": 6.59,
+    "duration_sec": 3.754,
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Miền Nam",
+    "source_status": "VERIFIED_SOUTHERN",
+    "provenance_policy": "TOÀN QUỐC -> MIỀN NAM"
   },
   "H": {
-    "letter": "H",
-    "video_id": "D0500B",
-    "filename": "D0500B.mp4",
-    "total_frames": 71,
+    "video_id": "D0500N",
+    "filename": "D0500N.mp4",
+    "total_frames": 65,
     "fps": 23.976,
-    "duration_sec": 2.961,
+    "duration_sec": 2.711,
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Miền Nam",
+    "source_status": "VERIFIED_SOUTHERN",
+    "provenance_policy": "TOÀN QUỐC -> MIỀN NAM"
   },
   "I": {
     "letter": "I",
@@ -141,7 +172,10 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "K": {
     "letter": "K",
@@ -153,7 +187,10 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "L": {
     "letter": "L",
@@ -165,7 +202,10 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "M": {
     "letter": "M",
@@ -177,7 +217,10 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "N": {
     "letter": "N",
@@ -189,7 +232,10 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "O": {
     "letter": "O",
@@ -201,19 +247,25 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "Ô": {
     "letter": "Ô",
-    "video_id": "D0507B",
-    "filename": "D0507B.mp4",
-    "total_frames": 84,
+    "video_id": "D0507N",
+    "filename": "D0507N.mp4",
+    "total_frames": 68,
     "fps": 23.976,
-    "duration_sec": 3.503,
+    "duration_sec": 2.836,
     "resolution": "1280x720",
     "is_dynamic": true,
     "stride": 1,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Miền Nam",
+    "provenance_policy": "TOÀN QUỐC -> MIỀN NAM",
+    "source_status": "VERIFIED_SOUTHERN"
   },
   "Ơ": {
     "letter": "Ơ",
@@ -225,19 +277,24 @@
     "resolution": "1280x720",
     "is_dynamic": true,
     "stride": 1,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Miền Nam",
+    "source_status": "VERIFIED_SOUTHERN",
+    "provenance_policy": "TOÀN QUỐC -> MIỀN NAM"
   },
   "P": {
-    "letter": "P",
-    "video_id": "D0509B",
-    "filename": "D0509B.mp4",
-    "total_frames": 96,
+    "video_id": "D0509N",
+    "filename": "D0509N.mp4",
+    "total_frames": 68,
     "fps": 23.976,
-    "duration_sec": 4.004,
+    "duration_sec": 2.836,
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Miền Nam",
+    "source_status": "VERIFIED_SOUTHERN",
+    "provenance_policy": "TOÀN QUỐC -> MIỀN NAM"
   },
   "Q": {
     "letter": "Q",
@@ -249,7 +306,10 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "R": {
     "letter": "R",
@@ -261,7 +321,10 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "S": {
     "letter": "S",
@@ -273,19 +336,24 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "T": {
-    "letter": "T",
-    "video_id": "D0513B",
-    "filename": "D0513B.mp4",
-    "total_frames": 86,
+    "video_id": "D0513N",
+    "filename": "D0513N.mp4",
+    "total_frames": 80,
     "fps": 23.976,
-    "duration_sec": 3.587,
+    "duration_sec": 3.337,
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Miền Nam",
+    "source_status": "VERIFIED_SOUTHERN",
+    "provenance_policy": "TOÀN QUỐC -> MIỀN NAM"
   },
   "U": {
     "letter": "U",
@@ -297,7 +365,10 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "Ư": {
     "letter": "Ư",
@@ -309,7 +380,10 @@
     "resolution": "1280x720",
     "is_dynamic": true,
     "stride": 1,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Miền Nam",
+    "source_status": "VERIFIED_SOUTHERN",
+    "provenance_policy": "TOÀN QUỐC -> MIỀN NAM"
   },
   "V": {
     "letter": "V",
@@ -321,19 +395,24 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Toàn quốc",
+    "source_status": "VERIFIED_NATIONAL",
+    "provenance_policy": "TOÀN QUỐC"
   },
   "X": {
-    "letter": "X",
-    "video_id": "D0517B",
-    "filename": "D0517B.mp4",
-    "total_frames": 173,
-    "fps": 23.976,
-    "duration_sec": 7.216,
+    "video_id": "D0517N",
+    "filename": "D0517N.mp4",
+    "total_frames": 106,
+    "fps": 29.97,
+    "duration_sec": 3.537,
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Miền Nam",
+    "source_status": "VERIFIED_SOUTHERN",
+    "provenance_policy": "TOÀN QUỐC -> MIỀN NAM"
   },
   "Y": {
     "letter": "Y",
@@ -345,6 +424,9 @@
     "resolution": "1280x720",
     "is_dynamic": false,
     "stride": 2,
-    "signer_id": "qipedc_signer_01"
+    "signer_id": "qipedc_signer_01",
+    "region": "Miền Nam",
+    "source_status": "VERIFIED_SOUTHERN",
+    "provenance_policy": "TOÀN QUỐC -> MIỀN NAM"
   }
 }

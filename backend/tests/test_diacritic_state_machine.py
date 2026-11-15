@@ -43,7 +43,8 @@ def make_dummy_landmarks(
     pinky_tip_y=0.45,
     index_tip_x=0.48,
     middle_tip_x=0.52,
-    pinky_tip_x=0.51
+    pinky_tip_x=0.51,
+    index_pip_x=0.47
 ):
     """Tạo bộ 21 landmarks giả lập có thể điều chỉnh tọa độ các ngón."""
     lm = []
@@ -56,7 +57,7 @@ def make_dummy_landmarks(
     lm.append([0.45, wrist_y - 0.16, 0.0]) # Thumb tip (4)
     # 5-8: Index
     lm.append([0.47, wrist_y - 0.15, 0.0]) # Index MCP (5)
-    lm.append([0.47, wrist_y - 0.22, 0.0]) # Index PIP (6)
+    lm.append([index_pip_x, wrist_y - 0.22, 0.0]) # Index PIP (6)
     lm.append([0.47, wrist_y - 0.28, 0.0]) # Index DIP (7)
     lm.append([index_tip_x, index_tip_y, 0.0]) # Index TIP (8)
     # 9-12: Middle
@@ -98,9 +99,9 @@ class TestDiacriticStateMachine(unittest.TestCase):
         self.assertEqual(self.fsm.state, STATE_BASE_STABLE)
         self.assertIsNotNone(self.fsm.baseline)
 
-    # 2. Test A mở hai ngón V -> Ă
+    # 2. Test A bật duỗi 1 ngón trỏ -> Ă (Chuẩn QIPEDC Miền Nam D0490N)
     def test_case_2_a_open_v_to_a_breve(self):
-        """Từ thế tay A, mở xòe 2 ngón trỏ và giữa -> Xác nhận Ă."""
+        """Từ thế tay A, bật duỗi riêng ngón trỏ lên trên (ngón giữa giữ gập) -> Xác nhận Ă."""
         t = 1.0
         for _ in range(5):
             lm_a = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.49, middle_tip_x=0.51, index_tip_y=0.45, middle_tip_y=0.45)
@@ -109,12 +110,13 @@ class TestDiacriticStateMachine(unittest.TestCase):
 
         self.assertEqual(self.fsm.state, STATE_BASE_STABLE)
 
-        # Mở xòe 2 ngón (khoảng cách tip x tăng mạnh: 0.38 và 0.62)
-        res1 = self.fsm.update("A", 0.95, make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.38, middle_tip_x=0.62, index_tip_y=0.30, middle_tip_y=0.30), timestamp=t)
+        # Duỗi thẳng riêng ngón trỏ lên (tip_y=0.25), ngón giữa giữ gập tại palm (tip_y=0.45)
+        lm_breve = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.47, middle_tip_x=0.50, index_tip_y=0.25, middle_tip_y=0.45)
+        res1 = self.fsm.update("A", 0.95, lm_breve, timestamp=t)
         t += 0.04
         self.assertEqual(res1["state"], STATE_DIACRITIC_CANDIDATE)
 
-        res2 = self.fsm.update("A", 0.95, make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.38, middle_tip_x=0.62, index_tip_y=0.30, middle_tip_y=0.30), timestamp=t)
+        res2 = self.fsm.update("A", 0.95, lm_breve, timestamp=t)
         self.assertEqual(res2["final_label"], "Ă")
         self.assertEqual(res2["state"], STATE_DIACRITIC_CONFIRMED)
         self.assertEqual(res2["source"], "diacritic_fsm")
@@ -154,21 +156,22 @@ class TestDiacriticStateMachine(unittest.TestCase):
         self.assertEqual(res2["final_label"], "Ê")
         self.assertEqual(res2["state"], STATE_DIACRITIC_CONFIRMED)
 
-    # 5. Test O nâng tay vẽ nón -> Ô
+    # 5. Test O tạo nón trỏ-giữa (QIPEDC) -> Ô
     def test_case_5_o_lift_to_o_circumflex(self):
-        """Từ thế tay O tròn khép, nâng tay lên cao vẽ nón -> Xác nhận Ô."""
+        """Từ thế tay O tròn khép, mở ngón trỏ và giữa gập đốt 2 tạo nón -> Xác nhận Ô."""
         t = 1.0
-        # O khép tròn: các ngón tụ lại gần nhau (index 0.48, pinky 0.51)
+        # O khép tròn: các ngón tụ lại gần nhau (index 0.48, middle 0.50, pinky 0.51)
         for _ in range(5):
-            self.fsm.update("O", 0.95, make_dummy_landmarks(wrist_y=0.58, index_tip_x=0.48, pinky_tip_x=0.51, index_tip_y=0.45, pinky_tip_y=0.45), timestamp=t)
+            self.fsm.update("O", 0.95, make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.48, middle_tip_x=0.50, pinky_tip_x=0.51, index_tip_y=0.45, middle_tip_y=0.45, pinky_tip_y=0.48), timestamp=t)
             t += 0.04
 
         self.assertEqual(self.fsm.state, STATE_BASE_STABLE)
 
-        # Nâng lên tạo nón mà vẫn giữ O khép tròn
-        res1 = self.fsm.update("O", 0.95, make_dummy_landmarks(wrist_y=0.53, index_tip_x=0.48, pinky_tip_x=0.51, index_tip_y=0.40, pinky_tip_y=0.40), timestamp=t)
+        # Mở ngón trỏ & giữa tạo nón, gập đốt PIP, ngón út gập sát
+        lm_hat = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.40, middle_tip_x=0.60, pinky_tip_x=0.51, index_tip_y=0.42, middle_tip_y=0.42, pinky_tip_y=0.48, index_pip_x=0.42)
+        res1 = self.fsm.update("O", 0.95, lm_hat, timestamp=t)
         t += 0.04
-        res2 = self.fsm.update("O", 0.95, make_dummy_landmarks(wrist_y=0.52, index_tip_x=0.48, pinky_tip_x=0.51, index_tip_y=0.39, pinky_tip_y=0.39), timestamp=t)
+        res2 = self.fsm.update("O", 0.95, lm_hat, timestamp=t)
 
         self.assertEqual(res2["final_label"], "Ô")
         self.assertEqual(res2["state"], STATE_DIACRITIC_CONFIRMED)
@@ -380,17 +383,17 @@ class TestDiacriticStateMachine(unittest.TestCase):
 
     # 18. (Task 7E.3) Phát hiện dấu thành công ngay trong pha transient
     def test_case_18_transient_neutral_detects_diacritic(self):
-        """Trong pha transient NEUTRAL, chuyển động vẽ nón vẫn được phát hiện và xác nhận."""
+        """Trong pha transient NEUTRAL, chuyển động tạo nón vẫn được phát hiện và xác nhận."""
         t = 1.0
         for _ in range(5):
-            self.fsm.update("O", 0.95, make_dummy_landmarks(wrist_y=0.58, index_tip_x=0.48, pinky_tip_x=0.51, index_tip_y=0.45, pinky_tip_y=0.45), timestamp=t)
+            self.fsm.update("O", 0.95, make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.48, middle_tip_x=0.50, pinky_tip_x=0.51, index_tip_y=0.45, middle_tip_y=0.45, pinky_tip_y=0.48), timestamp=t)
             t += 0.04
 
-        # Nâng tay lên vẽ nón trong khi nhãn phân loại tĩnh là NEUTRAL (vy <= -0.10)
-        lm_lift1 = make_dummy_landmarks(wrist_y=0.53, index_tip_x=0.48, pinky_tip_x=0.51, index_tip_y=0.40, pinky_tip_y=0.40)
+        # Mở ngón tạo nón trong khi nhãn phân loại tĩnh là NEUTRAL
+        lm_lift1 = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.40, middle_tip_x=0.60, pinky_tip_x=0.51, index_tip_y=0.42, middle_tip_y=0.42, pinky_tip_y=0.48, index_pip_x=0.42)
         res1 = self.fsm.update_transient(lm_lift1, timestamp=t)
         t += 0.04
-        lm_lift2 = make_dummy_landmarks(wrist_y=0.52, index_tip_x=0.48, pinky_tip_x=0.51, index_tip_y=0.39, pinky_tip_y=0.39)
+        lm_lift2 = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.40, middle_tip_x=0.60, pinky_tip_x=0.51, index_tip_y=0.42, middle_tip_y=0.42, pinky_tip_y=0.48, index_pip_x=0.42)
         res2 = self.fsm.update_transient(lm_lift2, timestamp=t)
 
         self.assertEqual(res2["state"], STATE_DIACRITIC_CONFIRMED)
@@ -531,9 +534,9 @@ class TestDiacriticStateMachine(unittest.TestCase):
         self.assertEqual(r3["confidence"], 0.95)
         self.assertIsNone(self.fsm.baseline)
 
-    # 26. (Task 7E.4A) A đang BASE_STABLE -> Rule V cạnh tranh -> FSM xác nhận Ă
+    # 26. (Task 7E.4A) A đang BASE_STABLE -> Rule V cạnh tranh -> FSM xác nhận Ă (Miền Nam D0490N)
     def test_case_26_a_stable_competing_rule_v_detects_a_breve(self):
-        """Khi A đang BASE_STABLE, mở 2 ngón tay làm dấu Ă (Rule V MATCH) -> FSM xác nhận Ă thành công."""
+        """Khi A đang BASE_STABLE, bật ngón trỏ tạo Ă (ngón giữa gập) dù bị nhãn cạnh tranh -> FSM xác nhận Ă."""
         t = 1.0
         for _ in range(5):
             lm_a = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.49, middle_tip_x=0.51, index_tip_y=0.45, middle_tip_y=0.45)
@@ -542,8 +545,8 @@ class TestDiacriticStateMachine(unittest.TestCase):
 
         self.assertEqual(self.fsm.state, STATE_BASE_STABLE)
 
-        # Mở ngón trỏ và ngón giữa (Ă) khiến Rule V MATCH
-        lm_breve = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.38, middle_tip_x=0.62, index_tip_y=0.25, middle_tip_y=0.25)
+        # Bật ngón trỏ lên (Ă D0490N), ngón giữa vẫn gập
+        lm_breve = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.47, middle_tip_x=0.50, index_tip_y=0.25, middle_tip_y=0.45)
         res1 = self.fsm.update_competing("V", 0.95, lm_breve, timestamp=t)
         t += 0.04
         res2 = self.fsm.update_competing("V", 0.95, lm_breve, timestamp=t)
@@ -670,6 +673,84 @@ class TestDiacriticStateMachine(unittest.TestCase):
         self.assertIsNone(self.fsm.baseline)
         self.assertIsNone(self.fsm.switch_candidate_base)
         self.assertEqual(self.fsm.switch_candidate_count, 0)
+
+    # 33. Adversarial: U -> Y (Shaka) KHÔNG được kích hoạt Ư giả
+    def test_case_33_u_to_y_shaka_never_triggers_u_horn(self):
+        """Chuyển từ U sang Y (ngón cái và út cùng duỗi ngang kiểu Shaka) KHÔNG được nhận nhầm thành Ư."""
+        t = 1.0
+        for _ in range(5):
+            self.fsm.update("U", 0.95, make_dummy_landmarks(wrist_y=0.55, pinky_tip_y=0.48), timestamp=t)
+            t += 0.04
+        self.assertEqual(self.fsm.state, STATE_BASE_STABLE)
+
+        # Tạo tư thế Shaka Y: ngón cái bung duỗi rộng ra ngoài (lm[4]=[0.33, 0.36]) + ngón út duỗi (tip_y=0.30)
+        lm_y = make_dummy_landmarks(wrist_y=0.55, pinky_tip_y=0.30)
+        lm_y[4] = [0.33, 0.36, 0.0]
+        lm_y[3] = [0.38, 0.40, 0.0]
+        lm_y[2] = [0.42, 0.44, 0.0]
+        r1 = self.fsm.update_competing("Y", 0.95, lm_y, timestamp=t)
+        self.assertIsNone(r1.get("diacritic_detected"))
+        t += 0.04
+        r2 = self.fsm.update_competing("Y", 0.95, lm_y, timestamp=t)
+        self.assertIsNone(r2.get("diacritic_detected"))
+        t += 0.04
+        r3 = self.fsm.update_competing("Y", 0.95, lm_y, timestamp=t)
+        self.assertEqual(r3["final_label"], "Y")
+        self.assertIsNone(r3.get("diacritic_detected"))
+
+    # 34. Adversarial: O -> Y (Shaka) KHÔNG được kích hoạt Ơ giả
+    def test_case_34_o_to_y_shaka_never_triggers_o_horn(self):
+        """Chuyển từ O sang Y (ngón cái và út duỗi ngang) KHÔNG được nhận nhầm thành Ơ."""
+        t = 1.0
+        for _ in range(5):
+            self.fsm.update("O", 0.95, make_dummy_landmarks(wrist_y=0.55, index_tip_y=0.45, pinky_tip_y=0.45), timestamp=t)
+            t += 0.04
+        self.assertEqual(self.fsm.state, STATE_BASE_STABLE)
+
+        lm_y = make_dummy_landmarks(wrist_y=0.55, pinky_tip_x=0.68, pinky_tip_y=0.30, index_tip_y=0.45)
+        lm_y[4] = [0.33, 0.36, 0.0]
+        lm_y[3] = [0.38, 0.40, 0.0]
+        r1 = self.fsm.update_competing("Y", 0.95, lm_y, timestamp=t)
+        self.assertIsNone(r1.get("diacritic_detected"))
+        t += 0.04
+        r2 = self.fsm.update_competing("Y", 0.95, lm_y, timestamp=t)
+        self.assertIsNone(r2.get("diacritic_detected"))
+        t += 0.04
+        r3 = self.fsm.update_competing("Y", 0.95, lm_y, timestamp=t)
+        self.assertEqual(r3["final_label"], "Y")
+        self.assertIsNone(r3.get("diacritic_detected"))
+
+    # 35. Adversarial: Â kiểu dấu mũ 2 ngón (D0491N) KHÔNG bị Ă cướp nhãn
+    def test_case_35_a_circumflex_two_finger_claw_never_swapped_to_a_breve(self):
+        """Khi từ A bật CẢ ngón trỏ và ngón giữa hơi tách khum tạo dấu mũ Â (D0491N), phải nhận Â (không phải Ă)."""
+        t = 1.0
+        # Tạo baseline nắm A với PIP thấp (y=0.41 > MCP 0.39)
+        lm_a = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.48, middle_tip_x=0.50, index_tip_y=0.45, middle_tip_y=0.45)
+        lm_a[6] = [0.47, 0.41, 0.0]
+        lm_a[10] = [0.50, 0.41, 0.0]
+        for _ in range(5):
+            self.fsm.update("A", 0.95, lm_a, timestamp=t)
+            t += 0.04
+
+        # Mở đồng thời trỏ + giữa tạo chữ Â (d_IM ~ 0.31, giữa đã nâng lên trên MCP)
+        lm_acirc = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.47, middle_tip_x=0.52, index_tip_y=0.33, middle_tip_y=0.33)
+        r1 = self.fsm.update("A", 0.95, lm_acirc, timestamp=t)
+        t += 0.04
+        r2 = self.fsm.update("A", 0.95, lm_acirc, timestamp=t)
+        self.assertEqual(r2["state"], STATE_DIACRITIC_CONFIRMED)
+        self.assertEqual(r2["final_label"], "Â")
+
+    # 36. Adversarial: Static A hold với trỏ hơi hở (kiểu idx=441) KHÔNG kích hoạt Ă/Â giả
+    def test_case_36_static_a_hold_loose_index_never_false_triggers(self):
+        """Giữ tĩnh thế A có trỏ hơi hở (d_IM ~ 0.30, middle_curl >= 0.35) suốt 12 frames phải giữ nguyên A."""
+        lm_loose_a = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.46, middle_tip_x=0.50, index_tip_y=0.40, middle_tip_y=0.45)
+        lm_loose_a[10] = [0.50, 0.41, 0.0]
+        t = 1.0
+        for _ in range(12):
+            res = self.fsm.update("A", 0.95, lm_loose_a, timestamp=t)
+            self.assertEqual(res["final_label"], "A")
+            self.assertIsNone(res.get("diacritic_detected"))
+            t += 0.04
 
 
 if __name__ == "__main__":

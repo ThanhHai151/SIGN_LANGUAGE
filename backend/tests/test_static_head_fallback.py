@@ -469,10 +469,10 @@ class TestStaticHeadFallback(unittest.TestCase):
                     self.assertEqual(res["sign"], "A")
                     self.assertEqual(res["source"], "static_head_fallback")
 
-        # Frame 6 & 7: Rule V xuất hiện khi người ký xòe ngón
+        # Frame 6 & 7: Chỉ ngón trỏ bật duỗi đứng (chuẩn QIPEDC Miền Nam D0490N), ngón giữa giữ gập
         mock_match_v = {"letter": "V", "confidence": 0.95, "status": "MATCH", "source": "geometric_rule"}
         with patch.object(self.rec.alphabet_classifier, "classify_detailed", return_value=mock_match_v):
-            lm_breve = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.38, middle_tip_x=0.62, index_tip_y=0.30, middle_tip_y=0.30)
+            lm_breve = make_dummy_landmarks(wrist_y=0.55, index_tip_x=0.47, middle_tip_x=0.50, index_tip_y=0.25, middle_tip_y=0.45)
             self.rec.predict_landmarks(lm_breve, mode="letters", session_id=session_id, timestamp=t)
             t += 0.04
             res_confirmed = self.rec.predict_landmarks(lm_breve, mode="letters", session_id=session_id, timestamp=t)

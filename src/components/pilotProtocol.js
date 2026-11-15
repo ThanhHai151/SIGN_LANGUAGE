@@ -1,3 +1,5 @@
+import { SIGN_CONVENTIONS } from './signConventions.js';
+
 export const PILOT_DURATION_SEC = 5;
 export const PILOT_REPETITIONS = 10;
 export const DEFAULT_PILOT_TARGET = 'A';
@@ -6,6 +8,90 @@ export const VSL_ALPHABET_29 = Object.freeze([
   'A', 'Ă', 'Â', 'B', 'C', 'D', 'Đ', 'E', 'Ê', 'G', 'H', 'I', 'K', 'L', 'M',
   'N', 'O', 'Ô', 'Ơ', 'P', 'Q', 'R', 'S', 'T', 'U', 'Ư', 'V', 'X', 'Y',
 ]);
+
+export function calculate3DDistance(p1, p2) {
+  if (!p1 || !p2 || p1.length < 3 || p2.length < 3) return 0;
+  const dx = (p1[0] || 0) - (p2[0] || 0);
+  const dy = (p1[1] || 0) - (p2[1] || 0);
+  const dz = (p1[2] || 0) - (p2[2] || 0);
+  return Math.hypot(dx, dy, dz);
+}
+
+export function calculate3DAngle(a, b, c) {
+  if (!a || !b || !c || a.length < 3 || b.length < 3 || c.length < 3) return 0;
+  const ba = [(a[0] || 0) - (b[0] || 0), (a[1] || 0) - (b[1] || 0), (a[2] || 0) - (b[2] || 0)];
+  const bc = [(c[0] || 0) - (b[0] || 0), (c[1] || 0) - (b[1] || 0), (c[2] || 0) - (b[2] || 0)];
+  const dot = ba[0] * bc[0] + ba[1] * bc[1] + ba[2] * bc[2];
+  const normBa = Math.hypot(ba[0], ba[1], ba[2]);
+  const normBc = Math.hypot(bc[0], bc[1], bc[2]);
+  if (normBa < 1e-6 || normBc < 1e-6) return 0;
+  const cosAngle = Math.max(-1, Math.min(1, dot / (normBa * normBc)));
+  return Math.round((Math.acos(cosAngle) * 180) / Math.PI);
+}
+
+export function computePinkyMetrics(landmarks, classifierFeatures = null) {
+  const defaultRes = {
+    hasData: false,
+    lm17: [0, 0, 0],
+    lm18: [0, 0, 0],
+    lm19: [0, 0, 0],
+    lm20: [0, 0, 0],
+    pipAngle: 0,
+    dipAngle: 0,
+    curl: classifierFeatures?.pinky_curl ?? 0.0,
+    d_pw: classifierFeatures?.d_PW ?? 0.0,
+    status: 'NO_DATA'
+  };
+
+  if (!landmarks || landmarks.length < 21) {
+    if (classifierFeatures?.pinky_curl !== undefined) {
+      const c = Number(classifierFeatures.pinky_curl || 0);
+      return {
+        ...defaultRes,
+        curl: c,
+        d_pw: Number(classifierFeatures.d_PW || 0),
+        status: (c <= 0.20) ? 'STRAIGHT' : 'CURLED'
+      };
+    }
+    return defaultRes;
+  }
+
+  const p0 = landmarks[0];
+  const p9 = landmarks[9];
+  const p17 = landmarks[17];
+  const p18 = landmarks[18];
+  const p19 = landmarks[19];
+  const p20 = landmarks[20];
+
+  const pipAngle = calculate3DAngle(p17, p18, p19);
+  const dipAngle = calculate3DAngle(p18, p19, p20);
+
+  const palmScale = calculate3DDistance(p0, p9) || 1.0;
+  const d_pw = calculate3DDistance(p20, p0) / palmScale;
+
+  const d20_17 = calculate3DDistance(p20, p17);
+  const d20_18 = calculate3DDistance(p20, p18);
+  const d18_17 = calculate3DDistance(p18, p17);
+  const strLen = d20_18 + d18_17;
+  const calcCurl = strLen > 1e-6 ? Math.max(0, Math.min(1, 1.0 - (d20_17 / strLen))) : 0.0;
+  const curl = classifierFeatures?.pinky_curl !== undefined ? Number(classifierFeatures.pinky_curl) : calcCurl;
+
+  const isStraight = (curl <= 0.20 && pipAngle >= 140) || (d_pw >= 1.30 && pipAngle >= 135);
+  const status = isStraight ? 'STRAIGHT' : 'CURLED';
+
+  return {
+    hasData: true,
+    lm17: [Number((p17[0] || 0).toFixed(4)), Number((p17[1] || 0).toFixed(4)), Number((p17[2] || 0).toFixed(4))],
+    lm18: [Number((p18[0] || 0).toFixed(4)), Number((p18[1] || 0).toFixed(4)), Number((p18[2] || 0).toFixed(4))],
+    lm19: [Number((p19[0] || 0).toFixed(4)), Number((p19[1] || 0).toFixed(4)), Number((p19[2] || 0).toFixed(4))],
+    lm20: [Number((p20[0] || 0).toFixed(4)), Number((p20[1] || 0).toFixed(4)), Number((p20[2] || 0).toFixed(4))],
+    pipAngle,
+    dipAngle,
+    curl,
+    d_pw,
+    status
+  };
+}
 
 export function canChangePilotTarget({ trialState, sequenceActive, sequenceCountdown, sessionOperationBusy, sessionStatus }) {
   return !['RECORDING', 'FINALIZING'].includes(trialState) && !sequenceActive && sequenceCountdown === null &&
@@ -304,8 +390,11 @@ export function evaluateTrialFrames(frames, expectedSign, durationSec = 5.0) {
       });
       hasDiacriticConfirmation = diacriticConfirmFrames.length >= 1;
 
-      // 3. Phân định PASS vs NEEDS_FIX vs INSUFFICIENT_DATA
-      if (hasDiacriticConfirmation && hasBaseEvidence) {
+      // 3. Phân định PASS vs NEEDS_FIX vs INSUFFICIENT_DATA vs BLOCKED_SOURCE
+      // Tuyệt đối không cho phép fake PASS nếu chữ thiếu video nguồn Toàn quốc / Miền Nam hợp lệ
+      if (SIGN_CONVENTIONS[expectedSign]?.status === 'BLOCKED_SOURCE') {
+        status = 'BLOCKED_SOURCE';
+      } else if (hasDiacriticConfirmation && hasBaseEvidence) {
         status = 'PASS';
       } else {
         status = 'NEEDS_FIX';
@@ -326,6 +415,41 @@ export function evaluateTrialFrames(frames, expectedSign, durationSec = 5.0) {
       status = 'PASS';
     } else {
       status = 'NEEDS_FIX';
+    }
+  }
+
+  // Phân định nguyên nhân lỗi (Root Cause) theo 6 nhóm lỗi bắt buộc (Task Master Section C)
+  let rootCause = 'NONE';
+  if (status !== 'PASS') {
+    if (status === 'NO_HAND') {
+      rootCause = 'NO_HAND_DETECTED';
+    } else if (status === 'INSUFFICIENT_DATA') {
+      rootCause = 'INSUFFICIENT_DATA';
+    } else if (status === 'BLOCKED_SOURCE') {
+      rootCause = 'BLOCKED_SOURCE';
+    } else if (isDynamic) {
+      if (!hasBaseEvidence) {
+        rootCause = 'BASE_LETTER_NOT_RECOGNIZED';
+      } else {
+        const fsmStates = validFrames.map(f => (f.classifier_details?.diacritic_fsm?.state || f.diacritic_fsm?.state || 'IDLE'));
+        const reachedStable = fsmStates.some(s => s === 'BASE_STABLE' || s === 'DIACRITIC_CANDIDATE' || s === 'DIACRITIC_CONFIRMED');
+        const reachedConfirmed = fsmStates.some(s => s === 'DIACRITIC_CONFIRMED');
+
+        if (!reachedStable) {
+          rootCause = 'BASE_DETECTED_BUT_FSM_NOT_STABILIZED';
+        } else if (!reachedConfirmed) {
+          rootCause = 'FSM_STABLE_BUT_NO_DIACRITIC_MOTION';
+        } else {
+          const hasTargetSign = validFrames.some(f => (f.sign || f.predicted_sign) === expectedSign);
+          if (!hasTargetSign) {
+            rootCause = 'FSM_CONFIRMED_BUT_RECOGNIZER_NEUTRAL';
+          } else {
+            rootCause = 'FRONTEND_DISPLAY_MISMATCH';
+          }
+        }
+      }
+    } else {
+      rootCause = 'STATIC_CLASSIFICATION_MISMATCH';
     }
   }
 
@@ -354,7 +478,8 @@ export function evaluateTrialFrames(frames, expectedSign, durationSec = 5.0) {
     durationSec,
     isDynamic,
     hasBaseEvidence: isDynamic ? hasBaseEvidence : undefined,
-    hasDiacriticConfirmation: isDynamic ? hasDiacriticConfirmation : undefined
+    hasDiacriticConfirmation: isDynamic ? hasDiacriticConfirmation : undefined,
+    root_cause: rootCause
   };
 }
 
@@ -365,6 +490,7 @@ export function buildEvaluationReport(sessionId, resultsByTarget, config = {}) {
   const letters = {};
   const lettersPassed = [];
   const lettersNeedingFix = [];
+  const lettersBlockedSource = [];
   const lettersUnsupported = [];
   let totalTrials = 0;
   let passedTrials = 0;
@@ -418,7 +544,10 @@ export function buildEvaluationReport(sessionId, resultsByTarget, config = {}) {
     });
 
     let status = 'NEEDS_FIX';
-    if (completed.length === 0) {
+    if (SIGN_CONVENTIONS[letter]?.status === 'BLOCKED_SOURCE') {
+      status = 'BLOCKED_SOURCE';
+      lettersBlockedSource.push(letter);
+    } else if (completed.length === 0) {
       status = 'UNTESTED';
     } else if (completed.every(t => t.status === 'NO_HAND')) {
       status = 'NO_HAND';
@@ -485,8 +614,48 @@ export function buildEvaluationReport(sessionId, resultsByTarget, config = {}) {
       overall_accuracy_pct: overallAccuracyPct,
       letters_passed: lettersPassed,
       letters_needing_fix: lettersNeedingFix,
+      letters_blocked_source: lettersBlockedSource,
       letters_unsupported: lettersUnsupported
     },
     letters
+  };
+}
+
+/**
+ * Trả về timestamp chuẩn Unix-epoch giây nhất quán giữa Frontend và Backend.
+ * Ưu tiên performance.timeOrigin + performance.now() để có độ phân giải sub-ms cùng gốc thời gian với time.time().
+ */
+export function getEpochSecondsNow() {
+  if (
+    typeof performance !== 'undefined' &&
+    typeof performance.now === 'function' &&
+    Number.isFinite(performance.timeOrigin) &&
+    performance.timeOrigin > 0
+  ) {
+    return (performance.timeOrigin + performance.now()) / 1000;
+  }
+  return Date.now() / 1000;
+}
+
+/**
+ * Tạo bộ sinh timestamp đơn điệu tăng (epoch giây) cho mỗi phiên / lượt thử,
+ * chống trùng hoặc lệch vi mô giữa các lần gửi request tuần tự.
+ */
+export function createMonotonicTimestampGenerator(initialLastTs = 0) {
+  let lastTs = Number.isFinite(initialLastTs) ? initialLastTs : 0;
+  return {
+    next(candidateTs = getEpochSecondsNow()) {
+      const raw = Number(candidateTs);
+      const safe = Number.isFinite(raw) ? raw : getEpochSecondsNow();
+      const mono = safe > lastTs ? safe : lastTs + 1e-4;
+      lastTs = mono;
+      return mono;
+    },
+    reset(newBaseline = 0) {
+      lastTs = Number.isFinite(newBaseline) ? newBaseline : 0;
+    },
+    current() {
+      return lastTs;
+    }
   };
 }

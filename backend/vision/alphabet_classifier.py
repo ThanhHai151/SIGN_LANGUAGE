@@ -60,6 +60,8 @@ Y_D_TW_MIN = 1.05
 Y_D_TI_MIN = 0.40
 Y_THUMB_LAT_MIN = 0.36
 Y_ANG_TP_MIN = 33.0
+Y_THUMB_MID_MIN = 0.42
+Y_THUMB_RING_MIN = 0.48
 
 # 3. Chữ V (Ngón trỏ & giữa xòe chữ V)
 V_D_IW_MIN = 1.70
@@ -268,7 +270,7 @@ P_DOWN_IDX_HORIZ_MAX = 0.70
 P_DOWN_D_MW_MIN = 1.35
 P_DOWN_MID_STRAIGHT_MIN = 0.80
 P_DOWN_MID_TIP_Y_MIN = 0.60
-P_DOWN_D_TM_MAX = 1.10
+P_DOWN_D_TM_MAX = 1.45
 P_DOWN_D_TI_MAX = 1.05
 P_DOWN_D_TW_MIN = 1.20
 P_DOWN_ANG_IM_MIN = 15.0
@@ -324,6 +326,7 @@ R_THUMB_RING_MIN = 0.18
 
 # 18. Chữ X (Ngón trỏ cong móc chạm ngón cái, các ngón khác nắm - QIPEDC D0517B)
 # Biến thể 1: Ngón trỏ móc dựng đứng (D0517B frame 36-48 & webcam upright - Candidate 2B)
+X_D_TI_MIN = 0.10
 X_D_TI_MAX = 0.25
 X_D_IW_MAX = 1.55
 X_IDX_CURL_MIN = 0.15
@@ -332,7 +335,7 @@ X_IDX_STRAIGHT_MAX = 0.85
 X_D_RW_MAX = 0.70
 X_D_PW_MAX = 0.65
 X_D_TW_MIN = 0.70
-X_D_TW_MAX = 1.30
+X_D_TW_MAX = 1.45
 X_IDX_TIP_Y_MAX = -0.20
 # Biến thể 2: Ngón trỏ móc chúi về phía trước (D0517B frame 108-136)
 X_FWD_D_TI_MIN = 0.35
@@ -580,10 +583,17 @@ class VSLAlphabetClassifier:
         is_y_pinky = (p_ext or p_curl <= 0.12) and (d_pw >= 1.30)
         is_y_middle_curled = (not i_ext) and (not m_ext) and (not r_ext)
         is_y_middle_dists = (d_iw <= I_D_IW_MAX) and (d_mw <= I_D_MW_MAX) and (d_rw <= I_D_RW_MAX)
+        thumb_mid_dist = feat.get("thumb_mid_dist")
+        thumb_ring_dist = feat.get("thumb_ring_dist")
+        is_y_thumb_not_o = (
+            (thumb_mid_dist is None or thumb_mid_dist >= Y_THUMB_MID_MIN)
+            and (thumb_ring_dist is None or thumb_ring_dist >= Y_THUMB_RING_MIN)
+        )
         is_y_thumb_spread = (
             d_tw >= Y_D_TW_MIN
             and d_ti >= Y_D_TI_MIN
             and (thumb_lat >= Y_THUMB_LAT_MIN or ang_tp >= Y_ANG_TP_MIN)
+            and is_y_thumb_not_o
         )
 
         if is_y_pinky and is_y_middle_curled and is_y_middle_dists and is_y_thumb_spread:
@@ -1101,7 +1111,7 @@ class VSLAlphabetClassifier:
         # -------------------------------------------------------------------
         # Biến thể 1: Ngón trỏ uốn móc dựng đứng (D0517B frame 36-48 & webcam upright - Candidate 2B)
         is_x_upright = (
-            d_ti <= X_D_TI_MAX
+            X_D_TI_MIN <= d_ti <= X_D_TI_MAX
             and d_iw <= X_D_IW_MAX
             and i_curl >= X_IDX_CURL_MIN
             and X_IDX_STRAIGHT_MIN <= idx_straight <= X_IDX_STRAIGHT_MAX
@@ -1881,8 +1891,9 @@ class VSLAlphabetClassifier:
         idx_dy = _num("idx_dy")
 
         conds_upright = {
+            "thumb_index_d_ti_in_range": (X_D_TI_MIN <= d_ti <= X_D_TI_MAX) if d_ti is not None else None,
             "thumb_index_d_ti_le_max": (d_ti <= X_D_TI_MAX) if d_ti is not None else None,
-            "d_ti_le_max": (d_ti <= X_D_TI_MAX) if d_ti is not None else None,
+            "d_ti_in_range": (X_D_TI_MIN <= d_ti <= X_D_TI_MAX) if d_ti is not None else None,
             "index_d_iw_le_max": (d_iw <= X_D_IW_MAX) if d_iw is not None else None,
             "d_iw_le_max": (d_iw <= X_D_IW_MAX) if d_iw is not None else None,
             "index_curl_ge_min": (idx_curl >= X_IDX_CURL_MIN) if idx_curl is not None else None,
