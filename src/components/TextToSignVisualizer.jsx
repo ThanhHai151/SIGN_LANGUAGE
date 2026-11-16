@@ -67,29 +67,51 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     }
   };
 
+  // Bảng chữ cái tải sẵn MỘT LẦN (kèm chuyển động robot) → bấm chữ nào robot diễn ngay, không chờ mạng
+  const lettersRef = useRef(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('http://127.0.0.1:8000/api/letters')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.letters) return;
+        lettersRef.current = data.letters;
+        Object.values(data.letters).forEach((it) => { if (it.motion_id) fetchMotion(it.motion_id); });
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
   // Chọn trực tiếp 1 chữ cái: robot diễn hình chữ cái học từ video bảng chữ cái QIPEDC
   const handleSelectDirectLetter = async (char) => {
-    const isTone = char === char.toLowerCase();
+    const key = char.toLowerCase();
+    const isTone = char === key;
     setInputText(isTone ? `Dấu ${char}` : `Chữ ${char}`);
     setIsPlaying(false);
-    try {
-      const res = await fetch(`http://127.0.0.1:8000/api/letter/${encodeURIComponent(char)}`);
-      const data = await res.json();
-      if (data?.sequence?.length) {
-        setSequence(data.sequence);
-        setCurrentIndex(0);
-        return;
-      }
-    } catch { /* mất kết nối backend → tư thế vẽ tay bên dưới */ }
+    let item = lettersRef.current?.[key];
+    if (!item) {
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/api/letter/${encodeURIComponent(char)}`);
+        const data = res.ok ? await res.json() : null;
+        item = data?.sequence?.[0];
+      } catch { /* mất kết nối backend */ }
+    }
+    if (item) {
+      setSequence([item]);
+      setCurrentIndex(0);
+      return;
+    }
+    // Backend chưa có bảng chữ cái học từ video → tư thế vẽ tay của chữ không dấu (Ă, Â → A; Đ → D)
+    const base = char.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'D').toUpperCase();
     setSequence([{
       token: char,
-      gloss: char,
-      label: `Chữ ${char}`,
+      gloss: base,
+      label: isTone ? `Dấu ${char}` : `Chữ ${char}`,
       type: 'fingerspelling',
       duration_ms: 2200,
-      pose_key: char,
-      word: char.toLowerCase(),
-      description: `Bảng chữ cái ngón tay VSL: Chữ ${char}`,
+      pose_key: isTone ? null : base,
+      word: key,
+      description: `Bảng chữ cái ngón tay VSL: Chữ ${char} (tư thế tham khảo — hãy khởi động lại backend để dùng bảng chữ cái học từ video)`,
       avatar_pose: {}
     }]);
     setCurrentIndex(0);
