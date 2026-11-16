@@ -1,0 +1,306 @@
+{
+ "a": {
+  "motion_id": "D0489",
+  "clip": [
+   1.125,
+   2.25
+  ],
+  "static": false
+ },
+ "ă": {
+  "motion_id": "D0490N",
+  "clip": [
+   1.75,
+   3.125
+  ],
+  "static": false
+ },
+ "â": {
+  "motion_id": "D0491N",
+  "clip": [
+   2.0,
+   3.0
+  ],
+  "static": false
+ },
+ "b": {
+  "motion_id": "D0492",
+  "clip": [
+   1.25,
+   2.25
+  ],
+  "static": false
+ },
+ "c": {
+  "motion_id": "D0493",
+  "clip": [
+   1.312,
+   1.812
+  ],
+  "static": true
+ },
+ "d": {
+  "motion_id": "D0494",
+  "clip": [
+   1.188,
+   1.688
+  ],
+  "static": true
+ },
+ "đ": {
+  "motion_id": "D0495",
+  "clip": [
+   1.938,
+   2.438
+  ],
+  "static": true
+ },
+ "e": {
+  "motion_id": "D0496",
+  "clip": [
+   0.812,
+   1.312
+  ],
+  "static": true
+ },
+ "ê": {
+  "motion_id": "D0497N",
+  "clip": [
+   2.125,
+   3.375
+  ],
+  "static": false
+ },
+ "g": {
+  "motion_id": "D0498N",
+  "clip": [
+   1.0,
+   2.0
+  ],
+  "static": false
+ },
+ "h": {
+  "motion_id": "D0500N",
+  "clip": [
+   0.625,
+   1.5
+  ],
+  "static": false
+ },
+ "i": {
+  "motion_id": "D0501",
+  "clip": [
+   0.875,
+   1.75
+  ],
+  "static": false
+ },
+ "k": {
+  "motion_id": "D0502",
+  "clip": [
+   0.938,
+   1.438
+  ],
+  "static": true
+ },
+ "l": {
+  "motion_id": "D0503",
+  "clip": [
+   0.75,
+   1.5
+  ],
+  "static": false
+ },
+ "m": {
+  "motion_id": "D0504",
+  "clip": [
+   1.625,
+   2.5
+  ],
+  "static": false
+ },
+ "n": {
+  "motion_id": "D0505",
+  "clip": [
+   1.25,
+   1.75
+  ],
+  "static": true
+ },
+ "o": {
+  "motion_id": "D0506",
+  "clip": [
+   1.25,
+   1.75
+  ],
+  "static": true
+ },
+ "ô": {
+  "motion_id": "D0507N",
+  "clip": [
+   0.875,
+   1.625
+  ],
+  "static": false
+ },
+ "ơ": {
+  "motion_id": "D0508N",
+  "clip": [
+   1.625,
+   2.75
+  ],
+  "static": false
+ },
+ "p": {
+  "motion_id": "D0509N",
+  "clip": [
+   0.75,
+   1.75
+  ],
+  "static": false
+ },
+ "q": {
+  "motion_id": "D0510",
+  "clip": [
+   1.5,
+   2.375
+  ],
+  "static": false
+ },
+ "r": {
+  "motion_id": "D0511",
+  "clip": [
+   0.75,
+   1.5
+  ],
+  "static": false
+ },
+ "s": {
+  "motion_id": "D0512",
+  "clip": [
+   1.062,
+   1.562
+  ],
+  "static": true
+ },
+ "t": {
+  "motion_id": "D0513N",
+  "clip": [
+   1.125,
+   2.0
+  ],
+  "static": false
+ },
+ "u": {
+  "motion_id": "D0514",
+  "clip": [
+   1.0,
+   1.75
+  ],
+  "static": false
+ },
+ "ư": {
+  "motion_id": "D0515N",
+  "clip": [
+   1.125,
+   2.25
+  ],
+  "static": false
+ },
+ "v": {
+  "motion_id": "D0516",
+  "clip": [
+   0.875,
+   1.625
+  ],
+  "static": false
+ },
+ "x": {
+  "motion_id": "D0517N",
+  "clip": [
+   1.375,
+   2.125
+  ],
+  "static": false
+ },
+ "y": {
+  "motion_id": "D0518N",
+  "clip": [
+   0.875,
+   1.625
+  ],
+  "static": false
+ },
+ "f": {
+  "motion_id": "D0521",
+  "clip": [
+   1.375,
+   2.25
+  ],
+  "static": false
+ },
+ "j": {
+  "motion_id": "D0522",
+  "clip": [
+   1.25,
+   2.25
+  ],
+  "static": false
+ },
+ "w": {
+  "motion_id": "D0523",
+  "clip": [
+   1.188,
+   1.688
+  ],
+  "static": true
+ },
+ "z": {
+  "motion_id": "D0519",
+  "clip": [
+   1.375,
+   3.0
+  ],
+  "static": false
+ },
+ "sắc": {
+  "motion_id": "D0525N",
+  "clip": [
+   0.75,
+   1.75
+  ],
+  "static": false
+ },
+ "huyền": {
+  "motion_id": "D0524N",
+  "clip": [
+   1.375,
+   1.875
+  ],
+  "static": false
+ },
+ "hỏi": {
+  "motion_id": "D0526N",
+  "clip": [
+   1.0,
+   2.0
+  ],
+  "static": false
+ },
+ "ngã": {
+  "motion_id": "D0527N",
+  "clip": [
+   0.875,
+   2.75
+  ],
+  "static": false
+ },
+ "nặng": {
+  "motion_id": "D0528",
+  "clip": [
+   0.875,
+   2.25
+  ],
+  "static": false
+ }
+}

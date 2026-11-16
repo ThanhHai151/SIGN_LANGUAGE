@@ -19,10 +19,11 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   const timerRef = useRef(null);
   const recognitionRef = useRef(null);
 
-  // Bảng chữ cái ngón tay đầy đủ 26 chữ cái theo ảnh mẫu thực tế A-Z
+  // Bảng chữ cái ngón tay tiếng Việt (QIPEDC) + chữ ngoại lai + dấu thanh
   const ALPHABET_LIST = [
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
-    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+    'A', 'Ă', 'Â', 'B', 'C', 'D', 'Đ', 'E', 'Ê', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'Ô', 'Ơ',
+    'P', 'Q', 'R', 'S', 'T', 'U', 'Ư', 'V', 'X', 'Y', 'F', 'J', 'W', 'Z',
+    'sắc', 'huyền', 'hỏi', 'ngã', 'nặng',
   ];
 
   const PHRASE_SUGGESTIONS = [
@@ -61,20 +62,31 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     }
   };
 
-  // Chọn trực tiếp 1 chữ cái để kiểm tra giải phẫu ngón tay
-  const handleSelectDirectLetter = (char) => {
-    setInputText(`Chữ ${char}`);
+  // Chọn trực tiếp 1 chữ cái: robot diễn hình chữ cái học từ video bảng chữ cái QIPEDC
+  const handleSelectDirectLetter = async (char) => {
+    const isTone = char === char.toLowerCase();
+    setInputText(isTone ? `Dấu ${char}` : `Chữ ${char}`);
+    setIsPlaying(false);
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/letter/${encodeURIComponent(char)}`);
+      const data = await res.json();
+      if (data?.sequence?.length) {
+        setSequence(data.sequence);
+        setCurrentIndex(0);
+        return;
+      }
+    } catch { /* mất kết nối backend → tư thế vẽ tay bên dưới */ }
     setSequence([{
       token: char,
       gloss: char,
       label: `Chữ ${char}`,
       type: 'fingerspelling',
       duration_ms: 2200,
+      pose_key: char,
       description: `Bảng chữ cái ngón tay VSL: Chữ ${char}`,
       avatar_pose: {}
     }]);
     setCurrentIndex(0);
-    setIsPlaying(false);
   };
 
   // Quản lý phát tự động
@@ -602,12 +614,12 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
         <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
-              🎯 Kiểm tra trực tiếp từng chữ cái A - Z (Theo bảng ảnh mẫu thực tế):
+              🎯 Kiểm tra trực tiếp từng chữ cái và dấu thanh (học từ video bảng chữ cái QIPEDC):
             </span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '6px' }}>
             {ALPHABET_LIST.map((char) => {
-              const isSelected = currentGloss === char;
+              const isSelected = currentStep?.word === char.toLowerCase() || currentGloss === char;
               return (
                 <button
                   key={char}
@@ -623,9 +635,9 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
                     cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}
-                  title={`Kiểm tra tư thế ngón tay chữ ${char}`}
+                  title={char === char.toLowerCase() ? `Dấu ${char}` : `Chữ ${char}`}
                 >
-                  {char}
+                  {char === char.toLowerCase() ? ({ 'sắc': '´', 'huyền': '`', 'hỏi': '?', 'ngã': '~', 'nặng': '.' }[char] || char) : char}
                 </button>
               );
             })}

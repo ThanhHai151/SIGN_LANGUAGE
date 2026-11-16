@@ -347,6 +347,20 @@ def recognize_frame(req: FrameRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/letter/{name}")
+def fingerspell_letter(name: str):
+    """Một chữ cái của bảng chữ cái ngón tay tiếng Việt (A, Ă, Â… hoặc dấu thanh: sắc, huyền, hỏi, ngã, nặng)
+    — robot diễn đoạn giữ hình chữ cái học từ video QIPEDC."""
+    from backend.nlp.text_to_vsl import letter_clips, _letter_item, remove_accents
+    from backend.models.lexicon import motion_ids
+    key = norm_key(name)
+    if key not in letter_clips():
+        raise HTTPException(status_code=404, detail="Không có chữ cái này")
+    is_tone = key in ("sắc", "huyền", "hỏi", "ngã", "nặng")
+    item = _letter_item(key, "" if is_tone else remove_accents(key).upper(), load_lexicon(), motion_ids(), key, is_tone=is_tone)
+    return {"success": True, "sequence": [item]}
+
+
 @app.post("/api/text_to_sign")
 def convert_text_to_sign(req: TextToSignRequest):
     """

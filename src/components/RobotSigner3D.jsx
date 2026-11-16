@@ -741,7 +741,11 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
     if (motionId) {
       fetchMotion(motionId).then((data) => {
         // bỏ qua kết quả về muộn của ký hiệu trước (đã chuyển sang ký hiệu khác)
-        if (!cancelled && data && data.keyframes?.length) rig.motion = { data, start: undefined };
+        if (!cancelled && data && data.keyframes?.length) {
+          // Bước có đoạn phát riêng (vd. chữ cái khi đánh vần: chỉ đoạn giữ hình chữ cái) → phát đúng đoạn đó
+          const clip = Array.isArray(currentStep?.clip) ? currentStep.clip : null;
+          rig.motion = { data: clip ? { ...data, active: clip } : data, start: undefined };
+        }
       });
     }
 

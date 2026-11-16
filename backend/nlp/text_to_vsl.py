@@ -10,6 +10,7 @@ Quy trình nâng cao:
 5. Chỉ kích hoạt Fingerspelling cho từ viết tắt hoặc tên riêng thực sự cần thiết.
 """
 
+import json
 import os
 import re
 import unicodedata
@@ -308,31 +309,88 @@ def _compound_len(words: list, i: int) -> int:
     return 0
 
 
-def _spell_items(word: str, lex: dict, group: str = None) -> list:
-    items = []
-    for char in remove_accents(word).upper():
-        if char not in VSL_ALPHABET:
+LETTER_CLIPS_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "letter_clips.json")
+_letter_cache = {"mtime": None, "clips": {}}
+
+# Dấu thanh (ký tự kết hợp Unicode) → tên dấu trong bảng chữ cái ngón tay
+TONE_MARKS = {"\u0301": "sắc", "\u0300": "huyền", "\u0309": "hỏi", "\u0303": "ngã", "\u0323": "nặng"}
+
+
+def letter_clips() -> dict:
+    """Chữ cái / dấu thanh → {motion_id, clip}: đoạn giữ hình chữ cái trong video bảng chữ cái QIPEDC
+    (backend/training/build_letter_clips.py)."""
+    try:
+        mtime = os.path.getmtime(LETTER_CLIPS_PATH)
+    except OSError:
+        return {}
+    if _letter_cache["mtime"] != mtime:
+        try:
+            with open(LETTER_CLIPS_PATH, encoding="utf-8") as f:
+                _letter_cache["clips"] = json.load(f)
+        except (OSError, ValueError):
+            _letter_cache["clips"] = {}
+        _letter_cache["mtime"] = mtime
+    return _letter_cache["clips"]
+
+
+def split_syllable(syl: str):
+    """"Trường" → (["t", "r", "ư", "ơ", "n", "g"], "huyền"): chữ cái tiếng Việt (giữ ă â ê ô ơ ư đ) + dấu thanh."""
+    tone = None
+    out = []
+    for ch in unicodedata.normalize("NFD", syl.lower()):
+        if ch in TONE_MARKS:
+            tone = TONE_MARKS[ch]
             continue
-        alpha_item = VSL_ALPHABET[char]
-        entry = exact_index(lex).get(char.lower())
-        items.append({
-            "token": char,
-            "gloss": f"ALPHA_{char}",
-            "label": f"Chữ {char}",
-            "word": char,
-            "entry_id": entry["id"] if entry else None,
-            "type": "fingerspelling",
-            "duration_ms": 800,
-            "description": alpha_item["description"],
-            "video_url": None,  # đánh vần: robot diễn tư thế chữ cái, không cần video
-            "variants": [],
-            "pose_key": char,
-            "has_pose": True,
-            "spelled_word": group or word,   # từ đang được đánh vần (giao diện hiển thị cả từ)
-            "motion_type": "static",
-            "fingers_state": alpha_item.get("fingers_state", {}),
-            "avatar_pose": {"right_arm": [35, 20, 0], "right_wrist": [15, 0, 0]},
-        })
+        out.append(ch)
+    letters = [c for c in unicodedata.normalize("NFC", "".join(out)) if c.isalpha() or c.isdigit()]
+    return letters, tone
+
+
+def _letter_item(name: str, ascii_key: str, lex: dict, available: set, group: str, is_tone: bool = False) -> dict:
+    """Một bước đánh vần: chữ cái (hoặc dấu thanh) diễn bằng chuyển động học từ video bảng chữ cái QIPEDC;
+    chưa có chuyển động → tư thế vẽ tay của chữ cái không dấu tương ứng."""
+    clip = letter_clips().get(name)
+    mid = clip["motion_id"] if clip and clip["motion_id"] in available else None
+    label = f"Dấu {name}" if is_tone else f"Chữ {name.upper()}"
+    alpha = VSL_ALPHABET.get(ascii_key, {})
+    dur = int(round((clip["clip"][1] - clip["clip"][0]) * 1000)) + 250 if mid else 800
+    return {
+        "token": label if is_tone else name.upper(),
+        "gloss": f"ALPHA_{name.upper()}",
+        "label": label,
+        "word": name,
+        "entry_id": None,
+        "type": "fingerspelling",
+        "duration_ms": dur,
+        "description": f"Bảng chữ cái ngón tay QIPEDC: {label}" if mid else alpha.get("description", label),
+        "video_url": None,
+        "variants": [],
+        # Chuyển động học từ video chữ cái QIPEDC, chỉ phát đoạn giữ hình chữ cái
+        "motion_id": mid,
+        "clip": list(clip["clip"]) if mid else None,
+        "pose_key": None if (mid or is_tone) else (ascii_key if ascii_key in VSL_ALPHABET else None),
+        "has_pose": bool(mid or ascii_key in VSL_ALPHABET),
+        "spelled_word": group,   # từ đang được đánh vần (giao diện hiển thị cả từ)
+        "motion_type": "dynamic" if mid else "static",
+        "fingers_state": alpha.get("fingers_state", {}),
+        "avatar_pose": {},
+    }
+
+
+def _spell_items(word: str, lex: dict, group: str = None, available: set = None) -> list:
+    """Đánh vần một từ theo bảng chữ cái ngón tay tiếng Việt: từng chữ cái (kể cả Ă Â Ê Ô Ơ Ư Đ),
+    dấu thanh làm sau các chữ cái của mỗi tiếng."""
+    available = motion_ids() if available is None else available
+    group = group or word
+    items = []
+    for syl in word.split():
+        letters, tone = split_syllable(syl)
+        for c in letters:
+            ascii_key = remove_accents(c).upper()
+            if c in letter_clips() or ascii_key in VSL_ALPHABET:
+                items.append(_letter_item(c, ascii_key, lex, available, group))
+        if tone and tone in letter_clips():
+            items.append(_letter_item(tone, "", lex, available, group, is_tone=True))
     return items
 
 
@@ -370,6 +428,8 @@ def text_to_vsl_glosses(text: str):
         for length in range(min(max_len, n - i), 1, -1):
             phrase = " ".join(words[i:i + length])
             entry = _resolve(phrase, lex, available, multi=True)
+            if entry and not _usable(entry, available) and not _video_id(entry):
+                entry = None   # cụm chưa diễn được → thử các từ ngắn hơn / đánh vần
             if entry:
                 push(_vocab_item(phrase, entry, available))
                 i += length
@@ -385,7 +445,7 @@ def text_to_vsl_glosses(text: str):
         if comp_len:
             parts = words[i:i + comp_len]
             if not all(p in STOPWORDS or ((e := _resolve(p, lex, available)) and _usable(e, available)) for p in parts):
-                result.extend(_spell_items("".join(parts), lex, group=" ".join(parts)))
+                result.extend(_spell_items(" ".join(parts), lex, available=available))
                 i += comp_len
                 continue
 
@@ -394,7 +454,11 @@ def text_to_vsl_glosses(text: str):
             i += 1
             continue
         entry = _resolve(word, lex, available)
-        if entry:
+        if entry and not _usable(entry, available) and not entry.get("proper_noun"):
+            # Có mục từ nhưng không có video miền Nam / dùng chung nào để robot học (vd. "tôi", "cảm ơn"
+            # chỉ có trong giáo trình) → đánh vần đúng chữ thay vì diễn một ký hiệu chưa kiểm chứng
+            result.extend(_spell_items(word, lex, available=available))
+        elif entry:
             push(_vocab_item(word, entry, available))
         elif re.fullmatch(r"\d+", word):
             for d in word:
@@ -402,7 +466,7 @@ def text_to_vsl_glosses(text: str):
                 if e:
                     push(_vocab_item(d, e, available))
         else:
-            result.extend(_spell_items(word, lex))
+            result.extend(_spell_items(word, lex, available=available))
         i += 1
 
     return result

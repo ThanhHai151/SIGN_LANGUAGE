@@ -42,14 +42,28 @@ class TestVSLSystem(unittest.TestCase):
         self.assertIn("XIN_CHAO", data["vocabulary"])
 
     def test_nlp_text_to_sign_greeting(self):
-        """Kiểm tra NLP chuyển đổi câu chào và cảm ơn"""
+        """Câu chào: "xin chào", "bạn" diễn bằng ký hiệu; "cảm ơn" (chưa có video miền Nam) được đánh vần đủ dấu"""
         result = text_to_vsl_glosses("Xin chào, cảm ơn bạn rất nhiều!")
         labels = [r["label"] for r in result]
         self.assertIn("Xin chào", labels)
-        self.assertIn("Cảm ơn", labels)
         self.assertIn("Bạn", labels)
+        spelled = [r["label"] for r in result if r.get("spelled_word") == "cảm ơn"]
+        self.assertEqual(spelled, ["Chữ C", "Chữ A", "Chữ M", "Dấu hỏi", "Chữ Ơ", "Chữ N"])
         # "rất" là hư từ → bỏ qua, không đánh vần
-        self.assertNotIn("Chữ R", labels)
+        self.assertNotIn("rất", {r.get("spelled_word") for r in result})
+
+    def test_fingerspelling_uses_learned_letters(self):
+        """Đánh vần dùng chuyển động học từ video bảng chữ cái QIPEDC, đủ chữ có dấu và dấu thanh"""
+        result = text_to_vsl_glosses("Nguyễn Thượng")   # tên riêng không có trong từ điển
+        self.assertEqual([r["label"] for r in result],
+                         ["Chữ N", "Chữ G", "Chữ U", "Chữ Y", "Chữ Ê", "Chữ N", "Dấu ngã",
+                          "Chữ T", "Chữ H", "Chữ Ư", "Chữ Ơ", "Chữ N", "Chữ G", "Dấu nặng"])
+        for r in result:
+            self.assertEqual(r["type"], "fingerspelling")
+            self.assertTrue(r["motion_id"], r["label"])
+            self.assertLess(r["clip"][0], r["clip"][1])
+        res = self.client.get("/api/letter/Ư").json()
+        self.assertEqual(res["sequence"][0]["motion_id"], "D0515N")
 
     def test_nlp_fingerspelling_proper_name(self):
         """Kiểm tra NLP tự động chuyển tên riêng chưa có trong từ điển sang đánh vần chữ cái"""
@@ -115,13 +129,11 @@ class TestVSLSystem(unittest.TestCase):
         self.assertTrue(seq[0]["video_url"].startswith("https://qipedc.moet.gov.vn/videos/"))
 
     def test_nlp_two_handed_phrases(self):
-        """Kiểm tra dịch thuật các từ vựng 2 tay mới: Xin vui lòng, Giúp đỡ, Gia đình"""
+        """"giúp đỡ" có ký hiệu hai tay học từ video; các từ chưa có video được đánh vần"""
         result = text_to_vsl_glosses("Xin vui lòng giúp đỡ gia đình tôi")
-        glosses = [r["gloss"] for r in result]
-        self.assertIn("XIN_VUI_LONG", glosses)
-        self.assertIn("GIUP_DO", glosses)
-        self.assertIn("GIA_DINH", glosses)
-        self.assertIn("TOI", glosses)
+        self.assertIn("giúp đỡ", [r["token"] for r in result if r["type"] == "vocabulary" and r.get("motion_id")])
+        spelled = {r.get("spelled_word") for r in result if r["type"] == "fingerspelling"}
+        self.assertTrue({"gia đình", "tôi"} <= spelled, spelled)
 
     def test_two_handed_help_recognition(self):
         """Kiểm tra nhận diện 2 tay cho cử chỉ Giúp đỡ (tay phải nắm, tay trái đỡ dưới)"""
@@ -188,7 +200,7 @@ class TestVSLSystem(unittest.TestCase):
         self.assertIn("lịch trình", spelled_words)
         self.assertIn("bạn bè", spelled_words)
         # Mọi ký hiệu được diễn đều có video mẫu người thật (miền Nam / dùng chung)
-        self.assertTrue(all(r.get("video_url") for r in result if r.get("motion_id")))
+        self.assertTrue(all(r.get("video_url") for r in result if r.get("motion_id") and r["type"] == "vocabulary"))
 
     def test_nlp_compound_not_split_into_wrong_signs(self):
         """"sinh nhật", "công nhân", "kết hôn": không được diễn "nhật" (nước Nhật), "nhân" (phép nhân), "hôn" """
@@ -226,7 +238,7 @@ class TestVSLSystem(unittest.TestCase):
     def test_camera_and_text_share_vocabulary(self):
         """Từ nhận diện được bằng camera cũng dịch ngược được từ văn bản về CÙNG mục từ"""
         from backend.models.lexicon import get_entry_by_sstcn
-        for idx, word in [(51, "tôi"), (52, "chào"), (60, "bạn"), (75, "ăn"), (80, "gia đình"), (84, "mẹ"), (98, "bác sĩ")]:
+        for idx, word in [(52, "chào"), (60, "bạn"), (84, "mẹ")]:
             entry = get_entry_by_sstcn(idx)
             seq = text_to_vsl_glosses(word)
             self.assertEqual(seq[0]["entry_id"], entry["id"], entry["word"])
@@ -248,9 +260,9 @@ class TestVSLSystem(unittest.TestCase):
         # từ không có video miền Nam: không dùng tư thế vẽ tay, robot đánh vần
         no_south = next(e for e in lex if e.get("no_south") and e.get("source") == "QIPEDC")
         self.assertIsNone(no_south["video_url"])
-        item = self.client.post("/api/text_to_sign", json={"text": no_south["keys"][0]}).json()["sequence"][0]
-        self.assertFalse(item["has_pose"])
-        self.assertTrue(item["spell"])
+        seq = self.client.post("/api/text_to_sign", json={"text": no_south["keys"][0]}).json()["sequence"]
+        self.assertTrue(all(r["type"] == "fingerspelling" for r in seq))
+        self.assertTrue(all(r["spelled_word"] == no_south["keys"][0] for r in seq))
 
     # ------------------------------------------------------------------
     # Chuyển động robot học từ video QIPEDC
