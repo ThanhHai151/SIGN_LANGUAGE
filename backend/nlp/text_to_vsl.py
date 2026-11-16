@@ -10,10 +10,11 @@ Quy trình nâng cao:
 5. Chỉ kích hoạt Fingerspelling cho từ viết tắt hoặc tên riêng thực sự cần thiết.
 """
 
+import os
 import re
 import unicodedata
 from backend.models.vsl_dictionary import VSL_VOCABULARY, VSL_ALPHABET
-from backend.models.lexicon import robot_pose_key, region_label, load_lexicon, gloss_of, display_label, norm_key, motion_id_of, motion_ids, motion_clip, sign_description
+from backend.models.lexicon import blocked_motion_ids, robot_pose_key, region_label, load_lexicon, gloss_of, display_label, norm_key, motion_id_of, motion_ids, motion_clip, sign_description
 
 # Các hư từ trong ngữ pháp tiếng Việt nói thường được lược bỏ hoặc tinh gọn trong VSL
 STOPWORDS = {
@@ -105,24 +106,30 @@ SEMANTIC_SYNONYM_MAP = {
     "không": "KHONG"
 }
 
-# Từ đồng nghĩa / cách viết khác → từ có trong bộ từ vựng
-SYNONYM_WORDS = {
-    "cám ơn": "cảm ơn", "xin chào": "chào",
-    "má": "mẹ", "mẹ": "mẹ", "ba": "bố", "cha": "bố",
-    "làm ơn": "xin vui lòng", "vui lòng": "xin vui lòng",
-    "học": "học tập", "học bài": "học tập", "nghỉ ngơi": "thư giãn", "bạn thân": "bạn bè",
-    "thường ngày": "hàng ngày", "nấu ăn": "nấu nướng", "dọn dẹp": "lau nhà",
-    # Từ thông dụng chưa có mục riêng trong QIPEDC → mục QIPEDC cùng nghĩa (có video miền Nam/dùng chung)
+# NGUYÊN TẮC CHÍNH XÁC: một từ chỉ được diễn bằng ký hiệu khi bộ từ vựng có đúng mục từ đó
+# (trùng từ gốc của mục QIPEDC). Không dùng ký hiệu của từ "gần nghĩa": thà đánh vần còn hơn diễn sai.
+# Bảng dưới đây chỉ gồm các cách viết / cách gọi KHÁC CỦA CÙNG MỘT KHÁI NIỆM, chỉ dùng khi từ gõ vào
+# không có mục riêng. Mỗi dòng cần người biết ngôn ngữ ký hiệu rà lại trước khi bổ sung thêm.
+SAME_SIGN_WORDS = {
+    # cách viết khác
+    "ký hiệu": "kí hiệu", "ngôn ngữ ký hiệu": "ngôn ngữ kí hiệu", "cám ơn": "cảm ơn",
+    # cách gọi khác của cùng một người / vật
+    "ba mẹ": "bố mẹ", "ba má": "bố mẹ",
     "trường": "nhà trường", "trường học": "nhà trường", "học sinh": "học trò",
     "giáo viên": "thầy cô", "thầy": "thầy giáo",
     "vở": "quyển vở", "tranh": "bức tranh", "thư viện": "phòng thư viện",
-    "đẹp": "đẹp đẽ", "ốm": "ốm đau", "sống": "sinh sống", "tối": "buổi tối",
-    "gì": "là gì", "nói": "nói chuyện", "chậm": "chậm chạp", "trời": "bầu trời",
-    "nghề": "ngành nghề", "ngon": "ngon miệng", "mua": "mua bán", "tết": "tết âm",
-    "ký hiệu": "kí hiệu", "ngôn ngữ ký hiệu": "ngôn ngữ kí hiệu",
-    "vui": "vui mừng", "đáng yêu": "dễ thương", "anh trai": "anh ruột",
-    # Học sinh xưng "em" khi nói về mình → ký hiệu chỉ vào bản thân như "tôi"
-    "em": "tôi", "chúng em": "chúng tôi",
+    "tối": "buổi tối", "trời": "bầu trời", "nghề": "ngành nghề", "tết": "tết âm",
+    "anh trai": "anh ruột", "nhà": "nhà cửa",
+    # "ốm" đứng riêng là "gầy" theo cách nói miền Nam (mục QIPEDC "gầy (miền Nam: ốm)"); "bị ốm/bệnh" là đau ốm
+    "bị ốm": "ốm đau", "bị bệnh": "ốm đau", "bệnh": "ốm đau",
+    # dạng rút gọn / dạng láy của cùng một từ
+    "xin chào": "chào", "học": "học tập", "làm": "làm việc", "gặp": "gặp gỡ", "giúp": "giúp đỡ",
+    "nấu": "nấu nướng", "nấu ăn": "nấu nướng", "đủ": "đầy đủ",
+    "chậm": "chậm chạp", "vui": "vui mừng", "ngon": "ngon miệng", "sống": "sinh sống",
+    "yêu thương": "thương yêu", "đáng yêu": "dễ thương", "nghỉ ngơi": "thư giãn",
+    "thường ngày": "hàng ngày", "gì": "là gì",
+    # số đếm viết bằng chữ
+    "một": "1", "hai": "2", "ba": "3", "bốn": "4", "sáu": "6", "bảy": "7", "tám": "8", "chín": "9", "mười": "10",
 }
 
 
@@ -141,35 +148,82 @@ AMBIGUOUS_PROPER_KEYS = {"anh"}
 def _usable(entry: dict, available: set = None) -> bool:
     """Robot diễn được: có chuyển động đã học, tư thế vẽ sẵn được phép dùng, hoặc có video QIPEDC
     (miền Nam / dùng chung) để trình duyệt học ngay khi cần."""
-    return bool(motion_id_of(entry, available) or robot_pose_key(entry) or _video_id(entry))
+    vid = _video_id(entry)
+    return bool(motion_id_of(entry, available) or robot_pose_key(entry) or (vid and vid not in blocked_motion_ids()))
+
+
+def headword_keys(word: str) -> list:
+    """Các cách gõ ứng ĐÚNG với một từ gốc của từ điển (khóa đầu tiên là từ gốc bỏ phần trong ngoặc).
+
+    Phần trong ngoặc của nhãn QIPEDC chỉ được coi là cách gõ khác khi chắc chắn là cùng một từ:
+      "má (giống: mẹ)" → má, mẹ;  "đẹp đẽ (như đẹp)" → đẹp đẽ, đẹp;  "gầy (miền Nam: ốm)" → gầy, ốm;
+      "võng (cái võng)" → võng, cái võng;  "về 5 (về nhà)" → về 5, về nhà;  "1 000 000 (một triệu)".
+    Chú thích nghĩa như "cao (nhà)", "bình sữa (em bé)", "cộng (Toán học)" KHÔNG phải là từ khóa
+    (gõ "nhà" không được ra ký hiệu "cao")."""
+    word = unicodedata.normalize("NFC", word or "")
+    raw_base = re.sub(r"\([^)]*\)", " ", word)
+    base = norm_key(raw_base)
+    keys = [base] if base else []
+    if re.search(r"[,/;]", raw_base):           # "anh hai, anh cả" / "chiên/rán": mỗi vế là một cách gọi
+        keys += [norm_key(part) for part in re.split(r"[,/;]", raw_base)]
+    stem = re.sub(r"\s*\d+$", "", base)           # "về 5" → "về"
+    numeric = bool(re.fullmatch(r"[\d\s.,]+", base or "x"))
+    for inner in re.findall(r"\(([^)]*)\)", word):
+        inner = inner.strip()
+        m = re.match(r"(?i)(?:giống\s*:|như\s+|miền nam\s*:)\s*(.+)", inner)
+        if m:
+            keys.append(norm_key(m.group(1)))
+            continue
+        k = norm_key(inner)
+        if not k or "," in inner or len(k.split()) > 5:
+            continue
+        if numeric or (stem and re.search(r"(^| )" + re.escape(stem) + r"( |$)", k)):
+            keys.append(k)
+    return list(dict.fromkeys(k for k in keys if k))
+
+
+_exact_cache = {}
+
+
+def exact_index(lex: dict) -> dict:
+    """Chỉ mục từ gõ vào → mục từ có ĐÚNG từ gốc đó (bỏ các khóa "gần nghĩa" của bộ từ vựng cũ).
+    Nhiều mục trùng khóa: ưu tiên mục robot diễn được (có video miền Nam / dùng chung), mục mà khóa là
+    chính từ gốc, mục không kèm chú thích, rồi tới mục thông dụng hơn."""
+    cache_key = id(lex["entries"])
+    if cache_key not in _exact_cache:
+        best = {}
+        for e in lex["entries"]:
+            hk = headword_keys(e["word"])
+            for i, k in enumerate(hk):
+                pri = (1 if _video_id(e) else 0, 1 if k == hk[0] else 0, -e["word"].count("("), -e.get("rank", 0))
+                if k not in best or pri > best[k][0]:
+                    best[k] = (pri, e)
+        _exact_cache.clear()
+        _exact_cache[cache_key] = {k: v[1] for k, v in best.items()}
+    return _exact_cache[cache_key]
 
 
 def _resolve(phrase: str, lex: dict, available: set = None, multi: bool = False):
-    """Tìm mục từ cho một cụm từ: khớp trực tiếp → đồng nghĩa → bản đồ ngữ nghĩa cũ (theo tư thế robot).
+    """Tìm mục từ cho một cụm từ: trùng đúng từ gốc → cách gọi khác của cùng khái niệm (SAME_SIGN_WORDS).
 
     Ưu tiên mục robot diễn được. Với cụm nhiều âm tiết (multi=True), bỏ qua mục robot chưa diễn được
-    để các từ ngắn hơn có ký hiệu được dùng thay vì đánh vần cả cụm (vd. "ăn cơm" → "ăn" + "cơm")."""
+    để các từ ngắn hơn có ký hiệu được dùng thay vì đánh vần cả cụm."""
+    idx = exact_index(lex)
     candidates = []
-    entry = lex["by_key"].get(phrase)
+    entry = idx.get(phrase)
     if entry and entry.get("proper_noun") and phrase in AMBIGUOUS_PROPER_KEYS:
         entry = None
     if entry:
         candidates.append(entry)
-    syn = SYNONYM_WORDS.get(phrase)
-    if syn and syn in lex["by_key"]:
-        candidates.append(lex["by_key"][syn])
-    pose_key = SEMANTIC_SYNONYM_MAP.get(phrase)
-    if pose_key and lex["by_pose"].get(pose_key):
-        candidates.append(lex["by_pose"][pose_key])
+    syn = SAME_SIGN_WORDS.get(phrase)
+    if syn and idx.get(norm_key(syn)):
+        candidates.append(idx[norm_key(syn)])
     for c in candidates:
         if _usable(c, available):
             return c
-    if not candidates:
-        return None
-    # Mục QIPEDC chưa có video miền Nam: giữ nguyên để giao diện báo "chưa có ký hiệu miền Nam"
-    if multi and candidates[0].get("source") != "QIPEDC":
-        return None
-    return candidates[0]
+    # Có mục từ nhưng robot chưa diễn được (chưa có video miền Nam / dùng chung): vẫn trả về để giao diện
+    # hiện đúng từ và báo "chưa có ký hiệu miền Nam"; robot đánh vần từ đó.
+    return candidates[0] if candidates else None
 
 
 _QIPEDC_VIDEO_RE = re.compile(r"qipedc\.moet\.gov\.vn/videos/([A-Za-z0-9_-]+)\.mp4")
@@ -213,7 +267,8 @@ def _vocab_item(token: str, entry: dict, available_motions: set = None) -> dict:
         "clip": list(motion_clip(motion_id)) if motion_id else None,
         "has_pose": bool(pose_key or motion_id),
         # Mã video QIPEDC: từ chưa có chuyển động → trình duyệt học từ video này rồi robot diễn
-        "video_id": _video_id(entry),
+        # (chuyển động không đạt kiểm định chất lượng → không học lại, robot đánh vần)
+        "video_id": None if _video_id(entry) in blocked_motion_ids() else _video_id(entry),
         # Chữ cái để robot đánh vần tạm trong lúc chưa có / đang học chuyển động
         "spell": [c for c in remove_accents(entry["word"]).upper() if c in VSL_ALPHABET][:12],
         # Diễn tả cụ thể cách làm ký hiệu (phân tích từ video người thật)
@@ -225,13 +280,41 @@ def _vocab_item(token: str, entry: dict, available_motions: set = None) -> dict:
     }
 
 
-def _spell_items(word: str, lex: dict) -> list:
+_compounds = None
+
+
+def vietnamese_compounds() -> set:
+    """Danh sách từ ghép tiếng Việt (2–4 tiếng) dùng để nhận ra ranh giới từ.
+    Nguồn: backend/data/sources/vi_compounds.txt (xem README cùng thư mục). Thiếu tệp → tập rỗng."""
+    global _compounds
+    if _compounds is None:
+        path = os.path.join(os.path.dirname(__file__), "..", "data", "sources", "vi_compounds.txt")
+        try:
+            with open(path, encoding="utf-8") as f:
+                _compounds = {norm_key(line) for line in f if line.strip()}
+        except OSError:
+            _compounds = set()
+    return _compounds
+
+
+def _compound_len(words: list, i: int) -> int:
+    """Số tiếng của từ ghép dài nhất bắt đầu tại words[i] (0 nếu không phải từ ghép đã biết)."""
+    comps = vietnamese_compounds()
+    if not comps:
+        return 0
+    for length in range(min(4, len(words) - i), 1, -1):
+        if " ".join(words[i:i + length]) in comps:
+            return length
+    return 0
+
+
+def _spell_items(word: str, lex: dict, group: str = None) -> list:
     items = []
     for char in remove_accents(word).upper():
         if char not in VSL_ALPHABET:
             continue
         alpha_item = VSL_ALPHABET[char]
-        entry = lex["by_key"].get(char.lower())
+        entry = exact_index(lex).get(char.lower())
         items.append({
             "token": char,
             "gloss": f"ALPHA_{char}",
@@ -245,6 +328,7 @@ def _spell_items(word: str, lex: dict) -> list:
             "variants": [],
             "pose_key": char,
             "has_pose": True,
+            "spelled_word": group or word,   # từ đang được đánh vần (giao diện hiển thị cả từ)
             "motion_type": "static",
             "fingers_state": alpha_item.get("fingers_state", {}),
             "avatar_pose": {"right_arm": [35, 20, 0], "right_wrist": [15, 0, 0]},
@@ -294,6 +378,17 @@ def text_to_vsl_glosses(text: str):
         if matched:
             continue
 
+        # Từ ghép tiếng Việt không có trong bộ ký hiệu ("sinh nhật", "công nhân", "kết hôn"...):
+        # KHÔNG tách ra từng tiếng để diễn (ký hiệu "nhật" là nước Nhật, "nhân" là phép nhân, "hôn" là hôn)
+        # mà đánh vần cả từ. Chỉ tách khi MỌI tiếng đều là từ có ký hiệu riêng ("về quê" → về + quê).
+        comp_len = _compound_len(words, i)
+        if comp_len:
+            parts = words[i:i + comp_len]
+            if not all(p in STOPWORDS or ((e := _resolve(p, lex, available)) and _usable(e, available)) for p in parts):
+                result.extend(_spell_items("".join(parts), lex, group=" ".join(parts)))
+                i += comp_len
+                continue
+
         word = words[i]
         if word in STOPWORDS:
             i += 1
@@ -303,7 +398,7 @@ def text_to_vsl_glosses(text: str):
             push(_vocab_item(word, entry, available))
         elif re.fullmatch(r"\d+", word):
             for d in word:
-                e = lex["by_key"].get(d)
+                e = exact_index(lex).get(d)
                 if e:
                     push(_vocab_item(d, e, available))
         else:

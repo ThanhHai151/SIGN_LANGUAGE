@@ -145,22 +145,32 @@ class TestVSLSystem(unittest.TestCase):
         self.assertTrue(data["success"])
         self.assertEqual(data["data"]["sign"], "GIUP_DO")
 
+    def _assert_exact(self, result):
+        """Nguyên tắc chính xác: mỗi ký hiệu phải là ký hiệu của ĐÚNG từ được gõ (hoặc cách gọi khác của
+        cùng khái niệm trong SAME_SIGN_WORDS) — không dùng ký hiệu của từ gần nghĩa."""
+        from backend.nlp.text_to_vsl import headword_keys, SAME_SIGN_WORDS
+        from backend.models.lexicon import norm_key
+        for r in result:
+            if r["type"] != "vocabulary":
+                continue
+            keys = headword_keys(r["word"])
+            ok = r["token"] in keys or norm_key(SAME_SIGN_WORDS.get(r["token"], "")) in keys
+            self.assertTrue(ok, f'"{r["token"]}" bị diễn bằng ký hiệu của "{r["word"]}"')
+
     def test_nlp_everyday_compound_phrases(self):
-        """Kiểm tra các cụm từ học bài, nấu ăn, lau nhà, đi ngủ được nhận diện thành cụm từ chứ không đánh vần chữ cái"""
+        """Cụm từ có trong bộ ký hiệu (nấu ăn, lau nhà) được diễn bằng ký hiệu; hư từ bị bỏ; không ghép sai nghĩa"""
         result = text_to_vsl_glosses("Tôi đang học bài và nấu ăn rồi lau nhà sau đó đi ngủ")
-        glosses = [r["gloss"] for r in result]
-        types = [r["type"] for r in result]
-
-        self.assertIn("HOC_BAI", glosses)
-        self.assertIn("NAU_AN", glosses)
-        self.assertIn("LAU_NHA", glosses)
-        self.assertIn("DI_NGU", glosses)
-
-        # Hư từ "và", "rồi" bị bỏ qua, không có chữ cái fingerspelling thừa
-        self.assertNotIn("fingerspelling", types)
+        signed = [r["token"] for r in result if r["type"] == "vocabulary" and r.get("motion_id")]
+        self.assertIn("nấu ăn", signed)
+        self.assertIn("lau nhà", signed)
+        self.assertIn("học", signed)
+        tokens = [r["token"] for r in result]
+        self.assertNotIn("và", tokens)   # hư từ "và", "rồi", "đang" bị bỏ qua
+        self.assertNotIn("rồi", tokens)
+        self._assert_exact(result)
 
     def test_nlp_full_long_discourse_sentence(self):
-        """Kiểm tra nguyên văn đoạn văn dài tự sự của người dùng được dịch 100% sang cụm từ có nghĩa, không có fingerspelling"""
+        """Đoạn văn dài: từ có ký hiệu được diễn bằng ký hiệu của chính từ đó, từ chưa có ký hiệu được đánh vần cả từ"""
         text = (
             "Những ngày cuối tuần của tôi không có lịch trình cụ thể vì chúng phụ thuộc vào mức độ bận rộn của tôi trong tuần. "
             "Tôi thường dành một ít thời gian cho việc học tập hoặc các dự án cá nhân, nhưng tôi cũng đảm bảo mình có đủ thời gian để thư giãn. "
@@ -168,33 +178,24 @@ class TestVSLSystem(unittest.TestCase):
         )
         result = text_to_vsl_glosses(text)
         self.assertGreater(len(result), 15)
-        
-        # Đảm bảo 100% token là vocabulary cụm từ, không có fingerspelling
-        fingerspelling_tokens = [r for r in result if r["type"] == "fingerspelling"]
-        self.assertEqual(len(fingerspelling_tokens), 0, f"Còn sót các ký tự fingerspelling: {fingerspelling_tokens}")
-        
-        glosses = [r["gloss"] for r in result]
-        self.assertIn("CUOI_TUAN", glosses)
-        self.assertIn("LICH_TRINH", glosses)
-        # Phần lớn ký hiệu có video mẫu người thật
-        with_video = [r for r in result if r.get("video_url")]
-        self.assertGreater(len(with_video), len(result) // 2)
-        self.assertIn("PHU_THUOC", glosses)
-        self.assertIn("BAN_RON", glosses)
-        self.assertIn("TRONG_TUAN", glosses)
-        self.assertIn("THOI_GIAN", glosses)
-        self.assertIn("HOC_BAI", glosses)
-        self.assertIn("DU_AN", glosses)
-        self.assertIn("DAM_BAO", glosses)
-        self.assertIn("THU_GIAN", glosses)
-        self.assertIn("NEU", glosses)       # "Nếu có thể" → ký hiệu NẾU
-        self.assertIn("THICH", glosses)
-        self.assertIn("GAP_GO", glosses)
-        self.assertIn("BAN", glosses)       # "bạn bè" → ký hiệu BẠN
-        self.assertIn("KHAM_PHA", glosses)
-        self.assertIn("DIA_DIEM", glosses)
-        self.assertIn("CO_HOI", glosses)
-        self.assertIn("THOI_QUEN", glosses)
+        self._assert_exact(result)
+        signed = [r["token"] for r in result if r["type"] == "vocabulary" and r.get("motion_id")]
+        for w in ("cuối tuần", "không có", "phụ thuộc", "học tập", "dự án", "thư giãn", "gặp gỡ", "khám phá",
+                  "địa điểm", "mới", "cơ hội", "thói quen"):
+            self.assertIn(w, signed)
+        # Từ ghép chưa có ký hiệu ("lịch trình", "bạn bè") được đánh vần CẢ TỪ, không tách ra từng tiếng để diễn sai nghĩa
+        spelled_words = {r.get("spelled_word") for r in result if r["type"] == "fingerspelling"}
+        self.assertIn("lịch trình", spelled_words)
+        self.assertIn("bạn bè", spelled_words)
+        # Mọi ký hiệu được diễn đều có video mẫu người thật (miền Nam / dùng chung)
+        self.assertTrue(all(r.get("video_url") for r in result if r.get("motion_id")))
+
+    def test_nlp_compound_not_split_into_wrong_signs(self):
+        """"sinh nhật", "công nhân", "kết hôn": không được diễn "nhật" (nước Nhật), "nhân" (phép nhân), "hôn" """
+        for text, bad in (("Chúc mừng sinh nhật", "nhật"), ("Chú tôi là công nhân", "nhân"), ("Bố mẹ kết hôn", "hôn"), ("Không sao", "sao")):
+            result = text_to_vsl_glosses(text)
+            self.assertNotIn(bad, [r["token"] for r in result if r["type"] == "vocabulary"], text)
+            self._assert_exact(result)
 
     # ------------------------------------------------------------------
     # Bộ từ vựng thống nhất (QIPEDC + giáo trình 102 + robot)
@@ -225,9 +226,9 @@ class TestVSLSystem(unittest.TestCase):
     def test_camera_and_text_share_vocabulary(self):
         """Từ nhận diện được bằng camera cũng dịch ngược được từ văn bản về CÙNG mục từ"""
         from backend.models.lexicon import get_entry_by_sstcn
-        for idx in [51, 52, 60, 75, 80, 84, 98]:  # Tôi, Chào, Bạn, Ăn, Gia đình, Mẹ, Bác sĩ
+        for idx, word in [(51, "tôi"), (52, "chào"), (60, "bạn"), (75, "ăn"), (80, "gia đình"), (84, "mẹ"), (98, "bác sĩ")]:
             entry = get_entry_by_sstcn(idx)
-            seq = text_to_vsl_glosses(entry["keys"][0])
+            seq = text_to_vsl_glosses(word)
             self.assertEqual(seq[0]["entry_id"], entry["id"], entry["word"])
 
     def test_south_standard(self):

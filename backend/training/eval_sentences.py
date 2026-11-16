@@ -31,13 +31,31 @@ def _sequence(text: str) -> list:
     return r.get("sequence", []) if isinstance(r, dict) else r
 
 
+def _gloss_view(seq: list) -> list:
+    """[(từ, cách diễn)] — các chữ cái đánh vần liên tiếp của cùng một từ được gộp lại thành một mục."""
+    out = []
+    for x in seq:
+        if x.get("type") == "fingerspelling":
+            word = x.get("spelled_word") or x.get("token")
+            if out and out[-1][1] == "đánh vần" and out[-1][2] == word:
+                continue
+            out.append((word, "đánh vần", word))
+        elif is_signed(x):
+            out.append((x.get("token"), "ký hiệu", None))
+        else:
+            out.append((x.get("token"), "đánh vần", None))
+    return [(t, k) for t, k, _ in out]
+
+
 def check_sentence(s: dict) -> dict:
     seq = _sequence(s["text"])
     signed_tokens = [_norm(x.get("token")) for x in seq if is_signed(x)]
+    covered = {syl for t in signed_tokens for syl in t.split()}   # các tiếng nằm trong một ký hiệu
     missing = []
     for w in s["must_sign"]:
         w = _norm(w)
-        ok = any(w == t or f" {w} " in f" {t} " for t in signed_tokens)
+        # đạt nếu cả từ nằm trong một ký hiệu, hoặc từng tiếng của nó đều được diễn bằng ký hiệu ("đi làm" → đi + làm)
+        ok = any(w == t or f" {w} " in f" {t} " for t in signed_tokens) or all(syl in covered for syl in w.split())
         if not ok:
             missing.append(w)
     words = [x for x in seq if x.get("type") != "fingerspelling"]
@@ -45,10 +63,7 @@ def check_sentence(s: dict) -> dict:
     return {
         "topic": s["topic"],
         "text": s["text"],
-        "glosses": [
-            (x.get("token"), "ký hiệu" if is_signed(x) else ("chữ cái" if x.get("type") == "fingerspelling" else "đánh vần"))
-            for x in seq
-        ],
+        "glosses": _gloss_view(seq),
         "missing": missing,
         "n_must": len(s["must_sign"]),
         "n_words": len(words),

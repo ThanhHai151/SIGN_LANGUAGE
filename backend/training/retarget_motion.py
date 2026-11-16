@@ -272,82 +272,181 @@ def to_robot_pos(v, sc):
     return np.array([v[0] * sc["x"], v[1] * (sc["up"] if v[1] > 0 else sc["y"]), v[2] * sc["z"]])
 
 
-def retarget_frame(fr, prev, scale=None):
-    if not fr.get("p"):
+# Làm mượt NHẸ ở đầu vào (vị trí cổ tay, hướng bàn tay) thay vì làm mượt góc khớp ở đầu ra:
+# trung bình các góc Euler làm bàn tay lệch hướng (góc Euler nhảy giữa hai cách biểu diễn tương đương),
+# còn làm mượt vị trí / quaternion thì robot vẫn tái hiện chính xác tư thế đã làm mượt.
+POS_D0 = 0.02               # cổ tay dịch < 2 cm giữa hai khung → coi như rung, lọc mạnh
+ROT_D0 = math.radians(12)   # bàn tay xoay < 12° giữa hai khung → coi như rung, lọc mạnh
+
+
+def _quat(R):
+    return np.asarray(Rot.from_matrix(R).as_quat(), dtype=float)  # x, y, z, w
+
+
+def _qmat(q):
+    x, y, z, w = q / np.linalg.norm(q)
+    return np.array([
+        [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
+        [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
+        [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)],
+    ])
+
+
+def _slerp(q0, q1, u):
+    d = float(np.dot(q0, q1))
+    if d < 0:
+        q1, d = -q1, -d
+    if d > 0.9995:
+        q = q0 + u * (q1 - q0)
+        return q / np.linalg.norm(q)
+    th = math.acos(min(1.0, d))
+    return (math.sin((1 - u) * th) * q0 + math.sin(u * th) * q1) / math.sin(th)
+
+
+def _smooth3(A, K):
+    """Lọc 3 điểm theo thời gian cho mảng (n, d), lặp lại mép."""
+    Ap = np.vstack([A[:1], A, A[-1:]])
+    return K[0] * Ap[:-2] + K[1] * Ap[1:-1] + K[2] * Ap[2:]
+
+
+def _smooth_adaptive(A, d0, side=0.2, angular=False):
+    """Lọc 3 điểm THÍCH NGHI: khi gần như đứng yên (thay đổi giữa hai khung ≪ d0) lọc mạnh để khử rung của
+    MediaPipe; khi đang chuyển động nhanh (thay đổi ≫ d0) gần như giữ nguyên để không làm trễ / thu nhỏ
+    động tác. A: (n, d) vị trí (mét) hoặc quaternion (angular=True, d0 tính bằng radian)."""
+    n = len(A)
+    if n < 3:
+        return A
+    out = A.copy()
+    for i in range(n):
+        a, b = A[max(0, i - 1)], A[min(n - 1, i + 1)]
+        if angular:
+            if np.dot(a, A[i]) < 0:
+                a = -a
+            if np.dot(b, A[i]) < 0:
+                b = -b
+            d = max(2 * math.acos(min(1.0, abs(float(np.dot(a, A[i]))))), 2 * math.acos(min(1.0, abs(float(np.dot(b, A[i]))))))
+        else:
+            d = max(float(np.linalg.norm(a - A[i])), float(np.linalg.norm(b - A[i])))
+        w = side / (1.0 + (d / d0) ** 2)
+        v = w * a + (1 - 2 * w) * A[i] + w * b
+        out[i] = v / np.linalg.norm(v) if angular else v
+    return out
+
+
+def _fill(A):
+    """Nội suy tuyến tính các hàng NaN của mảng (n, d); None nếu không có hàng hợp lệ nào."""
+    ok = ~np.isnan(A[:, 0])
+    if not ok.any():
         return None
-    P = to_robot(fr["p"])
-    T = torso_frame(P)
-    Tt = T.T
-    loc = lambda v: Tt @ (v - (P[1] + P[2]) / 2)  # noqa: E731
-    res = {"torso": [0.0, 0.0, 0.0]}
-    # Nghiêng thân nhẹ (giới hạn để robot không cúi quá)
-    te = euler(T)
-    res["torso"] = [float(np.clip(te[0] * 0.6, -0.15, 0.15)), float(np.clip(te[1] * 0.6, -0.2, 0.2)), float(np.clip(te[2] * 0.6, -0.12, 0.12))]
-    scale = scale or {"x": 1.25, "y": 1.04, "up": 1.5, "z": 0.62}
-    for side, (si, ei, wi, hk) in {"right": (2, 4, 6, "r"), "left": (1, 3, 5, "l")}.items():
-        sgn = -1.0 if side == "right" else 1.0
-        Sr = np.array([sgn * R_SHOULDER_HALF, 0.0, 0.0])          # vai robot (so với trung điểm hai vai)
-        Sh, Eh, Wh = loc(P[si]), loc(P[ei]), loc(P[wi])
-        # Đích cổ tay: giữ VỊ TRÍ so với thân người (quy về tỉ lệ robot) → hai tay chạm nhau, chạm ngực,
-        # đưa lên mặt… đúng chỗ như video; độ sâu giảm vì MediaPipe phóng đại trục trước–sau.
-        Wt = to_robot_pos(Wh, scale)
-        Rh = Rh_shape = Hrel = None
-        if fr.get(hk):
-            H = np.stack([loc(h) for h in to_robot(fr[hk])])
-            Hrel = H - H[0]
-            Rh = hand_frame(damp_z(Hrel, KZ_HAND), side)   # hướng bàn tay: giảm độ sâu
-            Rh_shape = hand_frame(Hrel, side)              # hình dạng ngón: dùng 3D đầy đủ
-        palm_dir = -Rh[:, 1] if Rh is not None else unit(damp_z(Wh - Eh, KZ_ARM))
-        Wt = _avoid_body(Wt, palm_dir)
-        pole = damp_z(Eh - (Sh + Wh) / 2, KZ_ARM)                 # khuỷu nằm phía nào của đường vai–cổ tay
-        Rs, theta, bend = _solve_arm(Sr, Wt, pole, (prev or {}).get(side + "_bend"))
-        res[side + "_bend"] = bend
-        Rfore = Rs @ Rot.from_euler("XYZ", [-theta, 0, 0]).as_matrix()
-        entry = {"arm": euler(Rs), "fore": [-theta, 0.0, 0.0], "hand": None}
-        if Rh is not None:
-            Rrel = Rfore.T @ Rh
-            q = Rot.from_matrix(Rrel).as_quat()  # x, y, z, w
-            twist = 2 * math.atan2(q[1], q[3])
-            twist = (twist + math.pi) % (2 * math.pi) - math.pi
-            Rw = Rot.from_euler("Y", twist).as_matrix().T @ Rrel
-            Hl = (Rh_shape.T @ Hrel.T).T
-            entry["hand"] = {"twist": twist, "wrist": euler(Rw), "fingers": finger_angles(Hl, side)}
-        res[side] = entry
-    return res
+    t = np.arange(len(A))
+    return np.stack([np.interp(t, t[ok], A[ok, j]) for j in range(A.shape[1])], axis=1)
 
 
-def flatten_side(entry, side):
-    vals = list(entry["arm"]) + list(entry["fore"])
-    h = entry.get("hand")
-    if h:
-        vals += [h["twist"]] + list(h["wrist"])
-        F = h["fingers"]
-    else:
-        vals += [np.nan] * 4
-        F = None
-    for fname, chans in FINGER_CHANNELS:
-        for c in chans:
-            vals.append(F[fname][c] if F else np.nan)
-    return vals
+def _near_euler(e, prev):
+    """Trong các bộ góc Euler XYZ biểu diễn cùng một phép quay, chọn bộ gần khung trước nhất
+    (frontend nội suy từng góc giữa hai khung → góc phải liên tục)."""
+    e = np.asarray(e, dtype=float)
+    if prev is None:
+        return e
+    best = None
+    for c in (e, np.array([e[0] + math.pi, math.pi - e[1], e[2] + math.pi])):
+        c = prev + (c - prev + math.pi) % (2 * math.pi) - math.pi
+        d = float(np.abs(c - prev).sum())
+        if best is None or d < best[0]:
+            best = (d, c)
+    return best[1]
 
 
 def retarget(raw, smooth=True):
-    frames = []
-    prev = None
+    frames_in = raw["frames"]
+    n = len(frames_in)
     scale = body_scale(raw)
-    for fr in raw["frames"]:
-        r = retarget_frame(fr, prev, scale)
-        if r:
-            prev = r
-        frames.append(r)
-    n = len(frames)
-    M = np.full((n, len(LAYOUT)), np.nan)
-    for i, r in enumerate(frames):
-        if not r:
+    nan3 = lambda: np.full((n, 3), np.nan)  # noqa: E731
+    torso = nan3()
+    sides = {"right": (2, 4, 6, "r"), "left": (1, 3, 5, "l")}
+    G = {s: {"W": nan3(), "pole": nan3(), "fdir": nan3(), "Q": np.full((n, 4), np.nan), "F": [None] * n} for s in sides}
+
+    # 1) Hình học từng khung trong khung thân người
+    for i, fr in enumerate(frames_in):
+        if not fr.get("p"):
             continue
-        M[i, :3] = r["torso"]
-        M[i, 3:3 + SIDE_CHANNELS] = flatten_side(r["right"], "right")
-        M[i, 3 + SIDE_CHANNELS:] = flatten_side(r["left"], "left")
+        P = to_robot(fr["p"])
+        T = torso_frame(P)
+        Tt = T.T
+        mid = (P[1] + P[2]) / 2
+        loc = lambda v: Tt @ (v - mid)  # noqa: E731
+        te = euler(T)
+        torso[i] = [np.clip(te[0] * 0.6, -0.15, 0.15), np.clip(te[1] * 0.6, -0.2, 0.2), np.clip(te[2] * 0.6, -0.12, 0.12)]
+        for side, (si, ei, wi, hk) in sides.items():
+            g = G[side]
+            Sh, Eh, Wh = loc(P[si]), loc(P[ei]), loc(P[wi])
+            g["W"][i] = Wh
+            g["pole"][i] = Eh - (Sh + Wh) / 2      # khuỷu nằm phía nào của đường vai–cổ tay
+            g["fdir"][i] = Wh - Eh
+            if fr.get(hk):
+                H = np.stack([loc(h) for h in to_robot(fr[hk])])
+                Hrel = H - H[0]
+                Rh = hand_frame(damp_z(Hrel, KZ_HAND), side)   # hướng bàn tay: giảm độ sâu
+                Rh_shape = hand_frame(Hrel, side)              # hình dạng ngón: dùng 3D đầy đủ
+                g["Q"][i] = _quat(Rh)
+                g["F"][i] = finger_angles((Rh_shape.T @ Hrel.T).T, side)
+
+    M = np.full((n, len(LAYOUT)), np.nan)
+    M[:, :3] = torso
+    for side, off in (("right", 3), ("left", 3 + SIDE_CHANNELS)):
+        g = G[side]
+        W, pole, fdir = _fill(g["W"]), _fill(g["pole"]), _fill(g["fdir"])
+        if W is None:
+            continue
+        # 2) Hướng bàn tay: lấp khoảng không thấy tay bằng slerp, làm mượt nhẹ trên quaternion
+        Q = g["Q"]
+        okq = np.where(~np.isnan(Q[:, 0]))[0]
+        Rh = [None] * n
+        if len(okq):
+            for a, b in zip(okq[:-1], okq[1:]):
+                if np.dot(Q[a], Q[b]) < 0:
+                    Q[b] = -Q[b]
+                for k in range(a + 1, b):
+                    Q[k] = _slerp(Q[a], Q[b], (k - a) / (b - a))
+            lo, hi = okq[0], okq[-1]
+            Qs = _smooth_adaptive(Q[lo:hi + 1], ROT_D0, angular=True) if (smooth and hi > lo) else Q[lo:hi + 1]
+            for k in range(lo, hi + 1):
+                Rh[k] = _qmat(Qs[k - lo])
+        # 3) Đích cổ tay: giữ VỊ TRÍ so với thân người (quy về tỉ lệ robot), tránh lọt vào thân/đầu, làm mượt nhẹ
+        Wt = np.zeros((n, 3))
+        for i in range(n):
+            palm_dir = -Rh[i][:, 1] if Rh[i] is not None else unit(damp_z(fdir[i], KZ_ARM))
+            Wt[i] = _avoid_body(to_robot_pos(W[i], scale), palm_dir)
+        if smooth and n >= 3:
+            Wt = _smooth_adaptive(Wt, POS_D0)
+            pole = _smooth3(pole, (0.25, 0.5, 0.25))
+        # 4) IK cánh tay + tách hướng bàn tay thành xoay cẳng tay (twist) và cổ tay
+        sgn = -1.0 if side == "right" else 1.0
+        Sr = np.array([sgn * R_SHOULDER_HALF, 0.0, 0.0])
+        prev_bend = prev_arm = prev_wrist = prev_twist = None
+        for i in range(n):
+            Rs, theta, prev_bend = _solve_arm(Sr, Wt[i], damp_z(pole[i], KZ_ARM), prev_bend)
+            prev_arm = _near_euler(euler(Rs), prev_arm)
+            M[i, off:off + 3] = prev_arm
+            M[i, off + 3:off + 6] = [-theta, 0.0, 0.0]
+            if Rh[i] is None:
+                continue
+            Rfore = Rs @ Rot.from_euler("XYZ", [-theta, 0, 0]).as_matrix()
+            Rrel = Rfore.T @ Rh[i]
+            q = _quat(Rrel)
+            twist = 2 * math.atan2(q[1], q[3])
+            ref = prev_twist if prev_twist is not None else 0.0
+            twist = ref + (twist - ref + math.pi) % (2 * math.pi) - math.pi
+            Rw = Rot.from_euler("Y", twist).as_matrix().T @ Rrel
+            prev_twist = twist
+            prev_wrist = _near_euler(euler(Rw), prev_wrist if prev_wrist is not None else np.zeros(3))
+            M[i, off + 6] = twist
+            M[i, off + 7:off + 10] = prev_wrist
+        # 5) Ngón tay (chỉ ở khung thấy tay; khoảng trống được nội suy bên dưới)
+        for i in range(n):
+            F = g["F"][i]
+            if F:
+                M[i, off + 10:off + SIDE_CHANNELS] = [F[fname][c] for fname, chans in FINGER_CHANNELS for c in chans]
 
     # Giá trị nghỉ cho phần không thấy tay ở đầu/cuối video
     rest_vec = np.zeros(len(LAYOUT))
@@ -368,9 +467,6 @@ def retarget(raw, smooth=True):
         if ok.sum() == 0:
             M[:, j] = rest_vec[j]
             continue
-        # mở góc liên tục để nội suy/làm mượt không bị nhảy ±π
-        col_ok = np.unwrap(col[ok])
-        col[ok] = col_ok
         first, last = np.argmax(ok), n - 1 - np.argmax(ok[::-1])
         # nội suy khoảng trống ở giữa, đầu/cuối chuyển dần về tư thế nghỉ
         col = np.interp(t, t[ok], col[ok])
@@ -387,9 +483,9 @@ def retarget(raw, smooth=True):
         fcols = [j for j, name in enumerate(LAYOUT) if any(f in name for f in ("thumb", "index", "middle", "ring", "pinky"))]
         Mp = np.vstack([M[:1], M, M[-1:]])
         M[:, fcols] = np.median(np.stack([Mp[:-2, fcols], Mp[1:-1, fcols], Mp[2:, fcols]]), axis=0)
-        K = np.array([0.25, 0.5, 0.25])
-        Mp = np.vstack([M[:1], M, M[-1:]])
-        M = K[0] * Mp[:-2] + K[1] * Mp[1:-1] + K[2] * Mp[2:]
+        # Cánh tay / cổ tay đã được làm mượt ở đầu vào → chỉ làm mượt thêm ngón tay và thân
+        scols = fcols + [0, 1, 2]
+        M[:, scols] = _smooth3(M[:, scols], (0.25, 0.5, 0.25))
     # Đoạn có động tác: từ lúc tay xuất hiện đến lúc tay biến mất (+ đệm), bỏ phần đứng yên đầu/cuối video
     fps = float(raw["fps"])
     # cổ tay rời vị trí nghỉ (vị trí ở các khung đầu video) hơn 7 cm → đang làm động tác
@@ -425,10 +521,7 @@ def retarget(raw, smooth=True):
         active = [max(0.0, act[0] / fps - 0.15), min(dur, (act[-1] + 1) / fps + 0.15)]
     else:
         active = [0.0, dur]
-    hand_cov = {
-        "right": float(np.mean([1.0 if (f and f["right"].get("hand")) else 0.0 for f in frames])),
-        "left": float(np.mean([1.0 if (f and f["left"].get("hand")) else 0.0 for f in frames])),
-    }
+    hand_cov = {side: float(np.mean([1.0 if F else 0.0 for F in G[side]["F"]])) if n else 0.0 for side in ("right", "left")}
     return {
         "id": raw["id"],
         "fps": raw["fps"],

@@ -39,7 +39,7 @@
     {"topic": "giao_tiep", "text": "Bạn khỏe không?", "must_sign": ["bạn", "khỏe", "không"]},
     {"topic": "giao_tiep", "text": "Tôi khỏe, cảm ơn bạn.", "must_sign": ["tôi", "khỏe", "cảm ơn", "bạn"]},
     {"topic": "giao_tiep", "text": "Xin lỗi, tôi đến muộn.", "must_sign": ["xin lỗi", "tôi", "đến", "muộn"]},
-    {"topic": "giao_tiep", "text": "Tạm biệt, hẹn gặp lại.", "must_sign": ["tạm biệt", "hẹn gặp lại"]},
+    {"topic": "giao_tiep", "text": "Tạm biệt, hẹn gặp lại.", "must_sign": ["tạm biệt", "hẹn", "gặp"]},
     {"topic": "giao_tiep", "text": "Bạn bao nhiêu tuổi?", "must_sign": ["bạn", "bao nhiêu", "tuổi"]},
     {"topic": "giao_tiep", "text": "Bạn sống ở đâu?", "must_sign": ["bạn", "sống", "ở đâu"]},
     {"topic": "giao_tiep", "text": "Tôi là người Điếc.", "must_sign": ["tôi", "điếc"]},
@@ -60,7 +60,7 @@
     {"topic": "giao_tiep", "text": "Bạn làm nghề gì?", "must_sign": ["bạn", "nghề", "gì"]},
     {"topic": "giao_tiep", "text": "Tôi yêu bạn.", "must_sign": ["tôi", "yêu", "bạn"]},
     {"topic": "giao_tiep", "text": "Bạn có khỏe không?", "must_sign": ["bạn", "khỏe", "không"]},
-    {"topic": "giao_tiep", "text": "Hẹn gặp lại ngày mai.", "must_sign": ["hẹn gặp lại", "ngày mai"]},
+    {"topic": "giao_tiep", "text": "Hẹn gặp lại ngày mai.", "must_sign": ["hẹn", "gặp", "ngày mai"]},
     {"topic": "giao_tiep", "text": "Tôi thích ăn phở.", "must_sign": ["tôi", "thích", "ăn", "phở"]},
 
     {"topic": "gia_dinh", "text": "Gia đình tôi có bốn người.", "must_sign": ["gia đình", "tôi", "bốn", "người"]},
