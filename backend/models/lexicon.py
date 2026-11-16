@@ -68,12 +68,17 @@ def sign_description(motion_id: str):
 
 
 def robot_pose_key(entry: dict):
-    """Khóa tư thế vẽ tay được phép dùng: chữ cái/số của bảng chữ cái ngón tay luôn dùng được;
-    từ vựng chỉ dùng khi tắt chế độ SOUTH_ONLY."""
+    """Khóa tư thế vẽ tay được phép dùng.
+
+    - Chữ cái/số của bảng chữ cái ngón tay: luôn dùng được.
+    - Từ của giáo trình / ứng dụng (không có trong danh mục QIPEDC, ví dụ "tôi", "ăn", "cảm ơn"):
+      không có cách làm theo vùng miền nào để chọn → dùng tư thế vẽ sẵn thay vì đánh vần.
+    - Từ QIPEDC: khi bật SOUTH_ONLY, robot chỉ diễn chuyển động học từ video miền Nam / dùng chung,
+      không dùng tư thế vẽ tay (từ chỉ có video miền Bắc/Trung sẽ được đánh vần)."""
     pk = entry.get("pose_key")
     if not pk:
         return None
-    if SOUTH_ONLY and not entry.get("fingerspelling"):
+    if SOUTH_ONLY and not entry.get("fingerspelling") and entry.get("source") == "QIPEDC":
         return None
     return pk
 

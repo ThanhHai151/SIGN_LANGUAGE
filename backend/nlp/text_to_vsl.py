@@ -17,7 +17,7 @@ from backend.models.lexicon import robot_pose_key, region_label, load_lexicon, g
 
 # Các hư từ trong ngữ pháp tiếng Việt nói thường được lược bỏ hoặc tinh gọn trong VSL
 STOPWORDS = {
-    "là", "thì", "mà", "những", "các", "của", "đang", "đã", "sẽ", "một", "rất",
+    "là", "thì", "mà", "những", "các", "của", "đang", "đã", "sẽ", "rất",
     "vì", "chúng", "vào", "trong", "cho", "việc", "hoặc", "nhưng", "cũng", "để",
     "mình", "điều", "đó", "khỏi", "có", "thường", "bởi", "tại", "do", "với", "được"
 }
@@ -112,6 +112,17 @@ SYNONYM_WORDS = {
     "làm ơn": "xin vui lòng", "vui lòng": "xin vui lòng",
     "học": "học tập", "học bài": "học tập", "nghỉ ngơi": "thư giãn", "bạn thân": "bạn bè",
     "thường ngày": "hàng ngày", "nấu ăn": "nấu nướng", "dọn dẹp": "lau nhà",
+    # Từ thông dụng chưa có mục riêng trong QIPEDC → mục QIPEDC cùng nghĩa (có video miền Nam/dùng chung)
+    "trường": "nhà trường", "trường học": "nhà trường", "học sinh": "học trò",
+    "giáo viên": "thầy cô", "thầy": "thầy giáo",
+    "vở": "quyển vở", "tranh": "bức tranh", "thư viện": "phòng thư viện",
+    "đẹp": "đẹp đẽ", "ốm": "ốm đau", "sống": "sinh sống", "tối": "buổi tối",
+    "gì": "là gì", "nói": "nói chuyện", "chậm": "chậm chạp", "trời": "bầu trời",
+    "nghề": "ngành nghề", "ngon": "ngon miệng", "mua": "mua bán", "tết": "tết âm",
+    "ký hiệu": "kí hiệu", "ngôn ngữ ký hiệu": "ngôn ngữ kí hiệu",
+    "vui": "vui mừng", "đáng yêu": "dễ thương", "anh trai": "anh ruột",
+    # Học sinh xưng "em" khi nói về mình → ký hiệu chỉ vào bản thân như "tôi"
+    "em": "tôi", "chúng em": "chúng tôi",
 }
 
 
@@ -127,20 +138,38 @@ def remove_accents(input_str: str) -> str:
 AMBIGUOUS_PROPER_KEYS = {"anh"}
 
 
-def _resolve(phrase: str, lex: dict):
-    """Tìm mục từ cho một cụm từ: khớp trực tiếp → đồng nghĩa → bản đồ ngữ nghĩa cũ (theo tư thế robot)."""
+def _usable(entry: dict, available: set = None) -> bool:
+    """Robot diễn được: có chuyển động đã học, tư thế vẽ sẵn được phép dùng, hoặc có video QIPEDC
+    (miền Nam / dùng chung) để trình duyệt học ngay khi cần."""
+    return bool(motion_id_of(entry, available) or robot_pose_key(entry) or _video_id(entry))
+
+
+def _resolve(phrase: str, lex: dict, available: set = None, multi: bool = False):
+    """Tìm mục từ cho một cụm từ: khớp trực tiếp → đồng nghĩa → bản đồ ngữ nghĩa cũ (theo tư thế robot).
+
+    Ưu tiên mục robot diễn được. Với cụm nhiều âm tiết (multi=True), bỏ qua mục robot chưa diễn được
+    để các từ ngắn hơn có ký hiệu được dùng thay vì đánh vần cả cụm (vd. "ăn cơm" → "ăn" + "cơm")."""
+    candidates = []
     entry = lex["by_key"].get(phrase)
     if entry and entry.get("proper_noun") and phrase in AMBIGUOUS_PROPER_KEYS:
         entry = None
     if entry:
-        return entry
+        candidates.append(entry)
     syn = SYNONYM_WORDS.get(phrase)
     if syn and syn in lex["by_key"]:
-        return lex["by_key"][syn]
+        candidates.append(lex["by_key"][syn])
     pose_key = SEMANTIC_SYNONYM_MAP.get(phrase)
-    if pose_key:
-        return lex["by_pose"].get(pose_key)
-    return None
+    if pose_key and lex["by_pose"].get(pose_key):
+        candidates.append(lex["by_pose"][pose_key])
+    for c in candidates:
+        if _usable(c, available):
+            return c
+    if not candidates:
+        return None
+    # Mục QIPEDC chưa có video miền Nam: giữ nguyên để giao diện báo "chưa có ký hiệu miền Nam"
+    if multi and candidates[0].get("source") != "QIPEDC":
+        return None
+    return candidates[0]
 
 
 _QIPEDC_VIDEO_RE = re.compile(r"qipedc\.moet\.gov\.vn/videos/([A-Za-z0-9_-]+)\.mp4")
@@ -256,7 +285,7 @@ def text_to_vsl_glosses(text: str):
         # Cụm nhiều âm tiết trước (kể cả cụm chứa hư từ như "có thể", "của tôi")
         for length in range(min(max_len, n - i), 1, -1):
             phrase = " ".join(words[i:i + length])
-            entry = _resolve(phrase, lex)
+            entry = _resolve(phrase, lex, available, multi=True)
             if entry:
                 push(_vocab_item(phrase, entry, available))
                 i += length
@@ -269,7 +298,7 @@ def text_to_vsl_glosses(text: str):
         if word in STOPWORDS:
             i += 1
             continue
-        entry = _resolve(word, lex)
+        entry = _resolve(word, lex, available)
         if entry:
             push(_vocab_item(word, entry, available))
         elif re.fullmatch(r"\d+", word):
