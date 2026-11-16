@@ -498,7 +498,15 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
       </div>
 
       {/* CỘT PHẢI: BẢNG SOI GIẢI PHẪU CƠ NGÓN TAY VÀ CHỌN CHỮ CÁI A-Z */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div
+        className="side-scroll"
+        style={{
+          display: 'flex', flexDirection: 'column', gap: '20px',
+          // Cột phải có thanh cuộn riêng: kéo lên/xuống để xem từng khung trong khi robot vẫn đứng yên bên trái
+          position: 'sticky', top: '16px', alignSelf: 'start',
+          maxHeight: 'calc(100vh - 32px)', overflowY: 'scroll', paddingRight: '10px',
+        }}
+      >
         
         {/* Diễn tả cụ thể ký hiệu đang diễn */}
         {currentStep && (
