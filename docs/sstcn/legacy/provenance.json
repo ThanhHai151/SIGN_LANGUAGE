@@ -1,0 +1,25 @@
+{
+  "artifacts": [
+    {
+      "source": "/home/thanhhai/Documents/UNIVERSITY/TOOL/SignLang/Test/test_set_result_report_nhom3.docx",
+      "restored_to": "docs/sstcn/legacy/test_set_result_report_nhom3.docx",
+      "sha256": "b0aef6143139fc0312ce4af144eec95a0473f7f793e60ef494b9e19d4470b699"
+    },
+    {
+      "source": "/home/thanhhai/Documents/UNIVERSITY/TOOL/SignLang/images/chao.gif",
+      "restored_to": "docs/sstcn/legacy/chao.gif",
+      "sha256": "b6841262af65ff9fc2f3bbe5fee4cae1cd2a47ae88f5dd8452139719560d8b69"
+    },
+    {
+      "source": "/home/thanhhai/Documents/UNIVERSITY/TOOL/SignLang/images/b.gif",
+      "restored_to": "docs/sstcn/legacy/b.gif",
+      "sha256": "35449ced58fce68a863679e554064e8c17df4bc0ad5e5468de3dc63ec40bc72b"
+    },
+    {
+      "source": "/home/thanhhai/Documents/UNIVERSITY/TOOL/SignLang/images/giadinh.gif",
+      "restored_to": "docs/sstcn/legacy/giadinh.gif",
+      "sha256": "c7b93501310f702e025d37798d3d57d1bc53c9a3278232e316a8632e5d44b76f"
+    }
+  ],
+  "note": "Historical artifacts recovered from the old local project; not newly generated test recordings."
+}

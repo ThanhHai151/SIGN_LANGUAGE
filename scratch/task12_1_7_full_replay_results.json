@@ -1,0 +1,166 @@
+{
+  "total_active": 7456,
+  "classes_22": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "G",
+    "H",
+    "I",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q",
+    "R",
+    "S",
+    "T",
+    "U",
+    "V",
+    "X",
+    "Y"
+  ],
+  "overall": {
+    "base_correct": 3574,
+    "base_acc": 47.93,
+    "sim_correct": 3996,
+    "sim_acc": 53.59,
+    "gain": 422
+  },
+  "target_h": {
+    "total": 455,
+    "base": {
+      "NEUTRAL": 431,
+      "K": 22,
+      "R": 2
+    },
+    "sim": {
+      "H": 422,
+      "K": 22,
+      "NEUTRAL": 9,
+      "R": 2
+    },
+    "cand_triggers": 424,
+    "trials_base": {
+      "pilot_20261107_2141_H_rep01_att01": {
+        "NEUTRAL": 29,
+        "K": 1
+      },
+      "pilot_20261107_2141_H_rep02_att01": {
+        "NEUTRAL": 36
+      },
+      "pilot_20261107_2141_H_rep03_att01": {
+        "NEUTRAL": 40,
+        "K": 4
+      },
+      "pilot_20261107_2141_H_rep04_att01": {
+        "NEUTRAL": 53,
+        "K": 5
+      },
+      "pilot_20261107_2141_H_rep05_att01": {
+        "NEUTRAL": 36,
+        "R": 2
+      },
+      "pilot_20261107_2141_H_rep06_att01": {
+        "NEUTRAL": 47,
+        "K": 4
+      },
+      "pilot_20261107_2141_H_rep07_att01": {
+        "NEUTRAL": 46,
+        "K": 7
+      },
+      "pilot_20261107_2141_H_rep08_att01": {
+        "NEUTRAL": 58,
+        "K": 1
+      },
+      "pilot_20261107_2141_H_rep09_att01": {
+        "NEUTRAL": 49
+      },
+      "pilot_20261107_2141_H_rep10_att01": {
+        "NEUTRAL": 37
+      }
+    },
+    "trials_sim": {
+      "pilot_20261107_2141_H_rep01_att01": {
+        "H": 29,
+        "K": 1
+      },
+      "pilot_20261107_2141_H_rep02_att01": {
+        "H": 36
+      },
+      "pilot_20261107_2141_H_rep03_att01": {
+        "H": 39,
+        "K": 4,
+        "NEUTRAL": 1
+      },
+      "pilot_20261107_2141_H_rep04_att01": {
+        "H": 51,
+        "K": 5,
+        "NEUTRAL": 2
+      },
+      "pilot_20261107_2141_H_rep05_att01": {
+        "H": 36,
+        "R": 2
+      },
+      "pilot_20261107_2141_H_rep06_att01": {
+        "H": 43,
+        "K": 4,
+        "NEUTRAL": 4
+      },
+      "pilot_20261107_2141_H_rep07_att01": {
+        "H": 44,
+        "K": 7,
+        "NEUTRAL": 2
+      },
+      "pilot_20261107_2141_H_rep08_att01": {
+        "H": 58,
+        "K": 1
+      },
+      "pilot_20261107_2141_H_rep09_att01": {
+        "H": 49
+      },
+      "pilot_20261107_2141_H_rep10_att01": {
+        "H": 37
+      }
+    }
+  },
+  "target_v": {
+    "total": 400,
+    "base": {
+      "R": 3,
+      "V": 362,
+      "NEUTRAL": 35
+    },
+    "sim": {
+      "R": 3,
+      "V": 362,
+      "NEUTRAL": 35
+    },
+    "cand_triggers": 0
+  },
+  "target_k": {
+    "total": 299,
+    "base": {
+      "I": 2,
+      "NEUTRAL": 55,
+      "K": 240,
+      "H": 1,
+      "S": 1
+    },
+    "sim": {
+      "I": 2,
+      "NEUTRAL": 55,
+      "K": 240,
+      "H": 1,
+      "S": 1
+    },
+    "cand_triggers": 0
+  },
+  "cand_triggers_all": {
+    "H": 424
+  }
+}

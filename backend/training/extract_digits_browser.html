@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Batch Digit Landmark Extractor</title>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+</head>
+<body>
+  <h2>VSL Connect AI - MediaPipe Hands Batch Landmark Extractor</h2>
+  <div id="status">INIT</div>
+  <pre id="output"></pre>
+  <img id="worker-img" style="display:none;" />
+
+  <script>
+    const IMAGES_TO_PROCESS = [
+      { digit: "1", split: "dev",  vid: "D0530", fidx: 71,  ts: 2.37, file: "D0530_dev_frame_f71.jpg" },
+      { digit: "1", split: "eval", vid: "D0530", fidx: 60,  ts: 2.00, file: "D0530_eval_frame_f60.jpg" },
+      { digit: "2", split: "dev",  vid: "D0531", fidx: 67,  ts: 2.25, file: "D0531_dev_frame_f67.jpg" },
+      { digit: "2", split: "eval", vid: "D0531", fidx: 55,  ts: 1.83, file: "D0531_eval_frame_f55.jpg" },
+      { digit: "3", split: "dev",  vid: "D0532", fidx: 67,  ts: 2.25, file: "D0532_dev_frame_f67.jpg" },
+      { digit: "3", split: "eval", vid: "D0532", fidx: 55,  ts: 1.83, file: "D0532_eval_frame_f55.jpg" },
+      { digit: "4", split: "dev",  vid: "D0533", fidx: 54,  ts: 1.81, file: "D0533_dev_frame_f54.jpg" },
+      { digit: "4", split: "eval", vid: "D0533", fidx: 45,  ts: 1.50, file: "D0533_eval_frame_f45.jpg" },
+      { digit: "5", split: "dev",  vid: "D0534", fidx: 67,  ts: 2.25, file: "D0534_dev_frame_f67.jpg" },
+      { digit: "5", split: "eval", vid: "D0534", fidx: 55,  ts: 1.83, file: "D0534_eval_frame_f55.jpg" },
+      { digit: "6", split: "dev",  vid: "D0535B", fidx: 105, ts: 3.50, file: "D0535B_dev_frame_f105.jpg" },
+      { digit: "6", split: "eval", vid: "D0535B", fidx: 90,  ts: 3.00, file: "D0535B_eval_frame_f90.jpg" },
+      { digit: "7", split: "dev",  vid: "D0536", fidx: 54,  ts: 1.81, file: "D0536_dev_frame_f54.jpg" },
+      { digit: "7", split: "eval", vid: "D0536", fidx: 45,  ts: 1.50, file: "D0536_eval_frame_f45.jpg" },
+      { digit: "8", split: "dev",  vid: "D0537", fidx: 77,  ts: 2.56, file: "D0537_dev_frame_f77.jpg" },
+      { digit: "8", split: "eval", vid: "D0537", fidx: 65,  ts: 2.17, file: "D0537_eval_frame_f65.jpg" },
+      { digit: "9", split: "dev",  vid: "D0538", fidx: 52,  ts: 1.75, file: "D0538_dev_frame_f52.jpg" },
+      { digit: "9", split: "eval", vid: "D0538", fidx: 42,  ts: 1.40, file: "D0538_eval_frame_f42.jpg" }
+    ];
+
+    async function processAll() {
+      const statusDiv = document.getElementById('status');
+      const outPre = document.getElementById('output');
+      const img = document.getElementById('worker-img');
+
+      try {
+        const hands = new Hands({
+          locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
+        });
+        hands.setOptions({
+          maxNumHands: 2,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.5
+        });
+        await hands.initialize();
+        statusDiv.innerText = 'INITIALIZED';
+
+        let currentResult = null;
+        hands.onResults((res) => {
+          currentResult = res;
+        });
+
+        const samples = [];
+
+        for (let i = 0; i < IMAGES_TO_PROCESS.length; i++) {
+          const item = IMAGES_TO_PROCESS[i];
+          statusDiv.innerText = `PROCESSING_${i + 1}_OF_${IMAGES_TO_PROCESS.length}_DIGIT_${item.digit}_${item.split}`;
+          
+          currentResult = null;
+          img.src = `/backend/data/media_cache/inspect_frames/${item.file}`;
+          await new Promise((res, rej) => {
+            img.onload = res;
+            img.onerror = () => rej(new Error(`Failed to load ${item.file}`));
+          });
+
+          await hands.send({ image: img });
+
+          let landmarks = null;
+          let handedness = "Right";
+          let confidence = 0.0;
+          let quality = "no_hand_detected";
+
+          if (currentResult && currentResult.multiHandLandmarks && currentResult.multiHandLandmarks.length > 0) {
+            let chosenIdx = 0;
+            if (currentResult.multiHandedness && currentResult.multiHandedness.length > 0) {
+              confidence = currentResult.multiHandedness[0].score || 0.9;
+            }
+            const rawLms = currentResult.multiHandLandmarks[chosenIdx];
+            if (rawLms && rawLms.length === 21) {
+              landmarks = rawLms.map(p => [
+                Math.round(p.x * 1e6) / 1e6,
+                Math.round(p.y * 1e6) / 1e6,
+                Math.round(p.z * 1e6) / 1e6
+              ]);
+              quality = "ok";
+            }
+          }
+
+          samples.push({
+            digit: item.digit,
+            split: item.split,
+            video_id: item.vid,
+            source_video_file: `backend/data/media_cache/videos/${item.vid}.mp4`,
+            frame_idx: item.fidx,
+            timestamp_sec: item.ts,
+            handedness: handedness,
+            confidence: Math.round(confidence * 10000) / 10000,
+            coordinate_type: "normalized_mediapipe_hands",
+            quality_status: quality,
+            landmarks: landmarks
+          });
+        }
+
+        const finalOutput = {
+          schema_version: "1.0",
+          description: "Ground truth landmarks 21 điểm trích xuất từ video QIPEDC cho số 1-9",
+          total_samples: samples.length,
+          successful_samples: samples.filter(s => s.quality_status === 'ok').length,
+          samples: samples
+        };
+
+        statusDiv.innerText = 'EXTRACTION_COMPLETE';
+        outPre.innerText = JSON.stringify(finalOutput);
+      } catch (err) {
+        statusDiv.innerText = 'ERROR: ' + err.message;
+      }
+    }
+
+    window.addEventListener('load', processAll);
+  </script>
+</body>
+</html>
+

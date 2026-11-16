@@ -24,10 +24,23 @@ dist-ssr
 *.sw?
 
 __pycache__/
+*.pyc
 *.py[cod]
+.venv/
 .env
 .kilo/
 
 # Bộ đệm video/ảnh mẫu QIPEDC (tự tạo khi chạy backend)
 backend/data/media_cache/
 backend/data/raw_motion/
+
+# File nhat ky chan doan (tao khi VSL_DIAGNOSTIC=1)
+backend/data/diagnostics/
+
+# SSTCN: downloaded data and generated experiment artifacts
+backend/data/sstcn/archives/
+backend/data/sstcn/raw/
+backend/data/sstcn/prepared*/
+backend/data/sstcn/demo_videos/
+backend/runs/
+.venv-sstcn/

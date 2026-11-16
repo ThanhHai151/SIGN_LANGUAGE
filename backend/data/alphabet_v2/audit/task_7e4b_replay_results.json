@@ -1,0 +1,1169 @@
+{
+  "Ơ": {
+    "video_id": "D0508N",
+    "total_frames": 89,
+    "expected_base": "O",
+    "competing_rule": "I",
+    "base_stable_frame": 40,
+    "base_stable_time": 1.668,
+    "baseline_retained_frames": 16,
+    "fsm_resets": 1,
+    "candidate_events_count": 1,
+    "candidate_events": [
+      {
+        "frame_index": 43,
+        "timestamp": 1.793,
+        "switch_candidate_base": "E",
+        "switch_candidate_count": 1,
+        "current_base": "O",
+        "state": "BASE_STABLE"
+      }
+    ],
+    "diacritic_confirmed_frames": [
+      {
+        "frame_index": 46,
+        "timestamp": 1.919,
+        "diacritic": "Ơ",
+        "reason": "Xác nhận dấu Ơ: Bật râu ngón út (dist=0.96 >= 0.50) (trong pha transient)"
+      }
+    ],
+    "confirmed_tokens": [
+      [
+        29,
+        "M"
+      ],
+      [
+        35,
+        "E"
+      ],
+      [
+        36,
+        "O"
+      ],
+      [
+        43,
+        "E"
+      ],
+      [
+        45,
+        "O"
+      ],
+      [
+        46,
+        "Ơ"
+      ],
+      [
+        57,
+        "I"
+      ]
+    ],
+    "base_timeline_sample": [
+      {
+        "frame_index": 35,
+        "timestamp": 1.46,
+        "phase": "manual_review_needed",
+        "raw_static": "E",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "E",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 36,
+        "timestamp": 1.501,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 37,
+        "timestamp": 1.543,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 38,
+        "timestamp": 1.585,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 39,
+        "timestamp": 1.627,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 40,
+        "timestamp": 1.668,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 41,
+        "timestamp": 1.71,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 42,
+        "timestamp": 1.752,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 43,
+        "timestamp": 1.793,
+        "phase": "manual_review_needed",
+        "raw_static": "E",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "E",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 44,
+        "timestamp": 1.835,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "NEUTRAL",
+        "source": "none"
+      },
+      {
+        "frame_index": 45,
+        "timestamp": 1.877,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": "DIACRITIC_CANDIDATE",
+        "fsm_base": "O",
+        "diacritic_detected": "Ơ",
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 46,
+        "timestamp": 1.919,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "DIACRITIC_CONFIRMED",
+        "fsm_base": "O",
+        "diacritic_detected": "Ơ",
+        "output_sign": "Ơ",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 47,
+        "timestamp": 1.96,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "O",
+        "diacritic_detected": "Ơ",
+        "output_sign": "Ơ",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 48,
+        "timestamp": 2.002,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "O",
+        "diacritic_detected": "Ơ",
+        "output_sign": "Ơ",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 49,
+        "timestamp": 2.044,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "O",
+        "diacritic_detected": "Ơ",
+        "output_sign": "Ơ",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 50,
+        "timestamp": 2.085,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "O",
+        "diacritic_detected": "Ơ",
+        "output_sign": "Ơ",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 51,
+        "timestamp": 2.127,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "O",
+        "diacritic_detected": "Ơ",
+        "output_sign": "Ơ",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 52,
+        "timestamp": 2.169,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "O",
+        "diacritic_detected": "Ơ",
+        "output_sign": "Ơ",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 53,
+        "timestamp": 2.211,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "O",
+        "diacritic_detected": "Ơ",
+        "output_sign": "Ơ",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 54,
+        "timestamp": 2.252,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "O",
+        "diacritic_detected": "Ơ",
+        "output_sign": "Ơ",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 55,
+        "timestamp": 2.294,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "O",
+        "diacritic_detected": "Ơ",
+        "output_sign": "Ơ",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 57,
+        "timestamp": 2.377,
+        "phase": "manual_review_needed",
+        "raw_static": "I",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "I",
+        "source": "geometric_rule"
+      }
+    ]
+  },
+  "Ư": {
+    "video_id": "D0515N",
+    "total_frames": 118,
+    "expected_base": "U",
+    "competing_rule": "I",
+    "base_stable_frame": 23,
+    "base_stable_time": 0.959,
+    "baseline_retained_frames": 21,
+    "fsm_resets": 1,
+    "candidate_events_count": 0,
+    "candidate_events": [],
+    "diacritic_confirmed_frames": [
+      {
+        "frame_index": 34,
+        "timestamp": 1.418,
+        "diacritic": "Ư",
+        "reason": "Xác nhận dấu Ư: Ngón út duỗi thẳng (curl=0.11 <= 0.35) (trong pha transient)"
+      }
+    ],
+    "confirmed_tokens": [
+      [
+        17,
+        "U"
+      ],
+      [
+        34,
+        "Ư"
+      ]
+    ],
+    "base_timeline_sample": [
+      {
+        "frame_index": 34,
+        "timestamp": 1.418,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "DIACRITIC_CONFIRMED",
+        "fsm_base": "U",
+        "diacritic_detected": "Ư",
+        "output_sign": "Ư",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 35,
+        "timestamp": 1.46,
+        "phase": "manual_review_needed",
+        "raw_static": "I",
+        "raw_conf": 0.95,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "U",
+        "diacritic_detected": "Ư",
+        "output_sign": "Ư",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 36,
+        "timestamp": 1.501,
+        "phase": "manual_review_needed",
+        "raw_static": "I",
+        "raw_conf": 0.95,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "U",
+        "diacritic_detected": "Ư",
+        "output_sign": "Ư",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 37,
+        "timestamp": 1.543,
+        "phase": "manual_review_needed",
+        "raw_static": "I",
+        "raw_conf": 0.95,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "U",
+        "diacritic_detected": "Ư",
+        "output_sign": "Ư",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 38,
+        "timestamp": 1.585,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "U",
+        "diacritic_detected": "Ư",
+        "output_sign": "Ư",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 39,
+        "timestamp": 1.627,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "U",
+        "diacritic_detected": "Ư",
+        "output_sign": "Ư",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 40,
+        "timestamp": 1.668,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "U",
+        "diacritic_detected": "Ư",
+        "output_sign": "Ư",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 41,
+        "timestamp": 1.71,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "U",
+        "diacritic_detected": "Ư",
+        "output_sign": "Ư",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 42,
+        "timestamp": 1.752,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "U",
+        "diacritic_detected": "Ư",
+        "output_sign": "Ư",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 43,
+        "timestamp": 1.793,
+        "phase": "manual_review_needed",
+        "raw_static": "I",
+        "raw_conf": 0.95,
+        "fsm_state": "COOLDOWN",
+        "fsm_base": "U",
+        "diacritic_detected": "Ư",
+        "output_sign": "Ư",
+        "source": "diacritic_fsm"
+      },
+      {
+        "frame_index": 44,
+        "timestamp": 1.835,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "NEUTRAL",
+        "source": "none"
+      },
+      {
+        "frame_index": 45,
+        "timestamp": 1.877,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "NEUTRAL",
+        "source": "none"
+      },
+      {
+        "frame_index": 46,
+        "timestamp": 1.919,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "NEUTRAL",
+        "source": "none"
+      },
+      {
+        "frame_index": 57,
+        "timestamp": 2.377,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "NEUTRAL",
+        "source": "none"
+      }
+    ]
+  },
+  "Ô": {
+    "video_id": "D0507B",
+    "total_frames": 84,
+    "expected_base": "O",
+    "competing_rule": null,
+    "base_stable_frame": 19,
+    "base_stable_time": 0.792,
+    "baseline_retained_frames": 16,
+    "fsm_resets": 1,
+    "candidate_events_count": 0,
+    "candidate_events": [],
+    "diacritic_confirmed_frames": [],
+    "confirmed_tokens": [
+      [
+        11,
+        "E"
+      ],
+      [
+        14,
+        "O"
+      ],
+      [
+        36,
+        "E"
+      ]
+    ],
+    "base_timeline_sample": [
+      {
+        "frame_index": 11,
+        "timestamp": 0.459,
+        "phase": "manual_review_needed",
+        "raw_static": "E",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "E",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 12,
+        "timestamp": 0.5,
+        "phase": "manual_review_needed",
+        "raw_static": "E",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "E",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 14,
+        "timestamp": 0.584,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 16,
+        "timestamp": 0.667,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 17,
+        "timestamp": 0.709,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 18,
+        "timestamp": 0.751,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 19,
+        "timestamp": 0.792,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 20,
+        "timestamp": 0.834,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 21,
+        "timestamp": 0.876,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 22,
+        "timestamp": 0.918,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 23,
+        "timestamp": 0.959,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 24,
+        "timestamp": 1.001,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 25,
+        "timestamp": 1.043,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 26,
+        "timestamp": 1.084,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 27,
+        "timestamp": 1.126,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 28,
+        "timestamp": 1.168,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 29,
+        "timestamp": 1.21,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 30,
+        "timestamp": 1.251,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 31,
+        "timestamp": 1.293,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 32,
+        "timestamp": 1.335,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 33,
+        "timestamp": 1.376,
+        "phase": "manual_review_needed",
+        "raw_static": "O",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "O",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 36,
+        "timestamp": 1.501,
+        "phase": "manual_review_needed",
+        "raw_static": "E",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "E",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 42,
+        "timestamp": 1.752,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "NEUTRAL",
+        "source": "none"
+      },
+      {
+        "frame_index": 43,
+        "timestamp": 1.793,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "NEUTRAL",
+        "source": "none"
+      },
+      {
+        "frame_index": 44,
+        "timestamp": 1.835,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "NEUTRAL",
+        "source": "none"
+      },
+      {
+        "frame_index": 45,
+        "timestamp": 1.877,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "NEUTRAL",
+        "source": "none"
+      },
+      {
+        "frame_index": 46,
+        "timestamp": 1.919,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "NEUTRAL",
+        "source": "none"
+      },
+      {
+        "frame_index": 57,
+        "timestamp": 2.377,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "NEUTRAL",
+        "source": "none"
+      }
+    ]
+  },
+  "Ă": {
+    "video_id": "D0490B",
+    "total_frames": 89,
+    "expected_base": "A",
+    "competing_rule": "V",
+    "base_stable_frame": null,
+    "base_stable_time": null,
+    "baseline_retained_frames": 0,
+    "fsm_resets": 0,
+    "candidate_events_count": 0,
+    "candidate_events": [],
+    "diacritic_confirmed_frames": [],
+    "confirmed_tokens": [
+      [
+        27,
+        "D"
+      ],
+      [
+        29,
+        "V"
+      ]
+    ],
+    "base_timeline_sample": [
+      {
+        "frame_index": 27,
+        "timestamp": 1.126,
+        "phase": "manual_review_needed",
+        "raw_static": "D",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "D",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 29,
+        "timestamp": 1.21,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 30,
+        "timestamp": 1.251,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 31,
+        "timestamp": 1.293,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 32,
+        "timestamp": 1.335,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 33,
+        "timestamp": 1.376,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 34,
+        "timestamp": 1.418,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 35,
+        "timestamp": 1.46,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 36,
+        "timestamp": 1.501,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 37,
+        "timestamp": 1.543,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 38,
+        "timestamp": 1.585,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 39,
+        "timestamp": 1.627,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 40,
+        "timestamp": 1.668,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 41,
+        "timestamp": 1.71,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 42,
+        "timestamp": 1.752,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 43,
+        "timestamp": 1.793,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 44,
+        "timestamp": 1.835,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 45,
+        "timestamp": 1.877,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 46,
+        "timestamp": 1.919,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "NEUTRAL",
+        "source": "none"
+      },
+      {
+        "frame_index": 47,
+        "timestamp": 1.96,
+        "phase": "manual_review_needed",
+        "raw_static": "V",
+        "raw_conf": 0.95,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "V",
+        "source": "geometric_rule"
+      },
+      {
+        "frame_index": 57,
+        "timestamp": 2.377,
+        "phase": "manual_review_needed",
+        "raw_static": "UNKNOWN",
+        "raw_conf": 0.0,
+        "fsm_state": null,
+        "fsm_base": null,
+        "diacritic_detected": null,
+        "output_sign": "NEUTRAL",
+        "source": null
+      }
+    ]
+  }
+}

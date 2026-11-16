@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Camera, CameraOff, Volume2, Copy, Trash2, CheckCircle2,
-  AlertCircle, Zap, Film, X, Sparkles, Gauge
+  AlertCircle, Zap, Film, X, Sparkles, Gauge,
+  Layers, Hand, User, Type, BookOpen, MessageSquare, Info
 } from 'lucide-react';
 import {
   sendSequenceForRecognition,
@@ -10,6 +11,40 @@ import {
   speakVietnamese,
   mediaUrl
 } from '../services/api';
+import WordDebugPanel from './WordDebugPanel';
+import { isWordDebugEnabled, isWordDebugActive, logWordDebugReset, logWordDebugEvent } from '../services/wordDebugApi';
+import PilotTestingHUD from './PilotTestingHUD';
+import { getEpochSecondsNow, createMonotonicTimestampGenerator } from './pilotProtocol.js';
+
+// Bảng ánh xạ phát âm TTS chuẩn cho từng chữ số (chỉ đọc tên số, không có tiền tố "số")
+const DIGIT_TTS_MAP = {
+  '0': 'không',
+  '1': 'một',
+  '2': 'hai',
+  '3': 'ba',
+  '4': 'bốn',
+  '5': 'năm',
+  '6': 'sáu',
+  '7': 'bảy',
+  '8': 'tám',
+  '9': 'chín',
+  '10': 'mười'
+};
+
+/**
+ * Định dạng câu văn bản cho TTS: chuyển đổi các chữ số thành tên chữ tiếng Việt tương ứng
+ * (ví dụ: '10 1 1 2' -> 'mười một một hai') và loại bỏ hoàn toàn từ 'Số'/'số'.
+ * Giữ nguyên các chữ cái, từ vựng và câu thông thường.
+ */
+function formatSentenceForTTS(text) {
+  if (!text) return '';
+  // Loại bỏ tiền tố "Số " hoặc "số " nếu có
+  let cleaned = text.replace(/(?:Số|số)\s+(\d+)/g, '$1');
+  // Chuyển đổi các chữ số riêng biệt 0-10 thành tên số tiếng Việt
+  return cleaned.replace(/\b(10|[0-9])\b/g, (match) => {
+    return DIGIT_TTS_MAP[match] || match;
+  });
+}
 
 const SEQ_LEN = 30; // 30 frames cho SSTCN_Attention (~2 giây cử chỉ)
 const FRAME_STEP = 6; // Sliding window: cập nhật mỗi 6 frame (~300ms) để nhận diện tức thì
@@ -55,9 +90,35 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
   const [cameraError, setCameraError] = useState(null);
   const [aspectRatio, setAspectRatio] = useState('4/3');
 
-  // Chế độ nhận diện
-  const [recognitionMode, setRecognitionMode] = useState('sequence'); // 'sequence' (102 VSL SSTCN) | 'instant' (Finger-spelling)
-  const [trackerEngine, setTrackerEngine] = useState('hands'); // 'hands' (60 FPS) | 'holistic' (Toàn thân)
+  // TIÊU CHÍ A: Phạm vi nhận diện: 'hands' (Bàn tay - 60 FPS) | 'holistic' (Toàn thân - 75 Khớp)
+  const [recognitionScope, setRecognitionScope] = useState('hands');
+
+  // TIÊU CHÍ B: Chế độ chuyển đổi: 'letters_numbers' (Chữ cái & Số) | 'words' (Từ vựng) | 'sentence' (Ghép câu ngữ cảnh)
+  const [conversionMode, setConversionMode] = useState('letters');
+
+  // Trạng thái kỹ thuật đồng bộ với backend & pipeline
+  const [recognitionMode, setRecognitionMode] = useState('instant'); // 'instant' | 'sequence'
+  const [trackerEngine, setTrackerEngine] = useState('hands'); // 'hands' | 'holistic'
+  const [holisticStatus, setHolisticStatus] = useState('ready'); // 'ready' | 'unavailable' | 'pose_missing'
+  const trackerEngineRef = useRef('hands');
+  const activeInstanceEngineRef = useRef(null); // Engine thực tế của instance đang chạy ('hands' | 'holistic' | null)
+  const holisticUnavailableRef = useRef(false);
+  const cameraActiveRef = useRef(false);
+  const holisticCanvasRef = useRef(null);
+  const missingHandsCountRef = useRef(0);
+  const missingPoseCountRef = useRef(0);
+  const poseZeroHistoryRef = useRef([]);
+  const lastFrameSendTimeRef = useRef(0);
+  const frameLatencyHistoryRef = useRef([]);
+  const windowTimestampsRef = useRef([]);
+
+  useEffect(() => {
+    trackerEngineRef.current = trackerEngine;
+  }, [trackerEngine]);
+
+  useEffect(() => {
+    cameraActiveRef.current = cameraActive;
+  }, [cameraActive]);
 
   // Trạng thái nhận diện chuỗi động
   const [topKPredictions, setTopKPredictions] = useState([]);
@@ -88,6 +149,36 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
   const isFrameBusyRef = useRef(false); // Frame-dropping lock chống nghẽn luồng xử lý
   const lastMotionUpdateRef = useRef(0);
 
+  // Đồng bộ mode thời gian thực chống Stale Closure & Out-of-Order In-Flight Requests
+  const conversionModeRef = useRef(conversionMode);
+  const recognitionModeRef = useRef(recognitionMode);
+  const requestGenRef = useRef(0);
+  const pendingTtsTimerRef = useRef(null);
+  const monotonicTsGenRef = useRef(createMonotonicTimestampGenerator());
+  const lastPilotTrialKeyRef = useRef(null);
+
+  useEffect(() => {
+    conversionModeRef.current = conversionMode;
+  }, [conversionMode]);
+
+  useEffect(() => {
+    recognitionModeRef.current = recognitionMode;
+  }, [recognitionMode]);
+
+  // Controlled Webcam Pilot State (Task 7F.5B / Task 11.2.2)
+  const [showPilotHUD, setShowPilotHUD] = useState(false);
+  const showPilotHUDRef = useRef(showPilotHUD);
+  showPilotHUDRef.current = showPilotHUD;
+  const cameraFpsRef = useRef(0);
+  const pilotMetadataProviderRef = useRef(null);
+  const onPilotFrameResultRef = useRef(null);
+  const [latestPilotResult, setLatestPilotResult] = useState(null);
+
+  const handlePilotMetadataUpdate = ({ getFrameMetadata, onFrameResult }) => {
+    pilotMetadataProviderRef.current = getFrameMetadata;
+    onPilotFrameResultRef.current = onFrameResult;
+  };
+
   // Danh mục cử chỉ mẫu để test nhanh mô phỏng
   const SAMPLE_GESTURES = [
     { name: 'Chào', idx: 52, type: 'XIN_CHAO', desc: 'Bàn tay phải mở ngang thái dương vẫy nhẹ' },
@@ -115,13 +206,14 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
     }
   };
 
-  // Trích xuất 75 khớp từ MediaPipe Holistic
+  // Trích xuất 75 khớp từ MediaPipe Holistic (Giữ nguyên thứ tự 33 Pose + 21 Left Hand + 21 Right Hand, hệ tọa độ xyz)
   const extract75KeypointsFromHolistic = (results) => {
+    const safeCoord = (v) => (Number.isFinite(v) ? v : 0);
     const keypoints = [];
     if (results.poseLandmarks && results.poseLandmarks.length >= 33) {
       for (let i = 0; i < 33; i++) {
         const lm = results.poseLandmarks[i];
-        keypoints.push([lm.x || 0, lm.y || 0, lm.z || 0]);
+        keypoints.push([safeCoord(lm?.x), safeCoord(lm?.y), safeCoord(lm?.z)]);
       }
     } else {
       for (let i = 0; i < 33; i++) keypoints.push([0, 0, 0]);
@@ -130,7 +222,7 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
     if (results.leftHandLandmarks && results.leftHandLandmarks.length >= 21) {
       for (let i = 0; i < 21; i++) {
         const lm = results.leftHandLandmarks[i];
-        keypoints.push([lm.x || 0, lm.y || 0, lm.z || 0]);
+        keypoints.push([safeCoord(lm?.x), safeCoord(lm?.y), safeCoord(lm?.z)]);
       }
     } else {
       for (let i = 0; i < 21; i++) keypoints.push([0, 0, 0]);
@@ -139,7 +231,7 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
     if (results.rightHandLandmarks && results.rightHandLandmarks.length >= 21) {
       for (let i = 0; i < 21; i++) {
         const lm = results.rightHandLandmarks[i];
-        keypoints.push([lm.x || 0, lm.y || 0, lm.z || 0]);
+        keypoints.push([safeCoord(lm?.x), safeCoord(lm?.y), safeCoord(lm?.z)]);
       }
     } else {
       for (let i = 0; i < 21; i++) keypoints.push([0, 0, 0]);
@@ -202,42 +294,108 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
     return keypoints;
   };
 
+  // Tạo bộ theo dõi MediaPipe (Hands hoặc Holistic) — Không tự ý fallback chéo giữa 2 engine
+  const createTracker = (engine) => {
+    let tracker = null;
+    if (engine === 'hands') {
+      if (!window.Hands) {
+        throw new Error('Thư viện MediaPipe Hands chưa sẵn sàng. Vui lòng kiểm tra kết nối mạng CDN.');
+      }
+      tracker = new window.Hands({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+      });
+      tracker.setOptions({
+        maxNumHands: 2,
+        modelComplexity: 1, // Full model: ưu tiên độ chính xác khớp ngón út ở 640x480
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.4
+      });
+      tracker.onResults(onHandsResultsFast);
+      tracker._engineType = 'hands';
+    } else if (engine === 'holistic') {
+      if (!window.Holistic) {
+        throw new Error('Thư viện MediaPipe Holistic chưa sẵn sàng. Chế độ Từ vựng yêu cầu Holistic 75 khớp thật.');
+      }
+      tracker = new window.Holistic({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`
+      });
+      tracker.setOptions({
+        modelComplexity: 0,
+        smoothLandmarks: false, // Tắt smoothing để loại bỏ hoàn toàn độ trễ kéo rê khung xương
+        minDetectionConfidence: 0.35, // Giảm ngưỡng để không bị mất bàn tay khi xoay úp/ngửa
+        minTrackingConfidence: 0.30
+      });
+      tracker.onResults(onHolisticResultsFast);
+      tracker._engineType = 'holistic';
+    } else {
+      throw new Error(`Engine MediaPipe không hợp lệ: ${engine}`);
+    }
+    return tracker;
+  };
+
+  // Hiển thị trạng thái khi Holistic không khả dụng ở mode 'words' (ngừng dự đoán, không crash)
+  const applyHolisticUnavailableState = (reasonMsg) => {
+    holisticUnavailableRef.current = true;
+    activeInstanceEngineRef.current = null;
+    setHolisticStatus('unavailable');
+    sequenceBufferRef.current = [];
+    windowTimestampsRef.current = [];
+    poseZeroHistoryRef.current = [];
+    updateHUDProgress(0, 0);
+    if (motionBadgeRef.current) {
+      motionBadgeRef.current.style.opacity = '1';
+      motionBadgeRef.current.innerText = '🚫 Cần Holistic';
+    }
+    setCurrentResult({
+      sign: 'NEUTRAL',
+      label: 'Holistic không khả dụng — Ngừng dự đoán',
+      confidence: 0,
+      type: 'holistic_unavailable',
+      description: reasonMsg || 'Chế độ Từ vựng yêu cầu MediaPipe Holistic (75 khớp thật). Đã ngừng dự đoán để không đưa Pose giả vào SSTCN.',
+      category: 'Kiểm soát Landmark',
+      video_url: ''
+    });
+    setTopKPredictions([]);
+    logWordDebugEvent('HOLISTIC_UNAVAILABLE', {
+      reason: reasonMsg || 'holistic_init_failed',
+      tracker_engine: trackerEngineRef.current,
+      active_instance_engine: 'none'
+    });
+  };
+
   // Khởi động Camera và MediaPipe với tối ưu hóa tối đa
-  const startCamera = async (engine = trackerEngine) => {
+  const startCamera = async (engine = trackerEngineRef.current) => {
     setCameraLoading(true);
     setCameraError(null);
     isFrameBusyRef.current = false;
 
+    const initialEngine = conversionModeRef.current === 'words' ? 'holistic' : engine;
+
     try {
       let tracker = null;
-
-      if (engine === 'hands' && window.Hands) {
-        tracker = new window.Hands({
-          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-        });
-        tracker.setOptions({
-          maxNumHands: 2,
-          modelComplexity: 0, // Lite mode = 60 FPS
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.4 // Giảm nhẹ ngưỡng tracking để không bao giờ bị drop khi chuyển động nhanh
-        });
-        tracker.onResults(onHandsResultsFast);
-      } else if (window.Holistic) {
-        tracker = new window.Holistic({
-          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`
-        });
-        tracker.setOptions({
-          modelComplexity: 0,
-          smoothLandmarks: true,
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.4
-        });
-        tracker.onResults(onHolisticResultsFast);
-      } else {
-        throw new Error('Thư viện MediaPipe chưa sẵn sàng. Vui lòng kiểm tra kết nối mạng CDN.');
+      try {
+        tracker = createTracker(initialEngine);
+        trackerInstanceRef.current = tracker;
+        activeInstanceEngineRef.current = initialEngine;
+        trackerEngineRef.current = initialEngine;
+        setTrackerEngine(initialEngine);
+        setRecognitionScope(initialEngine);
+        if (initialEngine === 'holistic') {
+          holisticUnavailableRef.current = false;
+          setHolisticStatus('ready');
+        }
+      } catch (trackerErr) {
+        if (conversionModeRef.current === 'words' || initialEngine === 'holistic') {
+          // Chế độ words: không fallback sang Hands, đánh dấu Holistic không khả dụng và ngừng dự đoán an toàn
+          trackerInstanceRef.current = null;
+          trackerEngineRef.current = 'holistic';
+          setTrackerEngine('holistic');
+          setRecognitionScope('holistic');
+          applyHolisticUnavailableState(trackerErr.message);
+        } else {
+          throw trackerErr;
+        }
       }
-
-      trackerInstanceRef.current = tracker;
 
       // Khởi động luồng webcam trực tiếp bằng getUserMedia với thông số tối ưu tuyệt đối
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -256,32 +414,91 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
         // Đồng bộ kích thước canvas
         handleVideoMetadata();
         setCameraActive(true);
+        cameraActiveRef.current = true;
 
-        // Khởi tạo Canvas Downsampler 320x240 tăng tốc phần cứng
+        // A01.1: Kiểm tra lại mode sau khi getUserMedia/video.play hoàn tất (chống race condition khi bấm đổi sang 'words' lúc camera đang mở)
+        const postStartRequiredEngine = conversionModeRef.current === 'words' ? 'holistic' : trackerEngineRef.current;
+        if (
+          !holisticUnavailableRef.current &&
+          (!trackerInstanceRef.current || trackerInstanceRef.current._engineType !== postStartRequiredEngine)
+        ) {
+          try {
+            const oldTracker = trackerInstanceRef.current;
+            const syncedTracker = createTracker(postStartRequiredEngine);
+            trackerInstanceRef.current = syncedTracker;
+            activeInstanceEngineRef.current = postStartRequiredEngine;
+            trackerEngineRef.current = postStartRequiredEngine;
+            setTrackerEngine(postStartRequiredEngine);
+            setRecognitionScope(postStartRequiredEngine);
+            if (oldTracker && typeof oldTracker.close === 'function') {
+              try { oldTracker.close(); } catch (e) {}
+            }
+          } catch (syncErr) {
+            if (postStartRequiredEngine === 'holistic') {
+              if (trackerInstanceRef.current && typeof trackerInstanceRef.current.close === 'function') {
+                try { trackerInstanceRef.current.close(); } catch (e) {}
+              }
+              trackerInstanceRef.current = null;
+              applyHolisticUnavailableState(syncErr.message);
+            }
+          }
+        }
+
+        // Khởi tạo Canvas xử lý: 640x480 cho Hands (modelComplexity=1) & 480x360 cho Holistic
         if (!processCanvasRef.current) {
           const pCanvas = document.createElement('canvas');
-          pCanvas.width = 320;
-          pCanvas.height = 240;
+          pCanvas.width = 640;
+          pCanvas.height = 480;
           processCanvasRef.current = pCanvas;
+        }
+        if (!holisticCanvasRef.current) {
+          const hCanvas = document.createElement('canvas');
+          hCanvas.width = 480;
+          hCanvas.height = 360;
+          holisticCanvasRef.current = hCanvas;
         }
         const pCanvas = processCanvasRef.current;
         const pCtx = pCanvas.getContext('2d', { willReadFrequently: true });
+        const hCanvas = holisticCanvasRef.current;
+        const hCtx = hCanvas.getContext('2d', { willReadFrequently: true });
 
         // Vòng lặp gửi frame tối ưu siêu tốc với Downsampling GPU & Frame Throttling
         const processCameraFrame = async () => {
-          if (!videoRef.current || !trackerInstanceRef.current || videoRef.current.paused || videoRef.current.ended) {
+          if (!videoRef.current || videoRef.current.paused || videoRef.current.ended) {
+            return;
+          }
+
+          const activeTracker = trackerInstanceRef.current;
+          const activeMode = conversionModeRef.current;
+
+          // Chốt chặn A01.1: Ở chế độ 'words', nếu Holistic không khả dụng hoặc instance không phải 'holistic' -> tạm ngừng gửi frame, không crash
+          if (activeMode === 'words' && (holisticUnavailableRef.current || !activeTracker || activeTracker._engineType !== 'holistic')) {
+            animationFrameIdRef.current = requestAnimationFrame(processCameraFrame);
+            return;
+          }
+
+          if (!activeTracker) {
+            animationFrameIdRef.current = requestAnimationFrame(processCameraFrame);
             return;
           }
 
           const now = performance.now();
-          // Điều tiết tối đa 30-33 FPS để giải phóng hoàn toàn CPU cho giao diện mượt mà 60 FPS
+          // Điều tiết 30-33 FPS để giải phóng CPU cho giao diện mượt mà
           if (!isFrameBusyRef.current && videoRef.current.readyState >= 2 && now - lastFrameSentTimeRef.current >= 30) {
             isFrameBusyRef.current = true;
             lastFrameSentTimeRef.current = now;
             try {
-              // Thu nhỏ cực nhanh từ webcam xuống 320x240 trong < 0.2ms bằng GPU
-              pCtx.drawImage(videoRef.current, 0, 0, 320, 240);
-              await trackerInstanceRef.current.send({ image: pCanvas });
+              const currentEngine = activeTracker._engineType || trackerEngineRef.current;
+              let imageToSend;
+              if (currentEngine === 'holistic') {
+                hCtx.drawImage(videoRef.current, 0, 0, 480, 360);
+                imageToSend = hCanvas;
+              } else {
+                pCtx.drawImage(videoRef.current, 0, 0, 640, 480);
+                imageToSend = pCanvas;
+              }
+              lastFrameSendTimeRef.current = performance.now();
+              await activeTracker.send({ image: imageToSend });
             } catch (err) {
               // Bỏ qua lỗi frame đơn lẻ
             } finally {
@@ -298,6 +515,7 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
       console.error('[Camera error]:', err);
       setCameraError(err.message || 'Không thể truy cập camera. Vui lòng cấp quyền truy cập webcam.');
       setCameraActive(false);
+      cameraActiveRef.current = false;
     } finally {
       setCameraLoading(false);
     }
@@ -313,16 +531,32 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
       cameraInstanceRef.current.stop();
       cameraInstanceRef.current = null;
     }
+    if (trackerInstanceRef.current) {
+      try {
+        if (typeof trackerInstanceRef.current.close === 'function') {
+          trackerInstanceRef.current.close();
+        }
+      } catch (e) {}
+      trackerInstanceRef.current = null;
+    }
+    activeInstanceEngineRef.current = null;
     if (videoRef.current && videoRef.current.srcObject) {
       const tracks = videoRef.current.srcObject.getTracks();
       tracks.forEach(track => track.stop());
       videoRef.current.srcObject = null;
     }
     setCameraActive(false);
+    cameraActiveRef.current = false;
     isFrameBusyRef.current = false;
     sequenceBufferRef.current = [];
+    windowTimestampsRef.current = [];
+    poseZeroHistoryRef.current = [];
+    missingHandsCountRef.current = 0;
+    missingPoseCountRef.current = 0;
     prevLeftHandRef.current = null;
     prevRightHandRef.current = null;
+    monotonicTsGenRef.current.reset(0);
+    lastPilotTrialKeyRef.current = null;
 
     const canvas = canvasRef.current;
     if (canvas) {
@@ -332,14 +566,215 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
   };
 
   // Đổi động cơ tracking (Hands vs Holistic)
-  const switchTrackerEngine = async (newEngine) => {
-    if (newEngine === trackerEngine) return;
+  const switchTrackerEngine = async (requestedEngine) => {
+    // A01.1: Chế độ 'words' bắt buộc khóa trên 'holistic', không cho phép chuyển sang 'hands'
+    let newEngine = requestedEngine;
+    if (conversionModeRef.current === 'words' && newEngine !== 'holistic') {
+      logWordDebugEvent('ENGINE_FALLBACK_BLOCKED', {
+        reason: 'words_mode_locks_holistic',
+        requested_engine: newEngine,
+        tracker_engine: trackerEngineRef.current,
+        active_instance_engine: activeInstanceEngineRef.current || 'none'
+      });
+      newEngine = 'holistic';
+    }
+
+    const isAlreadySynced =
+      newEngine === trackerEngineRef.current &&
+      (!cameraActiveRef.current || activeInstanceEngineRef.current === newEngine) &&
+      !(newEngine === 'holistic' && holisticUnavailableRef.current);
+
+    if (isAlreadySynced) return;
+
+    trackerEngineRef.current = newEngine;
     setTrackerEngine(newEngine);
-    if (cameraActive) {
-      stopCamera();
-      setTimeout(() => {
-        startCamera(newEngine);
-      }, 250);
+    setRecognitionScope(newEngine);
+
+    if (newEngine !== 'holistic') {
+      holisticUnavailableRef.current = false;
+      setHolisticStatus('ready');
+    }
+
+    if (cameraActiveRef.current && videoRef.current) {
+      isFrameBusyRef.current = true;
+      try {
+        const oldTracker = trackerInstanceRef.current;
+        const newTracker = createTracker(newEngine);
+        trackerInstanceRef.current = newTracker;
+        activeInstanceEngineRef.current = newEngine;
+        if (newEngine === 'holistic') {
+          holisticUnavailableRef.current = false;
+          setHolisticStatus('ready');
+        }
+        if (oldTracker) {
+          try {
+            if (typeof oldTracker.close === 'function') oldTracker.close();
+          } catch (e) {}
+        }
+        sequenceBufferRef.current = [];
+        windowTimestampsRef.current = [];
+        poseZeroHistoryRef.current = [];
+        missingHandsCountRef.current = 0;
+        missingPoseCountRef.current = 0;
+        prevLeftHandRef.current = null;
+        prevRightHandRef.current = null;
+      } catch (err) {
+        console.warn('Lỗi chuyển đổi động cơ tracking:', err);
+        if (newEngine === 'holistic') {
+          // Tuyệt đối không giữ lại oldTracker (Hands) chạy ngầm sinh DEFAULT_POSE giả!
+          const oldTracker = trackerInstanceRef.current;
+          trackerInstanceRef.current = null;
+          if (oldTracker) {
+            try {
+              if (typeof oldTracker.close === 'function') oldTracker.close();
+            } catch (e) {}
+          }
+          applyHolisticUnavailableState(err.message);
+        }
+      } finally {
+        isFrameBusyRef.current = false;
+      }
+    }
+  };
+
+  // Xử lý chuyển đổi độc lập TIÊU CHÍ A: Phạm vi nhận diện
+  const handleScopeChange = (newScope) => {
+    if (conversionModeRef.current === 'words' && newScope !== 'holistic') {
+      logWordDebugEvent('ENGINE_FALLBACK_BLOCKED', {
+        reason: 'manual_hands_scope_blocked_in_words_mode',
+        requested_engine: newScope,
+        tracker_engine: trackerEngineRef.current,
+        active_instance_engine: activeInstanceEngineRef.current || 'none'
+      });
+      return;
+    }
+    if (newScope === recognitionScope && (!cameraActiveRef.current || activeInstanceEngineRef.current === newScope)) return;
+    switchTrackerEngine(newScope);
+  };
+
+  // Xử lý chuyển đổi độc lập TIÊU CHÍ B: Chế độ chuyển đổi
+  const handleModeChange = (newMode) => {
+    if (newMode === conversionMode) return;
+    const newRecMode = (newMode === 'letters' || newMode === 'digits' || newMode === 'letters_numbers') ? 'instant' : 'sequence';
+
+    // Đồng bộ lập tức vào refs để callback MediaPipe đọc được ngay trong frame kế tiếp
+    conversionModeRef.current = newMode;
+    recognitionModeRef.current = newRecMode;
+    requestGenRef.current += 1; // Vô hiệu hoá tất cả response đang bay (in-flight) của mode cũ
+    isInferringRef.current = false;
+    monotonicTsGenRef.current.reset(0);
+    lastPilotTrialKeyRef.current = null;
+
+    setConversionMode(newMode);
+    setRecognitionMode(newRecMode);
+    sequenceBufferRef.current = [];
+    windowTimestampsRef.current = [];
+    poseZeroHistoryRef.current = [];
+    missingHandsCountRef.current = 0;
+    missingPoseCountRef.current = 0;
+    updateHUDProgress(0, 0);
+
+    // CHỈ áp dụng Holistic cho duy nhất chế độ 'words' (Từ vựng SSTCN 102)
+    // Các chế độ khác ('letters', 'digits', 'sentence') giữ nguyên tuyệt đối trên MediaPipe Hands
+    const targetScope = (newMode === 'words') ? 'holistic' : 'hands';
+    switchTrackerEngine(targetScope);
+
+    // Nếu chuyển sang chế độ digits, chuẩn hóa phụ đề hiện tại để bỏ từ "Số "
+    if (newMode === 'digits') {
+      setSentence(prev => prev ? prev.replace(/(?:Số|số)\s+(\d+)/g, '$1') : '');
+      setRecognizedTokens(prev => prev.map(item => ({
+        ...item,
+        token: (typeof item.token === 'string') ? item.token.replace(/^Số\s*/, '') : item.token
+      })));
+    }
+
+    // Reset kết quả cũ để tránh hiển thị nhầm lẫn giữa các chế độ (bảo tồn sentence đã xác nhận)
+    if (!(newMode === 'words' && holisticUnavailableRef.current)) {
+      setCurrentResult({
+        sign: 'NEUTRAL',
+        label: newMode === 'letters' ? 'Chờ cử chỉ chữ cái...' : newMode === 'digits' ? 'Chờ cử chỉ chữ số...' : newMode === 'words' ? 'Chờ cử chỉ từ vựng...' : 'Chờ bắt đầu ghép câu...',
+        confidence: 0,
+        type: '',
+        description: '',
+        category: '',
+        video_url: ''
+      });
+    }
+    setTopKPredictions([]);
+  };
+
+  // Helper đánh giá và hiển thị trạng thái tương thích giữa 2 tiêu chí lựa chọn
+  const getCombinationStatus = () => {
+    if (conversionMode === 'letters' || conversionMode === 'letters_numbers') {
+      if (recognitionScope === 'hands') {
+        return {
+          type: 'optimal',
+          badge: '✅ Hỗ trợ tối ưu',
+          badgeClass: 'badge-emerald',
+          title: 'Bàn tay + Bảng chữ cái VSL (<5ms)',
+          desc: 'MediaPipe Hands 60 FPS kết hợp Geometric Rules & MLP cho 27 chữ cái ngón tay VSL.'
+        };
+      } else {
+        return {
+          type: 'suboptimal',
+          badge: '⚠️ Chưa tối ưu',
+          badgeClass: 'badge-cyan',
+          title: 'Toàn thân + Chữ cái VSL',
+          desc: 'Chữ cái ngón tay được trích xuất từ mốc bàn tay của khung xương toàn thân (Khuyên dùng phạm vi Bàn tay để đạt 60 FPS).'
+        };
+      }
+    } else if (conversionMode === 'digits') {
+      if (recognitionScope === 'hands') {
+        return {
+          type: 'optimal',
+          badge: '✅ Hỗ trợ tối ưu',
+          badgeClass: 'badge-emerald',
+          title: 'Bàn tay + Chữ số 1–9 (<5ms)',
+          desc: 'MediaPipe Hands 60 FPS kết hợp VSLDigitClassifier phân loại hình học chính xác cho chữ số 1–9.'
+        };
+      } else {
+        return {
+          type: 'suboptimal',
+          badge: '⚠️ Chưa tối ưu',
+          badgeClass: 'badge-cyan',
+          title: 'Toàn thân + Chữ số 1–9',
+          desc: 'Chữ số ngón tay được trích xuất từ mốc bàn tay của khung xương toàn thân (Khuyên dùng phạm vi Bàn tay để đạt 60 FPS).'
+        };
+      }
+    } else if (conversionMode === 'words') {
+      if (holisticStatus === 'unavailable') {
+        return {
+          type: 'suboptimal',
+          badge: '🚫 Ngừng dự đoán',
+          badgeClass: 'badge-amber',
+          title: 'Holistic không khả dụng (Đã chặn Hands Fallback)',
+          desc: 'Chế độ Từ vựng yêu cầu MediaPipe Holistic 75 khớp thật. Đã khóa dự đoán để không đưa Pose giả vào SSTCN.'
+        };
+      }
+      if (holisticStatus === 'pose_missing') {
+        return {
+          type: 'suboptimal',
+          badge: '⚠️ Chờ khớp thân trên',
+          badgeClass: 'badge-amber',
+          title: 'Tạm mất khung xương Pose thân trên',
+          desc: 'Vui lòng giữ vai, khuỷu tay và bàn tay trong khung hình để Holistic trích xuất đủ 75 khớp thật.'
+        };
+      }
+      return {
+        type: 'optimal',
+        badge: '✅ Holistic 75 Khớp Thật',
+        badgeClass: 'badge-emerald',
+        title: 'Toàn thân + 63 Từ vựng VSL (SSTCN 30-Frame)',
+        desc: 'Khung xương 75 khớp thật (33 Pose + 21 Tay trái + 21 Tay phải) từ MediaPipe Holistic. Đã chặn hoàn toàn Pose giả.'
+      };
+    } else {
+      return {
+        type: 'developing',
+        badge: '💬 Đang phát triển NLP',
+        badgeClass: 'badge-cyan',
+        title: 'Ghép câu theo ngữ cảnh',
+        desc: 'Hỗ trợ ghép chuỗi từ/chữ tự động qua thời gian (Temporal Debounce). Mô hình ngữ pháp ngữ cảnh (Contextual NLP) đang trong quá trình phát triển.'
+      };
     }
   };
 
@@ -360,16 +795,17 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
       return currentLms;
     }
 
-    // Hệ số bù trễ (Extrapolation coefficient ~ 0.55)
-    const LATENCY_COMPENSATION = 0.55;
+    const isHolistic = trackerEngineRef.current === 'holistic';
+    // Holistic đã tắt smoothing nên chỉ bù nhẹ 0.20; Hands giữ 0.55
+    const LATENCY_COMPENSATION = isHolistic ? 0.20 : 0.55;
+    const maxV = isHolistic ? 0.12 : 0.06;
 
     return currentLms.map((curr, i) => {
       const vx = curr.x - prev[i].x;
       const vy = curr.y - prev[i].y;
 
-      // Giới hạn vận tốc tối đa để tránh biến dạng khi bàn tay đổi hướng đột ngột
-      const clampedVx = Math.max(-0.06, Math.min(0.06, vx));
-      const clampedVy = Math.max(-0.06, Math.min(0.06, vy));
+      const clampedVx = Math.max(-maxV, Math.min(maxV, vx));
+      const clampedVy = Math.max(-maxV, Math.min(maxV, vy));
 
       return {
         x: curr.x + clampedVx * LATENCY_COMPENSATION,
@@ -430,9 +866,19 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    // Bù đắp độ trễ chuyển động cho từng tay
-    const leftHand = extrapolateLandmarks(leftHandRaw, prevLeftHandRef);
-    const rightHand = extrapolateLandmarks(rightHandRaw, prevRightHandRef);
+    // Trong chế độ chẩn đoán (Pilot HUD), tắt bù trễ để hiển thị chính xác 21 raw landmarks từ MediaPipe
+    let leftHand;
+    let rightHand;
+    if (showPilotHUDRef.current) {
+      prevLeftHandRef.current = leftHandRaw ? leftHandRaw.map(l => ({ x: l.x, y: l.y })) : null;
+      prevRightHandRef.current = rightHandRaw ? rightHandRaw.map(l => ({ x: l.x, y: l.y })) : null;
+      leftHand = leftHandRaw;
+      rightHand = rightHandRaw;
+    } else {
+      // Bù đắp độ trễ chuyển động cho từng tay
+      leftHand = extrapolateLandmarks(leftHandRaw, prevLeftHandRef);
+      rightHand = extrapolateLandmarks(rightHandRaw, prevRightHandRef);
+    }
 
     // 1. Thân trên (Pose - nếu dùng Holistic)
     if (upperPose && window.drawConnectors && window.POSE_CONNECTIONS) {
@@ -465,7 +911,13 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
 
   // Xử lý luồng kết quả từ MediaPipe Hands (Siêu mượt)
   const onHandsResultsFast = (results) => {
+    const extractTs = getEpochSecondsNow();
     measureFPS();
+
+    // Chốt chặn an toàn A01.1: Chế độ 'words' tuyệt đối không nhận frame từ Hands
+    if (conversionModeRef.current === 'words') {
+      return;
+    }
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -473,16 +925,26 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
 
     let leftHand = null;
     let rightHand = null;
+    let leftScore = null;
+    let rightScore = null;
 
     if (results.multiHandLandmarks) {
       results.multiHandLandmarks.forEach((lms, idx) => {
         const label = results.multiHandedness?.[idx]?.label || (idx === 0 ? 'Right' : 'Left');
-        if (label === 'Left') leftHand = lms;
-        else rightHand = lms;
+        const score = typeof results.multiHandedness?.[idx]?.score === 'number'
+          ? results.multiHandedness[idx].score
+          : null;
+        if (label === 'Left') {
+          leftHand = lms;
+          leftScore = score;
+        } else {
+          rightHand = lms;
+          rightScore = score;
+        }
       });
     }
 
-    // Vẽ overlay siêu tốc với bù trễ chuyển động
+    // Vẽ overlay (bật raw landmarks không bù trễ khi đang ở chế độ chẩn đoán Pilot HUD)
     renderSkeletonsOverlay(ctx, leftHand, rightHand, null, canvas);
 
     handleMotionAndSequence(
@@ -490,12 +952,19 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
       Boolean(leftHand || rightHand),
       rightHand?.[0] || leftHand?.[0],
       leftHand,
-      rightHand
+      rightHand,
+      {
+        landmarkExtractTs: extractTs,
+        handednessScore: rightHand ? rightScore : (leftHand ? leftScore : null),
+        modelComplexity: 1,
+        processingResolution: '640x480'
+      }
     );
   };
 
   // Xử lý luồng kết quả từ MediaPipe Holistic
   const onHolisticResultsFast = (results) => {
+    const extractTs = getEpochSecondsNow();
     measureFPS();
 
     const canvas = canvasRef.current;
@@ -509,22 +978,38 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
       Boolean(results.leftHandLandmarks || results.rightHandLandmarks),
       results.rightHandLandmarks?.[0] || results.leftHandLandmarks?.[0],
       results.leftHandLandmarks,
-      results.rightHandLandmarks
+      results.rightHandLandmarks,
+      {
+        landmarkExtractTs: extractTs,
+        handednessScore: null,
+        modelComplexity: 0,
+        processingResolution: '480x360'
+      }
     );
   };
 
-  // Đo FPS 1 lần mỗi giây (không gây re-render liên tục)
+  // Đo FPS 1 lần mỗi giây & ghi nhận thời gian xử lý frame (phục vụ debug)
   const measureFPS = () => {
     frameCountRef.current += 1;
     const now = performance.now();
+    if (lastFrameSendTimeRef.current > 0) {
+      const lat = now - lastFrameSendTimeRef.current;
+      frameLatencyHistoryRef.current.push(lat);
+      if (frameLatencyHistoryRef.current.length > 30) {
+        frameLatencyHistoryRef.current.shift();
+      }
+    }
     if (now - lastTimeRef.current >= 1000) {
       const currentFps = frameCountRef.current;
+      cameraFpsRef.current = currentFps;
       setFps(currentFps);
       if (fpsBadgeRef.current) {
         fpsBadgeRef.current.innerText = `${currentFps} FPS`;
       }
       frameCountRef.current = 0;
       lastTimeRef.current = now;
+    } else if (cameraFpsRef.current === 0 && now - lastTimeRef.current >= 250) {
+      cameraFpsRef.current = Math.round((frameCountRef.current * 1000) / Math.max(1, now - lastTimeRef.current));
     }
   };
 
@@ -533,7 +1018,7 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
    * Thay vì chờ 2 giây từ đầu, duy trì cửa sổ trượt 30 frame và đánh giá mỗi 6 frame (~300ms).
    * Giúp nhận diện cử chỉ tức thì ngay khi chuyển động kết thúc!
    */
-  const handleMotionAndSequence = (getKeypointsFn, hasHands, primaryWrist, leftHand, rightHand) => {
+  const handleMotionAndSequence = (getKeypointsFn, hasHands, primaryWrist, leftHand, rightHand, diagMeta = null) => {
     const now = performance.now();
 
     // 1. Kiểm tra trạng thái chuyển động
@@ -552,19 +1037,39 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
       }
     }
 
+    const currentConversionMode = conversionModeRef.current;
+    const currentRecognitionMode = recognitionModeRef.current;
+
     // 2. CHẾ ĐỘ 1: CHUỖI ĐỘNG VSL (SSTCN-Attention 30-Frame Sliding Window)
-    if (recognitionMode === 'sequence') {
+    if (currentRecognitionMode === 'sequence') {
       if (!hasHands) {
-        if (sequenceBufferRef.current.length > 0) {
-          sequenceBufferRef.current = [];
-          updateHUDProgress(0, 0);
+        missingHandsCountRef.current = (missingHandsCountRef.current || 0) + 1;
+        // Chỉ reset buffer khi tay thực sự biến mất khỏi khung hình > 4 frame liên tiếp (~150ms)
+        // Tránh tình trạng xoay úp/ngửa bị drop 1-2 frame làm mất toàn bộ 30 frame đang tích lũy
+        if (missingHandsCountRef.current >= 4) {
+          if (sequenceBufferRef.current.length > 0) {
+            if (currentConversionMode === 'words') {
+              logWordDebugReset(
+                sequenceBufferRef.current.length,
+                'no_hands_detected',
+                missingHandsCountRef.current,
+                trackerEngineRef.current,
+                4
+              );
+            }
+            sequenceBufferRef.current = [];
+            windowTimestampsRef.current = [];
+            updateHUDProgress(0, 0);
+          }
         }
         return;
       }
+      missingHandsCountRef.current = 0;
 
-      // Đẩy frame vào bộ đệm
+      // Đẩy frame vào bộ đệm và lưu timestamp frame
       const frameKeypoints = getKeypointsFn();
       sequenceBufferRef.current.push(frameKeypoints);
+      windowTimestampsRef.current.push(now);
 
       const currentLen = sequenceBufferRef.current.length;
       const progressPercent = Math.min(100, Math.round((currentLen / SEQ_LEN) * 100));
@@ -573,16 +1078,55 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
       // Khi đã đủ 30 frame và không có suy luận nào đang chạy
       if (currentLen >= SEQ_LEN && !isInferringRef.current) {
         isInferringRef.current = true;
+        const currentGen = requestGenRef.current;
+        const requestMode = currentConversionMode;
         const sequencePayload = sequenceBufferRef.current.slice(-SEQ_LEN);
+
+        // Tính thời lượng thực tế của cửa sổ 30 frame
+        const recentTimestamps = windowTimestampsRef.current.slice(-SEQ_LEN);
+        const windowDurationMs = recentTimestamps.length >= 2
+          ? Math.round(recentTimestamps[recentTimestamps.length - 1] - recentTimestamps[0])
+          : 0;
 
         // SLIDING WINDOW: Loại bỏ 6 frame cũ nhất, giữ lại 24 frame để frame tiếp theo nhanh chóng đầy lại!
         sequenceBufferRef.current.splice(0, FRAME_STEP);
+        windowTimestampsRef.current.splice(0, FRAME_STEP);
+
+        // Chuẩn bị metadata nhận diện / debug cho Word Mode
+        let debugMeta = null;
+        if (requestMode === 'words') {
+          const latencies = frameLatencyHistoryRef.current;
+          const avgLat = latencies.length > 0
+            ? Math.round((latencies.reduce((a, b) => a + b, 0) / latencies.length) * 10) / 10
+            : null;
+          const maxLat = latencies.length > 0
+            ? Math.round(Math.max(...latencies) * 10) / 10
+            : null;
+
+          const currentClientFps = fpsBadgeRef.current
+            ? (parseInt(fpsBadgeRef.current.innerText, 10) || fps)
+            : fps;
+
+          debugMeta = {
+            tracker_engine: trackerEngineRef.current,
+            active_instance_engine: activeInstanceEngineRef.current || trackerInstanceRef.current?._engineType || 'unknown',
+            client_fps: currentClientFps,
+            avg_frame_process_ms: avgLat,
+            max_frame_process_ms: maxLat,
+            window_duration_ms: windowDurationMs,
+            consecutive_missing_hands: missingHandsCountRef.current
+          };
+        }
 
         // Gửi suy luận hoàn toàn không chặn luồng (Non-blocking Async)
-        sendSequenceForRecognition(sequencePayload, confidenceThreshold)
+        sendSequenceForRecognition(sequencePayload, confidenceThreshold, requestMode, debugMeta)
           .then((resp) => {
+            if (currentGen !== requestGenRef.current || conversionModeRef.current !== requestMode) {
+              return; // Bỏ qua response đến trễ sau khi đổi mode
+            }
             if (resp && resp.success && resp.data) {
               const data = resp.data;
+              setLatestPilotResult(data);
               setCurrentResult({
                 sign: data.sign,
                 label: data.label,
@@ -608,60 +1152,279 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
                   }
                 ]);
 
-                if (ttsEnabled) speakVietnamese(data.new_token);
+                if (ttsEnabled) {
+                  let textToSpeak = data.tts_text;
+                  if (!textToSpeak) {
+                    if (data.type === 'digit' || requestMode === 'digits') {
+                      textToSpeak = DIGIT_TTS_MAP[data.sign] || (data.sign ? DIGIT_TTS_MAP[data.sign.replace(/^Số\s*/, '')] : null) || data.sign;
+                    } else {
+                      textToSpeak = data.new_token;
+                    }
+                  }
+                  speakVietnamese(textToSpeak);
+                }
               }
             }
           })
           .catch((err) => console.warn('Lỗi suy luận chuỗi SSTCN:', err))
           .finally(() => {
-            isInferringRef.current = false;
+            if (currentGen === requestGenRef.current) {
+              isInferringRef.current = false;
+            }
           });
       }
     }
 
     // 3. CHẾ ĐỘ 2: ĐÁNH VẦN CHỮ CÁI TỨC THÌ (<5ms)
-    else if (recognitionMode === 'instant') {
-      if (!hasHands) return;
+    else if (currentRecognitionMode === 'instant') {
+      if (!hasHands && !pilotMetadataProviderRef.current) return;
 
       if (!isInferringRef.current) {
         isInferringRef.current = true;
+        const currentGen = requestGenRef.current;
+        const requestMode = currentConversionMode;
         const primary = rightHand || leftHand;
-        const rawPrimary = primary.map(lm => [lm.x, lm.y, lm.z]);
+        const primaryHandedness = rightHand ? 'Right' : (leftHand ? 'Left' : 'Right');
+        const rawPrimary = primary ? primary.map(lm => [lm.x, lm.y, lm.z]) : [];
         const multiHands = [];
         if (rightHand) multiHands.push({ handedness: 'Right', landmarks: rightHand.map(l => [l.x, l.y, l.z]) });
         if (leftHand) multiHands.push({ handedness: 'Left', landmarks: leftHand.map(l => [l.x, l.y, l.z]) });
 
-        sendLandmarksForRecognition(rawPrimary, multiHands)
+        let pilotMeta = null;
+        if (pilotMetadataProviderRef.current) {
+          try {
+            pilotMeta = pilotMetadataProviderRef.current();
+          } catch (e) {
+            pilotMeta = null;
+          }
+        }
+
+        if (!hasHands && !pilotMeta) {
+          isInferringRef.current = false;
+          return;
+        }
+
+        const currentTrialKey = pilotMeta?.trial_id ? `${pilotMeta.session_id || ''}:${pilotMeta.trial_id}` : null;
+        if (currentTrialKey !== lastPilotTrialKeyRef.current) {
+          lastPilotTrialKeyRef.current = currentTrialKey;
+          monotonicTsGenRef.current.reset(0);
+        }
+
+        const frameTs = monotonicTsGenRef.current.next(diagMeta?.landmarkExtractTs ?? getEpochSecondsNow());
+        const rawSendTs = getEpochSecondsNow();
+        const reqSendTs = rawSendTs >= frameTs ? rawSendTs : frameTs;
+
+        if (pilotMeta) {
+          pilotMeta.timestamp = frameTs;
+          pilotMeta.landmark_extract_ts = frameTs;
+          pilotMeta.request_send_ts = reqSendTs;
+          pilotMeta.has_hands = Boolean(hasHands);
+          pilotMeta.hand_detected = Boolean(hasHands);
+          pilotMeta.handedness = hasHands ? primaryHandedness : null;
+          if (diagMeta?.handednessScore !== undefined && diagMeta?.handednessScore !== null) {
+            pilotMeta.handedness_score = Number(diagMeta.handednessScore.toFixed(4));
+          }
+          pilotMeta.mediapipe_model_complexity = diagMeta?.modelComplexity ?? (trackerEngineRef.current === 'holistic' ? 0 : 1);
+          pilotMeta.processing_resolution = diagMeta?.processingResolution ?? (trackerEngineRef.current === 'holistic' ? '480x360' : '640x480');
+          pilotMeta.camera_fps = cameraFpsRef.current || fps;
+          if (videoRef.current) {
+            pilotMeta.image_width = videoRef.current.videoWidth || 640;
+            pilotMeta.image_height = videoRef.current.videoHeight || 480;
+            pilotMeta.video_pts_sec = Number.isFinite(videoRef.current.currentTime)
+              ? Number(videoRef.current.currentTime.toFixed(4))
+              : 'UNKNOWN';
+            pilotMeta.video_frame_idx = pilotMeta.frame_idx;
+            pilotMeta.raw_landmarks = rawPrimary;
+          }
+        }
+
+        const requestPilotMeta = pilotMeta ? Object.freeze({ ...pilotMeta }) : null;
+        const requestApiMeta = requestPilotMeta || Object.freeze({
+          timestamp: frameTs,
+          landmark_extract_ts: frameTs,
+          request_send_ts: reqSendTs
+        });
+
+        sendLandmarksForRecognition(rawPrimary, multiHands, primaryHandedness, requestMode, requestApiMeta)
           .then((resp) => {
+            if (currentGen !== requestGenRef.current || conversionModeRef.current !== requestMode) {
+              // Phản hồi đã quá hạn do đổi mode: Bỏ qua dứt điểm, không gửi frame rỗng vào HUD
+              return;
+            }
+
+            // Xử lý lỗi backend hoặc local fallback: Báo lỗi minh bạch cho HUD, không coi fallback là dự đoán backend hợp lệ
+            if (resp && resp.backend_error) {
+              if (requestPilotMeta && onPilotFrameResultRef.current) {
+                try {
+                  onPilotFrameResultRef.current(null, requestPilotMeta, {
+                    backendError: true,
+                    backendErrorMessage: resp.error || 'Backend recognition error',
+                  });
+                } catch (e) {
+                  // Ignore pilot subscriber errors
+                }
+              }
+              return;
+            }
+
             if (resp && resp.success && resp.data) {
               const data = resp.data;
+              setLatestPilotResult(data);
+              if (onPilotFrameResultRef.current) {
+                try {
+                  onPilotFrameResultRef.current(data, requestPilotMeta, {
+                    backendError: false,
+                    backendErrorMessage: null,
+                  });
+                } catch (e) {
+                  // Ignore pilot subscriber errors
+                }
+              }
+
+              // Chốt chặn bảo vệ UI:
+              // Nếu đang ở mode 'digits' mà kết quả không phải chữ số (0-9, số nhiều chữ số, hoặc NEUTRAL) -> bỏ qua
+              if (requestMode === 'digits' && data.sign !== 'NEUTRAL' && !/^[0-9]+$/.test(data.sign)) {
+                return;
+              }
+              // Nếu đang ở mode 'letters': chỉ cho phép 29 chữ cái tiếng Việt chuẩn VSL (A..Y, Ă, Â, Đ, Ê, Ô, Ơ, Ư; không có F, J, W, Z) hoặc NEUTRAL
+              if (requestMode === 'letters' && data.sign !== 'NEUTRAL' && !/^[A-EG-IK-VXYĂÂĐÊÔƠƯ]$/u.test(data.sign)) {
+                return;
+              }
+
               setCurrentResult({
                 sign: data.sign,
                 label: data.label,
                 confidence: data.confidence,
                 type: data.type || 'alphabet',
                 description: data.description,
-                category: 'Bảng chữ cái ngón tay',
+                category: requestMode === 'digits' ? 'Chữ số VSL' : (requestMode === 'letters' ? 'Bảng chữ cái VSL' : (requestMode === 'words' ? 'Từ vựng VSL (102 Từ)' : 'Ghép câu ngữ cảnh')),
                 video_url: ''
               });
 
+              // Xử lý phát âm TTS commit theo vòng đời cử chỉ từ backend (Task Master Final Token & TTS)
+              if (ttsEnabled && data.tts_speak) {
+                if (pendingTtsTimerRef.current) {
+                  clearTimeout(pendingTtsTimerRef.current);
+                  pendingTtsTimerRef.current = null;
+                }
+                const speakText = (requestMode === 'digits' && typeof data.tts_speak === 'string')
+                  ? (DIGIT_TTS_MAP[data.tts_speak] || data.tts_speak.replace(/^Số\s*/, ''))
+                  : data.tts_speak;
+                speakVietnamese(speakText);
+              }
+
               if (data.confirmed && data.new_token && data.sign !== 'NEUTRAL') {
-                setSentence(prev => prev ? `${prev} ${data.new_token}` : data.new_token);
-                setRecognizedTokens(prev => [
-                  ...prev.slice(-7),
-                  {
-                    token: data.new_token,
-                    confidence: data.confidence,
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                if (requestMode === 'letters' && !/^[A-EG-IK-VXYĂÂĐÊÔƠƯ]$/u.test(data.sign)) {
+                  return;
+                }
+                // Loại bỏ hoàn toàn tiền tố "Số " nếu kết quả là chữ số
+                const cleanToken = (requestMode === 'digits' && typeof data.new_token === 'string')
+                  ? data.new_token.replace(/^Số\s*/, '')
+                  : data.new_token;
+
+                if (data.replaced_token) {
+                  const cleanReplaced = typeof data.replaced_token === 'string'
+                    ? data.replaced_token.replace(/^Số\s*/, '')
+                    : data.replaced_token;
+
+                  setSentence(prev => {
+                    const normalizedPrev = prev ? prev.replace(/(?:Số|số)\s+(\d+)/g, '$1') : '';
+                    if (!normalizedPrev) return cleanToken;
+                    const tokens = normalizedPrev.trim().split(/\s+/);
+                    if (tokens.length > 0 && tokens[tokens.length - 1] === cleanReplaced) {
+                      tokens[tokens.length - 1] = cleanToken;
+                      return tokens.join(' ');
+                    }
+                    return data.sentence ? data.sentence.replace(/(?:Số|số)\s+(\d+)/g, '$1') : `${normalizedPrev} ${cleanToken}`;
+                  });
+
+                  setRecognizedTokens(prev => {
+                    if (prev.length === 0) {
+                      return [{
+                        token: cleanToken,
+                        confidence: data.confidence,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                      }];
+                    }
+                    const updated = [...prev];
+                    updated[updated.length - 1] = {
+                      token: cleanToken,
+                      confidence: data.confidence,
+                      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                    };
+                    return updated;
+                  });
+                } else {
+                  setSentence(prev => {
+                    // Làm sạch tiền tố "Số " trong chuỗi phụ đề phiên hiện tại nếu có
+                    const normalizedPrev = prev ? prev.replace(/(?:Số|số)\s+(\d+)/g, '$1') : '';
+                    return normalizedPrev ? `${normalizedPrev} ${cleanToken}` : cleanToken;
+                  });
+
+                  setRecognizedTokens(prev => [
+                    ...prev.slice(-7),
+                    {
+                      token: cleanToken,
+                      confidence: data.confidence,
+                      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                    }
+                  ]);
+                }
+
+                // Fallback TTS: Chỉ kích hoạt nếu backend không trả về trường tts_speak
+                if (ttsEnabled && !data.tts_speak) {
+                  let textToSpeak = data.tts_text;
+                  if (!textToSpeak) {
+                    if (data.type === 'digit' || requestMode === 'digits') {
+                      textToSpeak = DIGIT_TTS_MAP[cleanToken] || cleanToken;
+                    } else {
+                      textToSpeak = cleanToken;
+                    }
                   }
-                ]);
-                if (ttsEnabled) speakVietnamese(data.new_token);
+
+                  const BASE_LETTERS = ['A', 'D', 'E', 'O', 'U'];
+                  if (data.replaced_token) {
+                    if (pendingTtsTimerRef.current) {
+                      clearTimeout(pendingTtsTimerRef.current);
+                      pendingTtsTimerRef.current = null;
+                    }
+                    speakVietnamese(textToSpeak);
+                  } else if (BASE_LETTERS.includes(cleanToken)) {
+                    if (pendingTtsTimerRef.current) {
+                      clearTimeout(pendingTtsTimerRef.current);
+                    }
+                    pendingTtsTimerRef.current = setTimeout(() => {
+                      speakVietnamese(textToSpeak);
+                      pendingTtsTimerRef.current = null;
+                    }, 1200);
+                  } else {
+                    if (pendingTtsTimerRef.current) {
+                      clearTimeout(pendingTtsTimerRef.current);
+                      pendingTtsTimerRef.current = null;
+                    }
+                    speakVietnamese(textToSpeak);
+                  }
+                }
               }
             }
           })
-          .catch((err) => console.warn('Lỗi suy luận tức thì:', err))
+          .catch((err) => {
+            console.warn('Lỗi suy luận tức thì:', err);
+            if (requestPilotMeta && onPilotFrameResultRef.current) {
+              try {
+                onPilotFrameResultRef.current(null, requestPilotMeta, {
+                  backendError: true,
+                  backendErrorMessage: err?.message || 'Network exception in recognition request',
+                });
+              } catch (e) {
+                // Ignore pilot subscriber errors
+              }
+            }
+          })
           .finally(() => {
-            isInferringRef.current = false;
+            if (currentGen === requestGenRef.current) {
+              isInferringRef.current = false;
+            }
           });
       }
     }
@@ -749,69 +1512,152 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
           </div>
         </div>
 
-        {/* Thanh công cụ: Chọn Chế độ & Động cơ Tracking */}
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          {/* Chế độ nhận diện */}
-          <div style={{
-            flex: 1,
-            display: 'flex',
-            gap: '4px',
-            padding: '3px',
-            background: 'rgba(15, 23, 42, 0.6)',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-subtle)'
-          }}>
-            <button
-              onClick={() => {
-                setRecognitionMode('sequence');
-                sequenceBufferRef.current = [];
-                updateHUDProgress(0, 0);
-              }}
-              className={`btn ${recognitionMode === 'sequence' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ flex: 1, padding: '7px 10px', fontSize: '11px', justifyContent: 'center' }}
-            >
-              <Sparkles size={14} /> Chuỗi 102 Từ (Sliding 300ms)
-            </button>
-            <button
-              onClick={() => {
-                setRecognitionMode('instant');
-                sequenceBufferRef.current = [];
-                updateHUDProgress(0, 0);
-              }}
-              className={`btn ${recognitionMode === 'instant' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ flex: 1, padding: '7px 10px', fontSize: '11px', justifyContent: 'center' }}
-            >
-              <Zap size={14} /> Chữ Cái Tức Thì (&lt;5ms)
-            </button>
+        {/* THANH CÔNG CỤ TÁI CẤU TRÚC: 2 TIÊU CHÍ LỰA CHỌN ĐỘC LẬP */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          
+          {/* Hàng 2 nhóm lựa chọn độc lập */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '12px' }}>
+            
+            {/* TIÊU CHÍ A: PHẠM VI NHẬN DIỆN */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              padding: '10px',
+              background: 'rgba(15, 23, 42, 0.65)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-subtle)'
+            }}>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Layers size={13} style={{ color: 'var(--primary)' }} /> A. Phạm vi nhận diện
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  onClick={() => handleScopeChange('hands')}
+                  disabled={conversionMode === 'words'}
+                  className={`btn ${recognitionScope === 'hands' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{
+                    flex: 1,
+                    padding: '7px 8px',
+                    fontSize: '11px',
+                    justifyContent: 'center',
+                    opacity: conversionMode === 'words' ? 0.45 : 1,
+                    cursor: conversionMode === 'words' ? 'not-allowed' : 'pointer'
+                  }}
+                  title={conversionMode === 'words' ? 'Chế độ Từ vựng yêu cầu Toàn thân (Holistic 75 khớp thật)' : 'Nhận diện cử chỉ bàn tay siêu tốc 60 FPS'}
+                >
+                  <Hand size={14} /> Bàn tay
+                </button>
+                <button
+                  onClick={() => handleScopeChange('holistic')}
+                  className={`btn ${recognitionScope === 'holistic' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: 1, padding: '7px 8px', fontSize: '11px', justifyContent: 'center' }}
+                  title="Nhận diện toàn thân 75 khớp (Pose + 2 Bàn tay)"
+                >
+                  <User size={14} /> Toàn thân
+                </button>
+              </div>
+            </div>
+
+            {/* TIÊU CHÍ B: CHẾ ĐỘ CHUYỂN ĐỔI */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              padding: '10px',
+              background: 'rgba(15, 23, 42, 0.65)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-subtle)'
+            }}>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Sparkles size={13} style={{ color: 'var(--primary)' }} /> B. Chế độ chuyển đổi
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  onClick={() => handleModeChange('letters')}
+                  className={`btn ${conversionMode === 'letters' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: 1, padding: '7px 6px', fontSize: '11px', justifyContent: 'center' }}
+                  title="Nhận diện 27 chữ cái VSL tức thì (<5ms)"
+                >
+                  <Type size={13} /> Chữ cái
+                </button>
+                <button
+                  onClick={() => handleModeChange('digits')}
+                  className={`btn ${conversionMode === 'digits' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: 1, padding: '7px 6px', fontSize: '11px', justifyContent: 'center' }}
+                  title="Nhận diện chữ số VSL từ 1 đến 9 (<5ms)"
+                >
+                  <Zap size={13} /> Chữ số
+                </button>
+                <button
+                  onClick={() => handleModeChange('words')}
+                  className={`btn ${conversionMode === 'words' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: 1, padding: '7px 6px', fontSize: '11px', justifyContent: 'center' }}
+                  title="Nhận diện 102 từ vựng cử chỉ VSL (SSTCN 30-Frame)"
+                >
+                  <BookOpen size={13} /> Từ (102 Từ)
+                </button>
+                <button
+                  onClick={() => handleModeChange('sentence')}
+                  className={`btn ${conversionMode === 'sentence' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: 1, padding: '7px 6px', fontSize: '11px', justifyContent: 'center' }}
+                  title="Ghép chuỗi từ liên tục thành câu văn bản"
+                >
+                  <MessageSquare size={13} /> Ghép câu
+                </button>
+              </div>
+            </div>
+
           </div>
 
-          {/* Động cơ Tracking */}
-          <div style={{
-            display: 'flex',
-            gap: '4px',
-            padding: '3px',
-            background: 'rgba(15, 23, 42, 0.6)',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-subtle)'
-          }}>
-            <button
-              onClick={() => switchTrackerEngine('hands')}
-              className={`btn ${trackerEngine === 'hands' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ padding: '7px 10px', fontSize: '11px' }}
-              title="Động cơ bàn tay siêu tốc 60 FPS, phản hồi tức thì"
-            >
-              <Gauge size={14} /> Bàn Tay 60 FPS
-            </button>
-            <button
-              onClick={() => switchTrackerEngine('holistic')}
-              className={`btn ${trackerEngine === 'holistic' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ padding: '7px 10px', fontSize: '11px' }}
-              title="Toàn thân 75 khớp (Pose + 2 tay)"
-            >
-              Toàn Thân 75 Khớp
-            </button>
-          </div>
+          {conversionMode === 'words' && isWordDebugEnabled() && <WordDebugPanel />}
+
+          {/* BANNER THÔNG BÁO TRẠNG THÁI TỔ HỢP ĐỘC LẬP */}
+          {(() => {
+            const status = getCombinationStatus();
+            return (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-sm)',
+                background: status.type === 'optimal' 
+                  ? 'rgba(16, 185, 129, 0.08)' 
+                  : status.type === 'developing' 
+                  ? 'rgba(6, 182, 212, 0.08)' 
+                  : 'rgba(245, 158, 11, 0.08)',
+                border: `1px solid ${
+                  status.type === 'optimal' 
+                    ? 'rgba(16, 185, 129, 0.25)' 
+                    : status.type === 'developing'
+                    ? 'rgba(6, 182, 212, 0.25)'
+                    : 'rgba(245, 158, 11, 0.25)'
+                }`,
+                fontSize: '11px'
+              }}>
+                <span className={`badge ${status.badgeClass}`} style={{ fontSize: '10px', padding: '2px 6px', whiteSpace: 'nowrap' }}>
+                  {status.badge}
+                </span>
+                <span style={{ color: 'var(--text-secondary)', flex: 1, lineHeight: '1.4' }}>
+                  <strong style={{ color: 'var(--text-main)' }}>{status.title}: </strong>
+                  {status.desc}
+                </span>
+              </div>
+            );
+          })()}
+
         </div>
+
+        {/* GIAO DIỆN KIỂM THỬ CONTROLLED WEBCAM PILOT HUD (TASK 7F.5B / TASK 11.2.2 / TASK 3.10) */}
+        <PilotTestingHUD
+          isActive={showPilotHUD}
+          onToggleActive={() => setShowPilotHUD(prev => !prev)}
+          onMetadataUpdate={handlePilotMetadataUpdate}
+          cameraActive={cameraActive}
+          latestRecognition={latestPilotResult}
+          videoElementRef={videoRef}
+        />
 
         {/* Khung hiển thị Video & Canvas */}
         <div
@@ -1017,14 +1863,12 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
         <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>
-              Ký hiệu đang nhận diện
+              {conversionMode === 'letters' ? '🔤 Chữ cái VSL (29 Chữ)' : conversionMode === 'digits' ? '🔢 Chữ số VSL' : conversionMode === 'words' ? '📖 Từ vựng (102 Từ)' : conversionMode === 'sentence' ? '💬 Ghép câu ngữ cảnh' : '🔤 Chữ cái & Số'}
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
-              {activeSignCategory && (
-                <span className="badge badge-indigo" style={{ fontSize: '11px' }}>
-                  {activeSignCategory}
-                </span>
-              )}
+              <span className={`badge ${conversionMode === 'letters' || conversionMode === 'digits' || conversionMode === 'letters_numbers' ? 'badge-emerald' : conversionMode === 'words' ? 'badge-indigo' : 'badge-cyan'}`} style={{ fontSize: '11px' }}>
+                {conversionMode === 'letters' || conversionMode === 'digits' || conversionMode === 'letters_numbers' ? 'Instant (<5ms)' : conversionMode === 'words' ? 'SSTCN (30-Frame)' : 'Temporal Debounce'}
+              </span>
               <span className="badge badge-cyan" style={{ fontSize: '11px' }}>
                 {currentResult.confidence > 0 ? `${Math.round(currentResult.confidence * 100)}% Khớp` : 'Đang chờ...'}
               </span>
@@ -1115,16 +1959,31 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
         </div>
 
         {/* Card Phụ Đề Câu Hoàn Chỉnh */}
-        <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', flex: 1 }}>
+        <div className="glass-panel" style={{
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+          flex: 1,
+          border: conversionMode === 'sentence' ? '1px solid var(--border-active)' : '1px solid var(--border-subtle)',
+          boxShadow: conversionMode === 'sentence' ? '0 0 20px rgba(6, 182, 212, 0.1)' : 'none'
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h3 style={{ fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle2 size={18} style={{ color: 'var(--accent-success)' }} />
-              Phụ Đề Văn Bản Tiếng Việt
-            </h3>
+            <div>
+              <h3 style={{ fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                <CheckCircle2 size={18} style={{ color: 'var(--accent-success)' }} />
+                Phụ Đề Văn Bản Tiếng Việt
+              </h3>
+              {conversionMode === 'sentence' && (
+                <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: '600' }}>
+                  💬 Chế độ Ghép câu liên tục (Ghép chuỗi tự động qua thời gian)
+                </span>
+              )}
+            </div>
 
             <div style={{ display: 'flex', gap: '6px' }}>
               <button
-                onClick={() => speakVietnamese(sentence)}
+                onClick={() => speakVietnamese(formatSentenceForTTS(sentence))}
                 disabled={!sentence}
                 className="btn btn-secondary"
                 style={{ padding: '6px 10px', fontSize: '12px' }}

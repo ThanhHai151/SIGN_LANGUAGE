@@ -1,0 +1,144 @@
+{
+  "task_id": "TASK_7E.3",
+  "task_title": "Fix FSM Transient Base-Label Loss",
+  "project": "VSL Connect AI",
+  "timestamp": "2026-10-31T15:35:00+07:00",
+  "audit_mode": "IMPLEMENTATION_AND_VERIFICATION",
+  "checkpoint_hashes": {
+    "weights.pt": {
+      "path": "backend/models/weights.pt",
+      "sha256": "6965b4ffd9eed45c10317f0cc4eff453470ea4552c081f18ea997d74365907be",
+      "status": "UNCHANGED"
+    },
+    "sign_sstcn_attention_model.pth": {
+      "path": "backend/models/weights/sign_sstcn_attention_model.pth",
+      "sha256": "2a8ddcc4d06c4f23aa7910caf77371848034dcdf8f4749d134c5894764cf9697",
+      "status": "UNCHANGED"
+    },
+    "alphabet_static_head_v1.pt": {
+      "path": "backend/models/alphabet_static_head_v1.pt",
+      "sha256": "cab8123e23ed41a6088ba1c6e80a8aaaa9a382663418cc669eacff834795c254",
+      "status": "UNCHANGED"
+    }
+  },
+  "modifications": {
+    "backend/vision/diacritic_state_machine.py": {
+      "changes": [
+        "Added update_transient(landmarks_raw, timestamp) to safely feed motion frames without fabricating base labels or confidence.",
+        "In update(), when base_label is not in BASE_GROUPS, delegates to update_transient() if baseline exists and state is BASE_STABLE/DIACRITIC_CANDIDATE/COOLDOWN, preserving motion buffer and baseline snapshot.",
+        "Ensures timeout reset if transient duration exceeds max_diacritic_search_sec (0.65s).",
+        "Ensures immediate reset if landmarks are None or empty."
+      ]
+    },
+    "backend/vision/recognizer.py": {
+      "changes": [
+        "Implemented Situation B in predict_landmarks(mode='letters'): When base_sign in ('NEUTRAL', 'UNKNOWN') and hand landmarks are valid and FSM has an established baseline, calls fsm.update_transient() instead of fsm.reset().",
+        "Maintains Situation A: Standard FSM update with valid base sign.",
+        "Maintains Situation C: Immediate FSM reset on true hand loss, mode change, or definitive switch to an unrelated static letter.",
+        "Session isolation preserved via self.diacritic_fsms[session_id]."
+      ]
+    }
+  },
+  "constraints_adherence": {
+    "alphabet_classifier_untouched": true,
+    "rule_i_v_untouched": true,
+    "recognition_thresholds_untouched": true,
+    "static_head_model_untouched": true,
+    "checkpoints_retrained": false,
+    "all_7_dynamic_letters_claimed_fixed": false,
+    "notes": "Root Cause 1 (transient label loss) is resolved. Root Cause 2 (Rule I/V hijacking) and Root Cause 3 (A/E/D strict rules) remain to be addressed in subsequent tasks."
+  },
+  "test_suites_summary": {
+    "backend/tests/test_alphabet_classifier.py": {"tests": 12, "status": "PASSED"},
+    "backend/tests/test_alphabet_static_head_integration.py": {"tests": 10, "status": "PASSED"},
+    "backend/tests/test_diacritic_state_machine.py": {"tests": 21, "status": "PASSED", "new_tests": 6},
+    "backend/tests/test_diacritic_camera_integration.py": {"tests": 16, "status": "PASSED", "new_tests": 2},
+    "backend/tests/test_digit_10_integration.py": {"tests": 12, "status": "PASSED"},
+    "backend/tests/test_mode_separation.py": {"tests": 7, "status": "PASSED"},
+    "backend/tests/test_sequential_digits_integration.py": {"tests": 6, "status": "PASSED"},
+    "backend/tests/test_api.py": {"tests": 32, "status": "PASSED"},
+    "total_tests": 116,
+    "total_passed": 116,
+    "regressions": 0
+  },
+  "replay_comparison_7_videos": {
+    "Ă": {
+      "video_id": "D0490B",
+      "total_frames": 89,
+      "valid_landmarks": 53,
+      "valid_base_frames": 0,
+      "transient_neutral_frames": 34,
+      "reached_base_stable": false,
+      "before": {"reached_base_stable": false, "resets_on_neutral": 0, "tokens": [[27, "D"], [29, "V"]]},
+      "after": {"reached_base_stable": false, "retained_baseline_frames": 0, "tokens": [[27, "D"], [29, "V"]]},
+      "bottleneck": "Root Cause 3 (Strict Rule A produces 0 base frames; hijacked by D and V)"
+    },
+    "Â": {
+      "video_id": "D0491B",
+      "total_frames": 108,
+      "valid_landmarks": 57,
+      "valid_base_frames": 0,
+      "transient_neutral_frames": 55,
+      "reached_base_stable": false,
+      "before": {"reached_base_stable": false, "resets_on_neutral": 0, "tokens": [[49, "O"], [75, "S"]]},
+      "after": {"reached_base_stable": false, "retained_baseline_frames": 0, "tokens": [[49, "O"], [75, "S"]]},
+      "bottleneck": "Root Cause 3 (Strict Rule A produces 0 base frames; misclassified as O and S)"
+    },
+    "Ê": {
+      "video_id": "D0497B",
+      "total_frames": 76,
+      "valid_landmarks": 52,
+      "valid_base_frames": 0,
+      "transient_neutral_frames": 52,
+      "reached_base_stable": false,
+      "before": {"reached_base_stable": false, "resets_on_neutral": 0, "tokens": []},
+      "after": {"reached_base_stable": false, "retained_baseline_frames": 0, "tokens": []},
+      "bottleneck": "Root Cause 3 (Strict Rule E produces 0 base frames)"
+    },
+    "Ô": {
+      "video_id": "D0507B",
+      "total_frames": 84,
+      "valid_landmarks": 58,
+      "valid_base_frames": 19,
+      "transient_neutral_frames": 36,
+      "reached_base_stable": true,
+      "before": {"reached_base_stable": true, "resets_on_neutral": 1, "tokens": [[11, "E"], [14, "O"], [36, "E"]]},
+      "after": {"reached_base_stable": true, "retained_baseline_frames": 1, "tokens": [[11, "E"], [14, "O"], [36, "E"]]},
+      "bottleneck": "Baseline successfully preserved across transient NEUTRAL at frame 34 without resetting FSM. Lift motion was below threshold."
+    },
+    "Ơ": {
+      "video_id": "D0508N",
+      "total_frames": 89,
+      "valid_landmarks": 45,
+      "valid_base_frames": 8,
+      "transient_neutral_frames": 33,
+      "reached_base_stable": true,
+      "before": {"reached_base_stable": true, "resets_on_neutral": 0, "tokens": [[29, "M"], [35, "E"], [36, "O"], [43, "E"], [45, "O"], [57, "I"]]},
+      "after": {"reached_base_stable": true, "retained_baseline_frames": 0, "tokens": [[29, "M"], [35, "E"], [36, "O"], [43, "E"], [45, "O"], [57, "I"]]},
+      "bottleneck": "Root Cause 2 (Rule I hijacks frame 57 when pinky extends)"
+    },
+    "Ư": {
+      "video_id": "D0515N",
+      "total_frames": 118,
+      "valid_landmarks": 47,
+      "valid_base_frames": 15,
+      "transient_neutral_frames": 27,
+      "reached_base_stable": true,
+      "before": {"reached_base_stable": true, "resets_on_neutral": 1, "tokens": [[17, "U"], [34, "Ư"], [35, "I"]]},
+      "after": {"reached_base_stable": true, "retained_baseline_frames": 1, "tokens": [[17, "U"], [34, "Ư"], [35, "I"]]},
+      "bottleneck": "Baseline preserved during transient NEUTRAL at frame 33. Diacritic Ư confirmed at frame 34. Frame 35 hijacked by Rule I (Root Cause 2)."
+    },
+    "Đ": {
+      "video_id": "D0495",
+      "total_frames": 105,
+      "valid_landmarks": 47,
+      "valid_base_frames": 0,
+      "transient_neutral_frames": 47,
+      "reached_base_stable": false,
+      "before": {"reached_base_stable": false, "resets_on_neutral": 0, "tokens": []},
+      "after": {"reached_base_stable": false, "retained_baseline_frames": 0, "tokens": []},
+      "bottleneck": "Root Cause 3 (Strict Rule D produces 0 base frames)"
+    }
+  }
+}
+

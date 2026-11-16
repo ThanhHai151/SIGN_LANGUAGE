@@ -1,0 +1,31 @@
+{
+  "data": "backend/data/sstcn/prepared_baseline",
+  "output": "backend/runs/sstcn_reconstructed_baseline",
+  "epochs": 3,
+  "batch_size": 8,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "dropout": 0.3,
+  "seed": 42,
+  "patience": 8,
+  "threads": 4,
+  "device": "cuda",
+  "amp": true,
+  "augment": false,
+  "init_from": null,
+  "resume": null,
+  "allow_partial_classes": false,
+  "created_at": "2026-10-30T11:52:07.767470+00:00",
+  "torch_version": "2.12.0+cu130",
+  "numpy_version": "2.2.6",
+  "dataset_manifest_sha256": "ccf7303b641852aea1d48059cebb6132d377dd9762728eae467d9878f9d0c299",
+  "initial_checkpoint_sha256": null,
+  "counts": {
+    "train": 7283,
+    "val": 156,
+    "test": 1420
+  },
+  "selection": "validation accuracy, then validation loss; test is evaluated only after selection",
+  "historical_initialization_training_membership": "not_applicable",
+  "git_commit": "2543d0b7375d6b650e83186b87b0449d7877308b"
+}

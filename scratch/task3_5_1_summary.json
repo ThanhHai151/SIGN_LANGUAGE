@@ -1,0 +1,91 @@
+{
+  "s39_metadata": {
+    "label": "B",
+    "label_idx": 1,
+    "source_type": "static_video",
+    "source_letter": "B",
+    "video_id": "D0492",
+    "source_video": "backend/data/media_cache/videos/D0492.mp4",
+    "frame_index": 54,
+    "timestamp_sec": 2.252,
+    "quality_status": "ok",
+    "displacement_to_prev": 0.02376,
+    "is_representative": true
+  },
+  "s39_features": {
+    "palm_scale": 0.0887,
+    "thumb_ext": false,
+    "index_ext": false,
+    "middle_ext": false,
+    "ring_ext": false,
+    "pinky_ext": false,
+    "index_curl": 0.4818,
+    "middle_curl": 0.6939,
+    "ring_curl": 0.749,
+    "pinky_curl": 0.633,
+    "ang_TI": 3.72,
+    "ang_TP": 18.53,
+    "thumb_lat": 0.2327,
+    "d_TI": 0.1278,
+    "d_TM": 0.1545,
+    "d_TW": 1.1759,
+    "d_IM": 0.1719,
+    "d_IW": 1.276,
+    "d_MW": 1.1212,
+    "d_RW": 1.033,
+    "d_PW": 0.9302,
+    "diff_x_IM": 0.089,
+    "idx_horiz_ratio": 0.0651,
+    "idx_straight": 0.4136,
+    "idx_tip_y": -1.2493,
+    "idx_dx": 0.014,
+    "idx_dy": -0.2151,
+    "mid_horiz_ratio": 0.4281,
+    "mid_straight": 0.1711,
+    "mid_tip_y": -1.1025,
+    "ang_IM_dir": 21.61,
+    "mcp_width_2d": 0.4445,
+    "thumb_ring_dist": 0.395,
+    "thumb_mid_dist": 0.3469,
+    "cross_indicator": 0.011026
+  },
+  "s39_conditions": {
+    "d_TI <= 0.22": [
+      0.1278,
+      true
+    ],
+    "d_TM <= 0.35": [
+      0.1545,
+      true
+    ],
+    "idx_straight <= 0.48": [
+      0.4136,
+      true
+    ],
+    "d_IW >= 0.95": [
+      1.276,
+      true
+    ],
+    "d_MW >= 0.90": [
+      1.1212,
+      true
+    ],
+    "d_RW >= 0.80": [
+      1.033,
+      true
+    ],
+    "d_PW >= 0.75": [
+      0.9302,
+      true
+    ],
+    "d_TW >= 0.85": [
+      1.1759,
+      true
+    ]
+  },
+  "all_b_npz_count": 22,
+  "all_b_npz_fps": 1,
+  "all_551_npz_fps_to_o": {
+    "B": 1
+  }
+}

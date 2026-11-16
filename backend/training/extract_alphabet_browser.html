@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Batch Alphabet Landmark Extractor - VSL Connect AI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    #status { padding: 10px; background: #eee; font-weight: bold; margin-bottom: 10px; }
+    pre { background: #f8f8f8; padding: 10px; border: 1px solid #ddd; max-height: 400px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h2>VSL Connect AI - MediaPipe Hands 29 Chữ Cái Extractor</h2>
+  <div id="status">INIT</div>
+  <div id="progress">Chờ tải tác vụ...</div>
+  <pre id="output"></pre>
+  <img id="worker-img" style="display:none;" />
+
+  <script>
+    async function processAll() {
+      const statusDiv = document.getElementById('status');
+      const progDiv = document.getElementById('progress');
+      const outPre = document.getElementById('output');
+      const img = document.getElementById('worker-img');
+
+      try {
+        statusDiv.innerText = 'INITIALIZING_MEDIAPIPE';
+
+        // 1. Tải danh sách tác vụ trích xuất
+        const tasksRes = await fetch('/backend/training/alphabet_extraction_tasks.json');
+        if (!tasksRes.ok) throw new Error('Không thể tải alphabet_extraction_tasks.json');
+        const tasks = await tasksRes.json();
+        progDiv.innerText = `Đã nạp ${tasks.length} frame cần xử lý cho 29 video.`;
+
+        // 2. Khởi tạo MediaPipe Hands
+        const hands = new Hands({
+          locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
+        });
+
+        hands.setOptions({
+          maxNumHands: 2,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.5
+        });
+
+        await hands.initialize();
+        statusDiv.innerText = 'MEDIAPIPE_INITIALIZED';
+
+        let lastResult = null;
+        hands.onResults((res) => {
+          lastResult = res;
+        });
+
+        const samples = [];
+        let okCount = 0;
+        let failCount = 0;
+
+        // 3. Xử lý tuần tự từng frame
+        for (let i = 0; i < tasks.length; i++) {
+          const item = tasks[i];
+          statusDiv.innerText = `PROCESSING_${i + 1}_OF_${tasks.length}_LETTER_${item.letter}_FRAME_${item.frame_idx}`;
+          progDiv.innerText = `[${i + 1}/${tasks.length}] Video: ${item.video_id} (${item.letter}) | Frame ${item.frame_idx} (t=${item.timestamp_sec}s) | OK: ${okCount}, NoHand: ${failCount}`;
+
+          lastResult = null;
+          img.src = `/backend/data/media_cache/inspect_frames/${item.frame_file}`;
+
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = () => reject(new Error(`Không thể nạp ảnh frame: ${item.frame_file}`));
+          });
+
+          await hands.send({ image: img });
+
+          let landmarks = null;
+          let handedness = "Right";
+          let confidence = 0.0;
+          let qualityStatus = "no_hand_detected";
+
+          if (lastResult && lastResult.multiHandLandmarks && lastResult.multiHandLandmarks.length > 0) {
+            let chosenHandIdx = 0;
+
+            if (lastResult.multiHandedness && lastResult.multiHandedness.length > 0) {
+              confidence = lastResult.multiHandedness[0].score || 0.95;
+              handedness = lastResult.multiHandedness[0].label || "Right";
+            }
+
+            const rawLms = lastResult.multiHandLandmarks[chosenHandIdx];
+            if (rawLms && rawLms.length === 21) {
+              // Chuẩn hóa 6 chữ số thập phân
+              landmarks = rawLms.map(p => [
+                Math.round(p.x * 1e6) / 1e6,
+                Math.round(p.y * 1e6) / 1e6,
+                Math.round(p.z * 1e6) / 1e6
+              ]);
+
+              const isValid = landmarks.every(p => 
+                p.length >= 3 && 
+                Number.isFinite(p[0]) && 
+                Number.isFinite(p[1]) && 
+                Number.isFinite(p[2])
+              );
+
+              if (isValid) {
+                qualityStatus = "ok";
+                okCount++;
+              } else {
+                qualityStatus = "invalid_coordinate_values";
+                landmarks = null;
+                failCount++;
+              }
+            } else {
+              qualityStatus = "invalid_point_count";
+              failCount++;
+            }
+          } else {
+            failCount++;
+          }
+
+          samples.push({
+            letter: item.letter,
+            letter_upper: item.letter_upper,
+            digit: null,
+            video_id: item.video_id,
+            source_video_file: `backend/data/media_cache/videos/${item.video_id}.mp4`,
+            split: item.split,
+            frame_idx: item.frame_idx,
+            timestamp_sec: item.timestamp_sec,
+            phase: item.phase,
+            handedness: handedness,
+            confidence: Math.round(confidence * 10000) / 10000,
+            coordinate_type: "normalized_mediapipe_hands",
+            quality_status: qualityStatus,
+            landmarks: landmarks
+          });
+        }
+
+        const finalOutput = {
+          schema_version: "1.0",
+          description: "Ground truth landmarks 21 điểm trích xuất từ 29 video QIPEDC cho Bảng chữ cái VSL",
+          target_domain: "vsl_alphabet",
+          total_videos: 29,
+          total_samples: samples.length,
+          successful_samples: okCount,
+          failed_samples: failCount,
+          samples: samples
+        };
+
+        statusDiv.innerText = 'EXTRACTION_COMPLETE';
+        progDiv.innerText = `Hoàn tất! Tổng: ${samples.length} frame | Thành công: ${okCount} | Không phát hiện tay: ${failCount}`;
+        outPre.innerText = JSON.stringify(finalOutput);
+      } catch (err) {
+        statusDiv.innerText = 'ERROR: ' + err.message;
+        outPre.innerText = JSON.stringify({
+          schema_version: "1.0",
+          error: err.message,
+          samples: []
+        });
+      }
+    }
+
+    window.addEventListener('load', processAll);
+  </script>
+</body>
+</html>
+

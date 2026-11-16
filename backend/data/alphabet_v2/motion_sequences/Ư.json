@@ -1,0 +1,6643 @@
+{
+  "letter": "Ư",
+  "type": "motion_sequence",
+  "video_id": "D0515N",
+  "total_frames": 118,
+  "valid_frames": 47,
+  "sequence": [
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 0,
+      "timestamp_sec": 0,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 1,
+      "timestamp_sec": 0.042,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 2,
+      "timestamp_sec": 0.083,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 3,
+      "timestamp_sec": 0.125,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 4,
+      "timestamp_sec": 0.167,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 5,
+      "timestamp_sec": 0.209,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 6,
+      "timestamp_sec": 0.25,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 7,
+      "timestamp_sec": 0.292,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 8,
+      "timestamp_sec": 0.334,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 9,
+      "timestamp_sec": 0.375,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 10,
+      "timestamp_sec": 0.417,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 11,
+      "timestamp_sec": 0.459,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 12,
+      "timestamp_sec": 0.5,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 13,
+      "timestamp_sec": 0.542,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 14,
+      "timestamp_sec": 0.584,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9644,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.392516,
+          0.914151,
+          0
+        ],
+        [
+          0.409859,
+          0.927736,
+          -0.007252
+        ],
+        [
+          0.418107,
+          0.952794,
+          -0.012875
+        ],
+        [
+          0.416051,
+          0.978322,
+          -0.016525
+        ],
+        [
+          0.408748,
+          0.994768,
+          -0.019689
+        ],
+        [
+          0.404313,
+          0.942877,
+          -0.021462
+        ],
+        [
+          0.400052,
+          0.981636,
+          -0.027132
+        ],
+        [
+          0.398356,
+          1.003567,
+          -0.02839
+        ],
+        [
+          0.397406,
+          1.017822,
+          -0.028617
+        ],
+        [
+          0.389713,
+          0.944211,
+          -0.019762
+        ],
+        [
+          0.38399,
+          0.98461,
+          -0.024143
+        ],
+        [
+          0.384112,
+          1.007117,
+          -0.023359
+        ],
+        [
+          0.385465,
+          1.01826,
+          -0.023174
+        ],
+        [
+          0.378918,
+          0.947127,
+          -0.017659
+        ],
+        [
+          0.372662,
+          0.981678,
+          -0.021524
+        ],
+        [
+          0.374801,
+          0.998896,
+          -0.020576
+        ],
+        [
+          0.378275,
+          1.005965,
+          -0.019844
+        ],
+        [
+          0.372052,
+          0.951117,
+          -0.015865
+        ],
+        [
+          0.365729,
+          0.977857,
+          -0.019174
+        ],
+        [
+          0.368895,
+          0.991475,
+          -0.019246
+        ],
+        [
+          0.374016,
+          0.996735,
+          -0.019122
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 15,
+      "timestamp_sec": 0.626,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 16,
+      "timestamp_sec": 0.667,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0.7635,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.379346,
+          0.781214,
+          0
+        ],
+        [
+          0.385779,
+          0.774731,
+          -0.011845
+        ],
+        [
+          0.391543,
+          0.768883,
+          -0.0197
+        ],
+        [
+          0.38948,
+          0.765499,
+          -0.026058
+        ],
+        [
+          0.391026,
+          0.765431,
+          -0.031461
+        ],
+        [
+          0.420117,
+          0.784429,
+          -0.015336
+        ],
+        [
+          0.421395,
+          0.794569,
+          -0.024022
+        ],
+        [
+          0.411198,
+          0.797483,
+          -0.029508
+        ],
+        [
+          0.402828,
+          0.797899,
+          -0.032438
+        ],
+        [
+          0.417467,
+          0.788023,
+          -0.012884
+        ],
+        [
+          0.414457,
+          0.786671,
+          -0.021819
+        ],
+        [
+          0.403157,
+          0.784115,
+          -0.02637
+        ],
+        [
+          0.397003,
+          0.780204,
+          -0.028531
+        ],
+        [
+          0.412368,
+          0.790062,
+          -0.011439
+        ],
+        [
+          0.409379,
+          0.788338,
+          -0.020084
+        ],
+        [
+          0.401096,
+          0.786234,
+          -0.022567
+        ],
+        [
+          0.396921,
+          0.781692,
+          -0.022754
+        ],
+        [
+          0.405706,
+          0.792091,
+          -0.010764
+        ],
+        [
+          0.403179,
+          0.79041,
+          -0.017144
+        ],
+        [
+          0.396538,
+          0.787278,
+          -0.018245
+        ],
+        [
+          0.392903,
+          0.782324,
+          -0.017653
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 17,
+      "timestamp_sec": 0.709,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9976,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.403788,
+          0.755924,
+          0
+        ],
+        [
+          0.417529,
+          0.752428,
+          -0.009339
+        ],
+        [
+          0.425497,
+          0.744033,
+          -0.016525
+        ],
+        [
+          0.417562,
+          0.740651,
+          -0.023374
+        ],
+        [
+          0.404242,
+          0.742178,
+          -0.03081
+        ],
+        [
+          0.419912,
+          0.705795,
+          -0.016536
+        ],
+        [
+          0.416803,
+          0.688056,
+          -0.027266
+        ],
+        [
+          0.414594,
+          0.679696,
+          -0.034376
+        ],
+        [
+          0.412317,
+          0.671104,
+          -0.038551
+        ],
+        [
+          0.406133,
+          0.70227,
+          -0.01783
+        ],
+        [
+          0.404771,
+          0.675652,
+          -0.02831
+        ],
+        [
+          0.403788,
+          0.668818,
+          -0.032637
+        ],
+        [
+          0.401948,
+          0.666432,
+          -0.034594
+        ],
+        [
+          0.394629,
+          0.707141,
+          -0.019819
+        ],
+        [
+          0.386246,
+          0.69327,
+          -0.030832
+        ],
+        [
+          0.391259,
+          0.718616,
+          -0.031724
+        ],
+        [
+          0.397386,
+          0.738878,
+          -0.030028
+        ],
+        [
+          0.384352,
+          0.718917,
+          -0.022504
+        ],
+        [
+          0.377121,
+          0.708539,
+          -0.030071
+        ],
+        [
+          0.37998,
+          0.722834,
+          -0.029332
+        ],
+        [
+          0.385283,
+          0.736805,
+          -0.027636
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 18,
+      "timestamp_sec": 0.751,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9956,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.404175,
+          0.71568,
+          0
+        ],
+        [
+          0.419018,
+          0.713157,
+          -0.009502
+        ],
+        [
+          0.426761,
+          0.697693,
+          -0.015252
+        ],
+        [
+          0.418319,
+          0.691203,
+          -0.020329
+        ],
+        [
+          0.403582,
+          0.690582,
+          -0.025714
+        ],
+        [
+          0.421733,
+          0.657803,
+          -0.014502
+        ],
+        [
+          0.420022,
+          0.633749,
+          -0.023176
+        ],
+        [
+          0.418851,
+          0.620351,
+          -0.028937
+        ],
+        [
+          0.41663,
+          0.60454,
+          -0.032756
+        ],
+        [
+          0.408257,
+          0.652868,
+          -0.014612
+        ],
+        [
+          0.408913,
+          0.61925,
+          -0.02258
+        ],
+        [
+          0.408911,
+          0.606126,
+          -0.026068
+        ],
+        [
+          0.407463,
+          0.59324,
+          -0.028032
+        ],
+        [
+          0.396571,
+          0.656663,
+          -0.015329
+        ],
+        [
+          0.389571,
+          0.630217,
+          -0.025626
+        ],
+        [
+          0.392843,
+          0.658173,
+          -0.025052
+        ],
+        [
+          0.396731,
+          0.677757,
+          -0.022183
+        ],
+        [
+          0.386064,
+          0.668078,
+          -0.016587
+        ],
+        [
+          0.380039,
+          0.653341,
+          -0.024545
+        ],
+        [
+          0.383348,
+          0.671688,
+          -0.02269
+        ],
+        [
+          0.38821,
+          0.686717,
+          -0.019656
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 19,
+      "timestamp_sec": 0.792,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 20,
+      "timestamp_sec": 0.834,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9961,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.411079,
+          0.62247,
+          0
+        ],
+        [
+          0.425712,
+          0.610727,
+          -0.008618
+        ],
+        [
+          0.433841,
+          0.58734,
+          -0.013099
+        ],
+        [
+          0.42601,
+          0.570212,
+          -0.01756
+        ],
+        [
+          0.413341,
+          0.562845,
+          -0.021937
+        ],
+        [
+          0.427483,
+          0.539008,
+          -0.009065
+        ],
+        [
+          0.427416,
+          0.502978,
+          -0.016213
+        ],
+        [
+          0.427653,
+          0.48206,
+          -0.020979
+        ],
+        [
+          0.426891,
+          0.461781,
+          -0.0241
+        ],
+        [
+          0.414915,
+          0.534811,
+          -0.009965
+        ],
+        [
+          0.416176,
+          0.492918,
+          -0.016874
+        ],
+        [
+          0.417589,
+          0.46989,
+          -0.020525
+        ],
+        [
+          0.417362,
+          0.450066,
+          -0.022584
+        ],
+        [
+          0.403714,
+          0.541991,
+          -0.011733
+        ],
+        [
+          0.397902,
+          0.509586,
+          -0.021341
+        ],
+        [
+          0.402345,
+          0.530982,
+          -0.0216
+        ],
+        [
+          0.405932,
+          0.550295,
+          -0.019179
+        ],
+        [
+          0.393033,
+          0.557362,
+          -0.014245
+        ],
+        [
+          0.38926,
+          0.535024,
+          -0.02173
+        ],
+        [
+          0.394228,
+          0.547076,
+          -0.020513
+        ],
+        [
+          0.39843,
+          0.561761,
+          -0.017897
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 21,
+      "timestamp_sec": 0.876,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9961,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.412486,
+          0.600344,
+          0
+        ],
+        [
+          0.42828,
+          0.588692,
+          -0.008152
+        ],
+        [
+          0.436996,
+          0.562917,
+          -0.011903
+        ],
+        [
+          0.426844,
+          0.54308,
+          -0.015667
+        ],
+        [
+          0.413646,
+          0.536079,
+          -0.019399
+        ],
+        [
+          0.429937,
+          0.513521,
+          -0.006541
+        ],
+        [
+          0.43017,
+          0.477225,
+          -0.012482
+        ],
+        [
+          0.430054,
+          0.454658,
+          -0.016737
+        ],
+        [
+          0.429311,
+          0.433203,
+          -0.019692
+        ],
+        [
+          0.416833,
+          0.50959,
+          -0.0074
+        ],
+        [
+          0.41823,
+          0.46711,
+          -0.01331
+        ],
+        [
+          0.419724,
+          0.44343,
+          -0.017042
+        ],
+        [
+          0.419675,
+          0.421165,
+          -0.019195
+        ],
+        [
+          0.40525,
+          0.515497,
+          -0.009082
+        ],
+        [
+          0.40067,
+          0.480561,
+          -0.018698
+        ],
+        [
+          0.404887,
+          0.502929,
+          -0.018787
+        ],
+        [
+          0.407316,
+          0.523383,
+          -0.016011
+        ],
+        [
+          0.394306,
+          0.530014,
+          -0.011432
+        ],
+        [
+          0.391756,
+          0.504522,
+          -0.019322
+        ],
+        [
+          0.397285,
+          0.518548,
+          -0.017781
+        ],
+        [
+          0.400718,
+          0.53523,
+          -0.014648
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 22,
+      "timestamp_sec": 0.918,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9946,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.413892,
+          0.58132,
+          0
+        ],
+        [
+          0.429257,
+          0.568942,
+          -0.008512
+        ],
+        [
+          0.437629,
+          0.5416,
+          -0.012483
+        ],
+        [
+          0.427796,
+          0.520689,
+          -0.016421
+        ],
+        [
+          0.414552,
+          0.51313,
+          -0.0203
+        ],
+        [
+          0.43102,
+          0.491952,
+          -0.007175
+        ],
+        [
+          0.431337,
+          0.45456,
+          -0.013302
+        ],
+        [
+          0.431233,
+          0.431326,
+          -0.01743
+        ],
+        [
+          0.430377,
+          0.410324,
+          -0.020038
+        ],
+        [
+          0.4184,
+          0.488468,
+          -0.007975
+        ],
+        [
+          0.420158,
+          0.444617,
+          -0.013878
+        ],
+        [
+          0.421872,
+          0.420474,
+          -0.017194
+        ],
+        [
+          0.421807,
+          0.398866,
+          -0.01878
+        ],
+        [
+          0.407001,
+          0.495227,
+          -0.009652
+        ],
+        [
+          0.40228,
+          0.460652,
+          -0.019252
+        ],
+        [
+          0.405927,
+          0.482239,
+          -0.019186
+        ],
+        [
+          0.407971,
+          0.502281,
+          -0.01608
+        ],
+        [
+          0.395962,
+          0.510209,
+          -0.012024
+        ],
+        [
+          0.392747,
+          0.482929,
+          -0.01954
+        ],
+        [
+          0.397806,
+          0.496217,
+          -0.01764
+        ],
+        [
+          0.400984,
+          0.512407,
+          -0.014141
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 23,
+      "timestamp_sec": 0.959,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9941,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.415792,
+          0.557717,
+          0
+        ],
+        [
+          0.431685,
+          0.543482,
+          -0.00859
+        ],
+        [
+          0.440139,
+          0.514695,
+          -0.012336
+        ],
+        [
+          0.429904,
+          0.490908,
+          -0.016076
+        ],
+        [
+          0.415913,
+          0.481632,
+          -0.019628
+        ],
+        [
+          0.433314,
+          0.464269,
+          -0.005997
+        ],
+        [
+          0.434193,
+          0.425057,
+          -0.011879
+        ],
+        [
+          0.434282,
+          0.400684,
+          -0.015968
+        ],
+        [
+          0.433731,
+          0.378567,
+          -0.018632
+        ],
+        [
+          0.420375,
+          0.460398,
+          -0.006686
+        ],
+        [
+          0.42231,
+          0.415176,
+          -0.012464
+        ],
+        [
+          0.42424,
+          0.389517,
+          -0.016049
+        ],
+        [
+          0.42483,
+          0.367088,
+          -0.017879
+        ],
+        [
+          0.408855,
+          0.46722,
+          -0.008321
+        ],
+        [
+          0.404737,
+          0.431703,
+          -0.018134
+        ],
+        [
+          0.408614,
+          0.453881,
+          -0.018309
+        ],
+        [
+          0.410669,
+          0.475367,
+          -0.015282
+        ],
+        [
+          0.39789,
+          0.482285,
+          -0.010661
+        ],
+        [
+          0.395464,
+          0.455586,
+          -0.018834
+        ],
+        [
+          0.400611,
+          0.469367,
+          -0.017314
+        ],
+        [
+          0.403621,
+          0.48671,
+          -0.013924
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 24,
+      "timestamp_sec": 1.001,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9951,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.415768,
+          0.54832,
+          0
+        ],
+        [
+          0.431868,
+          0.533503,
+          -0.008739
+        ],
+        [
+          0.440595,
+          0.504488,
+          -0.012428
+        ],
+        [
+          0.431328,
+          0.481642,
+          -0.016089
+        ],
+        [
+          0.418564,
+          0.473126,
+          -0.019554
+        ],
+        [
+          0.433249,
+          0.455191,
+          -0.007017
+        ],
+        [
+          0.433935,
+          0.416115,
+          -0.012898
+        ],
+        [
+          0.434157,
+          0.391988,
+          -0.016805
+        ],
+        [
+          0.433167,
+          0.370347,
+          -0.019414
+        ],
+        [
+          0.421004,
+          0.451409,
+          -0.007799
+        ],
+        [
+          0.42299,
+          0.406416,
+          -0.013922
+        ],
+        [
+          0.425037,
+          0.380146,
+          -0.017394
+        ],
+        [
+          0.425073,
+          0.357852,
+          -0.019232
+        ],
+        [
+          0.40967,
+          0.458677,
+          -0.009553
+        ],
+        [
+          0.405334,
+          0.422539,
+          -0.019372
+        ],
+        [
+          0.409376,
+          0.444443,
+          -0.020045
+        ],
+        [
+          0.411529,
+          0.465395,
+          -0.017464
+        ],
+        [
+          0.398247,
+          0.473704,
+          -0.012035
+        ],
+        [
+          0.395918,
+          0.446632,
+          -0.020003
+        ],
+        [
+          0.400738,
+          0.458807,
+          -0.019189
+        ],
+        [
+          0.40342,
+          0.474797,
+          -0.01658
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 25,
+      "timestamp_sec": 1.043,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9946,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.415062,
+          0.543779,
+          0
+        ],
+        [
+          0.431775,
+          0.52926,
+          -0.008301
+        ],
+        [
+          0.440069,
+          0.49945,
+          -0.011565
+        ],
+        [
+          0.431044,
+          0.476774,
+          -0.014926
+        ],
+        [
+          0.418216,
+          0.468507,
+          -0.01814
+        ],
+        [
+          0.433152,
+          0.449746,
+          -0.006254
+        ],
+        [
+          0.434206,
+          0.409896,
+          -0.011991
+        ],
+        [
+          0.434632,
+          0.385516,
+          -0.015932
+        ],
+        [
+          0.433518,
+          0.363652,
+          -0.018685
+        ],
+        [
+          0.420899,
+          0.446299,
+          -0.00719
+        ],
+        [
+          0.423091,
+          0.401543,
+          -0.013333
+        ],
+        [
+          0.425109,
+          0.375298,
+          -0.01691
+        ],
+        [
+          0.424673,
+          0.353378,
+          -0.018895
+        ],
+        [
+          0.409552,
+          0.45357,
+          -0.009105
+        ],
+        [
+          0.405212,
+          0.416008,
+          -0.018783
+        ],
+        [
+          0.409276,
+          0.438173,
+          -0.019244
+        ],
+        [
+          0.411139,
+          0.459536,
+          -0.016631
+        ],
+        [
+          0.398066,
+          0.468647,
+          -0.011753
+        ],
+        [
+          0.395976,
+          0.440369,
+          -0.019831
+        ],
+        [
+          0.400817,
+          0.453007,
+          -0.019049
+        ],
+        [
+          0.403267,
+          0.469681,
+          -0.016491
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 26,
+      "timestamp_sec": 1.084,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9941,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.414505,
+          0.543249,
+          0
+        ],
+        [
+          0.431175,
+          0.528315,
+          -0.008434
+        ],
+        [
+          0.439006,
+          0.499071,
+          -0.011771
+        ],
+        [
+          0.429074,
+          0.477154,
+          -0.015213
+        ],
+        [
+          0.41608,
+          0.468507,
+          -0.018452
+        ],
+        [
+          0.432747,
+          0.448676,
+          -0.005714
+        ],
+        [
+          0.433919,
+          0.409175,
+          -0.011532
+        ],
+        [
+          0.434288,
+          0.385045,
+          -0.015619
+        ],
+        [
+          0.433237,
+          0.363358,
+          -0.018508
+        ],
+        [
+          0.420479,
+          0.444911,
+          -0.006748
+        ],
+        [
+          0.422475,
+          0.401001,
+          -0.013047
+        ],
+        [
+          0.424178,
+          0.374372,
+          -0.016881
+        ],
+        [
+          0.423748,
+          0.352148,
+          -0.019055
+        ],
+        [
+          0.409077,
+          0.45232,
+          -0.008861
+        ],
+        [
+          0.403976,
+          0.416287,
+          -0.018942
+        ],
+        [
+          0.407848,
+          0.439066,
+          -0.019573
+        ],
+        [
+          0.409853,
+          0.460665,
+          -0.01698
+        ],
+        [
+          0.397748,
+          0.467771,
+          -0.011743
+        ],
+        [
+          0.394711,
+          0.440425,
+          -0.02019
+        ],
+        [
+          0.399429,
+          0.4535,
+          -0.019559
+        ],
+        [
+          0.402135,
+          0.469782,
+          -0.01705
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 27,
+      "timestamp_sec": 1.126,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9956,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.411302,
+          0.551328,
+          0
+        ],
+        [
+          0.427565,
+          0.537316,
+          -0.009085
+        ],
+        [
+          0.436833,
+          0.509988,
+          -0.013236
+        ],
+        [
+          0.426552,
+          0.488131,
+          -0.017456
+        ],
+        [
+          0.412343,
+          0.480886,
+          -0.021606
+        ],
+        [
+          0.430006,
+          0.459212,
+          -0.007045
+        ],
+        [
+          0.430441,
+          0.42044,
+          -0.013579
+        ],
+        [
+          0.430322,
+          0.397172,
+          -0.018045
+        ],
+        [
+          0.429231,
+          0.375672,
+          -0.021031
+        ],
+        [
+          0.41721,
+          0.455949,
+          -0.008034
+        ],
+        [
+          0.419218,
+          0.411719,
+          -0.015086
+        ],
+        [
+          0.420325,
+          0.385571,
+          -0.019222
+        ],
+        [
+          0.4196,
+          0.363302,
+          -0.021494
+        ],
+        [
+          0.405877,
+          0.463585,
+          -0.010102
+        ],
+        [
+          0.400728,
+          0.428728,
+          -0.021298
+        ],
+        [
+          0.404408,
+          0.451401,
+          -0.022377
+        ],
+        [
+          0.406851,
+          0.472937,
+          -0.019811
+        ],
+        [
+          0.394779,
+          0.478735,
+          -0.012864
+        ],
+        [
+          0.392208,
+          0.452195,
+          -0.02176
+        ],
+        [
+          0.397177,
+          0.465416,
+          -0.020933
+        ],
+        [
+          0.400775,
+          0.482372,
+          -0.018171
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 28,
+      "timestamp_sec": 1.168,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9961,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.410356,
+          0.557655,
+          0
+        ],
+        [
+          0.426765,
+          0.545238,
+          -0.009413
+        ],
+        [
+          0.435851,
+          0.518481,
+          -0.013789
+        ],
+        [
+          0.425974,
+          0.496654,
+          -0.018179
+        ],
+        [
+          0.412069,
+          0.488474,
+          -0.02239
+        ],
+        [
+          0.429222,
+          0.465729,
+          -0.007307
+        ],
+        [
+          0.429478,
+          0.427225,
+          -0.014119
+        ],
+        [
+          0.429747,
+          0.404258,
+          -0.018812
+        ],
+        [
+          0.428859,
+          0.382659,
+          -0.021977
+        ],
+        [
+          0.416354,
+          0.461871,
+          -0.008291
+        ],
+        [
+          0.418334,
+          0.418217,
+          -0.01566
+        ],
+        [
+          0.419794,
+          0.392074,
+          -0.019913
+        ],
+        [
+          0.419242,
+          0.369444,
+          -0.022183
+        ],
+        [
+          0.405067,
+          0.469391,
+          -0.010383
+        ],
+        [
+          0.399588,
+          0.435022,
+          -0.021482
+        ],
+        [
+          0.403509,
+          0.458334,
+          -0.022101
+        ],
+        [
+          0.406054,
+          0.479696,
+          -0.019252
+        ],
+        [
+          0.394057,
+          0.48525,
+          -0.01328
+        ],
+        [
+          0.391357,
+          0.458966,
+          -0.02206
+        ],
+        [
+          0.396412,
+          0.472743,
+          -0.020986
+        ],
+        [
+          0.400066,
+          0.489532,
+          -0.018069
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 29,
+      "timestamp_sec": 1.21,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9956,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.4099,
+          0.560612,
+          0
+        ],
+        [
+          0.426204,
+          0.547771,
+          -0.008983
+        ],
+        [
+          0.435057,
+          0.520862,
+          -0.012996
+        ],
+        [
+          0.425314,
+          0.500152,
+          -0.017058
+        ],
+        [
+          0.412154,
+          0.492407,
+          -0.020852
+        ],
+        [
+          0.428583,
+          0.468091,
+          -0.006127
+        ],
+        [
+          0.429394,
+          0.430532,
+          -0.012543
+        ],
+        [
+          0.42974,
+          0.408115,
+          -0.017003
+        ],
+        [
+          0.428892,
+          0.386936,
+          -0.020055
+        ],
+        [
+          0.415904,
+          0.46431,
+          -0.007148
+        ],
+        [
+          0.41818,
+          0.421555,
+          -0.014199
+        ],
+        [
+          0.419549,
+          0.395856,
+          -0.018474
+        ],
+        [
+          0.418874,
+          0.373454,
+          -0.020742
+        ],
+        [
+          0.404529,
+          0.471842,
+          -0.009292
+        ],
+        [
+          0.398985,
+          0.438416,
+          -0.020275
+        ],
+        [
+          0.403138,
+          0.461141,
+          -0.021333
+        ],
+        [
+          0.406023,
+          0.482329,
+          -0.018776
+        ],
+        [
+          0.393696,
+          0.487606,
+          -0.012192
+        ],
+        [
+          0.390741,
+          0.463566,
+          -0.021113
+        ],
+        [
+          0.395824,
+          0.477276,
+          -0.020577
+        ],
+        [
+          0.399619,
+          0.493621,
+          -0.017979
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 30,
+      "timestamp_sec": 1.251,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9951,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.409378,
+          0.561821,
+          0
+        ],
+        [
+          0.426071,
+          0.549676,
+          -0.009395
+        ],
+        [
+          0.435758,
+          0.522829,
+          -0.013585
+        ],
+        [
+          0.426991,
+          0.500834,
+          -0.017775
+        ],
+        [
+          0.41364,
+          0.491061,
+          -0.021711
+        ],
+        [
+          0.429253,
+          0.47004,
+          -0.006974
+        ],
+        [
+          0.43024,
+          0.431979,
+          -0.013756
+        ],
+        [
+          0.430628,
+          0.409272,
+          -0.01842
+        ],
+        [
+          0.430012,
+          0.387686,
+          -0.02167
+        ],
+        [
+          0.416678,
+          0.465777,
+          -0.007921
+        ],
+        [
+          0.418767,
+          0.422529,
+          -0.015196
+        ],
+        [
+          0.420558,
+          0.396743,
+          -0.019448
+        ],
+        [
+          0.420252,
+          0.374496,
+          -0.021848
+        ],
+        [
+          0.405363,
+          0.472943,
+          -0.010033
+        ],
+        [
+          0.400647,
+          0.438141,
+          -0.021108
+        ],
+        [
+          0.405126,
+          0.461419,
+          -0.021835
+        ],
+        [
+          0.407762,
+          0.483202,
+          -0.019188
+        ],
+        [
+          0.39445,
+          0.488525,
+          -0.012981
+        ],
+        [
+          0.392311,
+          0.463313,
+          -0.022068
+        ],
+        [
+          0.397529,
+          0.477003,
+          -0.02156
+        ],
+        [
+          0.400755,
+          0.493333,
+          -0.019064
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 31,
+      "timestamp_sec": 1.293,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9951,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.40664,
+          0.550896,
+          0
+        ],
+        [
+          0.424708,
+          0.541011,
+          -0.008859
+        ],
+        [
+          0.437103,
+          0.517799,
+          -0.012911
+        ],
+        [
+          0.433506,
+          0.493224,
+          -0.016948
+        ],
+        [
+          0.423134,
+          0.479157,
+          -0.02091
+        ],
+        [
+          0.432692,
+          0.46399,
+          -0.007484
+        ],
+        [
+          0.436078,
+          0.426905,
+          -0.013894
+        ],
+        [
+          0.437578,
+          0.4042,
+          -0.018489
+        ],
+        [
+          0.43746,
+          0.382778,
+          -0.021543
+        ],
+        [
+          0.421299,
+          0.45915,
+          -0.007938
+        ],
+        [
+          0.425801,
+          0.41658,
+          -0.014417
+        ],
+        [
+          0.428595,
+          0.391639,
+          -0.018682
+        ],
+        [
+          0.429299,
+          0.370508,
+          -0.021323
+        ],
+        [
+          0.410087,
+          0.46353,
+          -0.009341
+        ],
+        [
+          0.408933,
+          0.428119,
+          -0.018641
+        ],
+        [
+          0.412721,
+          0.444361,
+          -0.020415
+        ],
+        [
+          0.414732,
+          0.462753,
+          -0.019136
+        ],
+        [
+          0.398201,
+          0.473984,
+          -0.011501
+        ],
+        [
+          0.398942,
+          0.44531,
+          -0.018984
+        ],
+        [
+          0.403849,
+          0.454406,
+          -0.018984
+        ],
+        [
+          0.406848,
+          0.469416,
+          -0.01721
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 32,
+      "timestamp_sec": 1.335,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9912,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.405191,
+          0.542801,
+          0
+        ],
+        [
+          0.424132,
+          0.533642,
+          -0.007912
+        ],
+        [
+          0.438212,
+          0.512458,
+          -0.011567
+        ],
+        [
+          0.441629,
+          0.487263,
+          -0.015187
+        ],
+        [
+          0.434018,
+          0.467448,
+          -0.018745
+        ],
+        [
+          0.435419,
+          0.462782,
+          -0.006758
+        ],
+        [
+          0.441475,
+          0.430907,
+          -0.012538
+        ],
+        [
+          0.444108,
+          0.413235,
+          -0.017211
+        ],
+        [
+          0.445301,
+          0.394412,
+          -0.020824
+        ],
+        [
+          0.425217,
+          0.455146,
+          -0.007505
+        ],
+        [
+          0.431003,
+          0.418301,
+          -0.01321
+        ],
+        [
+          0.436326,
+          0.399692,
+          -0.017374
+        ],
+        [
+          0.439261,
+          0.382941,
+          -0.020824
+        ],
+        [
+          0.413873,
+          0.456659,
+          -0.009223
+        ],
+        [
+          0.41527,
+          0.419787,
+          -0.017115
+        ],
+        [
+          0.421341,
+          0.434374,
+          -0.019167
+        ],
+        [
+          0.424666,
+          0.453814,
+          -0.019316
+        ],
+        [
+          0.401102,
+          0.463549,
+          -0.01177
+        ],
+        [
+          0.399072,
+          0.43182,
+          -0.019126
+        ],
+        [
+          0.404564,
+          0.433949,
+          -0.020987
+        ],
+        [
+          0.409337,
+          0.445688,
+          -0.021435
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 33,
+      "timestamp_sec": 1.376,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9893,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.403894,
+          0.534557,
+          0
+        ],
+        [
+          0.423987,
+          0.524921,
+          -0.00692
+        ],
+        [
+          0.438951,
+          0.507696,
+          -0.010321
+        ],
+        [
+          0.446753,
+          0.488357,
+          -0.013735
+        ],
+        [
+          0.447821,
+          0.465057,
+          -0.016935
+        ],
+        [
+          0.438789,
+          0.462856,
+          -0.005128
+        ],
+        [
+          0.445846,
+          0.441293,
+          -0.011348
+        ],
+        [
+          0.449605,
+          0.43204,
+          -0.016766
+        ],
+        [
+          0.453385,
+          0.421922,
+          -0.020668
+        ],
+        [
+          0.428895,
+          0.452905,
+          -0.005681
+        ],
+        [
+          0.435024,
+          0.426984,
+          -0.011095
+        ],
+        [
+          0.439904,
+          0.42223,
+          -0.014971
+        ],
+        [
+          0.444373,
+          0.420416,
+          -0.01817
+        ],
+        [
+          0.417463,
+          0.449991,
+          -0.007401
+        ],
+        [
+          0.421216,
+          0.418972,
+          -0.013943
+        ],
+        [
+          0.425164,
+          0.432258,
+          -0.015829
+        ],
+        [
+          0.42887,
+          0.451847,
+          -0.016584
+        ],
+        [
+          0.404565,
+          0.452644,
+          -0.009931
+        ],
+        [
+          0.40057,
+          0.422044,
+          -0.016076
+        ],
+        [
+          0.404307,
+          0.418535,
+          -0.01834
+        ],
+        [
+          0.410155,
+          0.426329,
+          -0.019458
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 34,
+      "timestamp_sec": 1.418,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9946,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.403205,
+          0.525945,
+          0
+        ],
+        [
+          0.42167,
+          0.520381,
+          -0.005068
+        ],
+        [
+          0.439801,
+          0.506489,
+          -0.008399
+        ],
+        [
+          0.452088,
+          0.488523,
+          -0.012468
+        ],
+        [
+          0.453864,
+          0.464783,
+          -0.016074
+        ],
+        [
+          0.438685,
+          0.459542,
+          -0.001451
+        ],
+        [
+          0.447753,
+          0.437979,
+          -0.008541
+        ],
+        [
+          0.448969,
+          0.44555,
+          -0.013488
+        ],
+        [
+          0.446883,
+          0.459062,
+          -0.015196
+        ],
+        [
+          0.429009,
+          0.449504,
+          -0.002629
+        ],
+        [
+          0.437429,
+          0.42527,
+          -0.009591
+        ],
+        [
+          0.438945,
+          0.441559,
+          -0.013844
+        ],
+        [
+          0.43757,
+          0.459226,
+          -0.015149
+        ],
+        [
+          0.418396,
+          0.443632,
+          -0.004935
+        ],
+        [
+          0.425516,
+          0.417016,
+          -0.010552
+        ],
+        [
+          0.427808,
+          0.436407,
+          -0.011839
+        ],
+        [
+          0.427655,
+          0.458112,
+          -0.01137
+        ],
+        [
+          0.406936,
+          0.443321,
+          -0.007924
+        ],
+        [
+          0.403796,
+          0.414178,
+          -0.011252
+        ],
+        [
+          0.407979,
+          0.406786,
+          -0.012408
+        ],
+        [
+          0.413871,
+          0.406907,
+          -0.012551
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 35,
+      "timestamp_sec": 1.46,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9927,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.401987,
+          0.510597,
+          0
+        ],
+        [
+          0.421568,
+          0.50905,
+          -0.00476
+        ],
+        [
+          0.442085,
+          0.499153,
+          -0.007719
+        ],
+        [
+          0.455066,
+          0.48325,
+          -0.011683
+        ],
+        [
+          0.454542,
+          0.460384,
+          -0.014966
+        ],
+        [
+          0.442841,
+          0.454204,
+          -0.000954
+        ],
+        [
+          0.450657,
+          0.442346,
+          -0.009179
+        ],
+        [
+          0.445962,
+          0.460768,
+          -0.014273
+        ],
+        [
+          0.441091,
+          0.477163,
+          -0.015589
+        ],
+        [
+          0.433611,
+          0.441629,
+          -0.002257
+        ],
+        [
+          0.442548,
+          0.429133,
+          -0.01106
+        ],
+        [
+          0.437813,
+          0.454028,
+          -0.014896
+        ],
+        [
+          0.432628,
+          0.474914,
+          -0.014954
+        ],
+        [
+          0.422888,
+          0.432818,
+          -0.004803
+        ],
+        [
+          0.431239,
+          0.413025,
+          -0.011977
+        ],
+        [
+          0.429652,
+          0.437156,
+          -0.012635
+        ],
+        [
+          0.427016,
+          0.460314,
+          -0.010593
+        ],
+        [
+          0.411007,
+          0.428439,
+          -0.007933
+        ],
+        [
+          0.409637,
+          0.398534,
+          -0.011291
+        ],
+        [
+          0.413573,
+          0.393477,
+          -0.011498
+        ],
+        [
+          0.418904,
+          0.396509,
+          -0.010293
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 36,
+      "timestamp_sec": 1.501,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9941,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.402458,
+          0.502378,
+          0
+        ],
+        [
+          0.421309,
+          0.502635,
+          -0.005087
+        ],
+        [
+          0.441904,
+          0.49346,
+          -0.008237
+        ],
+        [
+          0.454616,
+          0.478697,
+          -0.012133
+        ],
+        [
+          0.453154,
+          0.457495,
+          -0.015289
+        ],
+        [
+          0.442897,
+          0.448879,
+          -0.00276
+        ],
+        [
+          0.450643,
+          0.43837,
+          -0.011882
+        ],
+        [
+          0.445426,
+          0.458743,
+          -0.016952
+        ],
+        [
+          0.440428,
+          0.47659,
+          -0.018057
+        ],
+        [
+          0.433839,
+          0.435811,
+          -0.003925
+        ],
+        [
+          0.443167,
+          0.42534,
+          -0.013489
+        ],
+        [
+          0.437078,
+          0.450891,
+          -0.016678
+        ],
+        [
+          0.431325,
+          0.471406,
+          -0.016029
+        ],
+        [
+          0.4231,
+          0.426913,
+          -0.006385
+        ],
+        [
+          0.43245,
+          0.408608,
+          -0.01432
+        ],
+        [
+          0.429869,
+          0.432977,
+          -0.014628
+        ],
+        [
+          0.426677,
+          0.455704,
+          -0.012167
+        ],
+        [
+          0.41145,
+          0.422969,
+          -0.009416
+        ],
+        [
+          0.410232,
+          0.391245,
+          -0.013375
+        ],
+        [
+          0.414589,
+          0.386525,
+          -0.013967
+        ],
+        [
+          0.420309,
+          0.39098,
+          -0.012976
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 37,
+      "timestamp_sec": 1.543,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9937,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.40297,
+          0.4967,
+          0
+        ],
+        [
+          0.421508,
+          0.497346,
+          -0.005204
+        ],
+        [
+          0.442517,
+          0.487907,
+          -0.008228
+        ],
+        [
+          0.455436,
+          0.472509,
+          -0.01197
+        ],
+        [
+          0.453204,
+          0.45132,
+          -0.014934
+        ],
+        [
+          0.44322,
+          0.443299,
+          -0.002664
+        ],
+        [
+          0.450458,
+          0.433446,
+          -0.01157
+        ],
+        [
+          0.444805,
+          0.453913,
+          -0.016468
+        ],
+        [
+          0.439787,
+          0.471416,
+          -0.017509
+        ],
+        [
+          0.434354,
+          0.429974,
+          -0.003651
+        ],
+        [
+          0.443008,
+          0.420365,
+          -0.013149
+        ],
+        [
+          0.436505,
+          0.445769,
+          -0.016193
+        ],
+        [
+          0.430589,
+          0.466184,
+          -0.015415
+        ],
+        [
+          0.423788,
+          0.420656,
+          -0.005934
+        ],
+        [
+          0.433163,
+          0.402433,
+          -0.013756
+        ],
+        [
+          0.43024,
+          0.426637,
+          -0.013905
+        ],
+        [
+          0.426837,
+          0.449528,
+          -0.011324
+        ],
+        [
+          0.412235,
+          0.416158,
+          -0.008806
+        ],
+        [
+          0.411173,
+          0.385154,
+          -0.012737
+        ],
+        [
+          0.41553,
+          0.380437,
+          -0.013344
+        ],
+        [
+          0.421268,
+          0.385095,
+          -0.012325
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 38,
+      "timestamp_sec": 1.585,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9937,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.403685,
+          0.49151,
+          0
+        ],
+        [
+          0.42194,
+          0.49242,
+          -0.00523
+        ],
+        [
+          0.442853,
+          0.482628,
+          -0.008193
+        ],
+        [
+          0.455857,
+          0.467163,
+          -0.011876
+        ],
+        [
+          0.453424,
+          0.446425,
+          -0.014719
+        ],
+        [
+          0.443867,
+          0.438382,
+          -0.002461
+        ],
+        [
+          0.451048,
+          0.428398,
+          -0.011237
+        ],
+        [
+          0.444877,
+          0.448783,
+          -0.016033
+        ],
+        [
+          0.439567,
+          0.466128,
+          -0.016992
+        ],
+        [
+          0.435047,
+          0.424828,
+          -0.003406
+        ],
+        [
+          0.443543,
+          0.415191,
+          -0.012824
+        ],
+        [
+          0.436766,
+          0.440606,
+          -0.015713
+        ],
+        [
+          0.430605,
+          0.460667,
+          -0.014777
+        ],
+        [
+          0.424561,
+          0.415318,
+          -0.005658
+        ],
+        [
+          0.433859,
+          0.396793,
+          -0.013315
+        ],
+        [
+          0.430663,
+          0.421183,
+          -0.013201
+        ],
+        [
+          0.426946,
+          0.443949,
+          -0.010454
+        ],
+        [
+          0.413119,
+          0.41057,
+          -0.00853
+        ],
+        [
+          0.412075,
+          0.379698,
+          -0.012287
+        ],
+        [
+          0.416507,
+          0.375197,
+          -0.012721
+        ],
+        [
+          0.422279,
+          0.379892,
+          -0.011556
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 39,
+      "timestamp_sec": 1.627,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9922,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.405087,
+          0.484009,
+          0
+        ],
+        [
+          0.423324,
+          0.485873,
+          -0.005357
+        ],
+        [
+          0.444477,
+          0.476817,
+          -0.008232
+        ],
+        [
+          0.457391,
+          0.460887,
+          -0.011805
+        ],
+        [
+          0.454879,
+          0.44045,
+          -0.014566
+        ],
+        [
+          0.445561,
+          0.432644,
+          -0.00223
+        ],
+        [
+          0.45261,
+          0.422315,
+          -0.011055
+        ],
+        [
+          0.446427,
+          0.442281,
+          -0.016168
+        ],
+        [
+          0.440852,
+          0.45995,
+          -0.017373
+        ],
+        [
+          0.437049,
+          0.418196,
+          -0.003105
+        ],
+        [
+          0.445573,
+          0.408461,
+          -0.012521
+        ],
+        [
+          0.438498,
+          0.43334,
+          -0.015771
+        ],
+        [
+          0.432169,
+          0.454017,
+          -0.0151
+        ],
+        [
+          0.42658,
+          0.408001,
+          -0.005303
+        ],
+        [
+          0.43598,
+          0.389663,
+          -0.013021
+        ],
+        [
+          0.432252,
+          0.413076,
+          -0.013294
+        ],
+        [
+          0.428229,
+          0.436007,
+          -0.010749
+        ],
+        [
+          0.415164,
+          0.402635,
+          -0.008135
+        ],
+        [
+          0.414747,
+          0.372417,
+          -0.011998
+        ],
+        [
+          0.418488,
+          0.3677,
+          -0.012533
+        ],
+        [
+          0.423429,
+          0.372614,
+          -0.011408
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 40,
+      "timestamp_sec": 1.668,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9946,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.406666,
+          0.484618,
+          0
+        ],
+        [
+          0.424801,
+          0.485459,
+          -0.005351
+        ],
+        [
+          0.445313,
+          0.4761,
+          -0.008385
+        ],
+        [
+          0.457721,
+          0.459815,
+          -0.012069
+        ],
+        [
+          0.455927,
+          0.437941,
+          -0.014906
+        ],
+        [
+          0.446911,
+          0.431908,
+          -0.002632
+        ],
+        [
+          0.453597,
+          0.420513,
+          -0.01164
+        ],
+        [
+          0.447135,
+          0.440494,
+          -0.01668
+        ],
+        [
+          0.441392,
+          0.458012,
+          -0.017742
+        ],
+        [
+          0.437952,
+          0.417891,
+          -0.003534
+        ],
+        [
+          0.446429,
+          0.407038,
+          -0.013222
+        ],
+        [
+          0.439325,
+          0.43198,
+          -0.016477
+        ],
+        [
+          0.432706,
+          0.45189,
+          -0.015753
+        ],
+        [
+          0.427228,
+          0.407704,
+          -0.005732
+        ],
+        [
+          0.436021,
+          0.388925,
+          -0.013595
+        ],
+        [
+          0.432684,
+          0.412603,
+          -0.013821
+        ],
+        [
+          0.428818,
+          0.434618,
+          -0.011244
+        ],
+        [
+          0.415488,
+          0.40216,
+          -0.008515
+        ],
+        [
+          0.414793,
+          0.371438,
+          -0.012273
+        ],
+        [
+          0.419062,
+          0.367375,
+          -0.01277
+        ],
+        [
+          0.42448,
+          0.37196,
+          -0.011651
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 41,
+      "timestamp_sec": 1.71,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9932,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.407586,
+          0.485496,
+          0
+        ],
+        [
+          0.425764,
+          0.485989,
+          -0.005295
+        ],
+        [
+          0.445866,
+          0.476861,
+          -0.008323
+        ],
+        [
+          0.458328,
+          0.46093,
+          -0.012036
+        ],
+        [
+          0.456942,
+          0.438786,
+          -0.014861
+        ],
+        [
+          0.447696,
+          0.432197,
+          -0.00256
+        ],
+        [
+          0.454486,
+          0.421334,
+          -0.011629
+        ],
+        [
+          0.447853,
+          0.441301,
+          -0.016635
+        ],
+        [
+          0.44203,
+          0.458535,
+          -0.01763
+        ],
+        [
+          0.438822,
+          0.418289,
+          -0.00343
+        ],
+        [
+          0.44682,
+          0.407962,
+          -0.013121
+        ],
+        [
+          0.439829,
+          0.433008,
+          -0.016229
+        ],
+        [
+          0.433437,
+          0.453165,
+          -0.01537
+        ],
+        [
+          0.428183,
+          0.408044,
+          -0.005617
+        ],
+        [
+          0.436474,
+          0.389864,
+          -0.01355
+        ],
+        [
+          0.433025,
+          0.413883,
+          -0.013607
+        ],
+        [
+          0.429137,
+          0.436329,
+          -0.010832
+        ],
+        [
+          0.416413,
+          0.402318,
+          -0.008391
+        ],
+        [
+          0.415612,
+          0.37175,
+          -0.012149
+        ],
+        [
+          0.419567,
+          0.367734,
+          -0.012443
+        ],
+        [
+          0.424613,
+          0.372787,
+          -0.011075
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 42,
+      "timestamp_sec": 1.752,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9927,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.407644,
+          0.48907,
+          0
+        ],
+        [
+          0.426197,
+          0.489262,
+          -0.005323
+        ],
+        [
+          0.446468,
+          0.47979,
+          -0.008299
+        ],
+        [
+          0.458794,
+          0.463161,
+          -0.01197
+        ],
+        [
+          0.457043,
+          0.441056,
+          -0.014652
+        ],
+        [
+          0.447265,
+          0.435216,
+          -0.00259
+        ],
+        [
+          0.454445,
+          0.423803,
+          -0.011959
+        ],
+        [
+          0.448116,
+          0.445312,
+          -0.016971
+        ],
+        [
+          0.442226,
+          0.463044,
+          -0.017797
+        ],
+        [
+          0.438525,
+          0.421382,
+          -0.003496
+        ],
+        [
+          0.44653,
+          0.410012,
+          -0.013317
+        ],
+        [
+          0.439929,
+          0.436048,
+          -0.01627
+        ],
+        [
+          0.433607,
+          0.456733,
+          -0.015229
+        ],
+        [
+          0.427912,
+          0.410974,
+          -0.005779
+        ],
+        [
+          0.436018,
+          0.391906,
+          -0.013939
+        ],
+        [
+          0.432584,
+          0.416583,
+          -0.013814
+        ],
+        [
+          0.428618,
+          0.439475,
+          -0.010748
+        ],
+        [
+          0.416219,
+          0.40491,
+          -0.008667
+        ],
+        [
+          0.415359,
+          0.374013,
+          -0.012536
+        ],
+        [
+          0.419308,
+          0.36996,
+          -0.01274
+        ],
+        [
+          0.424178,
+          0.37494,
+          -0.011218
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 43,
+      "timestamp_sec": 1.793,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9937,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.40533,
+          0.502463,
+          0
+        ],
+        [
+          0.424337,
+          0.501797,
+          -0.00463
+        ],
+        [
+          0.445072,
+          0.492285,
+          -0.007579
+        ],
+        [
+          0.457654,
+          0.476379,
+          -0.011412
+        ],
+        [
+          0.454028,
+          0.456329,
+          -0.014487
+        ],
+        [
+          0.444522,
+          0.445491,
+          -0.002483
+        ],
+        [
+          0.451592,
+          0.437576,
+          -0.01189
+        ],
+        [
+          0.445523,
+          0.460598,
+          -0.017402
+        ],
+        [
+          0.439947,
+          0.478413,
+          -0.018757
+        ],
+        [
+          0.435573,
+          0.43312,
+          -0.004151
+        ],
+        [
+          0.443476,
+          0.422653,
+          -0.014418
+        ],
+        [
+          0.437445,
+          0.451564,
+          -0.018006
+        ],
+        [
+          0.431513,
+          0.474284,
+          -0.01755
+        ],
+        [
+          0.425031,
+          0.424043,
+          -0.007061
+        ],
+        [
+          0.433168,
+          0.406161,
+          -0.015409
+        ],
+        [
+          0.430343,
+          0.432766,
+          -0.015933
+        ],
+        [
+          0.426642,
+          0.457278,
+          -0.013518
+        ],
+        [
+          0.413462,
+          0.419488,
+          -0.010529
+        ],
+        [
+          0.412046,
+          0.387783,
+          -0.014225
+        ],
+        [
+          0.416018,
+          0.383329,
+          -0.014464
+        ],
+        [
+          0.421256,
+          0.387529,
+          -0.013325
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 44,
+      "timestamp_sec": 1.835,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9912,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.404369,
+          0.509074,
+          0
+        ],
+        [
+          0.423784,
+          0.508403,
+          -0.004893
+        ],
+        [
+          0.444573,
+          0.49843,
+          -0.007854
+        ],
+        [
+          0.456756,
+          0.482541,
+          -0.01183
+        ],
+        [
+          0.453291,
+          0.462234,
+          -0.014953
+        ],
+        [
+          0.444297,
+          0.453111,
+          -0.002516
+        ],
+        [
+          0.450657,
+          0.445412,
+          -0.012666
+        ],
+        [
+          0.444192,
+          0.46867,
+          -0.018366
+        ],
+        [
+          0.438655,
+          0.486775,
+          -0.019573
+        ],
+        [
+          0.434998,
+          0.439725,
+          -0.00406
+        ],
+        [
+          0.442185,
+          0.431745,
+          -0.01493
+        ],
+        [
+          0.435785,
+          0.460355,
+          -0.018447
+        ],
+        [
+          0.429664,
+          0.483253,
+          -0.017646
+        ],
+        [
+          0.424074,
+          0.430285,
+          -0.006971
+        ],
+        [
+          0.431654,
+          0.414825,
+          -0.016125
+        ],
+        [
+          0.428047,
+          0.441768,
+          -0.016346
+        ],
+        [
+          0.424,
+          0.466268,
+          -0.0132
+        ],
+        [
+          0.412133,
+          0.425123,
+          -0.010454
+        ],
+        [
+          0.410849,
+          0.394955,
+          -0.014605
+        ],
+        [
+          0.414445,
+          0.391552,
+          -0.014628
+        ],
+        [
+          0.419007,
+          0.397582,
+          -0.012875
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 45,
+      "timestamp_sec": 1.877,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9917,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.404037,
+          0.512807,
+          0
+        ],
+        [
+          0.423523,
+          0.511993,
+          -0.005303
+        ],
+        [
+          0.444124,
+          0.502996,
+          -0.008697
+        ],
+        [
+          0.456377,
+          0.487457,
+          -0.012996
+        ],
+        [
+          0.453017,
+          0.466643,
+          -0.016384
+        ],
+        [
+          0.444107,
+          0.45646,
+          -0.003171
+        ],
+        [
+          0.450047,
+          0.449647,
+          -0.013761
+        ],
+        [
+          0.442904,
+          0.473922,
+          -0.019621
+        ],
+        [
+          0.437253,
+          0.492472,
+          -0.020863
+        ],
+        [
+          0.434521,
+          0.443318,
+          -0.004551
+        ],
+        [
+          0.441191,
+          0.43635,
+          -0.015641
+        ],
+        [
+          0.434513,
+          0.465556,
+          -0.019029
+        ],
+        [
+          0.428672,
+          0.487955,
+          -0.018136
+        ],
+        [
+          0.423252,
+          0.434625,
+          -0.007351
+        ],
+        [
+          0.430485,
+          0.419545,
+          -0.016685
+        ],
+        [
+          0.426936,
+          0.446909,
+          -0.016662
+        ],
+        [
+          0.423243,
+          0.470966,
+          -0.013344
+        ],
+        [
+          0.411127,
+          0.43011,
+          -0.010739
+        ],
+        [
+          0.409816,
+          0.39948,
+          -0.01498
+        ],
+        [
+          0.41361,
+          0.396721,
+          -0.014875
+        ],
+        [
+          0.418368,
+          0.40337,
+          -0.012996
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 46,
+      "timestamp_sec": 1.919,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9927,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.403985,
+          0.51574,
+          0
+        ],
+        [
+          0.423084,
+          0.514711,
+          -0.005109
+        ],
+        [
+          0.443766,
+          0.504889,
+          -0.008409
+        ],
+        [
+          0.456462,
+          0.489212,
+          -0.012602
+        ],
+        [
+          0.453811,
+          0.468193,
+          -0.015916
+        ],
+        [
+          0.443982,
+          0.459608,
+          -0.003209
+        ],
+        [
+          0.450231,
+          0.451886,
+          -0.013621
+        ],
+        [
+          0.443407,
+          0.476061,
+          -0.019219
+        ],
+        [
+          0.437685,
+          0.494917,
+          -0.020343
+        ],
+        [
+          0.434503,
+          0.446437,
+          -0.004711
+        ],
+        [
+          0.44196,
+          0.438024,
+          -0.015858
+        ],
+        [
+          0.435235,
+          0.466735,
+          -0.019219
+        ],
+        [
+          0.429173,
+          0.489177,
+          -0.018329
+        ],
+        [
+          0.423326,
+          0.43767,
+          -0.007613
+        ],
+        [
+          0.430845,
+          0.42165,
+          -0.016947
+        ],
+        [
+          0.427469,
+          0.448586,
+          -0.017134
+        ],
+        [
+          0.423963,
+          0.472466,
+          -0.014089
+        ],
+        [
+          0.411341,
+          0.433446,
+          -0.011085
+        ],
+        [
+          0.408851,
+          0.402757,
+          -0.015436
+        ],
+        [
+          0.412748,
+          0.39887,
+          -0.015799
+        ],
+        [
+          0.418283,
+          0.404024,
+          -0.014417
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 47,
+      "timestamp_sec": 1.96,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9946,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.404731,
+          0.516974,
+          0
+        ],
+        [
+          0.423819,
+          0.515687,
+          -0.004916
+        ],
+        [
+          0.444535,
+          0.505612,
+          -0.008101
+        ],
+        [
+          0.457281,
+          0.489525,
+          -0.012143
+        ],
+        [
+          0.45444,
+          0.468633,
+          -0.015273
+        ],
+        [
+          0.444629,
+          0.459631,
+          -0.003039
+        ],
+        [
+          0.450903,
+          0.451704,
+          -0.012873
+        ],
+        [
+          0.444044,
+          0.47549,
+          -0.018097
+        ],
+        [
+          0.438171,
+          0.49444,
+          -0.019039
+        ],
+        [
+          0.435221,
+          0.44668,
+          -0.004527
+        ],
+        [
+          0.442727,
+          0.438346,
+          -0.015003
+        ],
+        [
+          0.435985,
+          0.466207,
+          -0.018003
+        ],
+        [
+          0.429728,
+          0.488195,
+          -0.016944
+        ],
+        [
+          0.424095,
+          0.438056,
+          -0.007354
+        ],
+        [
+          0.431712,
+          0.421879,
+          -0.016085
+        ],
+        [
+          0.428477,
+          0.448081,
+          -0.015956
+        ],
+        [
+          0.424912,
+          0.47178,
+          -0.012849
+        ],
+        [
+          0.412123,
+          0.433952,
+          -0.010749
+        ],
+        [
+          0.409677,
+          0.402891,
+          -0.014861
+        ],
+        [
+          0.413607,
+          0.398757,
+          -0.015026
+        ],
+        [
+          0.419019,
+          0.404008,
+          -0.013508
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 48,
+      "timestamp_sec": 2.002,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9937,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.404671,
+          0.516587,
+          0
+        ],
+        [
+          0.423914,
+          0.515099,
+          -0.004856
+        ],
+        [
+          0.444642,
+          0.504826,
+          -0.008094
+        ],
+        [
+          0.457393,
+          0.489267,
+          -0.012282
+        ],
+        [
+          0.454577,
+          0.468154,
+          -0.015658
+        ],
+        [
+          0.44473,
+          0.459287,
+          -0.002788
+        ],
+        [
+          0.451092,
+          0.451869,
+          -0.012858
+        ],
+        [
+          0.444613,
+          0.475107,
+          -0.018352
+        ],
+        [
+          0.438727,
+          0.493916,
+          -0.019423
+        ],
+        [
+          0.435374,
+          0.446444,
+          -0.004415
+        ],
+        [
+          0.443143,
+          0.438084,
+          -0.015058
+        ],
+        [
+          0.436387,
+          0.466014,
+          -0.018352
+        ],
+        [
+          0.429887,
+          0.488207,
+          -0.017423
+        ],
+        [
+          0.424237,
+          0.43792,
+          -0.007412
+        ],
+        [
+          0.431683,
+          0.421761,
+          -0.016352
+        ],
+        [
+          0.428717,
+          0.447536,
+          -0.016623
+        ],
+        [
+          0.425247,
+          0.471184,
+          -0.01367
+        ],
+        [
+          0.412243,
+          0.433886,
+          -0.010958
+        ],
+        [
+          0.409904,
+          0.402095,
+          -0.015223
+        ],
+        [
+          0.414034,
+          0.398718,
+          -0.015505
+        ],
+        [
+          0.419388,
+          0.405391,
+          -0.014011
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 49,
+      "timestamp_sec": 2.044,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9937,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.404568,
+          0.515987,
+          0
+        ],
+        [
+          0.42381,
+          0.51441,
+          -0.004812
+        ],
+        [
+          0.444613,
+          0.504031,
+          -0.007969
+        ],
+        [
+          0.457366,
+          0.488455,
+          -0.012059
+        ],
+        [
+          0.454552,
+          0.467813,
+          -0.015312
+        ],
+        [
+          0.444776,
+          0.458697,
+          -0.002724
+        ],
+        [
+          0.450976,
+          0.450876,
+          -0.012707
+        ],
+        [
+          0.444463,
+          0.473818,
+          -0.0182
+        ],
+        [
+          0.438557,
+          0.492755,
+          -0.019285
+        ],
+        [
+          0.435303,
+          0.445834,
+          -0.004335
+        ],
+        [
+          0.443005,
+          0.437203,
+          -0.014841
+        ],
+        [
+          0.436189,
+          0.464656,
+          -0.018094
+        ],
+        [
+          0.429699,
+          0.48678,
+          -0.017175
+        ],
+        [
+          0.424117,
+          0.437316,
+          -0.007308
+        ],
+        [
+          0.431468,
+          0.420974,
+          -0.016008
+        ],
+        [
+          0.428593,
+          0.445979,
+          -0.016267
+        ],
+        [
+          0.425193,
+          0.469236,
+          -0.013379
+        ],
+        [
+          0.412063,
+          0.43329,
+          -0.010845
+        ],
+        [
+          0.409912,
+          0.401751,
+          -0.014935
+        ],
+        [
+          0.413886,
+          0.398244,
+          -0.015195
+        ],
+        [
+          0.419048,
+          0.404796,
+          -0.013733
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 50,
+      "timestamp_sec": 2.085,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9932,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.404704,
+          0.5155,
+          0
+        ],
+        [
+          0.423773,
+          0.514124,
+          -0.004882
+        ],
+        [
+          0.444605,
+          0.503402,
+          -0.008012
+        ],
+        [
+          0.457307,
+          0.487937,
+          -0.012062
+        ],
+        [
+          0.454579,
+          0.467189,
+          -0.01526
+        ],
+        [
+          0.444635,
+          0.458318,
+          -0.002908
+        ],
+        [
+          0.450834,
+          0.450714,
+          -0.012873
+        ],
+        [
+          0.44446,
+          0.473938,
+          -0.018293
+        ],
+        [
+          0.438809,
+          0.492905,
+          -0.019339
+        ],
+        [
+          0.435156,
+          0.445342,
+          -0.004482
+        ],
+        [
+          0.442874,
+          0.437214,
+          -0.014966
+        ],
+        [
+          0.436278,
+          0.464966,
+          -0.01814
+        ],
+        [
+          0.429836,
+          0.486823,
+          -0.017199
+        ],
+        [
+          0.423975,
+          0.43679,
+          -0.007418
+        ],
+        [
+          0.431475,
+          0.420133,
+          -0.016129
+        ],
+        [
+          0.42863,
+          0.445536,
+          -0.016259
+        ],
+        [
+          0.425153,
+          0.468791,
+          -0.013296
+        ],
+        [
+          0.411872,
+          0.432729,
+          -0.010921
+        ],
+        [
+          0.409803,
+          0.40102,
+          -0.015095
+        ],
+        [
+          0.413879,
+          0.397766,
+          -0.015342
+        ],
+        [
+          0.419128,
+          0.404452,
+          -0.013861
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 51,
+      "timestamp_sec": 2.127,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9927,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.404504,
+          0.516322,
+          0
+        ],
+        [
+          0.423592,
+          0.51446,
+          -0.004687
+        ],
+        [
+          0.4443,
+          0.5034,
+          -0.007726
+        ],
+        [
+          0.457083,
+          0.487796,
+          -0.011686
+        ],
+        [
+          0.455017,
+          0.466932,
+          -0.014817
+        ],
+        [
+          0.444453,
+          0.458168,
+          -0.00292
+        ],
+        [
+          0.451183,
+          0.449477,
+          -0.012804
+        ],
+        [
+          0.445181,
+          0.473132,
+          -0.018265
+        ],
+        [
+          0.439644,
+          0.492432,
+          -0.019359
+        ],
+        [
+          0.43492,
+          0.445828,
+          -0.004543
+        ],
+        [
+          0.442881,
+          0.436714,
+          -0.015017
+        ],
+        [
+          0.436758,
+          0.465026,
+          -0.018418
+        ],
+        [
+          0.430632,
+          0.487324,
+          -0.017665
+        ],
+        [
+          0.423576,
+          0.437432,
+          -0.007467
+        ],
+        [
+          0.431303,
+          0.42021,
+          -0.016146
+        ],
+        [
+          0.428704,
+          0.446002,
+          -0.0165
+        ],
+        [
+          0.425453,
+          0.46946,
+          -0.013734
+        ],
+        [
+          0.411375,
+          0.433527,
+          -0.010915
+        ],
+        [
+          0.409525,
+          0.402042,
+          -0.015017
+        ],
+        [
+          0.413475,
+          0.397994,
+          -0.015358
+        ],
+        [
+          0.418658,
+          0.403424,
+          -0.013993
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 52,
+      "timestamp_sec": 2.169,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9897,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.404297,
+          0.517133,
+          0
+        ],
+        [
+          0.423704,
+          0.514895,
+          -0.004642
+        ],
+        [
+          0.44404,
+          0.503609,
+          -0.007727
+        ],
+        [
+          0.456798,
+          0.488456,
+          -0.011799
+        ],
+        [
+          0.455649,
+          0.467269,
+          -0.015092
+        ],
+        [
+          0.443894,
+          0.459304,
+          -0.003232
+        ],
+        [
+          0.451321,
+          0.449297,
+          -0.013349
+        ],
+        [
+          0.446236,
+          0.472473,
+          -0.01893
+        ],
+        [
+          0.441353,
+          0.491898,
+          -0.020029
+        ],
+        [
+          0.434268,
+          0.447279,
+          -0.004885
+        ],
+        [
+          0.442697,
+          0.437463,
+          -0.015595
+        ],
+        [
+          0.437478,
+          0.465655,
+          -0.019187
+        ],
+        [
+          0.431922,
+          0.488609,
+          -0.018508
+        ],
+        [
+          0.422867,
+          0.439041,
+          -0.007833
+        ],
+        [
+          0.43085,
+          0.422162,
+          -0.0168
+        ],
+        [
+          0.428902,
+          0.448018,
+          -0.017456
+        ],
+        [
+          0.425902,
+          0.471938,
+          -0.014753
+        ],
+        [
+          0.410588,
+          0.434808,
+          -0.011278
+        ],
+        [
+          0.409222,
+          0.403346,
+          -0.015712
+        ],
+        [
+          0.413715,
+          0.400746,
+          -0.016215
+        ],
+        [
+          0.419094,
+          0.408074,
+          -0.014823
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 53,
+      "timestamp_sec": 2.211,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9883,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.404183,
+          0.519852,
+          0
+        ],
+        [
+          0.423999,
+          0.51684,
+          -0.004279
+        ],
+        [
+          0.443195,
+          0.505316,
+          -0.007363
+        ],
+        [
+          0.45591,
+          0.491185,
+          -0.011507
+        ],
+        [
+          0.45665,
+          0.469758,
+          -0.014912
+        ],
+        [
+          0.442266,
+          0.460201,
+          -0.003512
+        ],
+        [
+          0.451078,
+          0.447955,
+          -0.013781
+        ],
+        [
+          0.448516,
+          0.471666,
+          -0.019843
+        ],
+        [
+          0.445348,
+          0.491973,
+          -0.021417
+        ],
+        [
+          0.432707,
+          0.449673,
+          -0.005392
+        ],
+        [
+          0.441728,
+          0.439128,
+          -0.016346
+        ],
+        [
+          0.43916,
+          0.467667,
+          -0.020741
+        ],
+        [
+          0.435128,
+          0.491306,
+          -0.020834
+        ],
+        [
+          0.421597,
+          0.442547,
+          -0.008464
+        ],
+        [
+          0.429873,
+          0.424656,
+          -0.017104
+        ],
+        [
+          0.429966,
+          0.450379,
+          -0.018281
+        ],
+        [
+          0.428236,
+          0.474884,
+          -0.016311
+        ],
+        [
+          0.409647,
+          0.439788,
+          -0.012067
+        ],
+        [
+          0.408275,
+          0.409331,
+          -0.016521
+        ],
+        [
+          0.41289,
+          0.406826,
+          -0.01743
+        ],
+        [
+          0.418246,
+          0.414246,
+          -0.016497
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 54,
+      "timestamp_sec": 2.252,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9912,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.404417,
+          0.525789,
+          0
+        ],
+        [
+          0.42407,
+          0.52228,
+          -0.004471
+        ],
+        [
+          0.442609,
+          0.508841,
+          -0.007352
+        ],
+        [
+          0.455106,
+          0.495834,
+          -0.01136
+        ],
+        [
+          0.458079,
+          0.476947,
+          -0.014693
+        ],
+        [
+          0.441731,
+          0.463197,
+          -0.003339
+        ],
+        [
+          0.450643,
+          0.448799,
+          -0.013836
+        ],
+        [
+          0.450713,
+          0.47175,
+          -0.02025
+        ],
+        [
+          0.449362,
+          0.491755,
+          -0.022068
+        ],
+        [
+          0.431622,
+          0.454642,
+          -0.005494
+        ],
+        [
+          0.440109,
+          0.441624,
+          -0.01706
+        ],
+        [
+          0.440319,
+          0.469567,
+          -0.022023
+        ],
+        [
+          0.437954,
+          0.493405,
+          -0.022412
+        ],
+        [
+          0.42009,
+          0.450038,
+          -0.008925
+        ],
+        [
+          0.42746,
+          0.433101,
+          -0.018455
+        ],
+        [
+          0.429438,
+          0.458579,
+          -0.020273
+        ],
+        [
+          0.429064,
+          0.482403,
+          -0.018467
+        ],
+        [
+          0.407808,
+          0.449284,
+          -0.012887
+        ],
+        [
+          0.406394,
+          0.418914,
+          -0.018112
+        ],
+        [
+          0.411085,
+          0.41675,
+          -0.019176
+        ],
+        [
+          0.416349,
+          0.423902,
+          -0.018192
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 55,
+      "timestamp_sec": 2.294,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9922,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.406758,
+          0.551063,
+          0
+        ],
+        [
+          0.426211,
+          0.545131,
+          -0.004859
+        ],
+        [
+          0.443151,
+          0.530266,
+          -0.009442
+        ],
+        [
+          0.454534,
+          0.518527,
+          -0.014952
+        ],
+        [
+          0.461365,
+          0.50888,
+          -0.020293
+        ],
+        [
+          0.438804,
+          0.482368,
+          -0.008017
+        ],
+        [
+          0.449175,
+          0.472816,
+          -0.019854
+        ],
+        [
+          0.452298,
+          0.494968,
+          -0.027763
+        ],
+        [
+          0.452974,
+          0.514625,
+          -0.031211
+        ],
+        [
+          0.427038,
+          0.479611,
+          -0.011037
+        ],
+        [
+          0.436258,
+          0.46828,
+          -0.02302
+        ],
+        [
+          0.441158,
+          0.494906,
+          -0.028304
+        ],
+        [
+          0.442599,
+          0.517349,
+          -0.029859
+        ],
+        [
+          0.414389,
+          0.48292,
+          -0.015065
+        ],
+        [
+          0.422303,
+          0.472953,
+          -0.025172
+        ],
+        [
+          0.427977,
+          0.498579,
+          -0.026592
+        ],
+        [
+          0.430105,
+          0.519914,
+          -0.025262
+        ],
+        [
+          0.401757,
+          0.490745,
+          -0.019651
+        ],
+        [
+          0.40374,
+          0.473141,
+          -0.025532
+        ],
+        [
+          0.41015,
+          0.480893,
+          -0.025645
+        ],
+        [
+          0.415529,
+          0.492362,
+          -0.024383
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 56,
+      "timestamp_sec": 2.336,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9976,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.40739,
+          0.567187,
+          0
+        ],
+        [
+          0.425473,
+          0.563782,
+          -0.004204
+        ],
+        [
+          0.440403,
+          0.553872,
+          -0.009392
+        ],
+        [
+          0.451034,
+          0.545926,
+          -0.015409
+        ],
+        [
+          0.458945,
+          0.539291,
+          -0.021477
+        ],
+        [
+          0.435004,
+          0.497857,
+          -0.009928
+        ],
+        [
+          0.446347,
+          0.500455,
+          -0.021171
+        ],
+        [
+          0.45123,
+          0.521488,
+          -0.029227
+        ],
+        [
+          0.45382,
+          0.53979,
+          -0.033347
+        ],
+        [
+          0.423151,
+          0.494993,
+          -0.013217
+        ],
+        [
+          0.433829,
+          0.502849,
+          -0.023965
+        ],
+        [
+          0.439517,
+          0.526565,
+          -0.029003
+        ],
+        [
+          0.44219,
+          0.545854,
+          -0.031165
+        ],
+        [
+          0.410746,
+          0.501461,
+          -0.017112
+        ],
+        [
+          0.419467,
+          0.509627,
+          -0.026453
+        ],
+        [
+          0.425727,
+          0.532754,
+          -0.027902
+        ],
+        [
+          0.42956,
+          0.550555,
+          -0.027208
+        ],
+        [
+          0.399307,
+          0.513884,
+          -0.021436
+        ],
+        [
+          0.403966,
+          0.516415,
+          -0.026861
+        ],
+        [
+          0.409202,
+          0.527022,
+          -0.026596
+        ],
+        [
+          0.413479,
+          0.53689,
+          -0.025332
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 57,
+      "timestamp_sec": 2.377,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.998,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.406644,
+          0.589675,
+          0
+        ],
+        [
+          0.425077,
+          0.586461,
+          -0.006203
+        ],
+        [
+          0.439044,
+          0.581026,
+          -0.013351
+        ],
+        [
+          0.448873,
+          0.577339,
+          -0.020957
+        ],
+        [
+          0.458072,
+          0.577648,
+          -0.028955
+        ],
+        [
+          0.437107,
+          0.525321,
+          -0.013666
+        ],
+        [
+          0.444119,
+          0.547162,
+          -0.026111
+        ],
+        [
+          0.447749,
+          0.566496,
+          -0.03512
+        ],
+        [
+          0.449477,
+          0.579636,
+          -0.040312
+        ],
+        [
+          0.423492,
+          0.526098,
+          -0.016835
+        ],
+        [
+          0.431649,
+          0.552663,
+          -0.028325
+        ],
+        [
+          0.434998,
+          0.574427,
+          -0.03386
+        ],
+        [
+          0.43547,
+          0.589366,
+          -0.036971
+        ],
+        [
+          0.409588,
+          0.536836,
+          -0.020652
+        ],
+        [
+          0.416119,
+          0.559214,
+          -0.031226
+        ],
+        [
+          0.421686,
+          0.581494,
+          -0.03302
+        ],
+        [
+          0.425044,
+          0.596604,
+          -0.032715
+        ],
+        [
+          0.397602,
+          0.553254,
+          -0.025042
+        ],
+        [
+          0.401448,
+          0.563684,
+          -0.031322
+        ],
+        [
+          0.405469,
+          0.574356,
+          -0.031188
+        ],
+        [
+          0.408637,
+          0.582087,
+          -0.030196
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 58,
+      "timestamp_sec": 2.419,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9688,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.410461,
+          0.595708,
+          0
+        ],
+        [
+          0.424435,
+          0.596696,
+          -0.005529
+        ],
+        [
+          0.435525,
+          0.602186,
+          -0.012591
+        ],
+        [
+          0.444094,
+          0.61215,
+          -0.020011
+        ],
+        [
+          0.454,
+          0.624308,
+          -0.028175
+        ],
+        [
+          0.430599,
+          0.567189,
+          -0.015639
+        ],
+        [
+          0.438245,
+          0.591339,
+          -0.026597
+        ],
+        [
+          0.441873,
+          0.614357,
+          -0.034434
+        ],
+        [
+          0.444851,
+          0.632217,
+          -0.038825
+        ],
+        [
+          0.417642,
+          0.569438,
+          -0.018115
+        ],
+        [
+          0.423814,
+          0.602015,
+          -0.027558
+        ],
+        [
+          0.428153,
+          0.626913,
+          -0.031223
+        ],
+        [
+          0.431781,
+          0.644993,
+          -0.03369
+        ],
+        [
+          0.405614,
+          0.577834,
+          -0.020918
+        ],
+        [
+          0.41066,
+          0.603921,
+          -0.030026
+        ],
+        [
+          0.415456,
+          0.626804,
+          -0.030679
+        ],
+        [
+          0.41939,
+          0.644002,
+          -0.029971
+        ],
+        [
+          0.396612,
+          0.588972,
+          -0.024202
+        ],
+        [
+          0.397262,
+          0.603894,
+          -0.029282
+        ],
+        [
+          0.400162,
+          0.616861,
+          -0.02803
+        ],
+        [
+          0.402847,
+          0.62861,
+          -0.026524
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 59,
+      "timestamp_sec": 2.461,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9844,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.388399,
+          0.670022,
+          0
+        ],
+        [
+          0.409304,
+          0.675576,
+          -0.005307
+        ],
+        [
+          0.428249,
+          0.698584,
+          -0.008843
+        ],
+        [
+          0.439942,
+          0.722176,
+          -0.011275
+        ],
+        [
+          0.448498,
+          0.741369,
+          -0.013462
+        ],
+        [
+          0.421533,
+          0.693117,
+          -0.013108
+        ],
+        [
+          0.428303,
+          0.722167,
+          -0.01878
+        ],
+        [
+          0.43276,
+          0.742999,
+          -0.021411
+        ],
+        [
+          0.436092,
+          0.761284,
+          -0.023131
+        ],
+        [
+          0.408204,
+          0.701469,
+          -0.013815
+        ],
+        [
+          0.413061,
+          0.738782,
+          -0.018883
+        ],
+        [
+          0.417172,
+          0.765493,
+          -0.020728
+        ],
+        [
+          0.420425,
+          0.788043,
+          -0.022675
+        ],
+        [
+          0.395389,
+          0.709091,
+          -0.014646
+        ],
+        [
+          0.400601,
+          0.745883,
+          -0.020511
+        ],
+        [
+          0.405176,
+          0.771275,
+          -0.022151
+        ],
+        [
+          0.409694,
+          0.791564,
+          -0.023245
+        ],
+        [
+          0.383864,
+          0.715243,
+          -0.015591
+        ],
+        [
+          0.386956,
+          0.745101,
+          -0.020181
+        ],
+        [
+          0.390486,
+          0.764903,
+          -0.021365
+        ],
+        [
+          0.39427,
+          0.78178,
+          -0.022288
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 60,
+      "timestamp_sec": 2.502,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9927,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.387945,
+          0.731385,
+          0
+        ],
+        [
+          0.409439,
+          0.735252,
+          -0.00672
+        ],
+        [
+          0.426606,
+          0.7612,
+          -0.010949
+        ],
+        [
+          0.43504,
+          0.787377,
+          -0.013418
+        ],
+        [
+          0.442174,
+          0.807484,
+          -0.015608
+        ],
+        [
+          0.415657,
+          0.761449,
+          -0.018603
+        ],
+        [
+          0.421875,
+          0.793502,
+          -0.025462
+        ],
+        [
+          0.425395,
+          0.817747,
+          -0.02821
+        ],
+        [
+          0.427829,
+          0.839017,
+          -0.02967
+        ],
+        [
+          0.400854,
+          0.771444,
+          -0.018603
+        ],
+        [
+          0.405356,
+          0.812738,
+          -0.024775
+        ],
+        [
+          0.409462,
+          0.842447,
+          -0.026901
+        ],
+        [
+          0.412642,
+          0.867111,
+          -0.028661
+        ],
+        [
+          0.388458,
+          0.779812,
+          -0.01842
+        ],
+        [
+          0.393408,
+          0.818458,
+          -0.024883
+        ],
+        [
+          0.397871,
+          0.844626,
+          -0.027158
+        ],
+        [
+          0.40238,
+          0.866056,
+          -0.028382
+        ],
+        [
+          0.378711,
+          0.786444,
+          -0.018345
+        ],
+        [
+          0.381726,
+          0.818897,
+          -0.02353
+        ],
+        [
+          0.384622,
+          0.839269,
+          -0.025205
+        ],
+        [
+          0.387851,
+          0.857252,
+          -0.026257
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 61,
+      "timestamp_sec": 2.544,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.9937,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.382776,
+          0.78377,
+          0
+        ],
+        [
+          0.405617,
+          0.788546,
+          -0.006745
+        ],
+        [
+          0.421202,
+          0.818393,
+          -0.010895
+        ],
+        [
+          0.428366,
+          0.849322,
+          -0.013271
+        ],
+        [
+          0.435079,
+          0.872558,
+          -0.015564
+        ],
+        [
+          0.409834,
+          0.827604,
+          -0.018972
+        ],
+        [
+          0.414862,
+          0.866056,
+          -0.025689
+        ],
+        [
+          0.418294,
+          0.89261,
+          -0.02842
+        ],
+        [
+          0.420906,
+          0.915347,
+          -0.029927
+        ],
+        [
+          0.395236,
+          0.837653,
+          -0.019005
+        ],
+        [
+          0.398275,
+          0.883335,
+          -0.025187
+        ],
+        [
+          0.401771,
+          0.915115,
+          -0.028092
+        ],
+        [
+          0.4049,
+          0.940724,
+          -0.030452
+        ],
+        [
+          0.383627,
+          0.845106,
+          -0.018797
+        ],
+        [
+          0.386427,
+          0.887527,
+          -0.025231
+        ],
+        [
+          0.390411,
+          0.916311,
+          -0.028857
+        ],
+        [
+          0.394861,
+          0.939512,
+          -0.031173
+        ],
+        [
+          0.375168,
+          0.850088,
+          -0.018655
+        ],
+        [
+          0.375833,
+          0.885589,
+          -0.024204
+        ],
+        [
+          0.377978,
+          0.907869,
+          -0.026935
+        ],
+        [
+          0.38095,
+          0.926453,
+          -0.028857
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 62,
+      "timestamp_sec": 2.586,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Left",
+      "confidence": 0.8604,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "ok",
+      "landmarks": [
+        [
+          0.369629,
+          0.796322,
+          0
+        ],
+        [
+          0.390621,
+          0.81501,
+          0.00232
+        ],
+        [
+          0.405192,
+          0.844712,
+          0.004859
+        ],
+        [
+          0.414423,
+          0.870521,
+          0.006842
+        ],
+        [
+          0.417681,
+          0.893015,
+          0.008935
+        ],
+        [
+          0.404977,
+          0.834071,
+          0.007444
+        ],
+        [
+          0.413115,
+          0.869627,
+          0.008323
+        ],
+        [
+          0.415956,
+          0.895751,
+          0.007515
+        ],
+        [
+          0.417023,
+          0.916365,
+          0.006952
+        ],
+        [
+          0.397018,
+          0.841406,
+          0.006576
+        ],
+        [
+          0.401773,
+          0.880806,
+          0.008423
+        ],
+        [
+          0.403426,
+          0.908723,
+          0.006189
+        ],
+        [
+          0.403997,
+          0.930397,
+          0.004139
+        ],
+        [
+          0.387301,
+          0.848288,
+          0.005748
+        ],
+        [
+          0.389119,
+          0.887343,
+          0.006862
+        ],
+        [
+          0.390929,
+          0.91527,
+          0.00441
+        ],
+        [
+          0.391119,
+          0.936304,
+          0.002236
+        ],
+        [
+          0.37644,
+          0.854092,
+          0.005241
+        ],
+        [
+          0.377945,
+          0.887145,
+          0.006481
+        ],
+        [
+          0.378829,
+          0.90927,
+          0.00626
+        ],
+        [
+          0.378994,
+          0.927031,
+          0.005883
+        ]
+      ]
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 63,
+      "timestamp_sec": 2.628,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 64,
+      "timestamp_sec": 2.669,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 65,
+      "timestamp_sec": 2.711,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 66,
+      "timestamp_sec": 2.753,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 67,
+      "timestamp_sec": 2.794,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 68,
+      "timestamp_sec": 2.836,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 69,
+      "timestamp_sec": 2.878,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 70,
+      "timestamp_sec": 2.92,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 71,
+      "timestamp_sec": 2.961,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 72,
+      "timestamp_sec": 3.003,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 73,
+      "timestamp_sec": 3.045,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 74,
+      "timestamp_sec": 3.086,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 75,
+      "timestamp_sec": 3.128,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 76,
+      "timestamp_sec": 3.17,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 77,
+      "timestamp_sec": 3.212,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 78,
+      "timestamp_sec": 3.253,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 79,
+      "timestamp_sec": 3.295,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 80,
+      "timestamp_sec": 3.337,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 81,
+      "timestamp_sec": 3.378,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 82,
+      "timestamp_sec": 3.42,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 83,
+      "timestamp_sec": 3.462,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 84,
+      "timestamp_sec": 3.503,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 85,
+      "timestamp_sec": 3.545,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 86,
+      "timestamp_sec": 3.587,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 87,
+      "timestamp_sec": 3.629,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 88,
+      "timestamp_sec": 3.67,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 89,
+      "timestamp_sec": 3.712,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 90,
+      "timestamp_sec": 3.754,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 91,
+      "timestamp_sec": 3.795,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 92,
+      "timestamp_sec": 3.837,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 93,
+      "timestamp_sec": 3.879,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 94,
+      "timestamp_sec": 3.921,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 95,
+      "timestamp_sec": 3.962,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 96,
+      "timestamp_sec": 4.004,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 97,
+      "timestamp_sec": 4.046,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 98,
+      "timestamp_sec": 4.087,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 99,
+      "timestamp_sec": 4.129,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 100,
+      "timestamp_sec": 4.171,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 101,
+      "timestamp_sec": 4.213,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 102,
+      "timestamp_sec": 4.254,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 103,
+      "timestamp_sec": 4.296,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 104,
+      "timestamp_sec": 4.338,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 105,
+      "timestamp_sec": 4.379,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 106,
+      "timestamp_sec": 4.421,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 107,
+      "timestamp_sec": 4.463,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 108,
+      "timestamp_sec": 4.504,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 109,
+      "timestamp_sec": 4.546,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 110,
+      "timestamp_sec": 4.588,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 111,
+      "timestamp_sec": 4.63,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 112,
+      "timestamp_sec": 4.671,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 113,
+      "timestamp_sec": 4.713,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 114,
+      "timestamp_sec": 4.755,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 115,
+      "timestamp_sec": 4.796,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 116,
+      "timestamp_sec": 4.838,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    },
+    {
+      "letter_label": "Ư",
+      "video_id": "D0515N",
+      "source_video_file": "backend/data/media_cache/videos/D0515N.mp4",
+      "frame_index": 117,
+      "timestamp_sec": 4.88,
+      "signer_id": "qipedc_signer_01",
+      "phase": "manual_review_needed",
+      "handedness": "Right",
+      "confidence": 0,
+      "coordinate_type": "normalized_mediapipe_hands",
+      "quality_status": "no_hand_detected",
+      "landmarks": null
+    }
+  ]
+}

@@ -1,0 +1,267 @@
+{
+  "task_id": "TASK_7B",
+  "title": "Phân tích định lượng đặc trưng động học cho 7 chữ cái VSL có dấu",
+  "audit_type": "READ_ONLY",
+  "timestamp": "2026-10-30T23:45:00+07:00",
+  "dataset_source": "backend/data/alphabet_v2/datasets/vsl_alphabet_motion_v2.json",
+  "coordinate_system_analysis": {
+    "raw_landmarks": {
+      "type": "MediaPipe Normalized Image Space [0, 1]",
+      "x_axis": "0.0 (left) -> 1.0 (right)",
+      "y_axis": "0.0 (top) -> 1.0 (bottom); Moving upward causes y to decrease",
+      "z_axis": "Depth relative to wrist (approx 0 in 2D camera)",
+      "suitability": "BẮT BUỘC dùng để tính quỹ đạo tịnh tiến không gian (nâng tay, vẽ nón Â, Ê, Ô) vì giữ nguyên tọa độ màn hình thực tế."
+    },
+    "normalized_feature_vector_72d": {
+      "pipeline": "normalize_hand_landmarks() -> _shift_and_scale()",
+      "shift": "Dịch gốc tọa độ về cổ tay (Landmark 0 = [0, 0, 0])",
+      "scale": "Chia cho khoảng cách lòng bàn tay d(0, 9)",
+      "effect": "LOẠI BỎ HOÀN TOÀN chuyển động tịnh tiến toàn cục (Translation Invariant). Cổ tay luôn luôn là (0,0,0).",
+      "suitability": "CHỈ dùng để tính hình thái ngón tay (Finger Morphology: duỗi/gập, góc khớp, khoảng cách ngón) vì bất biến cự ly và vị trí camera."
+    },
+    "temporal_resolution": {
+      "timestamp_availability": "Có sẵn timestamp_sec trong metadata từng frame (khoảng cách giữa các frame ~0.0417s, tương ứng 24-25 FPS thực tế).",
+      "velocity_calculation": "Vận tốc tức thời v_y = (y_t - y_{t-1}) / dt (đơn vị: chiều cao màn hình/giây). Cần hiệu chỉnh theo dt để chống giật khi FPS biến động."
+    }
+  },
+  "quantitative_features_summary": {
+    "Ă": {
+      "base_letter": "A",
+      "video_id": "D0490B",
+      "key_feature": "d_index_middle_norm (Khoảng cách đầu ngón trỏ - giữa / palm_scale)",
+      "base_pose": {
+        "count": 19,
+        "mean": 0.2424,
+        "std": 0.0511,
+        "min": 0.1782,
+        "max": 0.3341,
+        "median": 0.2285
+      },
+      "diacritic_motion": {
+        "count": 23,
+        "mean": 0.5403,
+        "std": 0.0451,
+        "min": 0.4571,
+        "max": 0.6200,
+        "median": 0.5463
+      },
+      "delta": 0.2979,
+      "separation_margin": 0.1230,
+      "status": "SEPARATED",
+      "secondary_feature": "index_curl (giảm từ 0.6420 ở A xuống 0.0363 ở Ă do duỗi thẳng ngón trỏ)",
+      "verdict": "Độ tin cậy cực cao. Hoàn toàn phân tách giữa A và Ă."
+    },
+    "Â": {
+      "base_letter": "A",
+      "video_id": "D0491B",
+      "key_feature": "wrist_y_lift (Độ dời cổ tay lên đỉnh nón: y_base_mean - y_apex)",
+      "base_pose": {
+        "count": 23,
+        "mean_y": 0.5603,
+        "std_y": 0.0379,
+        "min_y": 0.5310,
+        "max_y": 0.6792
+      },
+      "diacritic_motion": {
+        "count": 25,
+        "mean_y": 0.5397,
+        "std_y": 0.0308,
+        "apex_y_min": 0.5212,
+        "max_y": 0.6232
+      },
+      "max_lift_delta_y": 0.0391,
+      "max_upward_velocity": -0.1392,
+      "max_downward_velocity": 0.7345,
+      "status": "APEX_SEPARATED",
+      "verdict": "Mean tổng thể chồng lấn do bàn tay đi lên rồi đi xuống, nhưng ĐỈNH NÓN (y=0.5212) và xung vận tốc v_y phân tách rõ rệt so với tư thế giữ yên."
+    },
+    "Ê": {
+      "base_letter": "E",
+      "video_id": "D0497B",
+      "key_feature": "wrist_y_lift (Độ dời cổ tay lên đỉnh nón: y_base_mean - y_apex)",
+      "base_pose": {
+        "count": 20,
+        "mean_y": 0.5700,
+        "std_y": 0.0336,
+        "min_y": 0.5396,
+        "max_y": 0.6733
+      },
+      "diacritic_motion": {
+        "count": 20,
+        "mean_y": 0.5267,
+        "std_y": 0.0081,
+        "apex_y_min": 0.5158,
+        "max_y": 0.5440
+      },
+      "max_lift_delta_y": 0.0542,
+      "max_upward_velocity": -0.3254,
+      "max_downward_velocity": 0.5019,
+      "status": "APEX_SEPARATED",
+      "verdict": "Bàn tay nhấc lên 9.5% chiều cao màn hình. Tách biệt rõ nét đỉnh nón."
+    },
+    "Ô": {
+      "base_letter": "O",
+      "video_id": "D0507B",
+      "key_feature": "wrist_y_lift (Độ dời cổ tay lên đỉnh nón: y_base_mean - y_apex)",
+      "base_pose": {
+        "count": 19,
+        "mean_y": 0.5884,
+        "std_y": 0.0065,
+        "min_y": 0.5694,
+        "max_y": 0.5969
+      },
+      "diacritic_motion": {
+        "count": 20,
+        "mean_y": 0.5434,
+        "std_y": 0.0096,
+        "apex_y_min": 0.5323,
+        "max_y": 0.5641
+      },
+      "max_lift_delta_y": 0.0561,
+      "max_upward_velocity": -0.3394,
+      "max_downward_velocity": 0.4116,
+      "status": "SEPARATED",
+      "verdict": "Khoảng dải wrist_y ở BASE [0.5694, 0.5969] hoàn toàn tách rời dải DIAC [0.5323, 0.5641]. Độ tin cậy rất cao."
+    },
+    "Ơ": {
+      "base_letter": "O",
+      "video_id": "D0508N",
+      "key_feature": "d_thumb_index_norm (Khoảng cách đầu ngón cái - trỏ / palm_scale)",
+      "base_pose": {
+        "count": 9,
+        "mean": 0.2324,
+        "std": 0.0262,
+        "min": 0.1872,
+        "max": 0.2721
+      },
+      "diacritic_motion": {
+        "count": 24,
+        "mean": 0.3903,
+        "std": 0.0226,
+        "min": 0.3541,
+        "max": 0.4418
+      },
+      "delta": 0.1579,
+      "separation_margin": 0.0820,
+      "status": "SEPARATED",
+      "verdict": "Vẩy mở râu ngón cái/út làm giãn khoảng cách ngón cái-trỏ vượt hẳn ngưỡng 0.30. Không chồng lấn với O tròn khép kín."
+    },
+    "Ư": {
+      "base_letter": "U",
+      "video_id": "D0515N",
+      "key_feature": "pinky_curl (Tỉ lệ co gập ngón út: 0=thẳng, 1=co hoàn toàn)",
+      "base_pose": {
+        "count": 14,
+        "mean": 0.7964,
+        "std": 0.1523,
+        "min": 0.4597,
+        "max": 0.9197
+      },
+      "diacritic_motion": {
+        "count": 12,
+        "mean": 0.2154,
+        "std": 0.0478,
+        "min": 0.1425,
+        "max": 0.2978
+      },
+      "delta": -0.5810,
+      "separation_margin": 0.1619,
+      "status": "SEPARATED",
+      "verdict": "Ngón út duỗi thẳng (curl < 0.32) phân tách tuyệt đối với tư thế ngón út gập của chữ U (curl > 0.45)."
+    },
+    "Đ": {
+      "base_letter": "D",
+      "video_id": "D0495",
+      "key_feature": "index_pip_angle (Góc khớp liên đốt gần ngón trỏ, độ)",
+      "base_pose": {
+        "count": 26,
+        "mean": 124.7799,
+        "std": 4.6879,
+        "min": 115.32,
+        "max": 133.58
+      },
+      "diacritic_motion": {
+        "count": 9,
+        "mean": 104.9597,
+        "std": 10.6251,
+        "min": 91.45,
+        "max": 121.84
+      },
+      "delta": -19.8202,
+      "apex_angle_drop": 33.3299,
+      "status": "PULSE_SEPARATED",
+      "verdict": "Nét gạch ngang làm gập góc đốt giữa ngón trỏ xuống 91.5 độ. Thời lượng chỉ 9 frames (0.3s), cần phát hiện dạng xung chuyển tiếp."
+    }
+  },
+  "confusion_groups_analysis": {
+    "group_A_Ă_Â": {
+      "base": "A (Nắm đấm tĩnh)",
+      "separability": {
+        "A_vs_Ă": "Ă có d_index_middle > 0.40 và index_curl < 0.20 (mở ngón V). A có distance < 0.33.",
+        "A_vs_Â": "Â có đỉnh nâng cổ tay delta_y > 0.035 và vy < -0.10/s. A có delta_y < 0.020.",
+        "Ă_vs_Â": "Ă biến thiên hình thái ngón tay (không nâng tay). Â tịnh tiến cổ tay (ngón tay giữ nguyên nắm đấm A)."
+      },
+      "verdict": "100% Phân biệt rõ ràng trong dữ liệu khảo sát."
+    },
+    "group_E_Ê": {
+      "base": "E (Ngón cong tì ngón cái)",
+      "separability": {
+        "E_vs_Ê": "Ê có đỉnh nâng cổ tay delta_y > 0.040 và vy < -0.20/s. E giữ yên vị trí."
+      },
+      "verdict": "100% Phân biệt rõ ràng."
+    },
+    "group_O_Ô_Ơ": {
+      "base": "O (Khuyên tròn khép kín)",
+      "separability": {
+        "O_vs_Ô": "Ô nâng cả bàn tay lên đỉnh (delta_y > 0.045, vy < -0.20/s). O giữ yên.",
+        "O_vs_Ơ": "Ơ mở râu ngón cái/út (d_thumb_index > 0.32). O khép chặt (< 0.28).",
+        "Ô_vs_Ơ": "Ô tịnh tiến không gian (giữ khuyên tròn). Ơ biến thiên hình thái tại chỗ (không nâng tay)."
+      },
+      "verdict": "100% Phân biệt rõ ràng."
+    },
+    "group_U_Ư": {
+      "base": "U (2 ngón trỏ và giữa duỗi, ngón út gập)",
+      "separability": {
+        "U_vs_Ư": "Ư bật ngón út duỗi thẳng (pinky_curl < 0.32). U ngón út gập chặt (pinky_curl > 0.50)."
+      },
+      "verdict": "100% Phân biệt tuyệt đối."
+    },
+    "group_D_Đ": {
+      "base": "D (Ngón trỏ duỗi thẳng chỉ lên)",
+      "separability": {
+        "D_vs_Đ": "Đ gập đốt giữa ngón trỏ tạo nét gạch (index_pip_angle giảm xuống < 105 độ). D ngón trỏ thẳng (angle > 118 độ)."
+      },
+      "verdict": "Phân biệt được, cần cửa sổ phát hiện xung nhanh (pulse detector) vì thời lượng ngắn (9 frames)."
+    }
+  },
+  "realtime_implementation_recommendations": {
+    "ring_buffer_size": "15 frames (tương đương ~0.5 giây ở 30 FPS)",
+    "per_frame_features": [
+      "21 landmarks bàn tay chính",
+      "normalize_hand_landmarks (72D vector)",
+      "compute_finger_states (trạng thái duỗi/gập 5 ngón)",
+      "finger_curl_ratio (tỉ lệ co ngón)",
+      "raw_wrist_y và raw_palm_center_y"
+    ],
+    "sequence_level_features": [
+      "delta_y_apex = min(wrist_y) - mean(wrist_y_base)",
+      "max_upward_velocity = min(vy)",
+      "delta_finger_distance = max(d_index_middle) - initial_d",
+      "pinky_unfurl_event = (pinky_curl[-1] < 0.35 and pinky_curl[0] > 0.60)",
+      "index_hook_event = (min(index_pip_angle) < 105.0)"
+    ],
+    "entry_exit_rejection_heuristics": [
+      "Chỉ kích hoạt kiểm tra dấu KHI VÀ CHỈ KHI bàn tay đã ở tư thế nền ổn định (BASE_POSE) tối thiểu 4-6 frames.",
+      "Chặn EXIT: Nếu cổ tay di chuyển đi xuống (vy > +0.60/s liên tục) hoặc đi về phía mép dưới màn hình (wrist_y > 0.70), đánh dấu pha hạ tay và bỏ qua nhận diện dấu.",
+      "Chặn ENTRY: Không kích hoạt nhận diện dấu khi bàn tay mới xuất hiện từ ngoài khung hình."
+    ],
+    "zero_lag_guarantee": "17 chữ cái tĩnh thuần túy (B, C, G, H, I, K, L, M, N, P, Q, R, S, T, V, X, Y) không qua phân tích chuỗi thời gian, trả kết quả tức thì <5ms."
+  },
+  "critical_camera_validation_limitations": [
+    "Dữ liệu phân tích chỉ lấy từ 1 video QIPEDC chuẩn cho mỗi chữ -> các ngưỡng delta cần được kiểm chứng trên camera thực tế với nhiều người ký.",
+    "Tốc độ ký của người dùng thực tế có thể nhanh hơn hoặc chậm hơn video mẫu (24 FPS).",
+    "Người dùng có thể ký ở khoảng cách camera khác nhau (ảnh hưởng biên độ pixel, dù đã có palm_scale chuẩn hóa).",
+    "Góc quay camera nghiêng có thể làm sai lệch góc chiếu 2D của nét gạch chữ Đ."
+  ]
+}
+

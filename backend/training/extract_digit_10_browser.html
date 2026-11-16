@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Digit 10 Landmark Extractor - VSL Connect AI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+</head>
+<body>
+  <h2>Digit 10 Landmark Extractor (D0539.mp4)</h2>
+  <div id="status">INIT</div>
+  <pre id="output"></pre>
+  <img id="worker-img" style="display:none;" />
+
+  <script>
+    const VIDEO_ID = "D0539";
+    const DIGIT = "10";
+
+    const FRAMES_TO_PROCESS = [
+      { fidx: 10, ts: 0.33, split: "aux_entry", phase: "entry",        file: "D0539_f010.jpg" },
+      { fidx: 20, ts: 0.67, split: "aux_entry", phase: "entry",        file: "D0539_f020.jpg" },
+      { fidx: 28, ts: 0.93, split: "dev",       phase: "wrist_rotate", file: "D0539_f028.jpg" },
+      { fidx: 32, ts: 1.07, split: "dev",       phase: "wrist_rotate", file: "D0539_f032.jpg" },
+      { fidx: 36, ts: 1.20, split: "dev",       phase: "wrist_rotate", file: "D0539_f036.jpg" },
+      { fidx: 40, ts: 1.33, split: "dev",       phase: "wrist_rotate", file: "D0539_f040.jpg" },
+      { fidx: 44, ts: 1.47, split: "eval",      phase: "wrist_rotate", file: "D0539_f044.jpg" },
+      { fidx: 48, ts: 1.60, split: "eval",      phase: "wrist_rotate", file: "D0539_f048.jpg" },
+      { fidx: 54, ts: 1.80, split: "eval",      phase: "wrist_rotate", file: "D0539_f054.jpg" },
+      { fidx: 60, ts: 2.00, split: "aux_exit",  phase: "exit",         file: "D0539_f060.jpg" },
+      { fidx: 70, ts: 2.34, split: "aux_exit",  phase: "exit",         file: "D0539_f070.jpg" }
+    ];
+
+    async function processAll() {
+      const statusDiv = document.getElementById('status');
+      const outPre = document.getElementById('output');
+      const img = document.getElementById('worker-img');
+
+      try {
+        statusDiv.innerText = 'INITIALIZING_MEDIAPIPE';
+
+        const hands = new Hands({
+          locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
+        });
+
+        hands.setOptions({
+          maxNumHands: 2,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.5
+        });
+
+        await hands.initialize();
+        statusDiv.innerText = 'MEDIAPIPE_INITIALIZED';
+
+        let lastResult = null;
+        hands.onResults((res) => {
+          lastResult = res;
+        });
+
+        const samples = [];
+
+        for (let i = 0; i < FRAMES_TO_PROCESS.length; i++) {
+          const item = FRAMES_TO_PROCESS[i];
+          statusDiv.innerText = `PROCESSING_${i + 1}_OF_${FRAMES_TO_PROCESS.length}_FRAME_${item.fidx}`;
+
+          lastResult = null;
+          img.src = `/backend/data/media_cache/frames_d0539/${item.file}`;
+
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = () => reject(new Error(`Failed to load frame image: ${item.file}`));
+          });
+
+          await hands.send({ image: img });
+
+          let landmarks = null;
+          let handedness = "Right";
+          let confidence = 0.0;
+          let qualityStatus = "no_hand_detected";
+
+          if (lastResult && lastResult.multiHandLandmarks && lastResult.multiHandLandmarks.length > 0) {
+            let chosenHandIdx = 0;
+
+            if (lastResult.multiHandedness && lastResult.multiHandedness.length > 0) {
+              confidence = lastResult.multiHandedness[0].score || 0.95;
+              handedness = lastResult.multiHandedness[0].label || "Right";
+            }
+
+            const rawLms = lastResult.multiHandLandmarks[chosenHandIdx];
+            if (rawLms && rawLms.length === 21) {
+              landmarks = rawLms.map(p => [
+                Math.round(p.x * 1e6) / 1e6,
+                Math.round(p.y * 1e6) / 1e6,
+                Math.round(p.z * 1e6) / 1e6
+              ]);
+
+              const isValid = landmarks.every(p => 
+                p.length >= 3 && 
+                Number.isFinite(p[0]) && 
+                Number.isFinite(p[1]) && 
+                Number.isFinite(p[2])
+              );
+
+              if (isValid) {
+                qualityStatus = "ok";
+              } else {
+                qualityStatus = "invalid_coordinate_values";
+                landmarks = null;
+              }
+            } else {
+              qualityStatus = "invalid_point_count";
+            }
+          }
+
+          samples.push({
+            digit: DIGIT,
+            video_id: VIDEO_ID,
+            source_video_file: `backend/data/media_cache/videos/${VIDEO_ID}.mp4`,
+            split: item.split,
+            frame_idx: item.fidx,
+            timestamp_sec: item.ts,
+            phase: item.phase,
+            handedness: handedness,
+            confidence: Math.round(confidence * 10000) / 10000,
+            coordinate_type: "normalized_mediapipe_hands",
+            quality_status: qualityStatus,
+            landmarks: landmarks
+          });
+        }
+
+        const finalOutput = {
+          schema_version: "1.0",
+          description: "Ground Truth landmarks 21 điểm trích xuất từ video QIPEDC D0539 cho số 10",
+          target_domain: "vsl_digits",
+          digit: DIGIT,
+          source_video_id: VIDEO_ID,
+          source_video_file: `backend/data/media_cache/videos/${VIDEO_ID}.mp4`,
+          total_samples: samples.length,
+          successful_samples: samples.filter(s => s.quality_status === 'ok').length,
+          failed_samples: samples.filter(s => s.quality_status !== 'ok').length,
+          samples: samples
+        };
+
+        outPre.textContent = JSON.stringify(finalOutput, null, 2);
+        statusDiv.innerText = 'EXTRACTION_COMPLETE';
+      } catch (err) {
+        statusDiv.innerText = `ERROR: ${err.message}`;
+        outPre.textContent = JSON.stringify({ error: err.message }, null, 2);
+      }
+    }
+
+    window.addEventListener('load', () => {
+      setTimeout(processAll, 500);
+    });
+  </script>
+</body>
+</html>
+

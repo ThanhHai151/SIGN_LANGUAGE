@@ -1,0 +1,14 @@
+{
+  "checked_at": "2026-10-30T12:11:00.176291+00:00",
+  "skeleton_drive": {
+    "status": "downloaded",
+    "archives": 6,
+    "raw_npy_files": 47643
+  },
+  "legacy_reference_video": {
+    "url": "https://gajsffqnyujwyllfcmny.supabase.co/storage/v1/object/public/sign_videos/sign_000%20-%20LOOP%20-%20Videobolt.net.mp4",
+    "method": "HEAD",
+    "outcome": "DNS resolution failed in this environment",
+    "limitation": "This is an access failure, not proof the original source was deleted. Original training/test videos remain unrecovered."
+  }
+}

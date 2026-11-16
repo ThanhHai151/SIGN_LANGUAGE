@@ -1,0 +1,280 @@
+{
+  "Ă": {
+    "video_id": "D0490B",
+    "total_frames": 89,
+    "valid_landmarks": 53,
+    "phase_counts": {
+      "manual_review_needed": 89
+    },
+    "valid_base_frames": 0,
+    "before": {
+      "reached_base_stable": false,
+      "resets_on_neutral": 0,
+      "confirmed_tokens": [
+        [
+          27,
+          "D"
+        ],
+        [
+          29,
+          "V"
+        ]
+      ]
+    },
+    "after": {
+      "reached_base_stable": false,
+      "transient_neutral_frames": 34,
+      "baseline_retained_frames": 0,
+      "confirmed_tokens": [
+        [
+          27,
+          "D"
+        ],
+        [
+          29,
+          "V"
+        ]
+      ]
+    }
+  },
+  "Â": {
+    "video_id": "D0491B",
+    "total_frames": 108,
+    "valid_landmarks": 57,
+    "phase_counts": {
+      "manual_review_needed": 108
+    },
+    "valid_base_frames": 0,
+    "before": {
+      "reached_base_stable": false,
+      "resets_on_neutral": 0,
+      "confirmed_tokens": [
+        [
+          49,
+          "O"
+        ],
+        [
+          75,
+          "S"
+        ]
+      ]
+    },
+    "after": {
+      "reached_base_stable": false,
+      "transient_neutral_frames": 55,
+      "baseline_retained_frames": 0,
+      "confirmed_tokens": [
+        [
+          49,
+          "O"
+        ],
+        [
+          75,
+          "S"
+        ]
+      ]
+    }
+  },
+  "Ê": {
+    "video_id": "D0497B",
+    "total_frames": 76,
+    "valid_landmarks": 52,
+    "phase_counts": {
+      "manual_review_needed": 76
+    },
+    "valid_base_frames": 0,
+    "before": {
+      "reached_base_stable": false,
+      "resets_on_neutral": 0,
+      "confirmed_tokens": []
+    },
+    "after": {
+      "reached_base_stable": false,
+      "transient_neutral_frames": 52,
+      "baseline_retained_frames": 0,
+      "confirmed_tokens": []
+    }
+  },
+  "Ô": {
+    "video_id": "D0507B",
+    "total_frames": 84,
+    "valid_landmarks": 58,
+    "phase_counts": {
+      "manual_review_needed": 84
+    },
+    "valid_base_frames": 19,
+    "before": {
+      "reached_base_stable": true,
+      "resets_on_neutral": 1,
+      "confirmed_tokens": [
+        [
+          11,
+          "E"
+        ],
+        [
+          14,
+          "O"
+        ],
+        [
+          36,
+          "E"
+        ]
+      ]
+    },
+    "after": {
+      "reached_base_stable": true,
+      "transient_neutral_frames": 36,
+      "baseline_retained_frames": 1,
+      "confirmed_tokens": [
+        [
+          11,
+          "E"
+        ],
+        [
+          14,
+          "O"
+        ],
+        [
+          36,
+          "E"
+        ]
+      ]
+    }
+  },
+  "Ơ": {
+    "video_id": "D0508N",
+    "total_frames": 89,
+    "valid_landmarks": 45,
+    "phase_counts": {
+      "manual_review_needed": 89
+    },
+    "valid_base_frames": 8,
+    "before": {
+      "reached_base_stable": true,
+      "resets_on_neutral": 0,
+      "confirmed_tokens": [
+        [
+          29,
+          "M"
+        ],
+        [
+          35,
+          "E"
+        ],
+        [
+          36,
+          "O"
+        ],
+        [
+          43,
+          "E"
+        ],
+        [
+          45,
+          "O"
+        ],
+        [
+          57,
+          "I"
+        ]
+      ]
+    },
+    "after": {
+      "reached_base_stable": true,
+      "transient_neutral_frames": 33,
+      "baseline_retained_frames": 0,
+      "confirmed_tokens": [
+        [
+          29,
+          "M"
+        ],
+        [
+          35,
+          "E"
+        ],
+        [
+          36,
+          "O"
+        ],
+        [
+          43,
+          "E"
+        ],
+        [
+          45,
+          "O"
+        ],
+        [
+          57,
+          "I"
+        ]
+      ]
+    }
+  },
+  "Ư": {
+    "video_id": "D0515N",
+    "total_frames": 118,
+    "valid_landmarks": 47,
+    "phase_counts": {
+      "manual_review_needed": 118
+    },
+    "valid_base_frames": 15,
+    "before": {
+      "reached_base_stable": true,
+      "resets_on_neutral": 1,
+      "confirmed_tokens": [
+        [
+          17,
+          "U"
+        ],
+        [
+          34,
+          "Ư"
+        ],
+        [
+          35,
+          "I"
+        ]
+      ]
+    },
+    "after": {
+      "reached_base_stable": true,
+      "transient_neutral_frames": 27,
+      "baseline_retained_frames": 1,
+      "confirmed_tokens": [
+        [
+          17,
+          "U"
+        ],
+        [
+          34,
+          "Ư"
+        ],
+        [
+          35,
+          "I"
+        ]
+      ]
+    }
+  },
+  "Đ": {
+    "video_id": "D0495",
+    "total_frames": 105,
+    "valid_landmarks": 47,
+    "phase_counts": {
+      "manual_review_needed": 105
+    },
+    "valid_base_frames": 0,
+    "before": {
+      "reached_base_stable": false,
+      "resets_on_neutral": 0,
+      "confirmed_tokens": []
+    },
+    "after": {
+      "reached_base_stable": false,
+      "transient_neutral_frames": 47,
+      "baseline_retained_frames": 0,
+      "confirmed_tokens": []
+    }
+  }
+}

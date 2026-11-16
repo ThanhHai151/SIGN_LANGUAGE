@@ -1,0 +1,460 @@
+{
+  "audit_task": "TASK 7E.1",
+  "audit_title": "Kiểm toán 29 chữ cái VSL và lập danh sách chữ chưa nhận diện được",
+  "project": "VSL Connect AI",
+  "timestamp": "2026-10-31T15:00:00+07:00",
+  "audit_mode": "READ-ONLY AUDIT (Không sửa code, không đổi threshold, không huấn luyện model, không đổi checkpoint)",
+  "summary_metrics": {
+    "total_alphabet_letters": 29,
+    "pass_count": 11,
+    "fail_count": 8,
+    "unstable_count": 10,
+    "not_tested_count": 0,
+    "blocked_count": 0,
+    "confirmed_working_percentage": 37.93,
+    "unstable_percentage": 34.48,
+    "failing_percentage": 27.59
+  },
+  "alphabet_detailed_inventory": [
+    {
+      "letter": "A",
+      "type": "STATIC_AND_BASE",
+      "tier": "TIER_1_GEOMETRIC_RULE",
+      "status": "UNSTABLE",
+      "real_dataset_accuracy": "17/64 (26.6%)",
+      "neutral_rate": "46/64 (71.9%)",
+      "misclassified_as": ["O (1 mẫu)", "NEUTRAL (46 mẫu)"],
+      "root_cause_layer": "Geometric Rules",
+      "evidence": "backend/vision/alphabet_classifier.py dòng 303-306. Ngưỡng d_TW>=0.50, d_TM>=0.45 quá chặt chẽ, 71.9% mẫu rơi vào NO_MATCH -> NEUTRAL."
+    },
+    {
+      "letter": "Ă",
+      "type": "DYNAMIC_DIACRITIC",
+      "tier": "TIER_3_DIACRITIC_FSM",
+      "status": "FAIL",
+      "real_dataset_accuracy": "0/89 (0.0%)",
+      "neutral_rate": "67/89 (75.3%)",
+      "misclassified_as": ["V (Token chốt)", "NEUTRAL"],
+      "root_cause_layer": "Geometric Rules / Pipeline Reset Flaw",
+      "evidence": "Pha BASE_POSE của Ă (D0490B) 100% NEUTRAL do chữ nền A không nhận diện được. Khi mở ngón xòe tạo dấu, Tier 1 nhận nhầm thành V (backend/vision/alphabet_classifier.py dòng 263) và chốt token V."
+    },
+    {
+      "letter": "Â",
+      "type": "DYNAMIC_DIACRITIC",
+      "tier": "TIER_3_DIACRITIC_FSM",
+      "status": "FAIL",
+      "real_dataset_accuracy": "0/108 (0.0%)",
+      "neutral_rate": "81/108 (75.0%)",
+      "misclassified_as": ["NEUTRAL", "O (1 mẫu)"],
+      "root_cause_layer": "Geometric Rules",
+      "evidence": "Pha BASE_POSE của Â (D0491B) 22/23 frames NEUTRAL. Chữ nền A không đạt 4 frame liên tiếp để FSM chuyển sang BASE_STABLE (backend/vision/diacritic_state_machine.py dòng 402)."
+    },
+    {
+      "letter": "B",
+      "type": "STATIC_PURE",
+      "tier": "TIER_1_GEOMETRIC_RULE",
+      "status": "UNSTABLE",
+      "real_dataset_accuracy": "13/22 (59.1%)",
+      "neutral_rate": "8/22 (36.4%)",
+      "misclassified_as": ["O (1 mẫu)", "NEUTRAL (8 mẫu)"],
+      "root_cause_layer": "Geometric Rules",
+      "evidence": "backend/vision/alphabet_classifier.py dòng 243-245. Ngưỡng d_IW>=0.95, d_MW>=0.95, thumb_lat<=0.35 dễ trượt khi ngón hơi cong."
+    },
+    {
+      "letter": "C",
+      "type": "STATIC_PURE",
+      "tier": "TIER_1_GEOMETRIC_RULE",
+      "status": "UNSTABLE",
+      "real_dataset_accuracy": "12/20 (60.0%)",
+      "neutral_rate": "8/20 (40.0%)",
+      "misclassified_as": ["NEUTRAL (8 mẫu)"],
+      "root_cause_layer": "Geometric Rules",
+      "evidence": "backend/vision/alphabet_classifier.py dòng 295-298. Ràng buộc đồng thời 5 khoảng cách d_TI, d_TM, d_IW, d_MW, d_PW rất nhạy cảm với tỷ lệ bàn tay."
+    },
+    {
+      "letter": "D",
+      "type": "STATIC_AND_BASE",
+      "tier": "TIER_1_GEOMETRIC_RULE",
+      "status": "UNSTABLE",
+      "real_dataset_accuracy": "15/46 (32.6%)",
+      "neutral_rate": "31/46 (67.4%)",
+      "misclassified_as": ["NEUTRAL (31 mẫu)"],
+      "root_cause_layer": "Geometric Rules",
+      "evidence": "backend/vision/alphabet_classifier.py dòng 272-273. Điều kiện d_ti<=0.40 và d_tm<=0.35 quá hẹp trên hình chiếu 2D của MediaPipe."
+    },
+    {
+      "letter": "Đ",
+      "type": "DYNAMIC_DIACRITIC",
+      "tier": "TIER_3_DIACRITIC_FSM",
+      "status": "FAIL",
+      "real_dataset_accuracy": "0/105 (0.0%)",
+      "neutral_rate": "96/105 (91.4%)",
+      "misclassified_as": ["NEUTRAL (100% trong BASE_POSE)"],
+      "root_cause_layer": "Geometric Rules",
+      "evidence": "Pha BASE_POSE của Đ (D0494B) 26/26 frames NEUTRAL. Chữ nền D hoàn toàn tê liệt nên FSM không bao giờ vào BASE_STABLE để bắt xung gập đốt trỏ."
+    },
+    {
+      "letter": "E",
+      "type": "STATIC_AND_BASE",
+      "tier": "TIER_1_GEOMETRIC_RULE",
+      "status": "UNSTABLE",
+      "real_dataset_accuracy": "10/35 (28.6%)",
+      "neutral_rate": "25/35 (71.4%)",
+      "misclassified_as": ["NEUTRAL (25 mẫu)"],
+      "root_cause_layer": "Geometric Rules",
+      "evidence": "backend/vision/alphabet_classifier.py dòng 318-321. Điều kiện d_tm<=0.35 và d_tw<=0.45 thất bại khi ngón cái nằm sâu dưới 4 ngón."
+    },
+    {
+      "letter": "Ê",
+      "type": "DYNAMIC_DIACRITIC",
+      "tier": "TIER_3_DIACRITIC_FSM",
+      "status": "FAIL",
+      "real_dataset_accuracy": "0/76 (0.0%)",
+      "neutral_rate": "56/76 (73.7%)",
+      "misclassified_as": ["NEUTRAL (100% trong BASE_POSE)"],
+      "root_cause_layer": "Geometric Rules",
+      "evidence": "Pha BASE_POSE của Ê (D0497B) 20/20 frames NEUTRAL. FSM không có cơ sở snapshot chữ nền E."
+    },
+    {
+      "letter": "G",
+      "type": "STATIC_SUPPLEMENTAL",
+      "tier": "TIER_2_STATIC_HEAD",
+      "status": "PASS",
+      "real_dataset_accuracy": "26/29 (89.7%)",
+      "neutral_rate": "3/29 (10.3%)",
+      "misclassified_as": ["NEUTRAL (3 mẫu)"],
+      "root_cause_layer": "Không có (Hoạt động tốt)",
+      "evidence": "backend/models/alphabet_static_head_v1.pt và recognizer.py dòng 757. Độ chính xác 89.7% trên tập V2."
+    },
+    {
+      "letter": "H",
+      "type": "STATIC_SUPPLEMENTAL",
+      "tier": "TIER_2_STATIC_HEAD",
+      "status": "PASS",
+      "real_dataset_accuracy": "16/18 (88.9%)",
+      "neutral_rate": "2/18 (11.1%)",
+      "misclassified_as": ["NEUTRAL (2 mẫu)"],
+      "root_cause_layer": "Không có (Hoạt động tốt)",
+      "evidence": "backend/models/alphabet_static_head_v1.pt và recognizer.py dòng 757. Độ chính xác 88.9% trên tập V2."
+    },
+    {
+      "letter": "I",
+      "type": "STATIC_PURE",
+      "tier": "TIER_1_GEOMETRIC_RULE",
+      "status": "PASS",
+      "real_dataset_accuracy": "14/18 (77.8%)",
+      "neutral_rate": "4/18 (22.2%)",
+      "misclassified_as": ["NEUTRAL (4 mẫu)"],
+      "root_cause_layer": "Không có (Nhưng gây xung đột với Ư, Ơ)",
+      "evidence": "backend/vision/alphabet_classifier.py dòng 251. Nhận diện I tốt, nhưng bắt nhầm sang chuyển động vẩy ngón út của Ư và Ơ."
+    },
+    {
+      "letter": "K",
+      "type": "STATIC_SUPPLEMENTAL",
+      "tier": "TIER_2_STATIC_HEAD",
+      "status": "PASS",
+      "real_dataset_accuracy": "14/17 (82.4%)",
+      "neutral_rate": "3/17 (17.6%)",
+      "misclassified_as": ["NEUTRAL (3 mẫu)"],
+      "root_cause_layer": "Không có (Hoạt động tốt)",
+      "evidence": "backend/models/alphabet_static_head_v1.pt và recognizer.py dòng 757. Ngưỡng 0.75 đạt 82.4%."
+    },
+    {
+      "letter": "L",
+      "type": "STATIC_PURE",
+      "tier": "TIER_1_GEOMETRIC_RULE",
+      "status": "UNSTABLE",
+      "real_dataset_accuracy": "11/16 (68.8%)",
+      "neutral_rate": "5/16 (31.2%)",
+      "misclassified_as": ["NEUTRAL (5 mẫu)"],
+      "root_cause_layer": "Geometric Rules",
+      "evidence": "backend/vision/alphabet_classifier.py dòng 276. Ngưỡng góc ang_TI>=70.0 độ đôi khi trượt khi ngón cái không mở vuông góc."
+    },
+    {
+      "letter": "M",
+      "type": "STATIC_SUPPLEMENTAL",
+      "tier": "TIER_2_STATIC_HEAD",
+      "status": "PASS",
+      "real_dataset_accuracy": "17/19 (89.5%)",
+      "neutral_rate": "2/19 (10.5%)",
+      "misclassified_as": ["NEUTRAL (2 mẫu)"],
+      "root_cause_layer": "Không có (Hoạt động tốt)",
+      "evidence": "backend/models/alphabet_static_head_v1.pt và recognizer.py dòng 757. Đạt 89.5%."
+    },
+    {
+      "letter": "N",
+      "type": "STATIC_SUPPLEMENTAL",
+      "tier": "TIER_2_STATIC_HEAD",
+      "status": "UNSTABLE",
+      "real_dataset_accuracy": "15/21 (71.4%)",
+      "neutral_rate": "5/21 (23.8%)",
+      "misclassified_as": ["M (1 mẫu)", "NEUTRAL (5 mẫu)"],
+      "root_cause_layer": "Static Head MLP",
+      "evidence": "backend/models/alphabet_static_head_v1.pt. Nhầm lẫn giữa 2 ngón (N) và 3 ngón (M) do hình chiếu 2D."
+    },
+    {
+      "letter": "O",
+      "type": "STATIC_AND_BASE",
+      "tier": "TIER_1_GEOMETRIC_RULE",
+      "status": "PASS",
+      "real_dataset_accuracy": "37/48 (77.1%)",
+      "neutral_rate": "9/48 (18.8%)",
+      "misclassified_as": ["E (2 mẫu)", "NEUTRAL (9 mẫu)"],
+      "root_cause_layer": "Không có với O tĩnh",
+      "evidence": "backend/vision/alphabet_classifier.py dòng 288. Nhận diện tĩnh O tốt (77.1%)."
+    },
+    {
+      "letter": "Ô",
+      "type": "DYNAMIC_DIACRITIC",
+      "tier": "TIER_3_DIACRITIC_FSM",
+      "status": "FAIL",
+      "real_dataset_accuracy": "0/84 (0.0%)",
+      "neutral_rate": "58/84 (69.0%)",
+      "misclassified_as": ["O (Token chốt từ BASE_POSE)", "NEUTRAL", "E (1 mẫu)"],
+      "root_cause_layer": "DiacriticStateMachine / Pipeline Reset Flaw",
+      "evidence": "Nhận diện O chuẩn trong BASE_POSE (18/19 frames). Nhưng khi bắt đầu nâng tay vẽ nón ở DIACRITIC_MOTION, frame 34 rơi về NEUTRAL -> recognizer.py dòng 858 gọi fsm.reset() ngay lập tức, xóa sổ FSM."
+    },
+    {
+      "letter": "Ơ",
+      "type": "DYNAMIC_DIACRITIC",
+      "tier": "TIER_3_DIACRITIC_FSM",
+      "status": "FAIL",
+      "real_dataset_accuracy": "0/89 (0.0%)",
+      "neutral_rate": "77/89 (86.5%)",
+      "misclassified_as": ["O (Token chốt)", "I (1 frame)", "NEUTRAL"],
+      "root_cause_layer": "Geometric Rules / Pipeline Reset Flaw",
+      "evidence": "Khi bật ngón út làm râu, Rule chữ I (Tier 1) bắt nhầm ở frame 57, và các frame khác là NEUTRAL -> FSM bị reset, không phân giải được Ơ."
+    },
+    {
+      "letter": "P",
+      "type": "STATIC_SUPPLEMENTAL",
+      "tier": "TIER_2_STATIC_HEAD",
+      "status": "PASS",
+      "real_dataset_accuracy": "16/20 (80.0%)",
+      "neutral_rate": "4/20 (20.0%)",
+      "misclassified_as": ["NEUTRAL (4 mẫu)"],
+      "root_cause_layer": "Không có (Hoạt động tốt)",
+      "evidence": "backend/models/alphabet_static_head_v1.pt và recognizer.py dòng 757. Đạt 80.0%."
+    },
+    {
+      "letter": "Q",
+      "type": "STATIC_SUPPLEMENTAL",
+      "tier": "TIER_2_STATIC_HEAD",
+      "status": "FAIL",
+      "real_dataset_accuracy": "5/19 (26.3%)",
+      "neutral_rate": "14/19 (73.7%)",
+      "misclassified_as": ["NEUTRAL (14 mẫu)", "X (nguy cơ tiềm ẩn)"],
+      "root_cause_layer": "Ngưỡng confidence (Threshold too high)",
+      "evidence": "backend/vision/recognizer.py dòng 114. DEFAULT_SUPPLEMENTAL_THRESHOLDS['Q'] = 0.85 quá cao, loại bỏ 73.7% mẫu thật."
+    },
+    {
+      "letter": "R",
+      "type": "STATIC_SUPPLEMENTAL",
+      "tier": "TIER_2_STATIC_HEAD",
+      "status": "PASS",
+      "real_dataset_accuracy": "11/14 (78.6%)",
+      "neutral_rate": "3/14 (21.4%)",
+      "misclassified_as": ["NEUTRAL (3 mẫu)"],
+      "root_cause_layer": "Không có (Hoạt động tốt)",
+      "evidence": "backend/models/alphabet_static_head_v1.pt và recognizer.py dòng 757. Đạt 78.6%."
+    },
+    {
+      "letter": "S",
+      "type": "STATIC_PURE",
+      "tier": "TIER_1_GEOMETRIC_RULE",
+      "status": "PASS",
+      "real_dataset_accuracy": "11/15 (73.3%)",
+      "neutral_rate": "4/15 (26.7%)",
+      "misclassified_as": ["NEUTRAL (4 mẫu)"],
+      "root_cause_layer": "Không có",
+      "evidence": "backend/vision/alphabet_classifier.py dòng 310. Đạt 73.3%."
+    },
+    {
+      "letter": "T",
+      "type": "STATIC_PURE",
+      "tier": "TIER_1_GEOMETRIC_RULE",
+      "status": "UNSTABLE",
+      "real_dataset_accuracy": "11/20 (55.0%)",
+      "neutral_rate": "9/20 (45.0%)",
+      "misclassified_as": ["NEUTRAL (9 mẫu)"],
+      "root_cause_layer": "Geometric Rules",
+      "evidence": "backend/vision/alphabet_classifier.py dòng 282. Ngón cái kẹp giữa trỏ/giữa khó đo 2D."
+    },
+    {
+      "letter": "U",
+      "type": "STATIC_AND_BASE",
+      "tier": "TIER_2_STATIC_HEAD",
+      "status": "PASS",
+      "real_dataset_accuracy": "27/32 (84.4%)",
+      "neutral_rate": "5/32 (15.6%)",
+      "misclassified_as": ["NEUTRAL (5 mẫu)"],
+      "root_cause_layer": "Không có với U tĩnh",
+      "evidence": "backend/models/alphabet_static_head_v1.pt. Nhận diện U tĩnh tốt (84.4%)."
+    },
+    {
+      "letter": "Ư",
+      "type": "DYNAMIC_DIACRITIC",
+      "tier": "TIER_3_DIACRITIC_FSM",
+      "status": "FAIL",
+      "real_dataset_accuracy": "0/118 (0.0%)",
+      "neutral_rate": "93/118 (78.8%)",
+      "misclassified_as": ["U (Token chốt)", "I (4 frames)", "NEUTRAL"],
+      "root_cause_layer": "Geometric Rules / Pipeline Reset Flaw",
+      "evidence": "Nhận diện U chuẩn trong BASE_POSE (13 frames). Khi bật ngón út làm râu, Rule chữ I (Tier 1) cướp frame (frames 35-37, 43) -> recognizer.py dòng 858 reset FSM ngay lập tức."
+    },
+    {
+      "letter": "V",
+      "type": "STATIC_PURE",
+      "tier": "TIER_1_GEOMETRIC_RULE",
+      "status": "PASS",
+      "real_dataset_accuracy": "13/17 (76.5%)",
+      "neutral_rate": "4/17 (23.5%)",
+      "misclassified_as": ["NEUTRAL (4 mẫu)"],
+      "root_cause_layer": "Không có (Nhưng cướp nhãn của Ă)",
+      "evidence": "backend/vision/alphabet_classifier.py dòng 263. Nhận diện V tốt (76.5%), nhưng cướp nhãn khi người ký mở ngón làm dấu Ă."
+    },
+    {
+      "letter": "X",
+      "type": "STATIC_SUPPLEMENTAL",
+      "tier": "TIER_2_STATIC_HEAD",
+      "status": "UNSTABLE",
+      "real_dataset_accuracy": "17/25 (68.0%)",
+      "neutral_rate": "7/25 (28.0%)",
+      "misclassified_as": ["T (1 mẫu)", "NEUTRAL (7 mẫu)"],
+      "root_cause_layer": "Static Head MLP",
+      "evidence": "backend/models/alphabet_static_head_v1.pt. Trỏ móc câu dễ nhầm với T và Q trên 2D."
+    },
+    {
+      "letter": "Y",
+      "type": "STATIC_PURE",
+      "tier": "TIER_1_GEOMETRIC_RULE",
+      "status": "UNSTABLE",
+      "real_dataset_accuracy": "11/16 (68.8%)",
+      "neutral_rate": "5/16 (31.2%)",
+      "misclassified_as": ["NEUTRAL (5 mẫu)"],
+      "root_cause_layer": "Geometric Rules",
+      "evidence": "backend/vision/alphabet_classifier.py dòng 256. Ràng buộc cả ngón cái và út duỗi thẳng (Shaka) dễ trượt khi ngón cái mở chưa đủ."
+    }
+  ],
+  "dynamic_letters_special_audit": {
+    "Ă": {
+      "base_detected": false,
+      "base_detected_rate": "0/19 (0.0% trong BASE_POSE)",
+      "fsm_entered_base_stable": false,
+      "diacritic_detected": false,
+      "fsm_reached_confirmed": false,
+      "entry_exit_guard_blocked": false,
+      "landmarks_lost": false,
+      "smoothing_override": false,
+      "final_camera_result": "V (Bị cướp bởi Tier 1 V rule)",
+      "verdict": "FAIL"
+    },
+    "Â": {
+      "base_detected": false,
+      "base_detected_rate": "0/23 (0.0% trong BASE_POSE)",
+      "fsm_entered_base_stable": false,
+      "diacritic_detected": false,
+      "fsm_reached_confirmed": false,
+      "entry_exit_guard_blocked": false,
+      "landmarks_lost": false,
+      "smoothing_override": false,
+      "final_camera_result": "NEUTRAL",
+      "verdict": "FAIL"
+    },
+    "Ê": {
+      "base_detected": false,
+      "base_detected_rate": "0/20 (0.0% trong BASE_POSE)",
+      "fsm_entered_base_stable": false,
+      "diacritic_detected": false,
+      "fsm_reached_confirmed": false,
+      "entry_exit_guard_blocked": false,
+      "landmarks_lost": false,
+      "smoothing_override": false,
+      "final_camera_result": "NEUTRAL",
+      "verdict": "FAIL"
+    },
+    "Ô": {
+      "base_detected": true,
+      "base_detected_rate": "18/19 (94.7% trong BASE_POSE)",
+      "fsm_entered_base_stable": true,
+      "diacritic_detected": false,
+      "fsm_reached_confirmed": false,
+      "entry_exit_guard_blocked": false,
+      "landmarks_lost": false,
+      "smoothing_override": true,
+      "final_camera_result": "O (Token chốt từ BASE_POSE, DIACRITIC bị reset do rơi về NEUTRAL)",
+      "verdict": "FAIL"
+    },
+    "Ơ": {
+      "base_detected": true,
+      "base_detected_rate": "7/9 (77.8% trong BASE_POSE)",
+      "fsm_entered_base_stable": true,
+      "diacritic_detected": false,
+      "fsm_reached_confirmed": false,
+      "entry_exit_guard_blocked": false,
+      "landmarks_lost": false,
+      "smoothing_override": true,
+      "final_camera_result": "O (Bị FSM reset khi ngón út kích hoạt rule I hoặc NEUTRAL)",
+      "verdict": "FAIL"
+    },
+    "Ư": {
+      "base_detected": true,
+      "base_detected_rate": "13/14 (92.9% trong BASE_POSE)",
+      "fsm_entered_base_stable": true,
+      "diacritic_detected": false,
+      "fsm_reached_confirmed": false,
+      "entry_exit_guard_blocked": false,
+      "landmarks_lost": false,
+      "smoothing_override": true,
+      "final_camera_result": "U (Bị FSM reset khi ngón út kích hoạt rule I)",
+      "verdict": "FAIL"
+    },
+    "Đ": {
+      "base_detected": false,
+      "base_detected_rate": "0/26 (0.0% trong BASE_POSE)",
+      "fsm_entered_base_stable": false,
+      "diacritic_detected": false,
+      "fsm_reached_confirmed": false,
+      "entry_exit_guard_blocked": false,
+      "landmarks_lost": false,
+      "smoothing_override": false,
+      "final_camera_result": "NEUTRAL",
+      "verdict": "FAIL"
+    }
+  },
+  "root_cause_categories": [
+    {
+      "layer": "Pipeline Reset Flaw (Lỗi thiết kế luồng FSM trong recognizer.py)",
+      "affected_letters": ["Ô", "Ơ", "Ư", "Ă"],
+      "description": "Dòng 815 & 858 trong recognizer.py gọi fsm.reset() ngay khi base_sign != BASE_GROUPS. Trong quá trình cử động làm dấu, cử chỉ biến dạng khiến static classifier trả về NEUTRAL hoặc chữ khác, dẫn đến FSM bị xóa sổ ngay frame đầu tiên của chuyển động."
+    },
+    {
+      "layer": "Rule Hijacking (Xung đột phân cấp nhận diện Tầng 1)",
+      "affected_letters": ["Ă", "Ư", "Ơ"],
+      "description": "Rule chữ V (dòng 263) cướp nhãn Ă khi người ký xòe 2 ngón; Rule chữ I (dòng 251) cướp nhãn Ư và Ơ khi người ký vươn ngón út làm râu."
+    },
+    {
+      "layer": "Over-constrained Geometric Rules (Luật hình học quá khắt khe)",
+      "affected_letters": ["A", "D", "E", "Â", "Ă", "Ê", "Đ", "B", "C", "L", "T", "Y"],
+      "description": "Các luật hình học cho A, D, E đòi hỏi tọa độ và tỷ lệ khoảng cách ngón quá chặt, khiến 67% - 72% mẫu thật rơi vào NEUTRAL, gây 'đói dữ liệu' cho FSM."
+    },
+    {
+      "layer": "Rejection Threshold quá cao",
+      "affected_letters": ["Q"],
+      "description": "Ngưỡng 0.85 đặt cho chữ Q trong recognizer.py dòng 114 để chống nhầm sang X khiến 73.7% mẫu Q thật bị từ chối."
+    },
+    {
+      "layer": "Static Head MLP Confusion",
+      "affected_letters": ["N", "X"],
+      "description": "Ranh giới mong manh giữa N và M (ngón cái kẹp 2 ngón vs 3 ngón) và giữa X và T trên hình chiếu 2D."
+    }
+  ],
+  "recommended_fix_priority": [
+    "Ưu tiên 1 (Sửa lỗi Pipeline Reset Flaw): Sửa logic fsm.reset() trong recognizer.py, cho phép FSM duy trì trạng thái BASE_STABLE trong khoảng search window 0.65s ngay cả khi base_sign tạm rơi về NEUTRAL.",
+    "Ưu tiên 2 (Khắc phục Rule Hijacking): Tạm hoãn hoặc ức chế Rule chữ V và Rule chữ I ở Tầng 1 khi FSM đang ở trạng thái BASE_STABLE thuộc nhóm A hoặc U/O.",
+    "Ưu tiên 3 (Nới lỏng và chuẩn hóa Geometric Rules A, D, E): Cho phép Static Head fallback nhận diện chữ nền A, D, E khi Geometric Rules trả về NO_MATCH.",
+    "Ưu tiên 4 (Hiệu chuẩn ngưỡng chữ Q): Hạ ngưỡng req_threshold của Q từ 0.85 xuống 0.70 kết hợp kiểm tra độ cong ngón trỏ để phân biệt với X.",
+    "Ưu tiên 5 (Thu thập dữ liệu kiểm thử camera đa người ký): Thực hiện quy trình Task 6B.2 trên 3-5 người ký mới để kiểm chứng độ bền vững thực tế."
+  ]
+}
+

@@ -1,0 +1,265 @@
+{
+  "audit_metadata": {
+    "task_id": "TASK_7A",
+    "title": "Audit khả năng nhận diện 7 chữ cái có dấu bằng dữ liệu chuyển động",
+    "timestamp": "2026-10-30T23:30:00+07:00",
+    "target_letters": ["Ă", "Â", "Ê", "Ô", "Ơ", "Ư", "Đ"],
+    "audit_type": "READ_ONLY",
+    "status": "COMPLETED"
+  },
+  "part_1_motion_data_audit": {
+    "total_dynamic_letters": 7,
+    "total_sequences": 7,
+    "source_dataset": "backend/data/alphabet_v2/datasets/vsl_alphabet_motion_v2.json",
+    "summary_stats": {
+      "total_video_frames": 669,
+      "total_valid_frames": 359,
+      "total_missing_frames": 310,
+      "validity_percentage": 53.66
+    },
+    "phase_breakdown_total": {
+      "ENTRY": {"valid_frames": 34, "total_span_frames": 151},
+      "BASE_POSE": {"valid_frames": 130, "total_span_frames": 130},
+      "DIACRITIC_MOTION": {"valid_frames": 133, "total_span_frames": 133},
+      "EXIT": {"valid_frames": 62, "total_span_frames": 255}
+    },
+    "per_letter_breakdown": {
+      "Ă": {
+        "video_id": "D0490B",
+        "base_letter": "A",
+        "total_frames": 89,
+        "valid_frames": 53,
+        "missing_frames": 36,
+        "phases": {
+          "ENTRY": {"start": 0, "end": 6, "valid": 1, "total": 7},
+          "BASE_POSE": {"start": 7, "end": 25, "valid": 19, "total": 19},
+          "DIACRITIC_MOTION": {"start": 26, "end": 48, "valid": 23, "total": 23},
+          "EXIT": {"start": 49, "end": 88, "valid": 10, "total": 40}
+        },
+        "diacritic_nature": "Biến thiên hình thái ngón tay (Finger Morphological Transformation)",
+        "physical_mechanism": "Từ nắm đấm chữ A, ngón trỏ và ngón giữa mở xòe hình chữ V lật ngửa biểu thị dấu á trăng khuyết."
+      },
+      "Â": {
+        "video_id": "D0491B",
+        "base_letter": "A",
+        "total_frames": 108,
+        "valid_frames": 57,
+        "missing_frames": 51,
+        "phases": {
+          "ENTRY": {"start": 0, "end": 26, "valid": 4, "total": 27},
+          "BASE_POSE": {"start": 27, "end": 49, "valid": 23, "total": 23},
+          "DIACRITIC_MOTION": {"start": 50, "end": 74, "valid": 25, "total": 25},
+          "EXIT": {"start": 75, "end": 107, "valid": 5, "total": 33}
+        },
+        "diacritic_nature": "Quỹ đạo tịnh tiến không gian (Spatial Trajectory Translation)",
+        "physical_mechanism": "Giữ hình thái chữ A, đẩy cả bàn tay lên cao vẽ quỹ đạo hình nón nhọn (đỉnh vận tốc ngón trỏ v=3.61 tại frame 74)."
+      },
+      "Ê": {
+        "video_id": "D0497B",
+        "base_letter": "E",
+        "total_frames": 76,
+        "valid_frames": 52,
+        "missing_frames": 24,
+        "phases": {
+          "ENTRY": {"start": 0, "end": 7, "valid": 4, "total": 8},
+          "BASE_POSE": {"start": 8, "end": 27, "valid": 20, "total": 20},
+          "DIACRITIC_MOTION": {"start": 28, "end": 47, "valid": 20, "total": 20},
+          "EXIT": {"start": 48, "end": 75, "valid": 8, "total": 28}
+        },
+        "diacritic_nature": "Quỹ đạo tịnh tiến không gian (Spatial Trajectory Translation)",
+        "physical_mechanism": "Giữ dáng chữ E gập ngón tì ngón cái, bàn tay nhấc lên vùng trán/đầu vẽ dấu nón nhọn (cổ tay nâng từ y=0.55 lên 0.52)."
+      },
+      "Ô": {
+        "video_id": "D0507B",
+        "base_letter": "O",
+        "total_frames": 84,
+        "valid_frames": 58,
+        "missing_frames": 26,
+        "phases": {
+          "ENTRY": {"start": 0, "end": 15, "valid": 9, "total": 16},
+          "BASE_POSE": {"start": 16, "end": 34, "valid": 19, "total": 19},
+          "DIACRITIC_MOTION": {"start": 35, "end": 54, "valid": 20, "total": 20},
+          "EXIT": {"start": 55, "end": 83, "valid": 10, "total": 29}
+        },
+        "diacritic_nature": "Quỹ đạo tịnh tiến không gian (Spatial Trajectory Translation)",
+        "physical_mechanism": "Khuyên tròn O nâng cao lên trên đỉnh tạo dấu nón (đạt đỉnh y=0.534 tại frame 43)."
+      },
+      "Ơ": {
+        "video_id": "D0508N",
+        "base_letter": "O",
+        "total_frames": 89,
+        "valid_frames": 45,
+        "missing_frames": 44,
+        "phases": {
+          "ENTRY": {"start": 0, "end": 34, "valid": 6, "total": 35},
+          "BASE_POSE": {"start": 35, "end": 43, "valid": 9, "total": 9},
+          "DIACRITIC_MOTION": {"start": 44, "end": 67, "valid": 24, "total": 24},
+          "EXIT": {"start": 68, "end": 88, "valid": 6, "total": 21}
+        },
+        "diacritic_nature": "Biến thiên hình thái ngón tay (Finger Morphological Transformation)",
+        "physical_mechanism": "Từ khuyên tròn O ổn định, ngón cái/út bật vẩy ra ngoài tạo móc râu, duy trì tư thế râu suốt 24 frames."
+      },
+      "Ư": {
+        "video_id": "D0515N",
+        "base_letter": "U",
+        "total_frames": 118,
+        "valid_frames": 47,
+        "missing_frames": 71,
+        "phases": {
+          "ENTRY": {"start": 0, "end": 19, "valid": 4, "total": 20},
+          "BASE_POSE": {"start": 20, "end": 33, "valid": 14, "total": 14},
+          "DIACRITIC_MOTION": {"start": 34, "end": 45, "valid": 12, "total": 12},
+          "EXIT": {"start": 46, "end": 117, "valid": 17, "total": 72}
+        },
+        "diacritic_nature": "Biến thiên hình thái ngón tay (Finger Morphological Transformation)",
+        "physical_mechanism": "Hai ngón trỏ và giữa duỗi song song (chữ U), ngón út bật duỗi thẳng ra ngoài tạo râu (pinky_extended thay đổi từ False sang True)."
+      },
+      "Đ": {
+        "video_id": "D0495",
+        "base_letter": "D",
+        "total_frames": 105,
+        "valid_frames": 47,
+        "missing_frames": 58,
+        "phases": {
+          "ENTRY": {"start": 0, "end": 37, "valid": 6, "total": 38},
+          "BASE_POSE": {"start": 38, "end": 63, "valid": 26, "total": 26},
+          "DIACRITIC_MOTION": {"start": 64, "end": 72, "valid": 9, "total": 9},
+          "EXIT": {"start": 73, "end": 104, "valid": 6, "total": 32}
+        },
+        "diacritic_nature": "Chuyển động nội khớp ngón trỏ (Index Finger Kinematics / Stroke)",
+        "physical_mechanism": "Ngón trỏ duỗi đơn (chữ D) thực hiện động tác gập đốt giữa/vạch ngang ngắn trong 9 frames biểu thị nét gạch ngang."
+      }
+    },
+    "extractable_features_from_21_landmarks": [
+      "Wrist Spatial Displacement: delta_x, delta_y, delta_z giữa các frame",
+      "Centroid Trajectory: Quỹ đạo trọng tâm bàn tay qua thời gian",
+      "Velocity & Acceleration: Vận tốc tức thời v và gia tốc a của cổ tay và từng đầu ngón",
+      "Finger Extension State Delta: Biến thiên trạng thái duỗi/gập (thumb, index, middle, ring, pinky)",
+      "Inter-fingertip Distance: Khoảng cách giữa các đầu ngón (vd: tip 8 và tip 12 cho chữ Ă; tip 20 và palm cho chữ Ơ, Ư)",
+      "Finger Curl Ratio Changes: Biến thiên tỉ lệ co gập ngón tay (finger_curl_ratio)"
+    ],
+    "critical_limitation": "Mỗi chữ cái hiện chỉ có ĐÚNG 1 VIDEO / 1 NGƯỜI KÝ DUY NHẤT. Tổng số chuỗi chuyển động là 7 sequences. Hoàn toàn không đủ đa dạng thống kê để huấn luyện mô hình học sâu chuỗi (Deep Temporal Neural Network) tổng quát hóa."
+  },
+  "part_2_camera_pipeline_audit": {
+    "current_flow": {
+      "frontend_capture": "MediaPipe Hands trong CameraSignRecognizer.jsx trích xuất 21 landmarks bàn tay chính (và multi_hands nếu có).",
+      "transmission": "Gửi từng frame độc lập qua POST /api/recognize_landmarks với mode='letters'.",
+      "backend_processing": "VSLRecognizer.predict_landmarks xử lý không trạng thái (stateless) từng frame về mặt trích xuất đặc trưng.",
+      "smoothing_mechanism": "Bộ đệm collections.deque(maxlen=smoothing_window) chỉ lưu lịch sử kết quả dự đoán (final_sign, final_conf), KHÔNG lưu lịch sử raw landmarks hay feature vectors giữa các frames.",
+      "debounce_mechanism": "cooldown_sec (1.2s) và smoothing_window//2 đếm phiếu đa số để xác nhận chữ cái mới vào sentence_tokens."
+    },
+    "feasibility_of_landmark_buffer": {
+      "feasible": true,
+      "design": "Bổ sung một Ring Buffer (vd: collections.deque(maxlen=15..20)) lưu trữ tuple (timestamp, landmarks_21, feat_72) bên trong VSLRecognizer.predict_landmarks.",
+      "impact_on_current_modes": "Hoàn toàn không ảnh hưởng các mode khác (digits, words, sentence) nếu buffer chỉ được đọc khi mode=='letters' và dáng tay nền kích hoạt."
+    },
+    "reusable_modules": [
+      "backend.vision.feature_extractor.normalize_hand_landmarks: Chuẩn hóa 21 điểm thành 72D vector",
+      "backend.vision.feature_extractor.compute_finger_states: Đánh giá trạng thái duỗi/gập 5 ngón",
+      "backend.vision.feature_extractor.finger_curl_ratio: Đánh giá tỉ lệ co ngón chính xác",
+      "backend.vision.alphabet_classifier.VSLAlphabetClassifier: 12 luật hình học nhận diện nền cực nhanh (<1ms)",
+      "backend.models.alphabet_static_head.VSLStaticAlphabetHead: Nhận diện 10 chữ tĩnh bổ sung"
+    ]
+  },
+  "part_3_sstcn_model_audit": {
+    "model_name": "SSTCN_Attention",
+    "weights_path": "backend/models/weights/sign_sstcn_attention_model.pth",
+    "architecture": "Separable Spatial-Temporal Convolution Network kết hợp Joint Attention riêng cho 2 tay",
+    "input_contract": {
+      "expected_shape": "(Batch, Channels=3, Time=30, Joints=75)",
+      "joint_breakdown": {
+        "pose_joints": "0..32 (33 body keypoints từ MediaPipe Holistic)",
+        "left_hand_joints": "33..53 (21 keypoints bàn tay trái)",
+        "right_hand_joints": "54..74 (21 keypoints bàn tay phải)"
+      }
+    },
+    "labels_in_checkpoint": {
+      "total_classes": 102,
+      "vietnamese_alphabet_classes": "29 chữ cái (indices 0..28 trong SIGN_DICT_102, bao gồm đầy đủ Ă, Â, Ê, Ô, Ơ, Ư, Đ)"
+    },
+    "structural_incompatibility_with_alphabet_v2": {
+      "joint_count_mismatch": "Alphabet V2 chỉ có 21 landmarks bàn tay (không có 33 điểm cơ thể và không có bàn tay thứ hai).",
+      "code_level_crash": "Đầu vào 21 điểm gây lỗi 'IndexError: index 33 is out of bounds' tại self.left_hand_attn (truy xuất cứng indices 33..53).",
+      "zero_padding_distortion": "Nếu thêm 54 điểm zeros để ép đủ 75 joints, lớp Global Average Pooling (x.mean(dim=2).mean(dim=2)) sẽ bị pha loãng 72% giá trị 0, làm sai lệch hoàn toàn biểu diễn đặc trưng và phá vỡ độ chính xác.",
+      "camera_pipeline_mismatch": "Frontend mode 'letters' dùng MediaPipe Hands (<10ms). Chạy SSTCN đòi hỏi chuyển sang MediaPipe Holistic nặng gấp 3-4 lần, gây giật lag luồng camera."
+    },
+    "conclusion_on_sstcn": "KHÔNG THỂ SỬ DỤNG SSTCN CHO DỮ LIỆU 21 ĐIỂM ALPHABET V2 MÀ KHÔNG LÀM SAI LỆCH Ý NGHĨA DỮ LIỆU HOẶC GÂY SỤP ĐỔ SUY LUẬN."
+  },
+  "part_4_technical_options_comparison": {
+    "option_a_reuse_sstcn": {
+      "title": "Dùng lại mô hình SSTCN hiện có",
+      "pros": ["Có sẵn checkpoint 102 lớp chứa 29 nhãn chữ cái", "Không cần huấn luyện kiến trúc mới"],
+      "cons": [
+        "Bất tương thích nghiêm trọng về cấu trúc (cần 75 joints, chỉ có 21 joints)",
+        "IndexError khi chạy trực tiếp với 21 điểm",
+        "Padding bằng 0 làm sai lệch Global Average Pooling và phân phối trọng số",
+        "Bắt buộc camera phải chạy Holistic làm tăng độ trễ lên >60ms"
+      ],
+      "data_needed": "Bắt buộc thu thập lại toàn bộ dataset bằng MediaPipe Holistic (đủ 33 pose + 42 dual hands)",
+      "technical_risks": "Rất cao. Sai số suy luận lớn, giật lag camera, xung đột với 102 từ vựng",
+      "architectural_fit": "HOÀN TOÀN KHÔNG PHÙ HỢP (REJECTED)"
+    },
+    "option_b_independent_21joint_temporal_model": {
+      "title": "Xây dựng mô hình chuỗi thời gian độc lập nhận 21 hand landmarks (GRU / Mini-TCN / 1D-CNN)",
+      "pros": [
+        "Hoàn toàn tương thích với 21 landmarks của MediaPipe Hands",
+        "Độc lập 100% với SSTCN 102 lớp và VSLGestureNet 84 lớp",
+        "Mô hình nhỏ gọn, độ trễ thấp"
+      ],
+      "cons": [
+        "Dữ liệu hiện tại chỉ có 1 sequence / chữ -> nguy cơ Overfitting và Data Leakage trầm trọng",
+        "Không thể tổng quát hóa cho người ký khác nếu chỉ train trên 7 sequence hiện có",
+        "Chữ tĩnh vẫn phải đi qua mô hình chuỗi hoặc tạo độ trễ chờ frame"
+      ],
+      "data_needed": "Cần tối thiểu 30-50 sequence đa người ký cho mỗi chữ cái động với đa dạng tốc độ và góc quay",
+      "technical_risks": "Cao (rủi ro mô hình học vẹt cử chỉ của 1 người ký trong video QIPEDC)",
+      "architectural_fit": "PHÙ HỢP VỀ MẶT THIẾT KẾ NHƯNG THIẾU DỮ LIỆU TẠI THỜI ĐIỂM HIỆN TẠI"
+    },
+    "option_c_hierarchical_hybrid": {
+      "title": "Phương pháp kết hợp phân cấp: Dáng tay nền tĩnh + Bộ phân loại biến thiên động / nét vẽ (Hierarchical Hybrid)",
+      "pros": [
+        "Tối ưu hóa độ trễ tuyệt đối: 17 chữ tĩnh thuần túy trả kết quả tức thì (<5ms), không bị trễ 1 frame nào",
+        "Giải quyết triệt để vấn đề dữ liệu nhỏ: Dựa trên các đặc trưng giải phẫu học rõ ràng (Ă mở ngón V, Ư bật ngón út, Ơ vẩy râu, Đ gập trỏ)",
+        "Bảo toàn 100% các thành phần đã hoàn thiện (12 luật hình học, Static Head 10 chữ, SSTCN cũ)",
+        "Độ tin cậy cao, dễ kiểm toán và debug từng pha trạng thái"
+      ],
+      "cons": [
+        "Cần xây dựng máy trạng thái hữu hạn (FSM) và tinh chỉnh ngưỡng biến thiên hình học (kinematic thresholds)",
+        "Cần xử lý chống nhiễu rung lắc khi người ký giữ chữ nền"
+      ],
+      "data_needed": "Chỉ cần 3-5 mẫu người ký thực tế để kiểm chứng và calibrate ngưỡng mở ngón/quỹ đạo nón",
+      "technical_risks": "Thấp. Có thể fallback an toàn về chữ nền nếu nét vẽ không rõ ràng",
+      "architectural_fit": "PHÙ HỢP NHẤT VỚI KIẾN TRÚC VÀ ĐIỀU KIỆN HIỆN CÓ (HIGHLY RECOMMENDED)"
+    }
+  },
+  "part_5_proposed_architecture": {
+    "recommended_approach": "Option C (Hierarchical Hybrid Pipeline: Spatial Base Filter + Kinematic Stroke/Diacritic State Machine)",
+    "workflow": [
+      "Bước 1 (Frame Ingestion & Ring Buffer): Nhận 21 landmarks từ camera, đưa vào Ring Buffer cục bộ (15 frames ~0.5s).",
+      "Bước 2 (Spatial Base Classification): Chạy bộ phân loại tĩnh phân cấp (12 Geometric Rules -> 10 Static Head).",
+      "Bước 3 (Static Short-Circuit): Nếu kết quả là 1 trong 17 chữ tĩnh thuần túy (B, C, G, H, I, K, L, M, N, P, Q, R, S, T, V, X, Y), TRẢ KẾT QUẢ NGAY LẬP TỨC. Không kích hoạt kiểm tra động.",
+      "Bước 4 (Conditional Diacritic Evaluation): Nếu kết quả là 1 trong 5 chữ nền (A, D, E, O, U), kích hoạt Diacritic State Machine quét Ring Buffer 15 frames.",
+      "Bước 5 (Diacritic Resolution):",
+      "  - Dáng A: Nếu có mở xòe ngón trỏ+giữa -> Ă; nếu có đỉnh quỹ đạo nón nhọn -> Â; ngược lại giữ A.",
+      "  - Dáng E: Nếu có đỉnh quỹ đạo nón nhọn -> Ê; ngược lại giữ E.",
+      "  - Dáng O: Nếu có đỉnh quỹ đạo nón nhọn -> Ô; nếu có bật râu ngón út/cái -> Ơ; ngược lại giữ O.",
+      "  - Dáng U: Nếu có ngón út bật duỗi -> Ư; ngược lại giữ U.",
+      "  - Dáng D: Nếu ngón trỏ có nét gập/vạch ngang -> Đ; ngược lại giữ D.",
+      "Bước 6 (Safe Fallback): Nếu không có nét động nào vượt ngưỡng tin cậy, an toàn bảo lưu chữ cái nền tĩnh."
+    ],
+    "guarantees": {
+      "geometric_rules_preserved": true,
+      "static_alphabet_head_preserved": true,
+      "digits_and_words_unaffected": true,
+      "sstcn_model_untouched": true,
+      "zero_lag_for_pure_static_letters": true
+    }
+  },
+  "next_steps_priority": [
+    "1. [NGHIÊN CỨU] Thiết kế bộ trích xuất đặc trưng động học 15 frames (Kinematic Feature Extractor): tính độ mở ngón V, vận tốc đỉnh nón, trạng thái ngón út.",
+    "2. [THỰC NGHIỆM] Viết script phân tích ngưỡng định lượng (Quantitative Kinematic Thresholds) trực tiếp trên 133 frames DIACRITIC_MOTION của Dataset V2.",
+    "3. [DỮ LIỆU] Thu thập thêm dữ liệu kiểm thử từ 3-5 người ký thực tế (Multi-signer evaluation) cho 7 chữ cái có dấu để xác thực ngưỡng.",
+    "4. [TÍCH HỢP THỬ NGHIỆM] Xây dựng module độc lập DiacriticStateMachine và viết unit tests độc lập trước khi gắn vào recognizer.py."
+  ]
+}
+

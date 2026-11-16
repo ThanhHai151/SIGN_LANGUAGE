@@ -1,0 +1,244 @@
+{
+  "title": "Báo cáo xác minh phân đoạn 7 chữ động VSL (Task 5A)",
+  "timestamp": "2026-10-30",
+  "letters": {
+    "Ă": {
+      "video_id": "D0490B",
+      "base_letter": "A",
+      "task4_candidate": {
+        "entry": "5-6",
+        "base_pose": "7-25",
+        "diacritic": "26-48",
+        "exit": "49-59"
+      },
+      "task5a_verified": {
+        "entry": {
+          "range": "0-6",
+          "status": "đúng",
+          "reason": "Frame 0-4 ngoài khung hình; frame 5-6 đưa tay lên mép dưới"
+        },
+        "base_pose": {
+          "range": "7-25",
+          "status": "đúng",
+          "reason": "Tay nắm đấm ngón cái thẳng (dáng chữ A chuẩn) giữ bất động ở độ cao ổn định y=0.56"
+        },
+        "diacritic_motion": {
+          "range": "26-48",
+          "status": "đúng",
+          "reason": "Ngón trỏ và giữa mở xòe hình chữ V lật ngửa tạo dấu á, duy trì từ frame 26 đến 48"
+        },
+        "exit": {
+          "range": "49-88",
+          "status": "đúng",
+          "reason": "Bắt đầu hạ tay từ frame 49, vận tốc cổ tay đạt đỉnh ở frame 55, hạ khỏi khung hình từ frame 60"
+        }
+      },
+      "velocity_peak_explanation": "Đỉnh vận tốc cổ tay tại frame 55 (v=1.45) là pha hạ tay (EXIT), không phải dấu á.",
+      "manual_review_needed": false
+    },
+    "Â": {
+      "video_id": "D0491B",
+      "base_letter": "A",
+      "task4_candidate": {
+        "entry": "23-26",
+        "base_pose": "27-49",
+        "diacritic": "50-74",
+        "exit": "75-80"
+      },
+      "task5a_verified": {
+        "entry": {
+          "range": "0-26",
+          "status": "đúng",
+          "reason": "Frame 0-22 không thấy tay; frame 23-26 tay đưa nhanh lên tầm ngực"
+        },
+        "base_pose": {
+          "range": "27-49",
+          "status": "đúng",
+          "reason": "Tay nắm đấm dáng chữ A giữ cố định ở độ cao y=0.54, vận tốc tiệm cận 0"
+        },
+        "diacritic_motion": {
+          "range": "50-74",
+          "status": "đúng",
+          "reason": "Bàn tay đẩy lên cao vẽ dấu nón nhọn, đỉnh vận tốc ngón trỏ v=3.61 tại frame 74"
+        },
+        "exit": {
+          "range": "75-107",
+          "status": "đúng",
+          "reason": "Hoàn thành nón ở frame 75 và hạ tay xuống đùi"
+        }
+      },
+      "velocity_peak_explanation": "Đỉnh vận tốc ngón trỏ frame 74 thể hiện nét vạch cuối cùng của dấu nón nhọn trước khi hạ tay.",
+      "manual_review_needed": false
+    },
+    "Ê": {
+      "video_id": "D0497B",
+      "base_letter": "E",
+      "task4_candidate": {
+        "entry": "3-7",
+        "base_pose": "8-27",
+        "diacritic": "28-47",
+        "exit": "48-57"
+      },
+      "task5a_verified": {
+        "entry": {
+          "range": "0-7",
+          "status": "đúng",
+          "reason": "Frame 0-2 không thấy tay; frame 3-7 đưa tay lên"
+        },
+        "base_pose": {
+          "range": "8-27",
+          "status": "đúng",
+          "reason": "Các ngón tay gập tì ngón cái (dáng chữ E chuẩn) giữ yên tại y=0.55"
+        },
+        "diacritic_motion": {
+          "range": "28-47",
+          "status": "đúng",
+          "reason": "Bàn tay nhấc lên cao vẽ dấu nón ở vùng trán/đầu (cổ tay nâng từ y=0.55 lên 0.52)"
+        },
+        "exit": {
+          "range": "48-75",
+          "status": "đúng",
+          "reason": "Tay rơi tự do xuống dưới; đỉnh vận tốc tại frame 53 (v=2.49) là lúc tay rơi nhanh nhất về phía đùi"
+        }
+      },
+      "velocity_peak_explanation": "Đỉnh vận tốc tại frame 53 xuất hiện sau khi dấu nón kết thúc ở frame 47, đây chính là gia tốc rơi của pha EXIT.",
+      "manual_review_needed": false
+    },
+    "Ô": {
+      "video_id": "D0507B",
+      "base_letter": "O",
+      "task4_candidate": {
+        "entry": "6-15",
+        "base_pose": "16-34",
+        "diacritic": "35-54",
+        "exit": "55-65"
+      },
+      "task5a_verified": {
+        "entry": {
+          "range": "0-15",
+          "status": "đúng",
+          "reason": "Frame 0-5 không thấy tay; frame 6-15 đưa tay lên và bắt đầu khum tròn"
+        },
+        "base_pose": {
+          "range": "16-34",
+          "status": "đúng",
+          "reason": "Chữ O tròn trịa chuẩn mực được VSLAlphabetClassifier nhận diện MATCH liên tục"
+        },
+        "diacritic_motion": {
+          "range": "35-54",
+          "status": "đúng",
+          "reason": "Khuyên tròn O nâng cao lên trên đỉnh tạo dấu nón (đạt đỉnh y=0.534 tại frame 43)"
+        },
+        "exit": {
+          "range": "55-83",
+          "status": "đúng",
+          "reason": "Thả tay về tư thế nghỉ"
+        }
+      },
+      "velocity_peak_explanation": "Đỉnh vận tốc tại frame 61-62 phản ánh pha bắt đầu rơi tay sau khi hoàn tất nón.",
+      "manual_review_needed": false
+    },
+    "Ơ": {
+      "video_id": "D0508N",
+      "base_letter": "O",
+      "task4_candidate": {
+        "entry": "29-34",
+        "base_pose": "35-43",
+        "diacritic": "44-67",
+        "exit": "68-74"
+      },
+      "task5a_verified": {
+        "entry": {
+          "range": "0-34",
+          "status": "đúng",
+          "reason": "Diễn viên giữ tay dưới bàn tới frame 28; frame 29-34 tay vọt lên nhanh (đỉnh vận tốc v=4.75 ở frame 30)"
+        },
+        "base_pose": {
+          "range": "35-43",
+          "status": "đúng",
+          "reason": "Bàn tay khép tròn chữ O ổn định tại y=0.50 (VSLAlphabetClassifier khớp O)"
+        },
+        "diacritic_motion": {
+          "range": "44-67",
+          "status": "đúng",
+          "reason": "Ngón cái/út bật vẩy ra ngoài tạo móc râu, giữ hình thái râu từ frame 44 đến 67"
+        },
+        "exit": {
+          "range": "68-88",
+          "status": "đúng",
+          "reason": "Thu tay và hạ xuống đùi"
+        }
+      },
+      "velocity_peak_explanation": "Đỉnh vận tốc tại frame 30-31 là do diễn viên đưa tay lên quá nhanh từ đùi (ENTRY), không liên quan đến nét râu.",
+      "manual_review_needed": false
+    },
+    "Ư": {
+      "video_id": "D0515N",
+      "base_letter": "U",
+      "task4_candidate": {
+        "entry": "14-19",
+        "base_pose": "20-33",
+        "diacritic": "34-45",
+        "exit": "46-62"
+      },
+      "task5a_verified": {
+        "entry": {
+          "range": "0-19",
+          "status": "đúng",
+          "reason": "Frame 0-13 ngoài khung hình; frame 14-19 tay đưa lên"
+        },
+        "base_pose": {
+          "range": "20-33",
+          "status": "đúng",
+          "reason": "Hai ngón trỏ và giữa duỗi song song (dáng chữ U chuẩn)"
+        },
+        "diacritic_motion": {
+          "range": "34-45",
+          "status": "đúng",
+          "reason": "Ngón út bật duỗi thẳng ra ngoài tạo râu (khớp ngón út I-shape), ngón trỏ và giữa vẫn giữ hướng"
+        },
+        "exit": {
+          "range": "46-117",
+          "status": "đúng",
+          "reason": "Cử chỉ thu lại từ frame 46, tay hạ nhanh và rời khỏi khung hình ở frame 63"
+        }
+      },
+      "velocity_peak_explanation": "Đỉnh vận tốc ngón út tại frame 59 phản ánh chuyển động thu gập ngón út lại khi hạ tay.",
+      "manual_review_needed": false
+    },
+    "Đ": {
+      "video_id": "D0495",
+      "base_letter": "D",
+      "task4_candidate": {
+        "entry": "30-37",
+        "base_pose": "38-63",
+        "diacritic": "64-72",
+        "exit": "73-78"
+      },
+      "task5a_verified": {
+        "entry": {
+          "range": "0-37",
+          "status": "đúng",
+          "reason": "Diễn viên chuẩn bị tới frame 29; frame 30-37 đưa tay lên"
+        },
+        "base_pose": {
+          "range": "38-63",
+          "status": "đúng",
+          "reason": "Ngón trỏ duỗi đơn hướng lên trên (dáng chữ D chuẩn) giữ yên suốt 26 frames"
+        },
+        "diacritic_motion": {
+          "range": "64-72",
+          "status": "đúng",
+          "reason": "Ngón trỏ gập đốt giữa vạch ngang tạo nét gạch ngang của chữ Đ"
+        },
+        "exit": {
+          "range": "73-104",
+          "status": "đúng",
+          "reason": "Tay hạ xuống nhanh (đỉnh vận tốc v=3.82 tại frame 73)"
+        }
+      },
+      "velocity_peak_explanation": "Đỉnh vận tốc tại frame 73 chính là khoảnh khắc diễn viên giật tay hạ xuống ngay sau nét gạch.",
+      "manual_review_needed": false
+    }
+  }
+}

@@ -1,0 +1,273 @@
+{
+  "execution_timestamp": "2026-10-30 21:08:58",
+  "total_elapsed_sec": 1317.87,
+  "total_videos_processed": 29,
+  "total_frames_scanned": 1614,
+  "total_valid_landmarks": 856,
+  "overall_valid_ratio_pct": 53.04,
+  "dynamic_letters_count": 7,
+  "static_letters_count": 22,
+  "stats_per_letter": {
+    "A": {
+      "letter": "A",
+      "type": "static",
+      "video_id": "D0489",
+      "total_frames_scanned": 47,
+      "valid_landmarks": 23,
+      "failed_frames": 24,
+      "valid_ratio_pct": 48.94
+    },
+    "Ă": {
+      "letter": "Ă",
+      "type": "dynamic",
+      "video_id": "D0490B",
+      "total_frames_scanned": 89,
+      "valid_landmarks": 53,
+      "failed_frames": 36,
+      "valid_ratio_pct": 59.55
+    },
+    "Â": {
+      "letter": "Â",
+      "type": "dynamic",
+      "video_id": "D0491B",
+      "total_frames_scanned": 108,
+      "valid_landmarks": 57,
+      "failed_frames": 51,
+      "valid_ratio_pct": 52.78
+    },
+    "B": {
+      "letter": "B",
+      "type": "static",
+      "video_id": "D0492",
+      "total_frames_scanned": 47,
+      "valid_landmarks": 22,
+      "failed_frames": 25,
+      "valid_ratio_pct": 46.81
+    },
+    "C": {
+      "letter": "C",
+      "type": "static",
+      "video_id": "D0493",
+      "total_frames_scanned": 41,
+      "valid_landmarks": 20,
+      "failed_frames": 21,
+      "valid_ratio_pct": 48.78
+    },
+    "D": {
+      "letter": "D",
+      "type": "static",
+      "video_id": "D0494",
+      "total_frames_scanned": 44,
+      "valid_landmarks": 22,
+      "failed_frames": 22,
+      "valid_ratio_pct": 50.0
+    },
+    "Đ": {
+      "letter": "Đ",
+      "type": "dynamic",
+      "video_id": "D0495",
+      "total_frames_scanned": 105,
+      "valid_landmarks": 47,
+      "failed_frames": 58,
+      "valid_ratio_pct": 44.76
+    },
+    "E": {
+      "letter": "E",
+      "type": "static",
+      "video_id": "D0496",
+      "total_frames_scanned": 40,
+      "valid_landmarks": 20,
+      "failed_frames": 20,
+      "valid_ratio_pct": 50.0
+    },
+    "Ê": {
+      "letter": "Ê",
+      "type": "dynamic",
+      "video_id": "D0497B",
+      "total_frames_scanned": 76,
+      "valid_landmarks": 52,
+      "failed_frames": 24,
+      "valid_ratio_pct": 68.42
+    },
+    "G": {
+      "letter": "G",
+      "type": "static",
+      "video_id": "D0498B",
+      "total_frames_scanned": 79,
+      "valid_landmarks": 44,
+      "failed_frames": 35,
+      "valid_ratio_pct": 55.7
+    },
+    "H": {
+      "letter": "H",
+      "type": "static",
+      "video_id": "D0500B",
+      "total_frames_scanned": 36,
+      "valid_landmarks": 22,
+      "failed_frames": 14,
+      "valid_ratio_pct": 61.11
+    },
+    "I": {
+      "letter": "I",
+      "type": "static",
+      "video_id": "D0501",
+      "total_frames_scanned": 30,
+      "valid_landmarks": 21,
+      "failed_frames": 9,
+      "valid_ratio_pct": 70.0
+    },
+    "K": {
+      "letter": "K",
+      "type": "static",
+      "video_id": "D0502",
+      "total_frames_scanned": 33,
+      "valid_landmarks": 19,
+      "failed_frames": 14,
+      "valid_ratio_pct": 57.58
+    },
+    "L": {
+      "letter": "L",
+      "type": "static",
+      "video_id": "D0503",
+      "total_frames_scanned": 34,
+      "valid_landmarks": 20,
+      "failed_frames": 14,
+      "valid_ratio_pct": 58.82
+    },
+    "M": {
+      "letter": "M",
+      "type": "static",
+      "video_id": "D0504",
+      "total_frames_scanned": 48,
+      "valid_landmarks": 19,
+      "failed_frames": 29,
+      "valid_ratio_pct": 39.58
+    },
+    "N": {
+      "letter": "N",
+      "type": "static",
+      "video_id": "D0505",
+      "total_frames_scanned": 38,
+      "valid_landmarks": 25,
+      "failed_frames": 13,
+      "valid_ratio_pct": 65.79
+    },
+    "O": {
+      "letter": "O",
+      "type": "static",
+      "video_id": "D0506",
+      "total_frames_scanned": 37,
+      "valid_landmarks": 20,
+      "failed_frames": 17,
+      "valid_ratio_pct": 54.05
+    },
+    "Ô": {
+      "letter": "Ô",
+      "type": "dynamic",
+      "video_id": "D0507B",
+      "total_frames_scanned": 84,
+      "valid_landmarks": 58,
+      "failed_frames": 26,
+      "valid_ratio_pct": 69.05
+    },
+    "Ơ": {
+      "letter": "Ơ",
+      "type": "dynamic",
+      "video_id": "D0508N",
+      "total_frames_scanned": 89,
+      "valid_landmarks": 45,
+      "failed_frames": 44,
+      "valid_ratio_pct": 50.56
+    },
+    "P": {
+      "letter": "P",
+      "type": "static",
+      "video_id": "D0509B",
+      "total_frames_scanned": 48,
+      "valid_landmarks": 23,
+      "failed_frames": 25,
+      "valid_ratio_pct": 47.92
+    },
+    "Q": {
+      "letter": "Q",
+      "type": "static",
+      "video_id": "D0510",
+      "total_frames_scanned": 41,
+      "valid_landmarks": 19,
+      "failed_frames": 22,
+      "valid_ratio_pct": 46.34
+    },
+    "R": {
+      "letter": "R",
+      "type": "static",
+      "video_id": "D0511",
+      "total_frames_scanned": 32,
+      "valid_landmarks": 16,
+      "failed_frames": 16,
+      "valid_ratio_pct": 50.0
+    },
+    "S": {
+      "letter": "S",
+      "type": "static",
+      "video_id": "D0512",
+      "total_frames_scanned": 37,
+      "valid_landmarks": 16,
+      "failed_frames": 21,
+      "valid_ratio_pct": 43.24
+    },
+    "T": {
+      "letter": "T",
+      "type": "static",
+      "video_id": "D0513B",
+      "total_frames_scanned": 43,
+      "valid_landmarks": 23,
+      "failed_frames": 20,
+      "valid_ratio_pct": 53.49
+    },
+    "U": {
+      "letter": "U",
+      "type": "static",
+      "video_id": "D0514",
+      "total_frames_scanned": 39,
+      "valid_landmarks": 19,
+      "failed_frames": 20,
+      "valid_ratio_pct": 48.72
+    },
+    "Ư": {
+      "letter": "Ư",
+      "type": "dynamic",
+      "video_id": "D0515N",
+      "total_frames_scanned": 118,
+      "valid_landmarks": 47,
+      "failed_frames": 71,
+      "valid_ratio_pct": 39.83
+    },
+    "V": {
+      "letter": "V",
+      "type": "static",
+      "video_id": "D0516",
+      "total_frames_scanned": 32,
+      "valid_landmarks": 19,
+      "failed_frames": 13,
+      "valid_ratio_pct": 59.38
+    },
+    "X": {
+      "letter": "X",
+      "type": "static",
+      "video_id": "D0517B",
+      "total_frames_scanned": 87,
+      "valid_landmarks": 48,
+      "failed_frames": 39,
+      "valid_ratio_pct": 55.17
+    },
+    "Y": {
+      "letter": "Y",
+      "type": "static",
+      "video_id": "D0518N",
+      "total_frames_scanned": 32,
+      "valid_landmarks": 17,
+      "failed_frames": 15,
+      "valid_ratio_pct": 53.12
+    }
+  }
+}

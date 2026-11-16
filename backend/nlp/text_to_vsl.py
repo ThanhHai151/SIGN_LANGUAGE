@@ -251,6 +251,7 @@ def _vocab_item(token: str, entry: dict, available_motions: set = None) -> dict:
     pose_key = robot_pose_key(entry)
     legacy = VSL_VOCABULARY.get(pose_key or "", {})
     return {
+        **({"avatar_symbol": token.upper()} if len(token) == 1 and token.isalpha() else {}),
         "token": token,
         "gloss": gloss,
         "label": display_label(entry, token),
@@ -387,6 +388,9 @@ def _letter_item(name: str, ascii_key: str, lex: dict, available: set, group: st
     alpha = VSL_ALPHABET.get(ascii_key, {})
     dur = int(round((clip["clip"][1] - clip["clip"][0]) * 1000)) + 250 if mid else 800
     return {
+        # Ký hiệu cho avatar Mixamo (MixamoPoseAdapter.resolveVietnameseSign): chữ cái có dấu phụ (Ă, Ơ…)
+        # hoặc dấu thanh TONE_SAC/TONE_HUYEN/TONE_HOI/TONE_NGA/TONE_NANG
+        "avatar_symbol": f"TONE_{remove_accents(name).upper()}" if is_tone else name.upper(),
         "token": label if is_tone else name.upper(),
         "gloss": f"ALPHA_{name.upper()}",
         "label": label,

@@ -1,0 +1,3111 @@
+{
+  "D": {
+    "line": 2629,
+    "trial_id": "pilot_20261107_2141_D_rep02_att01",
+    "frame_idx": 1,
+    "expected_sign": "D",
+    "final_sign": "P",
+    "final_confidence": 0.95,
+    "prediction_source": "geometric_rule",
+    "gating_status": "passed_geometric",
+    "threshold_applied": null,
+    "reject_reason": null,
+    "geometric_status": "MATCH",
+    "geometric_letter": "P",
+    "geometric_reason": "Chữ P: trỏ đứng d_IW=1.93, cái tì giữa d_TM=0.26<=0.75, ang_IM=124.2°>=55.0°",
+    "matched_candidates": [
+      [
+        "P",
+        0.95
+      ]
+    ],
+    "static_head_raw": null,
+    "static_head_conf": null,
+    "static_head_top_k": null,
+    "diagnostics_snippet": {
+      "k_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "index_d_iw_ge_min": true,
+          "index_curl_le_max": true,
+          "index_horiz_le_max": true,
+          "index_straight_ge_min": true,
+          "middle_d_mw_in_range": false,
+          "middle_curl_le_max": false,
+          "middle_straight_ge_min": false,
+          "middle_horiz_ge_min": true,
+          "ang_im_in_range": false,
+          "d_im_ge_min": true,
+          "ring_d_rw_le_max": true,
+          "pinky_d_pw_le_max": true,
+          "diff_iw_rw_ge_min": true,
+          "diff_iw_pw_ge_min": true,
+          "thumb_d_ti_le_max": false,
+          "thumb_d_tm_le_max": true,
+          "thumb_mid_dist_le_max": true
+        },
+        "failed_conditions": [
+          "middle_d_mw_in_range",
+          "middle_curl_le_max",
+          "middle_straight_ge_min",
+          "ang_im_in_range",
+          "thumb_d_ti_le_max"
+        ]
+      },
+      "i_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "pinky_ext_or_straight": false,
+          "d_PW_ge_min": false,
+          "pinky_curl_le_max": false,
+          "middle_fingers_folded": false,
+          "d_IW_le_max": false,
+          "d_MW_le_max": false,
+          "d_RW_le_max": true,
+          "diff_PW_curled_ge_min": false,
+          "d_TI_le_max": false,
+          "d_TM_le_max": true,
+          "d_TW_le_max": true,
+          "thumb_not_spread": true
+        },
+        "failed_conditions": [
+          "pinky_ext_or_straight",
+          "d_PW_ge_min",
+          "pinky_curl_le_max",
+          "middle_fingers_folded",
+          "d_IW_le_max",
+          "d_MW_le_max",
+          "diff_PW_curled_ge_min",
+          "d_TI_le_max"
+        ]
+      },
+      "o_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_le_max": false,
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": false,
+          "d_rw_ge_min": false,
+          "d_pw_ge_min": false,
+          "idx_straight_le_max": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_le_max",
+          "d_mw_ge_min",
+          "d_rw_ge_min",
+          "d_pw_ge_min",
+          "idx_straight_le_max"
+        ]
+      },
+      "t_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_ge_min": false,
+          "d_im_ge_min": true,
+          "d_iw_le_max": false,
+          "d_mw_ge_min": false,
+          "d_rw_ge_min": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_ge_min",
+          "d_iw_le_max",
+          "d_mw_ge_min",
+          "d_rw_ge_min"
+        ]
+      },
+      "u_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": false,
+          "d_rw_le_max": true,
+          "d_pw_le_max": true,
+          "d_im_le_max": false,
+          "ang_im_dir_le_max": false,
+          "diff_x_im_le_max": false,
+          "idx_horiz_le_max": true,
+          "idx_tip_y_le_max": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_mw_ge_min",
+          "d_im_le_max",
+          "ang_im_dir_le_max",
+          "diff_x_im_le_max"
+        ]
+      },
+      "s_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_tw_le_max": true,
+          "d_ti_in_range": false,
+          "d_tm_in_range": false,
+          "d_iw_le_max": false,
+          "d_mw_le_max": true,
+          "d_rw_le_max": true,
+          "d_pw_in_range": true,
+          "d_pw_le_max": true,
+          "thumb_lat_ge_min": true
+        },
+        "failed_conditions": [
+          "d_ti_in_range",
+          "d_tm_in_range",
+          "d_iw_le_max"
+        ]
+      },
+      "p_rule_diagnostics": {
+        "matched": true,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "idx_straight_ge_min": true,
+          "idx_tip_y_le_max": true,
+          "idx_horiz_le_max": true,
+          "d_mw_le_max": true,
+          "d_ti_ge_min": true,
+          "d_tm_le_max": true,
+          "d_tw_le_max": true,
+          "thumb_lat_ge_min": true,
+          "ang_im_dir_ge_min": true
+        },
+        "failed_conditions": []
+      },
+      "q_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_in_range": true,
+          "idx_straight_ge_min": true,
+          "idx_tip_y_in_range": false,
+          "idx_dy_ge_min": false,
+          "idx_horiz_in_range": false,
+          "d_tw_in_range": false,
+          "d_ti_in_range": false,
+          "ang_ti_le_max": false,
+          "mid_straight_le_max": false,
+          "middle_curl_ge_min": false,
+          "ang_im_dir_ge_min": true
+        },
+        "failed_conditions": [
+          "idx_tip_y_in_range",
+          "idx_dy_ge_min",
+          "idx_horiz_in_range",
+          "d_tw_in_range",
+          "d_ti_in_range",
+          "ang_ti_le_max",
+          "mid_straight_le_max",
+          "middle_curl_ge_min"
+        ]
+      },
+      "r_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": false,
+          "d_rw_le_max": true,
+          "d_pw_le_max": true,
+          "idx_straight_ge_min": true,
+          "mid_straight_ge_min": false,
+          "idx_tip_y_le_max": true,
+          "mid_tip_y_le_max": false,
+          "idx_horiz_ratio_le_max": true,
+          "idx_dy_le_max": true,
+          "d_im_le_max": false,
+          "cross_indicator_le_max": true,
+          "diff_mw_iw_ge_min": false,
+          "mcp_width_2d_ge_min": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_mw_ge_min",
+          "mid_straight_ge_min",
+          "mid_tip_y_le_max",
+          "d_im_le_max",
+          "diff_mw_iw_ge_min"
+        ]
+      },
+      "x_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "thumb_index_d_ti_le_max": false,
+          "d_ti_le_max": false,
+          "index_d_iw_le_max": false,
+          "d_iw_le_max": false,
+          "index_curl_ge_min": false,
+          "idx_curl_ge_min": false,
+          "index_straight_le_max": false,
+          "idx_straight_le_max": false,
+          "ring_d_rw_le_max": true,
+          "d_rw_le_max": true,
+          "pinky_d_pw_le_max": false,
+          "d_pw_le_max": false,
+          "thumb_d_tw_in_range": false,
+          "d_tw_in_range": false,
+          "index_tip_y_le_max": true,
+          "idx_tip_y_le_max": true
+        },
+        "failed_conditions": [
+          "thumb_index_d_ti_le_max",
+          "d_ti_le_max",
+          "index_d_iw_le_max",
+          "d_iw_le_max",
+          "index_curl_ge_min",
+          "idx_curl_ge_min",
+          "index_straight_le_max",
+          "idx_straight_le_max",
+          "pinky_d_pw_le_max",
+          "d_pw_le_max",
+          "thumb_d_tw_in_range",
+          "d_tw_in_range"
+        ]
+      }
+    }
+  },
+  "E": {
+    "line": 3644,
+    "trial_id": "pilot_20261107_2141_E_rep06_att01",
+    "frame_idx": 10,
+    "expected_sign": "E",
+    "final_sign": "C",
+    "final_confidence": 0.95,
+    "prediction_source": "geometric_rule",
+    "gating_status": "passed_geometric",
+    "threshold_applied": null,
+    "reject_reason": null,
+    "geometric_status": "MATCH",
+    "geometric_letter": "C",
+    "geometric_reason": "Vòm cong mở chữ C: d_TI=0.72, d_IW=1.36",
+    "matched_candidates": [
+      [
+        "C",
+        0.95
+      ]
+    ],
+    "static_head_raw": null,
+    "static_head_conf": null,
+    "static_head_top_k": null,
+    "diagnostics_snippet": {
+      "k_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "index_d_iw_ge_min": false,
+          "index_curl_le_max": true,
+          "index_horiz_le_max": true,
+          "index_straight_ge_min": false,
+          "middle_d_mw_in_range": true,
+          "middle_curl_le_max": false,
+          "middle_straight_ge_min": false,
+          "middle_horiz_ge_min": false,
+          "ang_im_in_range": false,
+          "d_im_ge_min": false,
+          "ring_d_rw_le_max": false,
+          "pinky_d_pw_le_max": false,
+          "diff_iw_rw_ge_min": false,
+          "diff_iw_pw_ge_min": false,
+          "thumb_d_ti_le_max": true,
+          "thumb_d_tm_le_max": true,
+          "thumb_mid_dist_le_max": false
+        },
+        "failed_conditions": [
+          "index_d_iw_ge_min",
+          "index_straight_ge_min",
+          "middle_curl_le_max",
+          "middle_straight_ge_min",
+          "middle_horiz_ge_min",
+          "ang_im_in_range",
+          "d_im_ge_min",
+          "ring_d_rw_le_max",
+          "pinky_d_pw_le_max",
+          "diff_iw_rw_ge_min",
+          "diff_iw_pw_ge_min",
+          "thumb_mid_dist_le_max"
+        ]
+      },
+      "i_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "pinky_ext_or_straight": true,
+          "d_PW_ge_min": false,
+          "pinky_curl_le_max": true,
+          "middle_fingers_folded": false,
+          "d_IW_le_max": false,
+          "d_MW_le_max": false,
+          "d_RW_le_max": false,
+          "diff_PW_curled_ge_min": false,
+          "d_TI_le_max": false,
+          "d_TM_le_max": false,
+          "d_TW_le_max": true,
+          "thumb_not_spread": true
+        },
+        "failed_conditions": [
+          "d_PW_ge_min",
+          "middle_fingers_folded",
+          "d_IW_le_max",
+          "d_MW_le_max",
+          "d_RW_le_max",
+          "diff_PW_curled_ge_min",
+          "d_TI_le_max",
+          "d_TM_le_max"
+        ]
+      },
+      "o_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_le_max": false,
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_ge_min": true,
+          "d_pw_ge_min": true,
+          "idx_straight_le_max": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_le_max",
+          "idx_straight_le_max"
+        ]
+      },
+      "t_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_ge_min": false,
+          "d_im_ge_min": false,
+          "d_iw_le_max": false,
+          "d_mw_ge_min": false,
+          "d_rw_ge_min": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_ge_min",
+          "d_im_ge_min",
+          "d_iw_le_max",
+          "d_mw_ge_min",
+          "d_rw_ge_min"
+        ]
+      },
+      "u_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": false,
+          "d_mw_ge_min": false,
+          "d_rw_le_max": false,
+          "d_pw_le_max": false,
+          "d_im_le_max": false,
+          "ang_im_dir_le_max": true,
+          "diff_x_im_le_max": false,
+          "idx_horiz_le_max": true,
+          "idx_tip_y_le_max": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_iw_ge_min",
+          "d_mw_ge_min",
+          "d_rw_le_max",
+          "d_pw_le_max",
+          "d_im_le_max",
+          "diff_x_im_le_max"
+        ]
+      },
+      "s_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_tw_le_max": true,
+          "d_ti_in_range": false,
+          "d_tm_in_range": true,
+          "d_iw_le_max": false,
+          "d_mw_le_max": false,
+          "d_rw_le_max": false,
+          "d_pw_in_range": false,
+          "d_pw_le_max": false,
+          "thumb_lat_ge_min": false
+        },
+        "failed_conditions": [
+          "d_ti_in_range",
+          "d_iw_le_max",
+          "d_mw_le_max",
+          "d_rw_le_max",
+          "d_pw_in_range",
+          "d_pw_le_max",
+          "thumb_lat_ge_min"
+        ]
+      },
+      "p_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": false,
+          "idx_straight_ge_min": false,
+          "idx_tip_y_le_max": false,
+          "idx_horiz_le_max": true,
+          "d_mw_le_max": false,
+          "d_ti_ge_min": false,
+          "d_tm_le_max": true,
+          "d_tw_le_max": true,
+          "thumb_lat_ge_min": false,
+          "ang_im_dir_ge_min": false
+        },
+        "failed_conditions": [
+          "d_iw_ge_min",
+          "idx_straight_ge_min",
+          "idx_tip_y_le_max",
+          "d_mw_le_max",
+          "d_ti_ge_min",
+          "thumb_lat_ge_min",
+          "ang_im_dir_ge_min"
+        ]
+      },
+      "q_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_in_range": false,
+          "idx_straight_ge_min": false,
+          "idx_tip_y_in_range": false,
+          "idx_dy_ge_min": false,
+          "idx_horiz_in_range": false,
+          "d_tw_in_range": false,
+          "d_ti_in_range": true,
+          "ang_ti_le_max": true,
+          "mid_straight_le_max": true,
+          "middle_curl_ge_min": true,
+          "ang_im_dir_ge_min": false
+        },
+        "failed_conditions": [
+          "d_iw_in_range",
+          "idx_straight_ge_min",
+          "idx_tip_y_in_range",
+          "idx_dy_ge_min",
+          "idx_horiz_in_range",
+          "d_tw_in_range",
+          "ang_im_dir_ge_min"
+        ]
+      },
+      "r_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_le_max": false,
+          "d_pw_le_max": false,
+          "idx_straight_ge_min": false,
+          "mid_straight_ge_min": false,
+          "idx_tip_y_le_max": true,
+          "mid_tip_y_le_max": true,
+          "idx_horiz_ratio_le_max": true,
+          "idx_dy_le_max": true,
+          "d_im_le_max": true,
+          "cross_indicator_le_max": false,
+          "diff_mw_iw_ge_min": true,
+          "mcp_width_2d_ge_min": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_rw_le_max",
+          "d_pw_le_max",
+          "idx_straight_ge_min",
+          "mid_straight_ge_min",
+          "cross_indicator_le_max"
+        ]
+      },
+      "x_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "thumb_index_d_ti_le_max": false,
+          "d_ti_le_max": false,
+          "index_d_iw_le_max": false,
+          "d_iw_le_max": false,
+          "index_curl_ge_min": false,
+          "idx_curl_ge_min": false,
+          "index_straight_le_max": true,
+          "idx_straight_le_max": true,
+          "ring_d_rw_le_max": false,
+          "d_rw_le_max": false,
+          "pinky_d_pw_le_max": false,
+          "d_pw_le_max": false,
+          "thumb_d_tw_in_range": true,
+          "d_tw_in_range": true,
+          "index_tip_y_le_max": true,
+          "idx_tip_y_le_max": true
+        },
+        "failed_conditions": [
+          "thumb_index_d_ti_le_max",
+          "d_ti_le_max",
+          "index_d_iw_le_max",
+          "d_iw_le_max",
+          "index_curl_ge_min",
+          "idx_curl_ge_min",
+          "ring_d_rw_le_max",
+          "d_rw_le_max",
+          "pinky_d_pw_le_max",
+          "d_pw_le_max"
+        ]
+      }
+    }
+  },
+  "H": {
+    "line": 4341,
+    "trial_id": "pilot_20261107_2141_H_rep01_att01",
+    "frame_idx": 1,
+    "expected_sign": "H",
+    "final_sign": "V",
+    "final_confidence": 0.95,
+    "prediction_source": "geometric_rule",
+    "gating_status": "passed_geometric",
+    "threshold_applied": null,
+    "reject_reason": null,
+    "geometric_status": "MATCH",
+    "geometric_letter": "V",
+    "geometric_reason": "Trỏ & Giữa xòe chữ V: d_IM=0.87>=0.28, ang_IM=50.2°>=9.0°, MCP_width=0.56>=0.48",
+    "matched_candidates": [
+      [
+        "V",
+        0.95
+      ]
+    ],
+    "static_head_raw": null,
+    "static_head_conf": null,
+    "static_head_top_k": null,
+    "diagnostics_snippet": {
+      "k_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "index_d_iw_ge_min": true,
+          "index_curl_le_max": true,
+          "index_horiz_le_max": true,
+          "index_straight_ge_min": true,
+          "middle_d_mw_in_range": false,
+          "middle_curl_le_max": true,
+          "middle_straight_ge_min": true,
+          "middle_horiz_ge_min": true,
+          "ang_im_in_range": false,
+          "d_im_ge_min": true,
+          "ring_d_rw_le_max": true,
+          "pinky_d_pw_le_max": true,
+          "diff_iw_rw_ge_min": true,
+          "diff_iw_pw_ge_min": true,
+          "thumb_d_ti_le_max": true,
+          "thumb_d_tm_le_max": true,
+          "thumb_mid_dist_le_max": true
+        },
+        "failed_conditions": [
+          "middle_d_mw_in_range",
+          "ang_im_in_range"
+        ]
+      },
+      "i_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "pinky_ext_or_straight": false,
+          "d_PW_ge_min": false,
+          "pinky_curl_le_max": false,
+          "middle_fingers_folded": false,
+          "d_IW_le_max": false,
+          "d_MW_le_max": false,
+          "d_RW_le_max": true,
+          "diff_PW_curled_ge_min": false,
+          "d_TI_le_max": false,
+          "d_TM_le_max": false,
+          "d_TW_le_max": false,
+          "thumb_not_spread": false
+        },
+        "failed_conditions": [
+          "pinky_ext_or_straight",
+          "d_PW_ge_min",
+          "pinky_curl_le_max",
+          "middle_fingers_folded",
+          "d_IW_le_max",
+          "d_MW_le_max",
+          "diff_PW_curled_ge_min",
+          "d_TI_le_max",
+          "d_TM_le_max",
+          "d_TW_le_max",
+          "thumb_not_spread"
+        ]
+      },
+      "o_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_le_max": false,
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_ge_min": false,
+          "d_pw_ge_min": false,
+          "idx_straight_le_max": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_le_max",
+          "d_rw_ge_min",
+          "d_pw_ge_min",
+          "idx_straight_le_max"
+        ]
+      },
+      "t_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_ge_min": false,
+          "d_im_ge_min": true,
+          "d_iw_le_max": false,
+          "d_mw_ge_min": true,
+          "d_rw_ge_min": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_ge_min",
+          "d_iw_le_max",
+          "d_rw_ge_min"
+        ]
+      },
+      "u_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_le_max": true,
+          "d_pw_le_max": true,
+          "d_im_le_max": false,
+          "ang_im_dir_le_max": false,
+          "diff_x_im_le_max": false,
+          "idx_horiz_le_max": true,
+          "idx_tip_y_le_max": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_im_le_max",
+          "ang_im_dir_le_max",
+          "diff_x_im_le_max"
+        ]
+      },
+      "s_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_tw_le_max": true,
+          "d_ti_in_range": false,
+          "d_tm_in_range": true,
+          "d_iw_le_max": false,
+          "d_mw_le_max": false,
+          "d_rw_le_max": true,
+          "d_pw_in_range": true,
+          "d_pw_le_max": true,
+          "thumb_lat_ge_min": false
+        },
+        "failed_conditions": [
+          "d_ti_in_range",
+          "d_iw_le_max",
+          "d_mw_le_max",
+          "thumb_lat_ge_min"
+        ]
+      },
+      "p_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "idx_straight_ge_min": true,
+          "idx_tip_y_le_max": true,
+          "idx_horiz_le_max": true,
+          "d_mw_le_max": false,
+          "d_ti_ge_min": false,
+          "d_tm_le_max": true,
+          "d_tw_le_max": false,
+          "thumb_lat_ge_min": false,
+          "ang_im_dir_ge_min": false
+        },
+        "failed_conditions": [
+          "d_mw_le_max",
+          "d_ti_ge_min",
+          "d_tw_le_max",
+          "thumb_lat_ge_min",
+          "ang_im_dir_ge_min"
+        ]
+      },
+      "q_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_in_range": true,
+          "idx_straight_ge_min": true,
+          "idx_tip_y_in_range": false,
+          "idx_dy_ge_min": false,
+          "idx_horiz_in_range": false,
+          "d_tw_in_range": false,
+          "d_ti_in_range": false,
+          "ang_ti_le_max": true,
+          "mid_straight_le_max": false,
+          "middle_curl_ge_min": false,
+          "ang_im_dir_ge_min": true
+        },
+        "failed_conditions": [
+          "idx_tip_y_in_range",
+          "idx_dy_ge_min",
+          "idx_horiz_in_range",
+          "d_tw_in_range",
+          "d_ti_in_range",
+          "mid_straight_le_max",
+          "middle_curl_ge_min"
+        ]
+      },
+      "r_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_le_max": true,
+          "d_pw_le_max": true,
+          "idx_straight_ge_min": true,
+          "mid_straight_ge_min": true,
+          "idx_tip_y_le_max": true,
+          "mid_tip_y_le_max": true,
+          "idx_horiz_ratio_le_max": true,
+          "idx_dy_le_max": true,
+          "d_im_le_max": false,
+          "cross_indicator_le_max": true,
+          "diff_mw_iw_ge_min": true,
+          "mcp_width_2d_ge_min": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_im_le_max"
+        ]
+      },
+      "x_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "thumb_index_d_ti_le_max": false,
+          "d_ti_le_max": false,
+          "index_d_iw_le_max": false,
+          "d_iw_le_max": false,
+          "index_curl_ge_min": false,
+          "idx_curl_ge_min": false,
+          "index_straight_le_max": false,
+          "idx_straight_le_max": false,
+          "ring_d_rw_le_max": true,
+          "d_rw_le_max": true,
+          "pinky_d_pw_le_max": false,
+          "d_pw_le_max": false,
+          "thumb_d_tw_in_range": false,
+          "d_tw_in_range": false,
+          "index_tip_y_le_max": true,
+          "idx_tip_y_le_max": true
+        },
+        "failed_conditions": [
+          "thumb_index_d_ti_le_max",
+          "d_ti_le_max",
+          "index_d_iw_le_max",
+          "d_iw_le_max",
+          "index_curl_ge_min",
+          "idx_curl_ge_min",
+          "index_straight_le_max",
+          "idx_straight_le_max",
+          "pinky_d_pw_le_max",
+          "d_pw_le_max",
+          "thumb_d_tw_in_range",
+          "d_tw_in_range"
+        ]
+      }
+    }
+  },
+  "I": {
+    "line": 5120,
+    "trial_id": "pilot_20261107_2141_I_rep01_att01",
+    "frame_idx": 1,
+    "expected_sign": "I",
+    "final_sign": "Y",
+    "final_confidence": 0.95,
+    "prediction_source": "geometric_rule",
+    "gating_status": "passed_geometric",
+    "threshold_applied": null,
+    "reject_reason": null,
+    "geometric_status": "MATCH",
+    "geometric_letter": "Y",
+    "geometric_reason": "Ngón cái và út cùng duỗi thẳng (Shaka): d_PW=1.77>=1.30, d_TW=1.23>=1.05",
+    "matched_candidates": [
+      [
+        "Y",
+        0.95
+      ]
+    ],
+    "static_head_raw": null,
+    "static_head_conf": null,
+    "static_head_top_k": null,
+    "diagnostics_snippet": {
+      "k_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "index_d_iw_ge_min": false,
+          "index_curl_le_max": false,
+          "index_horiz_le_max": false,
+          "index_straight_ge_min": false,
+          "middle_d_mw_in_range": false,
+          "middle_curl_le_max": false,
+          "middle_straight_ge_min": false,
+          "middle_horiz_ge_min": false,
+          "ang_im_in_range": false,
+          "d_im_ge_min": false,
+          "ring_d_rw_le_max": true,
+          "pinky_d_pw_le_max": false,
+          "diff_iw_rw_ge_min": false,
+          "diff_iw_pw_ge_min": false,
+          "thumb_d_ti_le_max": true,
+          "thumb_d_tm_le_max": true,
+          "thumb_mid_dist_le_max": true
+        },
+        "failed_conditions": [
+          "index_d_iw_ge_min",
+          "index_curl_le_max",
+          "index_horiz_le_max",
+          "index_straight_ge_min",
+          "middle_d_mw_in_range",
+          "middle_curl_le_max",
+          "middle_straight_ge_min",
+          "middle_horiz_ge_min",
+          "ang_im_in_range",
+          "d_im_ge_min",
+          "pinky_d_pw_le_max",
+          "diff_iw_rw_ge_min",
+          "diff_iw_pw_ge_min"
+        ]
+      },
+      "i_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "pinky_ext_or_straight": true,
+          "d_PW_ge_min": true,
+          "pinky_curl_le_max": true,
+          "middle_fingers_folded": true,
+          "d_IW_le_max": true,
+          "d_MW_le_max": true,
+          "d_RW_le_max": true,
+          "diff_PW_curled_ge_min": true,
+          "d_TI_le_max": false,
+          "d_TM_le_max": false,
+          "d_TW_le_max": false,
+          "thumb_not_spread": true
+        },
+        "failed_conditions": [
+          "d_TI_le_max",
+          "d_TM_le_max",
+          "d_TW_le_max"
+        ]
+      },
+      "o_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_le_max": false,
+          "d_iw_ge_min": false,
+          "d_mw_ge_min": false,
+          "d_rw_ge_min": false,
+          "d_pw_ge_min": true,
+          "idx_straight_le_max": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_le_max",
+          "d_iw_ge_min",
+          "d_mw_ge_min",
+          "d_rw_ge_min",
+          "idx_straight_le_max"
+        ]
+      },
+      "t_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_ge_min": false,
+          "d_im_ge_min": false,
+          "d_iw_le_max": true,
+          "d_mw_ge_min": false,
+          "d_rw_ge_min": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_ge_min",
+          "d_im_ge_min",
+          "d_mw_ge_min",
+          "d_rw_ge_min"
+        ]
+      },
+      "u_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": false,
+          "d_mw_ge_min": false,
+          "d_rw_le_max": true,
+          "d_pw_le_max": false,
+          "d_im_le_max": false,
+          "ang_im_dir_le_max": false,
+          "diff_x_im_le_max": true,
+          "idx_horiz_le_max": false,
+          "idx_tip_y_le_max": false,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_iw_ge_min",
+          "d_mw_ge_min",
+          "d_pw_le_max",
+          "d_im_le_max",
+          "ang_im_dir_le_max",
+          "idx_horiz_le_max",
+          "idx_tip_y_le_max"
+        ]
+      },
+      "s_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_tw_le_max": true,
+          "d_ti_in_range": false,
+          "d_tm_in_range": true,
+          "d_iw_le_max": true,
+          "d_mw_le_max": true,
+          "d_rw_le_max": true,
+          "d_pw_in_range": false,
+          "d_pw_le_max": false,
+          "thumb_lat_ge_min": false
+        },
+        "failed_conditions": [
+          "d_ti_in_range",
+          "d_pw_in_range",
+          "d_pw_le_max",
+          "thumb_lat_ge_min"
+        ]
+      },
+      "p_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": false,
+          "idx_straight_ge_min": false,
+          "idx_tip_y_le_max": false,
+          "idx_horiz_le_max": true,
+          "d_mw_le_max": true,
+          "d_ti_ge_min": false,
+          "d_tm_le_max": true,
+          "d_tw_le_max": false,
+          "thumb_lat_ge_min": false,
+          "ang_im_dir_ge_min": false
+        },
+        "failed_conditions": [
+          "d_iw_ge_min",
+          "idx_straight_ge_min",
+          "idx_tip_y_le_max",
+          "d_ti_ge_min",
+          "d_tw_le_max",
+          "thumb_lat_ge_min",
+          "ang_im_dir_ge_min"
+        ]
+      },
+      "q_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_in_range": false,
+          "idx_straight_ge_min": false,
+          "idx_tip_y_in_range": false,
+          "idx_dy_ge_min": false,
+          "idx_horiz_in_range": false,
+          "d_tw_in_range": false,
+          "d_ti_in_range": true,
+          "ang_ti_le_max": true,
+          "mid_straight_le_max": false,
+          "middle_curl_ge_min": true,
+          "ang_im_dir_ge_min": false
+        },
+        "failed_conditions": [
+          "d_iw_in_range",
+          "idx_straight_ge_min",
+          "idx_tip_y_in_range",
+          "idx_dy_ge_min",
+          "idx_horiz_in_range",
+          "d_tw_in_range",
+          "mid_straight_le_max",
+          "ang_im_dir_ge_min"
+        ]
+      },
+      "r_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": false,
+          "d_mw_ge_min": false,
+          "d_rw_le_max": true,
+          "d_pw_le_max": false,
+          "idx_straight_ge_min": false,
+          "mid_straight_ge_min": false,
+          "idx_tip_y_le_max": false,
+          "mid_tip_y_le_max": false,
+          "idx_horiz_ratio_le_max": true,
+          "idx_dy_le_max": false,
+          "d_im_le_max": true,
+          "cross_indicator_le_max": false,
+          "diff_mw_iw_ge_min": true,
+          "mcp_width_2d_ge_min": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_iw_ge_min",
+          "d_mw_ge_min",
+          "d_pw_le_max",
+          "idx_straight_ge_min",
+          "mid_straight_ge_min",
+          "idx_tip_y_le_max",
+          "mid_tip_y_le_max",
+          "idx_dy_le_max",
+          "cross_indicator_le_max"
+        ]
+      },
+      "x_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "thumb_index_d_ti_le_max": false,
+          "d_ti_le_max": false,
+          "index_d_iw_le_max": true,
+          "d_iw_le_max": true,
+          "index_curl_ge_min": true,
+          "idx_curl_ge_min": true,
+          "index_straight_le_max": true,
+          "idx_straight_le_max": true,
+          "ring_d_rw_le_max": false,
+          "d_rw_le_max": false,
+          "pinky_d_pw_le_max": false,
+          "d_pw_le_max": false,
+          "thumb_d_tw_in_range": false,
+          "d_tw_in_range": false,
+          "index_tip_y_le_max": true,
+          "idx_tip_y_le_max": true
+        },
+        "failed_conditions": [
+          "thumb_index_d_ti_le_max",
+          "d_ti_le_max",
+          "ring_d_rw_le_max",
+          "d_rw_le_max",
+          "pinky_d_pw_le_max",
+          "d_pw_le_max",
+          "thumb_d_tw_in_range",
+          "d_tw_in_range"
+        ]
+      }
+    }
+  },
+  "M": {
+    "line": 6548,
+    "trial_id": "pilot_20261107_2141_M_rep01_att01",
+    "frame_idx": 15,
+    "expected_sign": "M",
+    "final_sign": "NEUTRAL",
+    "final_confidence": 0.0,
+    "prediction_source": "none",
+    "gating_status": "rejected",
+    "threshold_applied": 0.7,
+    "reject_reason": "Confidence 0.32 < threshold 0.70",
+    "geometric_status": "NO_MATCH",
+    "geometric_letter": null,
+    "geometric_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "matched_candidates": [],
+    "static_head_raw": "A",
+    "static_head_conf": 0.3175,
+    "static_head_top_k": [
+      {
+        "letter": "A",
+        "confidence": 0.3175
+      },
+      {
+        "letter": "V",
+        "confidence": 0.1341
+      },
+      {
+        "letter": "K",
+        "confidence": 0.1156
+      },
+      {
+        "letter": "M",
+        "confidence": 0.0867
+      },
+      {
+        "letter": "L",
+        "confidence": 0.0866
+      }
+    ],
+    "diagnostics_snippet": {
+      "k_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "index_d_iw_ge_min": true,
+          "index_curl_le_max": true,
+          "index_horiz_le_max": true,
+          "index_straight_ge_min": true,
+          "middle_d_mw_in_range": false,
+          "middle_curl_le_max": true,
+          "middle_straight_ge_min": true,
+          "middle_horiz_ge_min": false,
+          "ang_im_in_range": false,
+          "d_im_ge_min": false,
+          "ring_d_rw_le_max": false,
+          "pinky_d_pw_le_max": false,
+          "diff_iw_rw_ge_min": false,
+          "diff_iw_pw_ge_min": false,
+          "thumb_d_ti_le_max": true,
+          "thumb_d_tm_le_max": false,
+          "thumb_mid_dist_le_max": false
+        },
+        "failed_conditions": [
+          "middle_d_mw_in_range",
+          "middle_horiz_ge_min",
+          "ang_im_in_range",
+          "d_im_ge_min",
+          "ring_d_rw_le_max",
+          "pinky_d_pw_le_max",
+          "diff_iw_rw_ge_min",
+          "diff_iw_pw_ge_min",
+          "thumb_d_tm_le_max",
+          "thumb_mid_dist_le_max"
+        ]
+      },
+      "i_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "pinky_ext_or_straight": true,
+          "d_PW_ge_min": true,
+          "pinky_curl_le_max": true,
+          "middle_fingers_folded": true,
+          "d_IW_le_max": false,
+          "d_MW_le_max": false,
+          "d_RW_le_max": false,
+          "diff_PW_curled_ge_min": false,
+          "d_TI_le_max": false,
+          "d_TM_le_max": false,
+          "d_TW_le_max": false,
+          "thumb_not_spread": true
+        },
+        "failed_conditions": [
+          "d_IW_le_max",
+          "d_MW_le_max",
+          "d_RW_le_max",
+          "diff_PW_curled_ge_min",
+          "d_TI_le_max",
+          "d_TM_le_max",
+          "d_TW_le_max"
+        ]
+      },
+      "o_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_le_max": false,
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_ge_min": true,
+          "d_pw_ge_min": true,
+          "idx_straight_le_max": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_le_max",
+          "idx_straight_le_max"
+        ]
+      },
+      "t_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_ge_min": true,
+          "d_im_ge_min": false,
+          "d_iw_le_max": false,
+          "d_mw_ge_min": true,
+          "d_rw_ge_min": true
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_im_ge_min",
+          "d_iw_le_max"
+        ]
+      },
+      "u_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_le_max": false,
+          "d_pw_le_max": false,
+          "d_im_le_max": false,
+          "ang_im_dir_le_max": true,
+          "diff_x_im_le_max": true,
+          "idx_horiz_le_max": true,
+          "idx_tip_y_le_max": false,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_rw_le_max",
+          "d_pw_le_max",
+          "d_im_le_max",
+          "idx_tip_y_le_max"
+        ]
+      },
+      "s_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_tw_le_max": false,
+          "d_ti_in_range": false,
+          "d_tm_in_range": false,
+          "d_iw_le_max": false,
+          "d_mw_le_max": false,
+          "d_rw_le_max": false,
+          "d_pw_in_range": false,
+          "d_pw_le_max": false,
+          "thumb_lat_ge_min": false
+        },
+        "failed_conditions": [
+          "d_tw_le_max",
+          "d_ti_in_range",
+          "d_tm_in_range",
+          "d_iw_le_max",
+          "d_mw_le_max",
+          "d_rw_le_max",
+          "d_pw_in_range",
+          "d_pw_le_max",
+          "thumb_lat_ge_min"
+        ]
+      },
+      "p_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "idx_straight_ge_min": true,
+          "idx_tip_y_le_max": false,
+          "idx_horiz_le_max": true,
+          "d_mw_le_max": false,
+          "d_ti_ge_min": false,
+          "d_tm_le_max": false,
+          "d_tw_le_max": false,
+          "thumb_lat_ge_min": false,
+          "ang_im_dir_ge_min": false
+        },
+        "failed_conditions": [
+          "idx_tip_y_le_max",
+          "d_mw_le_max",
+          "d_ti_ge_min",
+          "d_tm_le_max",
+          "d_tw_le_max",
+          "thumb_lat_ge_min",
+          "ang_im_dir_ge_min"
+        ]
+      },
+      "q_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_in_range": true,
+          "idx_straight_ge_min": true,
+          "idx_tip_y_in_range": false,
+          "idx_dy_ge_min": true,
+          "idx_horiz_in_range": false,
+          "d_tw_in_range": true,
+          "d_ti_in_range": true,
+          "ang_ti_le_max": true,
+          "mid_straight_le_max": false,
+          "middle_curl_ge_min": false,
+          "ang_im_dir_ge_min": false
+        },
+        "failed_conditions": [
+          "idx_tip_y_in_range",
+          "idx_horiz_in_range",
+          "mid_straight_le_max",
+          "middle_curl_ge_min",
+          "ang_im_dir_ge_min"
+        ]
+      },
+      "r_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_le_max": false,
+          "d_pw_le_max": false,
+          "idx_straight_ge_min": true,
+          "mid_straight_ge_min": true,
+          "idx_tip_y_le_max": false,
+          "mid_tip_y_le_max": false,
+          "idx_horiz_ratio_le_max": true,
+          "idx_dy_le_max": false,
+          "d_im_le_max": true,
+          "cross_indicator_le_max": false,
+          "diff_mw_iw_ge_min": true,
+          "mcp_width_2d_ge_min": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_rw_le_max",
+          "d_pw_le_max",
+          "idx_tip_y_le_max",
+          "mid_tip_y_le_max",
+          "idx_dy_le_max",
+          "cross_indicator_le_max"
+        ]
+      },
+      "x_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "thumb_index_d_ti_le_max": false,
+          "d_ti_le_max": false,
+          "index_d_iw_le_max": false,
+          "d_iw_le_max": false,
+          "index_curl_ge_min": false,
+          "idx_curl_ge_min": false,
+          "index_straight_le_max": false,
+          "idx_straight_le_max": false,
+          "ring_d_rw_le_max": false,
+          "d_rw_le_max": false,
+          "pinky_d_pw_le_max": false,
+          "d_pw_le_max": false,
+          "thumb_d_tw_in_range": false,
+          "d_tw_in_range": false,
+          "index_tip_y_le_max": false,
+          "idx_tip_y_le_max": false
+        },
+        "failed_conditions": [
+          "thumb_index_d_ti_le_max",
+          "d_ti_le_max",
+          "index_d_iw_le_max",
+          "d_iw_le_max",
+          "index_curl_ge_min",
+          "idx_curl_ge_min",
+          "index_straight_le_max",
+          "idx_straight_le_max",
+          "ring_d_rw_le_max",
+          "d_rw_le_max",
+          "pinky_d_pw_le_max",
+          "d_pw_le_max",
+          "thumb_d_tw_in_range",
+          "d_tw_in_range",
+          "index_tip_y_le_max",
+          "idx_tip_y_le_max"
+        ]
+      }
+    }
+  },
+  "N": {
+    "line": 7041,
+    "trial_id": "pilot_20261107_2141_N_rep01_att01",
+    "frame_idx": 1,
+    "expected_sign": "N",
+    "final_sign": "NEUTRAL",
+    "final_confidence": 0.0,
+    "prediction_source": "none",
+    "gating_status": "rejected",
+    "threshold_applied": 0.75,
+    "reject_reason": "Confidence 0.66 < threshold 0.75",
+    "geometric_status": "NO_MATCH",
+    "geometric_letter": null,
+    "geometric_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "matched_candidates": [],
+    "static_head_raw": "N",
+    "static_head_conf": 0.664,
+    "static_head_top_k": [
+      {
+        "letter": "N",
+        "confidence": 0.664
+      },
+      {
+        "letter": "V",
+        "confidence": 0.1966
+      },
+      {
+        "letter": "B",
+        "confidence": 0.0683
+      },
+      {
+        "letter": "M",
+        "confidence": 0.0289
+      },
+      {
+        "letter": "L",
+        "confidence": 0.0129
+      }
+    ],
+    "diagnostics_snippet": {
+      "k_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "index_d_iw_ge_min": true,
+          "index_curl_le_max": true,
+          "index_horiz_le_max": true,
+          "index_straight_ge_min": true,
+          "middle_d_mw_in_range": false,
+          "middle_curl_le_max": true,
+          "middle_straight_ge_min": true,
+          "middle_horiz_ge_min": false,
+          "ang_im_in_range": false,
+          "d_im_ge_min": false,
+          "ring_d_rw_le_max": false,
+          "pinky_d_pw_le_max": false,
+          "diff_iw_rw_ge_min": false,
+          "diff_iw_pw_ge_min": true,
+          "thumb_d_ti_le_max": true,
+          "thumb_d_tm_le_max": false,
+          "thumb_mid_dist_le_max": false
+        },
+        "failed_conditions": [
+          "middle_d_mw_in_range",
+          "middle_horiz_ge_min",
+          "ang_im_in_range",
+          "d_im_ge_min",
+          "ring_d_rw_le_max",
+          "pinky_d_pw_le_max",
+          "diff_iw_rw_ge_min",
+          "thumb_d_tm_le_max",
+          "thumb_mid_dist_le_max"
+        ]
+      },
+      "i_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "pinky_ext_or_straight": true,
+          "d_PW_ge_min": false,
+          "pinky_curl_le_max": true,
+          "middle_fingers_folded": true,
+          "d_IW_le_max": false,
+          "d_MW_le_max": false,
+          "d_RW_le_max": false,
+          "diff_PW_curled_ge_min": false,
+          "d_TI_le_max": false,
+          "d_TM_le_max": false,
+          "d_TW_le_max": false,
+          "thumb_not_spread": false
+        },
+        "failed_conditions": [
+          "d_PW_ge_min",
+          "d_IW_le_max",
+          "d_MW_le_max",
+          "d_RW_le_max",
+          "diff_PW_curled_ge_min",
+          "d_TI_le_max",
+          "d_TM_le_max",
+          "d_TW_le_max",
+          "thumb_not_spread"
+        ]
+      },
+      "o_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_le_max": false,
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_ge_min": true,
+          "d_pw_ge_min": true,
+          "idx_straight_le_max": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_le_max",
+          "idx_straight_le_max"
+        ]
+      },
+      "t_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_ge_min": true,
+          "d_im_ge_min": false,
+          "d_iw_le_max": false,
+          "d_mw_ge_min": true,
+          "d_rw_ge_min": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_im_ge_min",
+          "d_iw_le_max",
+          "d_rw_ge_min"
+        ]
+      },
+      "u_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_le_max": false,
+          "d_pw_le_max": true,
+          "d_im_le_max": false,
+          "ang_im_dir_le_max": true,
+          "diff_x_im_le_max": true,
+          "idx_horiz_le_max": true,
+          "idx_tip_y_le_max": false,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_rw_le_max",
+          "d_im_le_max",
+          "idx_tip_y_le_max"
+        ]
+      },
+      "s_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_tw_le_max": false,
+          "d_ti_in_range": false,
+          "d_tm_in_range": false,
+          "d_iw_le_max": false,
+          "d_mw_le_max": false,
+          "d_rw_le_max": false,
+          "d_pw_in_range": false,
+          "d_pw_le_max": false,
+          "thumb_lat_ge_min": true
+        },
+        "failed_conditions": [
+          "d_tw_le_max",
+          "d_ti_in_range",
+          "d_tm_in_range",
+          "d_iw_le_max",
+          "d_mw_le_max",
+          "d_rw_le_max",
+          "d_pw_in_range",
+          "d_pw_le_max"
+        ]
+      },
+      "p_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "idx_straight_ge_min": true,
+          "idx_tip_y_le_max": false,
+          "idx_horiz_le_max": true,
+          "d_mw_le_max": false,
+          "d_ti_ge_min": false,
+          "d_tm_le_max": false,
+          "d_tw_le_max": false,
+          "thumb_lat_ge_min": true,
+          "ang_im_dir_ge_min": false
+        },
+        "failed_conditions": [
+          "idx_tip_y_le_max",
+          "d_mw_le_max",
+          "d_ti_ge_min",
+          "d_tm_le_max",
+          "d_tw_le_max",
+          "ang_im_dir_ge_min"
+        ]
+      },
+      "q_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_in_range": true,
+          "idx_straight_ge_min": true,
+          "idx_tip_y_in_range": true,
+          "idx_dy_ge_min": true,
+          "idx_horiz_in_range": false,
+          "d_tw_in_range": true,
+          "d_ti_in_range": true,
+          "ang_ti_le_max": false,
+          "mid_straight_le_max": false,
+          "middle_curl_ge_min": false,
+          "ang_im_dir_ge_min": false
+        },
+        "failed_conditions": [
+          "idx_horiz_in_range",
+          "ang_ti_le_max",
+          "mid_straight_le_max",
+          "middle_curl_ge_min",
+          "ang_im_dir_ge_min"
+        ]
+      },
+      "r_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_le_max": false,
+          "d_pw_le_max": false,
+          "idx_straight_ge_min": true,
+          "mid_straight_ge_min": true,
+          "idx_tip_y_le_max": false,
+          "mid_tip_y_le_max": false,
+          "idx_horiz_ratio_le_max": true,
+          "idx_dy_le_max": false,
+          "d_im_le_max": true,
+          "cross_indicator_le_max": false,
+          "diff_mw_iw_ge_min": true,
+          "mcp_width_2d_ge_min": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_rw_le_max",
+          "d_pw_le_max",
+          "idx_tip_y_le_max",
+          "mid_tip_y_le_max",
+          "idx_dy_le_max",
+          "cross_indicator_le_max"
+        ]
+      },
+      "x_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "thumb_index_d_ti_le_max": false,
+          "d_ti_le_max": false,
+          "index_d_iw_le_max": false,
+          "d_iw_le_max": false,
+          "index_curl_ge_min": false,
+          "idx_curl_ge_min": false,
+          "index_straight_le_max": false,
+          "idx_straight_le_max": false,
+          "ring_d_rw_le_max": false,
+          "d_rw_le_max": false,
+          "pinky_d_pw_le_max": false,
+          "d_pw_le_max": false,
+          "thumb_d_tw_in_range": false,
+          "d_tw_in_range": false,
+          "index_tip_y_le_max": false,
+          "idx_tip_y_le_max": false
+        },
+        "failed_conditions": [
+          "thumb_index_d_ti_le_max",
+          "d_ti_le_max",
+          "index_d_iw_le_max",
+          "d_iw_le_max",
+          "index_curl_ge_min",
+          "idx_curl_ge_min",
+          "index_straight_le_max",
+          "idx_straight_le_max",
+          "ring_d_rw_le_max",
+          "d_rw_le_max",
+          "pinky_d_pw_le_max",
+          "d_pw_le_max",
+          "thumb_d_tw_in_range",
+          "d_tw_in_range",
+          "index_tip_y_le_max",
+          "idx_tip_y_le_max"
+        ]
+      }
+    }
+  },
+  "O": {
+    "line": 7718,
+    "trial_id": "pilot_20261107_2141_O_rep02_att01",
+    "frame_idx": 8,
+    "expected_sign": "O",
+    "final_sign": "A",
+    "final_confidence": 0.8204,
+    "prediction_source": "static_head_fallback",
+    "gating_status": "passed_fallback",
+    "threshold_applied": 0.7,
+    "reject_reason": null,
+    "geometric_status": "NO_MATCH",
+    "geometric_letter": null,
+    "geometric_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "matched_candidates": [],
+    "static_head_raw": "A",
+    "static_head_conf": 0.8204,
+    "static_head_top_k": [
+      {
+        "letter": "A",
+        "confidence": 0.8204
+      },
+      {
+        "letter": "V",
+        "confidence": 0.0563
+      },
+      {
+        "letter": "K",
+        "confidence": 0.0297
+      },
+      {
+        "letter": "B",
+        "confidence": 0.0188
+      },
+      {
+        "letter": "T",
+        "confidence": 0.0186
+      }
+    ],
+    "diagnostics_snippet": {
+      "k_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "index_d_iw_ge_min": false,
+          "index_curl_le_max": false,
+          "index_horiz_le_max": false,
+          "index_straight_ge_min": false,
+          "middle_d_mw_in_range": true,
+          "middle_curl_le_max": false,
+          "middle_straight_ge_min": false,
+          "middle_horiz_ge_min": true,
+          "ang_im_in_range": false,
+          "d_im_ge_min": false,
+          "ring_d_rw_le_max": false,
+          "pinky_d_pw_le_max": false,
+          "diff_iw_rw_ge_min": false,
+          "diff_iw_pw_ge_min": false,
+          "thumb_d_ti_le_max": true,
+          "thumb_d_tm_le_max": true,
+          "thumb_mid_dist_le_max": false
+        },
+        "failed_conditions": [
+          "index_d_iw_ge_min",
+          "index_curl_le_max",
+          "index_horiz_le_max",
+          "index_straight_ge_min",
+          "middle_curl_le_max",
+          "middle_straight_ge_min",
+          "ang_im_in_range",
+          "d_im_ge_min",
+          "ring_d_rw_le_max",
+          "pinky_d_pw_le_max",
+          "diff_iw_rw_ge_min",
+          "diff_iw_pw_ge_min",
+          "thumb_mid_dist_le_max"
+        ]
+      },
+      "i_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "pinky_ext_or_straight": false,
+          "d_PW_ge_min": false,
+          "pinky_curl_le_max": false,
+          "middle_fingers_folded": true,
+          "d_IW_le_max": false,
+          "d_MW_le_max": false,
+          "d_RW_le_max": false,
+          "diff_PW_curled_ge_min": false,
+          "d_TI_le_max": true,
+          "d_TM_le_max": true,
+          "d_TW_le_max": false,
+          "thumb_not_spread": true
+        },
+        "failed_conditions": [
+          "pinky_ext_or_straight",
+          "d_PW_ge_min",
+          "pinky_curl_le_max",
+          "d_IW_le_max",
+          "d_MW_le_max",
+          "d_RW_le_max",
+          "diff_PW_curled_ge_min",
+          "d_TW_le_max"
+        ]
+      },
+      "o_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": true,
+          "d_tm_le_max": false,
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_ge_min": true,
+          "d_pw_ge_min": true,
+          "idx_straight_le_max": false
+        },
+        "failed_conditions": [
+          "d_tm_le_max",
+          "idx_straight_le_max"
+        ]
+      },
+      "t_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": true,
+          "d_tm_ge_min": false,
+          "d_im_ge_min": false,
+          "d_iw_le_max": false,
+          "d_mw_ge_min": false,
+          "d_rw_ge_min": false
+        },
+        "failed_conditions": [
+          "d_tm_ge_min",
+          "d_im_ge_min",
+          "d_iw_le_max",
+          "d_mw_ge_min",
+          "d_rw_ge_min"
+        ]
+      },
+      "u_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": false,
+          "d_mw_ge_min": false,
+          "d_rw_le_max": false,
+          "d_pw_le_max": false,
+          "d_im_le_max": false,
+          "ang_im_dir_le_max": true,
+          "diff_x_im_le_max": true,
+          "idx_horiz_le_max": false,
+          "idx_tip_y_le_max": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_iw_ge_min",
+          "d_mw_ge_min",
+          "d_rw_le_max",
+          "d_pw_le_max",
+          "d_im_le_max",
+          "idx_horiz_le_max"
+        ]
+      },
+      "s_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_tw_le_max": true,
+          "d_ti_in_range": true,
+          "d_tm_in_range": false,
+          "d_iw_le_max": true,
+          "d_mw_le_max": false,
+          "d_rw_le_max": false,
+          "d_pw_in_range": false,
+          "d_pw_le_max": false,
+          "thumb_lat_ge_min": true
+        },
+        "failed_conditions": [
+          "d_tm_in_range",
+          "d_mw_le_max",
+          "d_rw_le_max",
+          "d_pw_in_range",
+          "d_pw_le_max"
+        ]
+      },
+      "p_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": false,
+          "idx_straight_ge_min": false,
+          "idx_tip_y_le_max": false,
+          "idx_horiz_le_max": false,
+          "d_mw_le_max": false,
+          "d_ti_ge_min": false,
+          "d_tm_le_max": true,
+          "d_tw_le_max": false,
+          "thumb_lat_ge_min": false,
+          "ang_im_dir_ge_min": false
+        },
+        "failed_conditions": [
+          "d_iw_ge_min",
+          "idx_straight_ge_min",
+          "idx_tip_y_le_max",
+          "idx_horiz_le_max",
+          "d_mw_le_max",
+          "d_ti_ge_min",
+          "d_tw_le_max",
+          "thumb_lat_ge_min",
+          "ang_im_dir_ge_min"
+        ]
+      },
+      "q_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_in_range": false,
+          "idx_straight_ge_min": false,
+          "idx_tip_y_in_range": false,
+          "idx_dy_ge_min": false,
+          "idx_horiz_in_range": true,
+          "d_tw_in_range": true,
+          "d_ti_in_range": false,
+          "ang_ti_le_max": true,
+          "mid_straight_le_max": false,
+          "middle_curl_ge_min": true,
+          "ang_im_dir_ge_min": false
+        },
+        "failed_conditions": [
+          "d_iw_in_range",
+          "idx_straight_ge_min",
+          "idx_tip_y_in_range",
+          "idx_dy_ge_min",
+          "d_ti_in_range",
+          "mid_straight_le_max",
+          "ang_im_dir_ge_min"
+        ]
+      },
+      "r_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_le_max": false,
+          "d_pw_le_max": false,
+          "idx_straight_ge_min": false,
+          "mid_straight_ge_min": false,
+          "idx_tip_y_le_max": true,
+          "mid_tip_y_le_max": true,
+          "idx_horiz_ratio_le_max": false,
+          "idx_dy_le_max": true,
+          "d_im_le_max": true,
+          "cross_indicator_le_max": true,
+          "diff_mw_iw_ge_min": true,
+          "mcp_width_2d_ge_min": false,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_rw_le_max",
+          "d_pw_le_max",
+          "idx_straight_ge_min",
+          "mid_straight_ge_min",
+          "idx_horiz_ratio_le_max",
+          "mcp_width_2d_ge_min"
+        ]
+      },
+      "x_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "thumb_index_d_ti_le_max": true,
+          "d_ti_le_max": true,
+          "index_d_iw_le_max": false,
+          "d_iw_le_max": false,
+          "index_curl_ge_min": true,
+          "idx_curl_ge_min": true,
+          "index_straight_le_max": true,
+          "idx_straight_le_max": true,
+          "ring_d_rw_le_max": false,
+          "d_rw_le_max": false,
+          "pinky_d_pw_le_max": false,
+          "d_pw_le_max": false,
+          "thumb_d_tw_in_range": false,
+          "d_tw_in_range": false,
+          "index_tip_y_le_max": true,
+          "idx_tip_y_le_max": true
+        },
+        "failed_conditions": [
+          "index_d_iw_le_max",
+          "d_iw_le_max",
+          "ring_d_rw_le_max",
+          "d_rw_le_max",
+          "pinky_d_pw_le_max",
+          "d_pw_le_max",
+          "thumb_d_tw_in_range",
+          "d_tw_in_range"
+        ]
+      }
+    }
+  },
+  "P": {
+    "line": 8336,
+    "trial_id": "pilot_20261107_2141_P_rep01_att02",
+    "frame_idx": 15,
+    "expected_sign": "P",
+    "final_sign": "NEUTRAL",
+    "final_confidence": 0.0,
+    "prediction_source": "none",
+    "gating_status": "rejected",
+    "threshold_applied": 0.7,
+    "reject_reason": "Letter 'V' not in supplemental/fallback set",
+    "geometric_status": "NO_MATCH",
+    "geometric_letter": null,
+    "geometric_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "matched_candidates": [],
+    "static_head_raw": "V",
+    "static_head_conf": 0.6002,
+    "static_head_top_k": [
+      {
+        "letter": "V",
+        "confidence": 0.6002
+      },
+      {
+        "letter": "N",
+        "confidence": 0.1975
+      },
+      {
+        "letter": "B",
+        "confidence": 0.0809
+      },
+      {
+        "letter": "L",
+        "confidence": 0.0665
+      },
+      {
+        "letter": "A",
+        "confidence": 0.0135
+      }
+    ],
+    "diagnostics_snippet": {
+      "k_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "index_d_iw_ge_min": true,
+          "index_curl_le_max": true,
+          "index_horiz_le_max": false,
+          "index_straight_ge_min": true,
+          "middle_d_mw_in_range": false,
+          "middle_curl_le_max": true,
+          "middle_straight_ge_min": true,
+          "middle_horiz_ge_min": false,
+          "ang_im_in_range": false,
+          "d_im_ge_min": true,
+          "ring_d_rw_le_max": false,
+          "pinky_d_pw_le_max": false,
+          "diff_iw_rw_ge_min": true,
+          "diff_iw_pw_ge_min": true,
+          "thumb_d_ti_le_max": true,
+          "thumb_d_tm_le_max": true,
+          "thumb_mid_dist_le_max": true
+        },
+        "failed_conditions": [
+          "index_horiz_le_max",
+          "middle_d_mw_in_range",
+          "middle_horiz_ge_min",
+          "ang_im_in_range",
+          "ring_d_rw_le_max",
+          "pinky_d_pw_le_max"
+        ]
+      },
+      "i_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "pinky_ext_or_straight": true,
+          "d_PW_ge_min": false,
+          "pinky_curl_le_max": false,
+          "middle_fingers_folded": false,
+          "d_IW_le_max": false,
+          "d_MW_le_max": false,
+          "d_RW_le_max": false,
+          "diff_PW_curled_ge_min": false,
+          "d_TI_le_max": false,
+          "d_TM_le_max": false,
+          "d_TW_le_max": false,
+          "thumb_not_spread": true
+        },
+        "failed_conditions": [
+          "d_PW_ge_min",
+          "pinky_curl_le_max",
+          "middle_fingers_folded",
+          "d_IW_le_max",
+          "d_MW_le_max",
+          "d_RW_le_max",
+          "diff_PW_curled_ge_min",
+          "d_TI_le_max",
+          "d_TM_le_max",
+          "d_TW_le_max"
+        ]
+      },
+      "o_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_le_max": false,
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_ge_min": true,
+          "d_pw_ge_min": true,
+          "idx_straight_le_max": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_le_max",
+          "idx_straight_le_max"
+        ]
+      },
+      "t_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_ge_min": false,
+          "d_im_ge_min": true,
+          "d_iw_le_max": false,
+          "d_mw_ge_min": true,
+          "d_rw_ge_min": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_ge_min",
+          "d_iw_le_max",
+          "d_rw_ge_min"
+        ]
+      },
+      "u_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_le_max": true,
+          "d_pw_le_max": true,
+          "d_im_le_max": false,
+          "ang_im_dir_le_max": false,
+          "diff_x_im_le_max": false,
+          "idx_horiz_le_max": false,
+          "idx_tip_y_le_max": false,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_im_le_max",
+          "ang_im_dir_le_max",
+          "diff_x_im_le_max",
+          "idx_horiz_le_max",
+          "idx_tip_y_le_max"
+        ]
+      },
+      "s_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_tw_le_max": false,
+          "d_ti_in_range": false,
+          "d_tm_in_range": true,
+          "d_iw_le_max": false,
+          "d_mw_le_max": false,
+          "d_rw_le_max": false,
+          "d_pw_in_range": false,
+          "d_pw_le_max": false,
+          "thumb_lat_ge_min": true
+        },
+        "failed_conditions": [
+          "d_tw_le_max",
+          "d_ti_in_range",
+          "d_iw_le_max",
+          "d_mw_le_max",
+          "d_rw_le_max",
+          "d_pw_in_range",
+          "d_pw_le_max"
+        ]
+      },
+      "p_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "idx_straight_ge_min": true,
+          "idx_tip_y_le_max": false,
+          "idx_horiz_le_max": true,
+          "d_mw_le_max": false,
+          "d_ti_ge_min": false,
+          "d_tm_le_max": true,
+          "d_tw_le_max": false,
+          "thumb_lat_ge_min": true,
+          "ang_im_dir_ge_min": false
+        },
+        "failed_conditions": [
+          "idx_tip_y_le_max",
+          "d_mw_le_max",
+          "d_ti_ge_min",
+          "d_tw_le_max",
+          "ang_im_dir_ge_min"
+        ]
+      },
+      "q_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_in_range": false,
+          "idx_straight_ge_min": true,
+          "idx_tip_y_in_range": false,
+          "idx_dy_ge_min": true,
+          "idx_horiz_in_range": false,
+          "d_tw_in_range": false,
+          "d_ti_in_range": true,
+          "ang_ti_le_max": true,
+          "mid_straight_le_max": false,
+          "middle_curl_ge_min": false,
+          "ang_im_dir_ge_min": true
+        },
+        "failed_conditions": [
+          "d_iw_in_range",
+          "idx_tip_y_in_range",
+          "idx_horiz_in_range",
+          "d_tw_in_range",
+          "mid_straight_le_max",
+          "middle_curl_ge_min"
+        ]
+      },
+      "r_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_le_max": false,
+          "d_pw_le_max": false,
+          "idx_straight_ge_min": true,
+          "mid_straight_ge_min": true,
+          "idx_tip_y_le_max": false,
+          "mid_tip_y_le_max": false,
+          "idx_horiz_ratio_le_max": true,
+          "idx_dy_le_max": false,
+          "d_im_le_max": false,
+          "cross_indicator_le_max": false,
+          "diff_mw_iw_ge_min": false,
+          "mcp_width_2d_ge_min": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_rw_le_max",
+          "d_pw_le_max",
+          "idx_tip_y_le_max",
+          "mid_tip_y_le_max",
+          "idx_dy_le_max",
+          "d_im_le_max",
+          "cross_indicator_le_max",
+          "diff_mw_iw_ge_min"
+        ]
+      },
+      "x_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "thumb_index_d_ti_le_max": false,
+          "d_ti_le_max": false,
+          "index_d_iw_le_max": false,
+          "d_iw_le_max": false,
+          "index_curl_ge_min": false,
+          "idx_curl_ge_min": false,
+          "index_straight_le_max": false,
+          "idx_straight_le_max": false,
+          "ring_d_rw_le_max": false,
+          "d_rw_le_max": false,
+          "pinky_d_pw_le_max": false,
+          "d_pw_le_max": false,
+          "thumb_d_tw_in_range": false,
+          "d_tw_in_range": false,
+          "index_tip_y_le_max": false,
+          "idx_tip_y_le_max": false
+        },
+        "failed_conditions": [
+          "thumb_index_d_ti_le_max",
+          "d_ti_le_max",
+          "index_d_iw_le_max",
+          "d_iw_le_max",
+          "index_curl_ge_min",
+          "idx_curl_ge_min",
+          "index_straight_le_max",
+          "idx_straight_le_max",
+          "ring_d_rw_le_max",
+          "d_rw_le_max",
+          "pinky_d_pw_le_max",
+          "d_pw_le_max",
+          "thumb_d_tw_in_range",
+          "d_tw_in_range",
+          "index_tip_y_le_max",
+          "idx_tip_y_le_max"
+        ]
+      }
+    }
+  },
+  "Q": {
+    "line": 9083,
+    "trial_id": "pilot_20261107_2141_Q_rep01_att01",
+    "frame_idx": 15,
+    "expected_sign": "Q",
+    "final_sign": "NEUTRAL",
+    "final_confidence": 0.0,
+    "prediction_source": "none",
+    "gating_status": "rejected",
+    "threshold_applied": 0.7,
+    "reject_reason": "Letter 'V' not in supplemental/fallback set",
+    "geometric_status": "NO_MATCH",
+    "geometric_letter": null,
+    "geometric_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "matched_candidates": [],
+    "static_head_raw": "V",
+    "static_head_conf": 0.6835,
+    "static_head_top_k": [
+      {
+        "letter": "V",
+        "confidence": 0.6835
+      },
+      {
+        "letter": "N",
+        "confidence": 0.1021
+      },
+      {
+        "letter": "B",
+        "confidence": 0.1007
+      },
+      {
+        "letter": "L",
+        "confidence": 0.0628
+      },
+      {
+        "letter": "A",
+        "confidence": 0.0118
+      }
+    ],
+    "diagnostics_snippet": {
+      "k_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "index_d_iw_ge_min": true,
+          "index_curl_le_max": true,
+          "index_horiz_le_max": false,
+          "index_straight_ge_min": true,
+          "middle_d_mw_in_range": true,
+          "middle_curl_le_max": false,
+          "middle_straight_ge_min": false,
+          "middle_horiz_ge_min": true,
+          "ang_im_in_range": false,
+          "d_im_ge_min": true,
+          "ring_d_rw_le_max": true,
+          "pinky_d_pw_le_max": false,
+          "diff_iw_rw_ge_min": true,
+          "diff_iw_pw_ge_min": true,
+          "thumb_d_ti_le_max": true,
+          "thumb_d_tm_le_max": true,
+          "thumb_mid_dist_le_max": true
+        },
+        "failed_conditions": [
+          "index_horiz_le_max",
+          "middle_curl_le_max",
+          "middle_straight_ge_min",
+          "ang_im_in_range",
+          "pinky_d_pw_le_max"
+        ]
+      },
+      "i_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "pinky_ext_or_straight": true,
+          "d_PW_ge_min": false,
+          "pinky_curl_le_max": false,
+          "middle_fingers_folded": false,
+          "d_IW_le_max": false,
+          "d_MW_le_max": false,
+          "d_RW_le_max": false,
+          "diff_PW_curled_ge_min": false,
+          "d_TI_le_max": false,
+          "d_TM_le_max": true,
+          "d_TW_le_max": false,
+          "thumb_not_spread": true
+        },
+        "failed_conditions": [
+          "d_PW_ge_min",
+          "pinky_curl_le_max",
+          "middle_fingers_folded",
+          "d_IW_le_max",
+          "d_MW_le_max",
+          "d_RW_le_max",
+          "diff_PW_curled_ge_min",
+          "d_TI_le_max",
+          "d_TW_le_max"
+        ]
+      },
+      "o_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_le_max": false,
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_ge_min": true,
+          "d_pw_ge_min": true,
+          "idx_straight_le_max": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_le_max",
+          "idx_straight_le_max"
+        ]
+      },
+      "t_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_ge_min": false,
+          "d_im_ge_min": true,
+          "d_iw_le_max": false,
+          "d_mw_ge_min": false,
+          "d_rw_ge_min": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_ge_min",
+          "d_iw_le_max",
+          "d_mw_ge_min",
+          "d_rw_ge_min"
+        ]
+      },
+      "u_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": false,
+          "d_rw_le_max": true,
+          "d_pw_le_max": true,
+          "d_im_le_max": false,
+          "ang_im_dir_le_max": false,
+          "diff_x_im_le_max": false,
+          "idx_horiz_le_max": false,
+          "idx_tip_y_le_max": false,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_mw_ge_min",
+          "d_im_le_max",
+          "ang_im_dir_le_max",
+          "diff_x_im_le_max",
+          "idx_horiz_le_max",
+          "idx_tip_y_le_max"
+        ]
+      },
+      "s_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_tw_le_max": false,
+          "d_ti_in_range": false,
+          "d_tm_in_range": true,
+          "d_iw_le_max": false,
+          "d_mw_le_max": false,
+          "d_rw_le_max": false,
+          "d_pw_in_range": false,
+          "d_pw_le_max": false,
+          "thumb_lat_ge_min": true
+        },
+        "failed_conditions": [
+          "d_tw_le_max",
+          "d_ti_in_range",
+          "d_iw_le_max",
+          "d_mw_le_max",
+          "d_rw_le_max",
+          "d_pw_in_range",
+          "d_pw_le_max"
+        ]
+      },
+      "p_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "idx_straight_ge_min": true,
+          "idx_tip_y_le_max": false,
+          "idx_horiz_le_max": true,
+          "d_mw_le_max": true,
+          "d_ti_ge_min": false,
+          "d_tm_le_max": true,
+          "d_tw_le_max": false,
+          "thumb_lat_ge_min": true,
+          "ang_im_dir_ge_min": true
+        },
+        "failed_conditions": [
+          "idx_tip_y_le_max",
+          "d_ti_ge_min",
+          "d_tw_le_max"
+        ]
+      },
+      "q_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_in_range": true,
+          "idx_straight_ge_min": true,
+          "idx_tip_y_in_range": true,
+          "idx_dy_ge_min": true,
+          "idx_horiz_in_range": false,
+          "d_tw_in_range": true,
+          "d_ti_in_range": true,
+          "ang_ti_le_max": true,
+          "mid_straight_le_max": false,
+          "middle_curl_ge_min": true,
+          "ang_im_dir_ge_min": true
+        },
+        "failed_conditions": [
+          "idx_horiz_in_range",
+          "mid_straight_le_max"
+        ]
+      },
+      "r_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": false,
+          "d_rw_le_max": false,
+          "d_pw_le_max": false,
+          "idx_straight_ge_min": true,
+          "mid_straight_ge_min": false,
+          "idx_tip_y_le_max": false,
+          "mid_tip_y_le_max": false,
+          "idx_horiz_ratio_le_max": true,
+          "idx_dy_le_max": false,
+          "d_im_le_max": false,
+          "cross_indicator_le_max": false,
+          "diff_mw_iw_ge_min": false,
+          "mcp_width_2d_ge_min": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_mw_ge_min",
+          "d_rw_le_max",
+          "d_pw_le_max",
+          "mid_straight_ge_min",
+          "idx_tip_y_le_max",
+          "mid_tip_y_le_max",
+          "idx_dy_le_max",
+          "d_im_le_max",
+          "cross_indicator_le_max",
+          "diff_mw_iw_ge_min"
+        ]
+      },
+      "x_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "thumb_index_d_ti_le_max": false,
+          "d_ti_le_max": false,
+          "index_d_iw_le_max": false,
+          "d_iw_le_max": false,
+          "index_curl_ge_min": false,
+          "idx_curl_ge_min": false,
+          "index_straight_le_max": false,
+          "idx_straight_le_max": false,
+          "ring_d_rw_le_max": false,
+          "d_rw_le_max": false,
+          "pinky_d_pw_le_max": false,
+          "d_pw_le_max": false,
+          "thumb_d_tw_in_range": false,
+          "d_tw_in_range": false,
+          "index_tip_y_le_max": false,
+          "idx_tip_y_le_max": false
+        },
+        "failed_conditions": [
+          "thumb_index_d_ti_le_max",
+          "d_ti_le_max",
+          "index_d_iw_le_max",
+          "d_iw_le_max",
+          "index_curl_ge_min",
+          "idx_curl_ge_min",
+          "index_straight_le_max",
+          "idx_straight_le_max",
+          "ring_d_rw_le_max",
+          "d_rw_le_max",
+          "pinky_d_pw_le_max",
+          "d_pw_le_max",
+          "thumb_d_tw_in_range",
+          "d_tw_in_range",
+          "index_tip_y_le_max",
+          "idx_tip_y_le_max"
+        ]
+      }
+    }
+  },
+  "R": {
+    "line": 9607,
+    "trial_id": "pilot_20261107_2141_R_rep02_att01",
+    "frame_idx": 11,
+    "expected_sign": "R",
+    "final_sign": "H",
+    "final_confidence": 0.95,
+    "prediction_source": "geometric_rule",
+    "gating_status": "passed_geometric",
+    "threshold_applied": null,
+    "reject_reason": null,
+    "geometric_status": "MATCH",
+    "geometric_letter": "H",
+    "geometric_reason": "Chữ H (2 ngón ngang): d_IW=1.92, d_MW=1.74",
+    "matched_candidates": [
+      [
+        "H",
+        0.95
+      ]
+    ],
+    "static_head_raw": null,
+    "static_head_conf": null,
+    "static_head_top_k": null,
+    "diagnostics_snippet": {
+      "k_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "index_d_iw_ge_min": true,
+          "index_curl_le_max": true,
+          "index_horiz_le_max": false,
+          "index_straight_ge_min": true,
+          "middle_d_mw_in_range": false,
+          "middle_curl_le_max": true,
+          "middle_straight_ge_min": true,
+          "middle_horiz_ge_min": true,
+          "ang_im_in_range": false,
+          "d_im_ge_min": false,
+          "ring_d_rw_le_max": true,
+          "pinky_d_pw_le_max": true,
+          "diff_iw_rw_ge_min": true,
+          "diff_iw_pw_ge_min": true,
+          "thumb_d_ti_le_max": true,
+          "thumb_d_tm_le_max": true,
+          "thumb_mid_dist_le_max": true
+        },
+        "failed_conditions": [
+          "index_horiz_le_max",
+          "middle_d_mw_in_range",
+          "ang_im_in_range",
+          "d_im_ge_min"
+        ]
+      },
+      "i_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "pinky_ext_or_straight": true,
+          "d_PW_ge_min": false,
+          "pinky_curl_le_max": true,
+          "middle_fingers_folded": false,
+          "d_IW_le_max": false,
+          "d_MW_le_max": false,
+          "d_RW_le_max": false,
+          "diff_PW_curled_ge_min": false,
+          "d_TI_le_max": false,
+          "d_TM_le_max": true,
+          "d_TW_le_max": false,
+          "thumb_not_spread": false
+        },
+        "failed_conditions": [
+          "d_PW_ge_min",
+          "middle_fingers_folded",
+          "d_IW_le_max",
+          "d_MW_le_max",
+          "d_RW_le_max",
+          "diff_PW_curled_ge_min",
+          "d_TI_le_max",
+          "d_TW_le_max",
+          "thumb_not_spread"
+        ]
+      },
+      "o_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_le_max": false,
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_ge_min": true,
+          "d_pw_ge_min": true,
+          "idx_straight_le_max": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_le_max",
+          "idx_straight_le_max"
+        ]
+      },
+      "t_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": false,
+          "d_tm_ge_min": false,
+          "d_im_ge_min": false,
+          "d_iw_le_max": false,
+          "d_mw_ge_min": true,
+          "d_rw_ge_min": false
+        },
+        "failed_conditions": [
+          "d_ti_le_max",
+          "d_tm_ge_min",
+          "d_im_ge_min",
+          "d_iw_le_max",
+          "d_rw_ge_min"
+        ]
+      },
+      "u_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_le_max": true,
+          "d_pw_le_max": true,
+          "d_im_le_max": false,
+          "ang_im_dir_le_max": false,
+          "diff_x_im_le_max": true,
+          "idx_horiz_le_max": false,
+          "idx_tip_y_le_max": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_im_le_max",
+          "ang_im_dir_le_max",
+          "idx_horiz_le_max"
+        ]
+      },
+      "s_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_tw_le_max": false,
+          "d_ti_in_range": false,
+          "d_tm_in_range": true,
+          "d_iw_le_max": false,
+          "d_mw_le_max": false,
+          "d_rw_le_max": false,
+          "d_pw_in_range": false,
+          "d_pw_le_max": false,
+          "thumb_lat_ge_min": true
+        },
+        "failed_conditions": [
+          "d_tw_le_max",
+          "d_ti_in_range",
+          "d_iw_le_max",
+          "d_mw_le_max",
+          "d_rw_le_max",
+          "d_pw_in_range",
+          "d_pw_le_max"
+        ]
+      },
+      "p_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "idx_straight_ge_min": true,
+          "idx_tip_y_le_max": false,
+          "idx_horiz_le_max": false,
+          "d_mw_le_max": false,
+          "d_ti_ge_min": false,
+          "d_tm_le_max": true,
+          "d_tw_le_max": false,
+          "thumb_lat_ge_min": true,
+          "ang_im_dir_ge_min": false
+        },
+        "failed_conditions": [
+          "idx_tip_y_le_max",
+          "idx_horiz_le_max",
+          "d_mw_le_max",
+          "d_ti_ge_min",
+          "d_tw_le_max",
+          "ang_im_dir_ge_min"
+        ]
+      },
+      "q_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_in_range": true,
+          "idx_straight_ge_min": true,
+          "idx_tip_y_in_range": false,
+          "idx_dy_ge_min": false,
+          "idx_horiz_in_range": true,
+          "d_tw_in_range": true,
+          "d_ti_in_range": true,
+          "ang_ti_le_max": true,
+          "mid_straight_le_max": false,
+          "middle_curl_ge_min": false,
+          "ang_im_dir_ge_min": false
+        },
+        "failed_conditions": [
+          "idx_tip_y_in_range",
+          "idx_dy_ge_min",
+          "mid_straight_le_max",
+          "middle_curl_ge_min",
+          "ang_im_dir_ge_min"
+        ]
+      },
+      "r_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": true,
+          "d_rw_le_max": false,
+          "d_pw_le_max": false,
+          "idx_straight_ge_min": true,
+          "mid_straight_ge_min": true,
+          "idx_tip_y_le_max": true,
+          "mid_tip_y_le_max": true,
+          "idx_horiz_ratio_le_max": false,
+          "idx_dy_le_max": true,
+          "d_im_le_max": true,
+          "cross_indicator_le_max": false,
+          "diff_mw_iw_ge_min": true,
+          "mcp_width_2d_ge_min": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_rw_le_max",
+          "d_pw_le_max",
+          "idx_horiz_ratio_le_max",
+          "cross_indicator_le_max"
+        ]
+      },
+      "x_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "thumb_index_d_ti_le_max": false,
+          "d_ti_le_max": false,
+          "index_d_iw_le_max": false,
+          "d_iw_le_max": false,
+          "index_curl_ge_min": false,
+          "idx_curl_ge_min": false,
+          "index_straight_le_max": false,
+          "idx_straight_le_max": false,
+          "ring_d_rw_le_max": false,
+          "d_rw_le_max": false,
+          "pinky_d_pw_le_max": false,
+          "d_pw_le_max": false,
+          "thumb_d_tw_in_range": false,
+          "d_tw_in_range": false,
+          "index_tip_y_le_max": true,
+          "idx_tip_y_le_max": true
+        },
+        "failed_conditions": [
+          "thumb_index_d_ti_le_max",
+          "d_ti_le_max",
+          "index_d_iw_le_max",
+          "d_iw_le_max",
+          "index_curl_ge_min",
+          "idx_curl_ge_min",
+          "index_straight_le_max",
+          "idx_straight_le_max",
+          "ring_d_rw_le_max",
+          "d_rw_le_max",
+          "pinky_d_pw_le_max",
+          "d_pw_le_max",
+          "thumb_d_tw_in_range",
+          "d_tw_in_range"
+        ]
+      }
+    }
+  },
+  "X": {
+    "line": 12368,
+    "trial_id": "pilot_20261107_2141_X_rep01_att01",
+    "frame_idx": 15,
+    "expected_sign": "X",
+    "final_sign": "NEUTRAL",
+    "final_confidence": 0.0,
+    "prediction_source": "none",
+    "gating_status": "rejected",
+    "threshold_applied": 0.7,
+    "reject_reason": "Letter 'V' not in supplemental/fallback set",
+    "geometric_status": "NO_MATCH",
+    "geometric_letter": null,
+    "geometric_reason": "Không khớp với bất kỳ quy tắc hình học chữ cái nào đã biết",
+    "matched_candidates": [],
+    "static_head_raw": "V",
+    "static_head_conf": 0.634,
+    "static_head_top_k": [
+      {
+        "letter": "V",
+        "confidence": 0.634
+      },
+      {
+        "letter": "A",
+        "confidence": 0.2362
+      },
+      {
+        "letter": "K",
+        "confidence": 0.0433
+      },
+      {
+        "letter": "B",
+        "confidence": 0.0205
+      },
+      {
+        "letter": "R",
+        "confidence": 0.0175
+      }
+    ],
+    "diagnostics_snippet": {
+      "k_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "index_d_iw_ge_min": false,
+          "index_curl_le_max": false,
+          "index_horiz_le_max": false,
+          "index_straight_ge_min": false,
+          "middle_d_mw_in_range": false,
+          "middle_curl_le_max": false,
+          "middle_straight_ge_min": false,
+          "middle_horiz_ge_min": true,
+          "ang_im_in_range": true,
+          "d_im_ge_min": false,
+          "ring_d_rw_le_max": true,
+          "pinky_d_pw_le_max": true,
+          "diff_iw_rw_ge_min": false,
+          "diff_iw_pw_ge_min": false,
+          "thumb_d_ti_le_max": true,
+          "thumb_d_tm_le_max": true,
+          "thumb_mid_dist_le_max": true
+        },
+        "failed_conditions": [
+          "index_d_iw_ge_min",
+          "index_curl_le_max",
+          "index_horiz_le_max",
+          "index_straight_ge_min",
+          "middle_d_mw_in_range",
+          "middle_curl_le_max",
+          "middle_straight_ge_min",
+          "d_im_ge_min",
+          "diff_iw_rw_ge_min",
+          "diff_iw_pw_ge_min"
+        ]
+      },
+      "i_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "pinky_ext_or_straight": false,
+          "d_PW_ge_min": false,
+          "pinky_curl_le_max": false,
+          "middle_fingers_folded": true,
+          "d_IW_le_max": false,
+          "d_MW_le_max": true,
+          "d_RW_le_max": true,
+          "diff_PW_curled_ge_min": false,
+          "d_TI_le_max": true,
+          "d_TM_le_max": false,
+          "d_TW_le_max": false,
+          "thumb_not_spread": true
+        },
+        "failed_conditions": [
+          "pinky_ext_or_straight",
+          "d_PW_ge_min",
+          "pinky_curl_le_max",
+          "d_IW_le_max",
+          "diff_PW_curled_ge_min",
+          "d_TM_le_max",
+          "d_TW_le_max"
+        ]
+      },
+      "o_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": true,
+          "d_tm_le_max": false,
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": false,
+          "d_rw_ge_min": false,
+          "d_pw_ge_min": false,
+          "idx_straight_le_max": false
+        },
+        "failed_conditions": [
+          "d_tm_le_max",
+          "d_mw_ge_min",
+          "d_rw_ge_min",
+          "d_pw_ge_min",
+          "idx_straight_le_max"
+        ]
+      },
+      "t_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_ti_le_max": true,
+          "d_tm_ge_min": false,
+          "d_im_ge_min": false,
+          "d_iw_le_max": true,
+          "d_mw_ge_min": false,
+          "d_rw_ge_min": false
+        },
+        "failed_conditions": [
+          "d_tm_ge_min",
+          "d_im_ge_min",
+          "d_mw_ge_min",
+          "d_rw_ge_min"
+        ]
+      },
+      "u_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": false,
+          "d_mw_ge_min": false,
+          "d_rw_le_max": true,
+          "d_pw_le_max": true,
+          "d_im_le_max": false,
+          "ang_im_dir_le_max": false,
+          "diff_x_im_le_max": true,
+          "idx_horiz_le_max": false,
+          "idx_tip_y_le_max": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_iw_ge_min",
+          "d_mw_ge_min",
+          "d_im_le_max",
+          "ang_im_dir_le_max",
+          "idx_horiz_le_max"
+        ]
+      },
+      "s_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_tw_le_max": true,
+          "d_ti_in_range": true,
+          "d_tm_in_range": true,
+          "d_iw_le_max": true,
+          "d_mw_le_max": true,
+          "d_rw_le_max": true,
+          "d_pw_in_range": true,
+          "d_pw_le_max": true,
+          "thumb_lat_ge_min": false
+        },
+        "failed_conditions": [
+          "thumb_lat_ge_min"
+        ]
+      },
+      "p_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": false,
+          "idx_straight_ge_min": false,
+          "idx_tip_y_le_max": false,
+          "idx_horiz_le_max": false,
+          "d_mw_le_max": true,
+          "d_ti_ge_min": false,
+          "d_tm_le_max": true,
+          "d_tw_le_max": false,
+          "thumb_lat_ge_min": false,
+          "ang_im_dir_ge_min": true
+        },
+        "failed_conditions": [
+          "d_iw_ge_min",
+          "idx_straight_ge_min",
+          "idx_tip_y_le_max",
+          "idx_horiz_le_max",
+          "d_ti_ge_min",
+          "d_tw_le_max",
+          "thumb_lat_ge_min"
+        ]
+      },
+      "q_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_in_range": false,
+          "idx_straight_ge_min": false,
+          "idx_tip_y_in_range": false,
+          "idx_dy_ge_min": false,
+          "idx_horiz_in_range": false,
+          "d_tw_in_range": false,
+          "d_ti_in_range": false,
+          "ang_ti_le_max": true,
+          "mid_straight_le_max": false,
+          "middle_curl_ge_min": false,
+          "ang_im_dir_ge_min": true
+        },
+        "failed_conditions": [
+          "d_iw_in_range",
+          "idx_straight_ge_min",
+          "idx_tip_y_in_range",
+          "idx_dy_ge_min",
+          "idx_horiz_in_range",
+          "d_tw_in_range",
+          "d_ti_in_range",
+          "mid_straight_le_max",
+          "middle_curl_ge_min"
+        ]
+      },
+      "r_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "d_iw_ge_min": true,
+          "d_mw_ge_min": false,
+          "d_rw_le_max": true,
+          "d_pw_le_max": true,
+          "idx_straight_ge_min": false,
+          "mid_straight_ge_min": false,
+          "idx_tip_y_le_max": true,
+          "mid_tip_y_le_max": false,
+          "idx_horiz_ratio_le_max": false,
+          "idx_dy_le_max": false,
+          "d_im_le_max": true,
+          "cross_indicator_le_max": false,
+          "diff_mw_iw_ge_min": false,
+          "mcp_width_2d_ge_min": true,
+          "thumb_ring_dist_ge_min": true
+        },
+        "failed_conditions": [
+          "d_mw_ge_min",
+          "idx_straight_ge_min",
+          "mid_straight_ge_min",
+          "mid_tip_y_le_max",
+          "idx_horiz_ratio_le_max",
+          "idx_dy_le_max",
+          "cross_indicator_le_max",
+          "diff_mw_iw_ge_min"
+        ]
+      },
+      "x_rule_diagnostics": {
+        "matched": false,
+        "conditions": {
+          "thumb_index_d_ti_le_max": true,
+          "d_ti_le_max": true,
+          "index_d_iw_le_max": false,
+          "d_iw_le_max": false,
+          "index_curl_ge_min": true,
+          "idx_curl_ge_min": true,
+          "index_straight_le_max": true,
+          "idx_straight_le_max": true,
+          "ring_d_rw_le_max": true,
+          "d_rw_le_max": true,
+          "pinky_d_pw_le_max": true,
+          "d_pw_le_max": true,
+          "thumb_d_tw_in_range": false,
+          "d_tw_in_range": false,
+          "index_tip_y_le_max": true,
+          "idx_tip_y_le_max": true
+        },
+        "failed_conditions": [
+          "index_d_iw_le_max",
+          "d_iw_le_max",
+          "thumb_d_tw_in_range",
+          "d_tw_in_range"
+        ]
+      }
+    }
+  }
+}

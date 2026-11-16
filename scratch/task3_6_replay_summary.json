@@ -1,0 +1,372 @@
+{
+  "runtime_status": {
+    "has_static_head": true,
+    "static_head_load_status": "loaded",
+    "pytorch_version": "2.2.2+cpu"
+  },
+  "file_hashes": {
+    "npz_dataset": {
+      "path": "backend/data/alphabet_v2/datasets/vsl_alphabet_static_v2.npz",
+      "sha256": "0a254daadb4a5dee58d3b11b97071fa093ea2470df6e8a3d609b6d886bfc53b9",
+      "size_bytes": 267504
+    },
+    "fixture_o": {
+      "path": "backend/data/alphabet_v2/static_landmarks/O.json",
+      "sha256": "679da5e880328d7c1f9e271f5e7a8bf19f88c54629c65fbd039fe3415df12df4",
+      "size_bytes": 52452
+    },
+    "pilot_213800": {
+      "path": "backend/data/diagnostics/pilot_pilot_20261108_213800.jsonl",
+      "sha256": "e1d2273d3291f6af801ad22bdb955b5875a580d316b9a633da7972cba5d99002",
+      "size_bytes": 1068499
+    },
+    "pilot_211742": {
+      "path": "backend/data/diagnostics/pilot_pilot_20261108_193712_20261108_211742_1.jsonl",
+      "sha256": "21bfed1ccf47ae3d1cceaa12ed844511e2cf043daa7d6c65357633ce78c5310f",
+      "size_bytes": 825100
+    },
+    "p_holdout": {
+      "path": "backend/data/diagnostics/pilot_pilot_20261108_183703.jsonl",
+      "sha256": "a41604ad6df42371fdf6523ce48f6a90b3dafa748dcc9c6964482e5459bb1a2f",
+      "size_bytes": 4866136
+    },
+    "x_holdout": {
+      "path": "backend/data/diagnostics/pilot_pilot_20261108_193712.jsonl",
+      "sha256": "bc58a5fa8a1b2986e7fd3613f88ea46f889e8db54407f3f9d81ad627bcbb610b",
+      "size_bytes": 1339648
+    }
+  },
+  "target_o": {
+    "npz_o": {
+      "total_samples": 48,
+      "by_video": {
+        "D0506": {
+          "total": 20,
+          "geom_matches": 12
+        },
+        "D0507B": {
+          "total": 19,
+          "geom_matches": 18
+        },
+        "D0508N": {
+          "total": 9,
+          "geom_matches": 7
+        }
+      },
+      "total_geom_matches": 37,
+      "total_pipeline_matches": 37
+    },
+    "fixture_o": {
+      "total_valid_frames": 20,
+      "matched_frames_count": 12,
+      "matched_frame_indices": [
+        22,
+        26,
+        28,
+        30,
+        32,
+        34,
+        36,
+        38,
+        40,
+        42,
+        44,
+        46
+      ],
+      "unmatched_frame_indices": [
+        16,
+        18,
+        20,
+        24,
+        48,
+        50,
+        52,
+        54
+      ],
+      "confirmed_tokens": [
+        "O"
+      ]
+    },
+    "pilot_213800": {
+      "total_lines": 110,
+      "active_frames": 92,
+      "idle_frames": 18,
+      "geom_matches": 88,
+      "geom_accuracy": 0.9565,
+      "trial_accuracy": "9/10",
+      "runtime_confirmed_trials": "9/10",
+      "trials": {
+        "pilot_20261108_213800_O_rep01": {
+          "total": 8,
+          "matched": 4,
+          "rate": 0.5,
+          "passed_70": false,
+          "confirmed_tokens": []
+        },
+        "pilot_20261108_213800_O_rep02": {
+          "total": 8,
+          "matched": 8,
+          "rate": 1.0,
+          "passed_70": true,
+          "confirmed_tokens": [
+            "O",
+            "O"
+          ]
+        },
+        "pilot_20261108_213800_O_rep03": {
+          "total": 9,
+          "matched": 9,
+          "rate": 1.0,
+          "passed_70": true,
+          "confirmed_tokens": [
+            "O",
+            "O"
+          ]
+        },
+        "pilot_20261108_213800_O_rep04": {
+          "total": 8,
+          "matched": 8,
+          "rate": 1.0,
+          "passed_70": true,
+          "confirmed_tokens": [
+            "O",
+            "O"
+          ]
+        },
+        "pilot_20261108_213800_O_rep05": {
+          "total": 9,
+          "matched": 9,
+          "rate": 1.0,
+          "passed_70": true,
+          "confirmed_tokens": [
+            "O",
+            "O"
+          ]
+        },
+        "pilot_20261108_213800_O_rep06": {
+          "total": 10,
+          "matched": 10,
+          "rate": 1.0,
+          "passed_70": true,
+          "confirmed_tokens": [
+            "O",
+            "O"
+          ]
+        },
+        "pilot_20261108_213800_O_rep07": {
+          "total": 10,
+          "matched": 10,
+          "rate": 1.0,
+          "passed_70": true,
+          "confirmed_tokens": [
+            "O",
+            "O"
+          ]
+        },
+        "pilot_20261108_213800_O_rep08": {
+          "total": 9,
+          "matched": 9,
+          "rate": 1.0,
+          "passed_70": true,
+          "confirmed_tokens": [
+            "O",
+            "O"
+          ]
+        },
+        "pilot_20261108_213800_O_rep09": {
+          "total": 10,
+          "matched": 10,
+          "rate": 1.0,
+          "passed_70": true,
+          "confirmed_tokens": [
+            "O",
+            "O"
+          ]
+        },
+        "pilot_20261108_213800_O_rep10": {
+          "total": 11,
+          "matched": 11,
+          "rate": 1.0,
+          "passed_70": true,
+          "confirmed_tokens": [
+            "O",
+            "O"
+          ]
+        }
+      }
+    },
+    "pilot_211742": {
+      "total_lines": 85,
+      "active_frames": 68,
+      "idle_frames": 17,
+      "geom_matches": 6,
+      "geom_accuracy": 0.0882,
+      "outer_gate_fails": 1,
+      "condition_failures": {
+        "idx_straight_le_max": 52,
+        "d_tm_le_max": 17,
+        "d_ti_le_max": 37
+      },
+      "trial_accuracy": "0/10",
+      "runtime_confirmed_trials": "0/10",
+      "trials": {
+        "pilot_20261108_193712_O_rep01": {
+          "total": 6,
+          "matched": 0,
+          "rate": 0.0,
+          "passed_70": false,
+          "confirmed_tokens": []
+        },
+        "pilot_20261108_193712_O_rep02": {
+          "total": 6,
+          "matched": 1,
+          "rate": 0.1667,
+          "passed_70": false,
+          "confirmed_tokens": []
+        },
+        "pilot_20261108_193712_O_rep03": {
+          "total": 6,
+          "matched": 2,
+          "rate": 0.3333,
+          "passed_70": false,
+          "confirmed_tokens": []
+        },
+        "pilot_20261108_193712_O_rep04": {
+          "total": 7,
+          "matched": 0,
+          "rate": 0.0,
+          "passed_70": false,
+          "confirmed_tokens": []
+        },
+        "pilot_20261108_193712_O_rep05": {
+          "total": 7,
+          "matched": 0,
+          "rate": 0.0,
+          "passed_70": false,
+          "confirmed_tokens": []
+        },
+        "pilot_20261108_193712_O_rep06": {
+          "total": 7,
+          "matched": 2,
+          "rate": 0.2857,
+          "passed_70": false,
+          "confirmed_tokens": []
+        },
+        "pilot_20261108_193712_O_rep07": {
+          "total": 7,
+          "matched": 1,
+          "rate": 0.1429,
+          "passed_70": false,
+          "confirmed_tokens": []
+        },
+        "pilot_20261108_193712_O_rep08": {
+          "total": 8,
+          "matched": 0,
+          "rate": 0.0,
+          "passed_70": false,
+          "confirmed_tokens": []
+        },
+        "pilot_20261108_193712_O_rep09": {
+          "total": 7,
+          "matched": 0,
+          "rate": 0.0,
+          "passed_70": false,
+          "confirmed_tokens": []
+        },
+        "pilot_20261108_193712_O_rep10": {
+          "total": 7,
+          "matched": 0,
+          "rate": 0.0,
+          "passed_70": false,
+          "confirmed_tokens": []
+        }
+      }
+    }
+  },
+  "non_o": {
+    "npz_non_o": {
+      "total_samples": 503,
+      "total_fps": 1,
+      "fps_by_letter": {
+        "B": [
+          {
+            "idx": 39,
+            "video_id": "D0492",
+            "frame_index": 54,
+            "is_representative": true,
+            "status": "MATCH",
+            "reason": "Vòng tròn kín chữ O: d_TI=0.13<=0.22, d_TM=0.15<=0.35, d_RW=1.03>=0.8, d_TW=1.18>=0.85"
+          }
+        ]
+      }
+    },
+    "fixtures_non_o": {
+      "total_fixtures": 22,
+      "total_valid_frames": 514,
+      "total_fps": 1,
+      "fps_by_letter": {
+        "B": [
+          {
+            "file": "B.json",
+            "frame_index": 54,
+            "phase": "stable_pose",
+            "reason": "Vòng tròn kín chữ O: d_TI=0.13<=0.22, d_TM=0.15<=0.35, d_RW=1.03>=0.8, d_TW=1.18>=0.85"
+          }
+        ]
+      }
+    },
+    "p_holdout": {
+      "total_active": 314,
+      "fps": 0
+    },
+    "x_holdout": {
+      "total_active": 108,
+      "fps": 0
+    }
+  },
+  "pipeline_analysis": {},
+  "historical_comparison": [
+    {
+      "dataset": "Webcam 213800 Active Frames",
+      "historical": "88 / 92 (95.65%)",
+      "replay": "88 / 92 (95.65%)",
+      "exact_match": true
+    },
+    {
+      "dataset": "Webcam 211742 Active Frames",
+      "historical": "6 / 68 (8.82%)",
+      "replay": "6 / 68 (8.82%)",
+      "exact_match": true
+    },
+    {
+      "dataset": "D0506 Fixture Matched Frames",
+      "historical": "12 / 12 (Hold 100%)",
+      "replay": "12 / 20 (Total 60.00%)",
+      "exact_match": true
+    },
+    {
+      "dataset": "O NPZ Total Samples",
+      "historical": "37 / 48 (77.08%)",
+      "replay": "37 / 48 (77.08%)",
+      "exact_match": true
+    },
+    {
+      "dataset": "NPZ Non-O FP (sans test exception)",
+      "historical": "1 / 503 (B f54)",
+      "replay": "1 / 503",
+      "exact_match": true
+    },
+    {
+      "dataset": "Webcam P Holdout FP",
+      "historical": "0 / 314 (0.0%)",
+      "replay": "0 / 314",
+      "exact_match": true
+    },
+    {
+      "dataset": "Webcam X Holdout FP",
+      "historical": "0 / 108 (0.0%)",
+      "replay": "0 / 108",
+      "exact_match": true
+    }
+  ]
+}

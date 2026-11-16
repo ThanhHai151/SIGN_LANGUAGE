@@ -1,0 +1,106 @@
+{
+  "eval_results": {
+    "Config-Baseline (Production Rule 6)": {
+      "o_pilot": "0/92 (0.0%)",
+      "o_fix": "12/12 (100.0%)",
+      "npz_fp": 0,
+      "fix_fp": 0,
+      "px_fp": 0,
+      "total_fp": 0,
+      "fp_details": []
+    },
+    "Config-C1-Actual (d_TM=0.35, idx=0.40)": {
+      "o_pilot": "32/92 (34.8%)",
+      "o_fix": "12/12 (100.0%)",
+      "npz_fp": 0,
+      "fix_fp": 1,
+      "px_fp": 0,
+      "total_fp": 1,
+      "fp_details": [
+        "E: npz=0, fix=1"
+      ]
+    },
+    "Config-C2A-Actual (d_TM=0.35, idx=0.48)": {
+      "o_pilot": "88/92 (95.7%)",
+      "o_fix": "12/12 (100.0%)",
+      "npz_fp": 0,
+      "fix_fp": 1,
+      "px_fp": 0,
+      "total_fp": 1,
+      "fp_details": [
+        "E: npz=0, fix=1"
+      ]
+    },
+    "Config-C2B-Script1 (d_TI=0.25, d_TM=0.40, idx=0.48)": {
+      "o_pilot": "88/92 (95.7%)",
+      "o_fix": "12/12 (100.0%)",
+      "npz_fp": 0,
+      "fix_fp": 1,
+      "px_fp": 0,
+      "total_fp": 1,
+      "fp_details": [
+        "E: npz=0, fix=1"
+      ]
+    },
+    "Config-C2C-Script1 (d_TI=0.22, d_TM=0.38, idx=0.48)": {
+      "o_pilot": "88/92 (95.7%)",
+      "o_fix": "12/12 (100.0%)",
+      "npz_fp": 0,
+      "fix_fp": 1,
+      "px_fp": 0,
+      "total_fp": 1,
+      "fp_details": [
+        "E: npz=0, fix=1"
+      ]
+    },
+    "Config-C2B-FullSim (d_TI=0.25, d_TM=0.38, idx=0.50)": {
+      "o_pilot": "88/92 (95.7%)",
+      "o_fix": "12/12 (100.0%)",
+      "npz_fp": 1,
+      "fix_fp": 2,
+      "px_fp": 0,
+      "total_fp": 3,
+      "fp_details": [
+        "T: npz=1, fix=1",
+        "E: npz=0, fix=1"
+      ]
+    },
+    "Config-C2B-TextMismatch (d_TM=0.35, idx=0.44)": {
+      "o_pilot": "71/92 (77.2%)",
+      "o_fix": "12/12 (100.0%)",
+      "npz_fp": 0,
+      "fix_fp": 1,
+      "px_fp": 0,
+      "total_fp": 1,
+      "fp_details": [
+        "E: npz=0, fix=1"
+      ]
+    },
+    "Config-C3-Actual (d_TM=0.35, idx=0.48, d_TW>=0.85)": {
+      "o_pilot": "88/92 (95.7%)",
+      "o_fix": "12/12 (100.0%)",
+      "npz_fp": 0,
+      "fix_fp": 0,
+      "px_fp": 0,
+      "total_fp": 0,
+      "fp_details": []
+    }
+  },
+  "unique_studio_samples": 235,
+  "total_observations": 794,
+  "webcam_p_holdout_frames": 314,
+  "webcam_x_holdout_frames": 108,
+  "unique_samples_metadata": 657,
+  "studio_video_ids": [
+    "D0489",
+    "D0490B",
+    "D0491B",
+    "D0493",
+    "D0496",
+    "D0497B",
+    "D0509B",
+    "D0512",
+    "D0513B",
+    "D0517B"
+  ]
+}

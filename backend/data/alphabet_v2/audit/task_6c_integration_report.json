@@ -1,0 +1,84 @@
+{
+  "task_id": "TASK_6C",
+  "task_title": "Tích hợp Static Alphabet Head vào luồng nhận diện camera",
+  "status": "COMPLETED",
+  "timestamp": "2026-10-30T23:15:00+07:00",
+  "modified_files": [
+    "backend/vision/recognizer.py"
+  ],
+  "created_test_files": [
+    "backend/tests/test_alphabet_static_head_integration.py"
+  ],
+  "architectural_hierarchy": {
+    "tier_1_geometric_rules": {
+      "priority": "Highest (Executed First)",
+      "classes": ["A", "B", "C", "D", "E", "I", "L", "O", "S", "T", "V", "Y"],
+      "action_on_match": "Accept immediately, set source='geometric_rule', bypass Static Head",
+      "short_circuit_verified": true
+    },
+    "tier_2_static_head_fallback": {
+      "priority": "Secondary (Fallback on NO_MATCH / UNKNOWN)",
+      "model": "VSLStaticAlphabetHead (Compact MLP 72 -> 64 -> 32 -> 22)",
+      "weights_path": "backend/models/alphabet_static_head_v1.pt",
+      "allowed_supplemental_classes": ["G", "H", "K", "M", "N", "P", "Q", "R", "U", "X"],
+      "rejection_policy": "Any prediction outside the 10 supplemental classes is strictly rejected to NEUTRAL (confidence: 0.0)"
+    }
+  },
+  "supplemental_thresholds": {
+    "G": 0.70,
+    "H": 0.70,
+    "K": 0.75,
+    "M": 0.70,
+    "N": 0.75,
+    "P": 0.70,
+    "Q": 0.85,
+    "R": 0.75,
+    "U": 0.70,
+    "X": 0.70
+  },
+  "special_cases": {
+    "letter_Q": {
+      "threshold": 0.85,
+      "rationale": "High threshold prevents false positive confusion with letter X under 2D frontal camera projections.",
+      "verified_behavior": "Transition frames (conf ~0.50) rejected; stable frontal Q frames (conf >0.85) correctly recognized."
+    }
+  },
+  "graceful_degradation": {
+    "behavior_on_missing_weights": "recognizer initializes with has_static_head=False; geometric rules continue with zero disruption; camera does not crash."
+  },
+  "sha256_verification": {
+    "backend/models/weights.pt": {
+      "hash": "6965b4ffd9eed45c10317f0cc4eff453470ea4552c081f18ea997d74365907be",
+      "status": "MATCH_UNCHANGED"
+    },
+    "backend/models/weights/sign_sstcn_attention_model.pth": {
+      "hash": "2a8ddcc4d06c4f23aa7910caf77371848034dcdf8f4749d134c5894764cf9697",
+      "status": "MATCH_UNCHANGED"
+    },
+    "backend/models/alphabet_static_head_v1.pt": {
+      "hash": "cab8123e23ed41a6088ba1c6e80a8aaaa9a382663418cc669eacff834795c254",
+      "status": "MATCH_UNCHANGED"
+    }
+  },
+  "test_execution_results": {
+    "total_tests": 45,
+    "passed": 45,
+    "failed": 0,
+    "errors": 0,
+    "breakdown": {
+      "backend/tests/test_alphabet_classifier.py": "26 passed",
+      "backend/tests/test_alphabet_recognition_integration.py": "9 passed",
+      "backend/tests/test_alphabet_static_head_integration.py": "10 passed"
+    }
+  },
+  "constraints_adherence": {
+    "retrained_vsl_gesture_net_84": false,
+    "retrained_sstcn_102": false,
+    "modified_weights_pt": false,
+    "modified_geometric_rules": false,
+    "modified_digit_classifier": false,
+    "integrated_dynamic_accents_letters": false,
+    "other_modes_affected": false
+  }
+}
+

@@ -1,0 +1,33 @@
+{
+  "checkpoint": "backend/models/weights/sign_sstcn_reconstructed_model.pth",
+  "sha256": "370c5edcadfbc2b0b2476b6fb7dfe7ca3d53f68f3a2fcb13036e5b7ebabf9fad",
+  "source_run": "backend/runs/sstcn_reconstructed_full",
+  "initialization": "random, no historical checkpoint loaded",
+  "epochs_completed": 12,
+  "best_epoch_zero_based": 10,
+  "best_epoch_display": 11,
+  "dataset_manifest_sha256": "e3340c0d55b27dce703a1575d721c339c73609dc19ad730d616f027099fb3920",
+  "counts": {
+    "train": 38818,
+    "val": 1407,
+    "test": 1420
+  },
+  "validation": {
+    "samples": 1407,
+    "accuracy": 0.8578535891968728,
+    "weighted_f1": 0.8561374617014242
+  },
+  "test": {
+    "samples": 1420,
+    "accuracy": 0.8866197183098592,
+    "top5_accuracy": 0.9950704225352113,
+    "weighted_f1": 0.8844394970602992
+  },
+  "production_default": "The original checkpoint remains the default; select this candidate using VSL_SSTCN_WEIGHTS.",
+  "historical_checkpoint_sha256": "2a8ddcc4d06c4f23aa7910caf77371848034dcdf8f4749d134c5894764cf9697",
+  "historical_test_accuracy": 0.8661971830985915,
+  "improvement_percentage_points": 2.042253521126769,
+  "last_checkpoint": "backend/models/weights/sign_sstcn_reconstructed_last.pth",
+  "last_checkpoint_sha256": "301dc6bcf0d282acf029ad9c8c921766de6da51d5167f7becafbba630ae319ec",
+  "archived_manifest": "docs/sstcn/evaluation/sstcn_reconstructed_full/dataset_manifest.json.gz"
+}

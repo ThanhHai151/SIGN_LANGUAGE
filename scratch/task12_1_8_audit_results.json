@@ -1,0 +1,127 @@
+{
+  "total_h": 455,
+  "cand_h_count": 424,
+  "rule_k_count": 22,
+  "rule_r_count": 2,
+  "cand_h_and_k": [
+    15,
+    22
+  ],
+  "cand_h_and_r": [],
+  "cand_h_only_count": 422,
+  "neither_count": 9,
+  "final_counts": {
+    "H": 422,
+    "K": 22,
+    "NEUTRAL": 9,
+    "R": 2
+  },
+  "cand_h_and_k_details": [
+    {
+      "frame_idx": 15,
+      "trial_id": "pilot_20261107_2141_H_rep04_att01",
+      "is_cand_h": true,
+      "has_base_k": true,
+      "has_base_r": false,
+      "has_base_v": false,
+      "base_matches": [
+        "K"
+      ],
+      "sim_matches": [
+        "K"
+      ],
+      "final_pipeline_sign": "K",
+      "feat": {
+        "idx_straight": 0.9994,
+        "mid_straight": 0.9932,
+        "idx_horiz_ratio": 0.0508,
+        "mid_horiz_ratio": 0.9079,
+        "ang_IM_dir": 62.31,
+        "d_IW": 1.8907,
+        "d_MW": 1.5287,
+        "d_RW": 0.6363,
+        "d_PW": 0.5717
+      }
+    },
+    {
+      "frame_idx": 22,
+      "trial_id": "pilot_20261107_2141_H_rep08_att01",
+      "is_cand_h": true,
+      "has_base_k": true,
+      "has_base_r": false,
+      "has_base_v": false,
+      "base_matches": [
+        "K"
+      ],
+      "sim_matches": [
+        "K"
+      ],
+      "final_pipeline_sign": "K",
+      "feat": {
+        "idx_straight": 0.9991,
+        "mid_straight": 0.9968,
+        "idx_horiz_ratio": 0.0962,
+        "mid_horiz_ratio": 0.9337,
+        "ang_IM_dir": 63.5,
+        "d_IW": 1.8855,
+        "d_MW": 1.5228,
+        "d_RW": 0.6562,
+        "d_PW": 0.5899
+      }
+    }
+  ],
+  "rule_r_details": [
+    {
+      "frame_idx": 9,
+      "trial_id": "pilot_20261107_2141_H_rep05_att01",
+      "is_cand_h": false,
+      "has_base_k": false,
+      "has_base_r": true,
+      "has_base_v": false,
+      "base_matches": [
+        "R"
+      ],
+      "sim_matches": [
+        "R"
+      ],
+      "final_pipeline_sign": "R",
+      "feat": {
+        "idx_straight": 0.9967,
+        "mid_straight": 0.9998,
+        "idx_horiz_ratio": 0.3076,
+        "mid_horiz_ratio": 0.7853,
+        "ang_IM_dir": 33.83,
+        "d_IW": 1.8591,
+        "d_MW": 1.635,
+        "d_RW": 0.619,
+        "d_PW": 0.5672
+      }
+    },
+    {
+      "frame_idx": 10,
+      "trial_id": "pilot_20261107_2141_H_rep05_att01",
+      "is_cand_h": false,
+      "has_base_k": false,
+      "has_base_r": true,
+      "has_base_v": false,
+      "base_matches": [
+        "R"
+      ],
+      "sim_matches": [
+        "R"
+      ],
+      "final_pipeline_sign": "R",
+      "feat": {
+        "idx_straight": 0.9927,
+        "mid_straight": 0.9998,
+        "idx_horiz_ratio": 0.3524,
+        "mid_horiz_ratio": 0.8013,
+        "ang_IM_dir": 32.62,
+        "d_IW": 1.8558,
+        "d_MW": 1.6317,
+        "d_RW": 0.637,
+        "d_PW": 0.597
+      }
+    }
+  ]
+}

@@ -1,0 +1,534 @@
+{
+  "fixtures": {
+    "O": {
+      "exists": true,
+      "path": "backend/data/alphabet_v2/static_landmarks/O.json",
+      "size_bytes": 52452,
+      "type": "dict",
+      "total_items": 6,
+      "sample_keys": [
+        "letter",
+        "type",
+        "video_id",
+        "total_frames",
+        "valid_frames"
+      ]
+    },
+    "A": {
+      "exists": true,
+      "path": "backend/data/alphabet_v2/static_landmarks/A.json",
+      "size_bytes": 62282,
+      "type": "dict",
+      "total_items": 6,
+      "sample_keys": [
+        "letter",
+        "type",
+        "video_id",
+        "total_frames",
+        "valid_frames"
+      ]
+    },
+    "S": {
+      "exists": true,
+      "path": "backend/data/alphabet_v2/static_landmarks/S.json",
+      "size_bytes": 45296,
+      "type": "dict",
+      "total_items": 6,
+      "sample_keys": [
+        "letter",
+        "type",
+        "video_id",
+        "total_frames",
+        "valid_frames"
+      ]
+    },
+    "C": {
+      "exists": true,
+      "path": "backend/data/alphabet_v2/static_landmarks/C.json",
+      "size_bytes": 54226,
+      "type": "dict",
+      "total_items": 6,
+      "sample_keys": [
+        "letter",
+        "type",
+        "video_id",
+        "total_frames",
+        "valid_frames"
+      ]
+    }
+  },
+  "npz": {
+    "backend/data/alphabet_v2/datasets/vsl_alphabet_static_south_clean_v1.npz": {
+      "exists": true,
+      "size_bytes": 150718,
+      "files": [
+        "X",
+        "y",
+        "classes",
+        "landmarks",
+        "metadata_json"
+      ],
+      "X_shape": [
+        309,
+        72
+      ],
+      "X_dtype": "float32",
+      "y_shape": [
+        309
+      ],
+      "y_dtype": "int64",
+      "y_unique": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "14",
+        "15",
+        "16",
+        "18",
+        "19",
+        "21"
+      ],
+      "y_has_O": true,
+      "classes_shape": [
+        22
+      ],
+      "classes_dtype": "<U1",
+      "classes_unique": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "G",
+        "H",
+        "I",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "X",
+        "Y"
+      ],
+      "classes_has_O": true,
+      "landmarks_shape": [
+        309,
+        21,
+        3
+      ],
+      "landmarks_dtype": "float32",
+      "metadata_json_shape": [],
+      "metadata_json_dtype": "<U91067"
+    },
+    "backend/data/alphabet_v2/datasets/vsl_alphabet_static_v2.npz": {
+      "exists": true,
+      "size_bytes": 267504,
+      "files": [
+        "X",
+        "y",
+        "classes",
+        "landmarks",
+        "metadata_json"
+      ],
+      "X_shape": [
+        551,
+        72
+      ],
+      "X_dtype": "float32",
+      "y_shape": [
+        551
+      ],
+      "y_dtype": "int64",
+      "y_unique": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "y_has_O": true,
+      "classes_shape": [
+        22
+      ],
+      "classes_dtype": "<U1",
+      "classes_unique": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "G",
+        "H",
+        "I",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "X",
+        "Y"
+      ],
+      "classes_has_O": true,
+      "landmarks_shape": [
+        551,
+        21,
+        3
+      ],
+      "landmarks_dtype": "float32",
+      "metadata_json_shape": [],
+      "metadata_json_dtype": "<U163896"
+    },
+    "backend/data/vsl_dataset.npz": {
+      "exists": true,
+      "size_bytes": 3043079,
+      "files": [
+        "X",
+        "y",
+        "classes"
+      ],
+      "X_shape": [
+        12600,
+        72
+      ],
+      "X_dtype": "float32",
+      "y_shape": [
+        12600
+      ],
+      "y_dtype": "int64",
+      "y_unique": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34"
+      ],
+      "y_has_O": true,
+      "classes_shape": [
+        84
+      ],
+      "classes_dtype": "<U12",
+      "classes_unique": [
+        "A",
+        "AN_COM",
+        "B",
+        "BAN",
+        "BAN_BE",
+        "BAN_RON",
+        "BENH_VIEN",
+        "BUON",
+        "C",
+        "CAM_ON",
+        "CA_NHAN",
+        "CHO",
+        "CO_HOI",
+        "CO_THE",
+        "CUOI_TUAN",
+        "D",
+        "DAM_BAO",
+        "DIA_DIEM",
+        "DI_HOC",
+        "DI_NGU",
+        "DOC_SACH",
+        "DONG_Y",
+        "DU",
+        "DU_AN",
+        "E",
+        "F",
+        "G",
+        "GAP_GO",
+        "GIA_DINH",
+        "GIUP_DO",
+        "H",
+        "HANG_NGAY",
+        "HOC_BAI",
+        "HOI",
+        "I"
+      ],
+      "classes_has_O": true
+    }
+  },
+  "pilot_logs": {
+    "pilot_pilot_20261108_042505.jsonl": {
+      "size_bytes": 644042,
+      "total_frames": 68,
+      "o_frames": 0,
+      "expected_signs": [
+        "P"
+      ],
+      "trial_count": 1,
+      "trials": [
+        "pilot_20261108_042505_P_rep01"
+      ]
+    },
+    "pilot_pilot_20261108_044024.jsonl": {
+      "size_bytes": 1369222,
+      "total_frames": 146,
+      "o_frames": 0,
+      "expected_signs": [
+        "P"
+      ],
+      "trial_count": 10,
+      "trials": [
+        "pilot_20261108_044024_P_rep01",
+        "pilot_20261108_044024_P_rep02",
+        "pilot_20261108_044024_P_rep03",
+        "pilot_20261108_044024_P_rep04",
+        "pilot_20261108_044024_P_rep05",
+        "pilot_20261108_044024_P_rep06",
+        "pilot_20261108_044024_P_rep07",
+        "pilot_20261108_044024_P_rep08",
+        "pilot_20261108_044024_P_rep09",
+        "pilot_20261108_044024_P_rep10"
+      ]
+    },
+    "pilot_pilot_20261108_183703.jsonl": {
+      "size_bytes": 4866136,
+      "total_frames": 519,
+      "o_frames": 0,
+      "expected_signs": [
+        "P"
+      ],
+      "trial_count": 10,
+      "trials": [
+        "pilot_20261108_183703_P_rep01",
+        "pilot_20261108_183703_P_rep02",
+        "pilot_20261108_183703_P_rep03",
+        "pilot_20261108_183703_P_rep04",
+        "pilot_20261108_183703_P_rep05",
+        "pilot_20261108_183703_P_rep06",
+        "pilot_20261108_183703_P_rep07",
+        "pilot_20261108_183703_P_rep08",
+        "pilot_20261108_183703_P_rep09",
+        "pilot_20261108_183703_P_rep10"
+      ]
+    },
+    "pilot_pilot_20261108_184115.jsonl": {
+      "size_bytes": 3258696,
+      "total_frames": 343,
+      "o_frames": 0,
+      "expected_signs": [
+        "X"
+      ],
+      "trial_count": 10,
+      "trials": [
+        "pilot_20261108_184115_X_rep01",
+        "pilot_20261108_184115_X_rep02",
+        "pilot_20261108_184115_X_rep03",
+        "pilot_20261108_184115_X_rep04",
+        "pilot_20261108_184115_X_rep05",
+        "pilot_20261108_184115_X_rep06",
+        "pilot_20261108_184115_X_rep07",
+        "pilot_20261108_184115_X_rep08",
+        "pilot_20261108_184115_X_rep09",
+        "pilot_20261108_184115_X_rep10"
+      ]
+    },
+    "pilot_pilot_20261108_184115_20261108_192112_1.jsonl": {
+      "size_bytes": 2972139,
+      "total_frames": 315,
+      "o_frames": 0,
+      "expected_signs": [
+        "X"
+      ],
+      "trial_count": 1,
+      "trials": [
+        "pilot_20261108_184115_X_rep10"
+      ]
+    },
+    "pilot_pilot_20261108_193712.jsonl": {
+      "size_bytes": 1339648,
+      "total_frames": 142,
+      "o_frames": 0,
+      "expected_signs": [
+        "X"
+      ],
+      "trial_count": 10,
+      "trials": [
+        "pilot_20261108_193712_X_rep01",
+        "pilot_20261108_193712_X_rep02",
+        "pilot_20261108_193712_X_rep03",
+        "pilot_20261108_193712_X_rep04",
+        "pilot_20261108_193712_X_rep05",
+        "pilot_20261108_193712_X_rep06",
+        "pilot_20261108_193712_X_rep07",
+        "pilot_20261108_193712_X_rep08",
+        "pilot_20261108_193712_X_rep09",
+        "pilot_20261108_193712_X_rep10"
+      ]
+    },
+    "pilot_pilot_20261108_193712_20261108_211742_1.jsonl": {
+      "size_bytes": 825100,
+      "total_frames": 85,
+      "o_frames": 68,
+      "expected_signs": [
+        "O"
+      ],
+      "trial_count": 10,
+      "trials": [
+        "pilot_20261108_193712_O_rep01",
+        "pilot_20261108_193712_O_rep02",
+        "pilot_20261108_193712_O_rep03",
+        "pilot_20261108_193712_O_rep04",
+        "pilot_20261108_193712_O_rep05",
+        "pilot_20261108_193712_O_rep06",
+        "pilot_20261108_193712_O_rep07",
+        "pilot_20261108_193712_O_rep08",
+        "pilot_20261108_193712_O_rep09",
+        "pilot_20261108_193712_O_rep10"
+      ]
+    },
+    "pilot_pilot_20261108_213800.jsonl": {
+      "size_bytes": 1068499,
+      "total_frames": 110,
+      "o_frames": 92,
+      "expected_signs": [
+        "O"
+      ],
+      "trial_count": 10,
+      "trials": [
+        "pilot_20261108_213800_O_rep01",
+        "pilot_20261108_213800_O_rep02",
+        "pilot_20261108_213800_O_rep03",
+        "pilot_20261108_213800_O_rep04",
+        "pilot_20261108_213800_O_rep05",
+        "pilot_20261108_213800_O_rep06",
+        "pilot_20261108_213800_O_rep07",
+        "pilot_20261108_213800_O_rep08",
+        "pilot_20261108_213800_O_rep09",
+        "pilot_20261108_213800_O_rep10"
+      ]
+    },
+    "pilot_pilot_20261109_004312.jsonl": {
+      "size_bytes": 4224136,
+      "total_frames": 436,
+      "o_frames": 349,
+      "expected_signs": [
+        "O"
+      ],
+      "trial_count": 10,
+      "trials": [
+        "pilot_20261109_004312_O_rep01",
+        "pilot_20261109_004312_O_rep02",
+        "pilot_20261109_004312_O_rep03",
+        "pilot_20261109_004312_O_rep04",
+        "pilot_20261109_004312_O_rep05",
+        "pilot_20261109_004312_O_rep06",
+        "pilot_20261109_004312_O_rep07",
+        "pilot_20261109_004312_O_rep08",
+        "pilot_20261109_004312_O_rep09",
+        "pilot_20261109_004312_O_rep10"
+      ]
+    },
+    "pilot_pilot_20261109_013304.jsonl": {
+      "size_bytes": 3339886,
+      "total_frames": 345,
+      "o_frames": 292,
+      "expected_signs": [
+        "O"
+      ],
+      "trial_count": 10,
+      "trials": [
+        "pilot_20261109_013304_O_rep01",
+        "pilot_20261109_013304_O_rep02",
+        "pilot_20261109_013304_O_rep03",
+        "pilot_20261109_013304_O_rep04",
+        "pilot_20261109_013304_O_rep05",
+        "pilot_20261109_013304_O_rep06",
+        "pilot_20261109_013304_O_rep07",
+        "pilot_20261109_013304_O_rep08",
+        "pilot_20261109_013304_O_rep09",
+        "pilot_20261109_013304_O_rep10"
+      ]
+    },
+    "pilot_pilot_20261109_022547.jsonl": {
+      "size_bytes": 5616822,
+      "total_frames": 458,
+      "o_frames": 309,
+      "expected_signs": [
+        "O"
+      ],
+      "trial_count": 10,
+      "trials": [
+        "pilot_20261109_022547_O_rep01",
+        "pilot_20261109_022547_O_rep02",
+        "pilot_20261109_022547_O_rep03",
+        "pilot_20261109_022547_O_rep04",
+        "pilot_20261109_022547_O_rep05",
+        "pilot_20261109_022547_O_rep06",
+        "pilot_20261109_022547_O_rep07",
+        "pilot_20261109_022547_O_rep08",
+        "pilot_20261109_022547_O_rep09",
+        "pilot_20261109_022547_O_rep10"
+      ]
+    }
+  }
+}
