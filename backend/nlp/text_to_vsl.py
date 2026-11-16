@@ -183,6 +183,8 @@ def headword_keys(word: str) -> list:
     return list(dict.fromkeys(k for k in keys if k))
 
 
+CLASSIFIERS = ("con", "cái", "chiếc", "quả", "trái", "quyển", "cuốn", "tờ", "bức", "ngôi", "căn", "tấm")
+
 _exact_cache = {}
 
 
@@ -204,7 +206,7 @@ def exact_index(lex: dict) -> dict:
     return _exact_cache[cache_key]
 
 
-def _resolve(phrase: str, lex: dict, available: set = None, multi: bool = False):
+def _resolve(phrase: str, lex: dict, available: set = None, multi: bool = False, classifier: bool = True):
     """Tìm mục từ cho một cụm từ: trùng đúng từ gốc → cách gọi khác của cùng khái niệm (SAME_SIGN_WORDS).
 
     Ưu tiên mục robot diễn được. Với cụm nhiều âm tiết (multi=True), bỏ qua mục robot chưa diễn được
@@ -219,6 +221,14 @@ def _resolve(phrase: str, lex: dict, available: set = None, multi: bool = False)
     syn = SAME_SIGN_WORDS.get(phrase)
     if syn and idx.get(norm_key(syn)):
         candidates.append(idx[norm_key(syn)])
+    # Danh từ chỉ loại không đổi nghĩa: "chó" = "con chó", "táo" = "quả táo", "vở" = "quyển vở"
+    # (không dùng "cây": "cây khế" là cây, không phải quả khế)
+    if classifier and not candidates and phrase not in STOPWORDS:
+        for cl in CLASSIFIERS:
+            e = idx.get(f"{cl} {phrase}")
+            if e:
+                candidates.append(e)
+                break
     for c in candidates:
         if _usable(c, available):
             return c
@@ -304,9 +314,31 @@ def _compound_len(words: list, i: int) -> int:
     if not comps:
         return 0
     for length in range(min(4, len(words) - i), 1, -1):
-        if " ".join(words[i:i + length]) in comps:
-            return length
+        if " ".join(words[i:i + length]) not in comps:
+            continue
+        # "nhà tôi", "của em": danh từ + đại từ là cụm, không phải từ ghép
+        if words[i + length - 1] in PRONOUNS:
+            continue
+        # "có con chó": "con chó" là ký hiệu → "có con" không phải từ ghép ở đây
+        if any(" ".join(words[j:j + m]) in _phrase_keys()
+               for j in range(i + 1, i + length) for m in range(2, 5) if j + m > i + length and j + m <= len(words)):
+            continue
+        return length
     return 0
+
+
+PRONOUNS = {"tôi", "tao", "tớ", "mình", "bạn", "em", "anh", "chị", "nó", "họ", "ta", "chúng", "ông", "bà", "cô", "chú", "bác"}
+_phrase_cache = {}
+
+
+def _phrase_keys() -> set:
+    """Các cụm nhiều tiếng có ký hiệu (khóa của bộ từ vựng)."""
+    lex = load_lexicon()
+    key = id(lex["entries"])
+    if key not in _phrase_cache:
+        _phrase_cache.clear()
+        _phrase_cache[key] = {k for k in exact_index(lex) if " " in k}
+    return _phrase_cache[key]
 
 
 LETTER_CLIPS_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "letter_clips.json")
@@ -444,7 +476,7 @@ def text_to_vsl_glosses(text: str):
         comp_len = _compound_len(words, i)
         if comp_len:
             parts = words[i:i + comp_len]
-            if not all(p in STOPWORDS or ((e := _resolve(p, lex, available)) and _usable(e, available)) for p in parts):
+            if not all(p in STOPWORDS or ((e := _resolve(p, lex, available, classifier=False)) and _usable(e, available)) for p in parts):
                 result.extend(_spell_items(" ".join(parts), lex, available=available))
                 i += comp_len
                 continue

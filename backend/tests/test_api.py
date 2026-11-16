@@ -160,13 +160,14 @@ class TestVSLSystem(unittest.TestCase):
     def _assert_exact(self, result):
         """Nguyên tắc chính xác: mỗi ký hiệu phải là ký hiệu của ĐÚNG từ được gõ (hoặc cách gọi khác của
         cùng khái niệm trong SAME_SIGN_WORDS) — không dùng ký hiệu của từ gần nghĩa."""
-        from backend.nlp.text_to_vsl import headword_keys, SAME_SIGN_WORDS
+        from backend.nlp.text_to_vsl import headword_keys, SAME_SIGN_WORDS, CLASSIFIERS
         from backend.models.lexicon import norm_key
         for r in result:
             if r["type"] != "vocabulary":
                 continue
             keys = headword_keys(r["word"])
-            ok = r["token"] in keys or norm_key(SAME_SIGN_WORDS.get(r["token"], "")) in keys
+            ok = (r["token"] in keys or norm_key(SAME_SIGN_WORDS.get(r["token"], "")) in keys
+                  or any(f"{cl} {r['token']}" in keys for cl in CLASSIFIERS))   # "chó" = "con chó"
             self.assertTrue(ok, f'"{r["token"]}" bị diễn bằng ký hiệu của "{r["word"]}"')
 
     def test_nlp_everyday_compound_phrases(self):
@@ -201,6 +202,13 @@ class TestVSLSystem(unittest.TestCase):
         self.assertIn("bạn bè", spelled_words)
         # Mọi ký hiệu được diễn đều có video mẫu người thật (miền Nam / dùng chung)
         self.assertTrue(all(r.get("video_url") for r in result if r.get("motion_id") and r["type"] == "vocabulary"))
+
+    def test_single_noun_without_classifier(self):
+        """Gõ riêng "chó", "táo", "trường" vẫn ra ký hiệu "con chó", "quả táo", "nhà trường"; "công nhân" không thành "con công" """
+        for text, word in (("chó", "con chó"), ("táo", "quả táo"), ("trường", "nhà trường"), ("Nhà tôi có con chó", "con chó")):
+            words = [r["word"] for r in text_to_vsl_glosses(text) if r["type"] == "vocabulary"]
+            self.assertIn(word, words, text)
+        self.assertNotIn("con công", [r["word"] for r in text_to_vsl_glosses("công nhân")])
 
     def test_nlp_compound_not_split_into_wrong_signs(self):
         """"sinh nhật", "công nhân", "kết hôn": không được diễn "nhật" (nước Nhật), "nhân" (phép nhân), "hôn" """
