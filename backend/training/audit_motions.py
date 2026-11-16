@@ -24,7 +24,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, ROOT)
 from backend.models.rotation import Rotation as Rot  # noqa: E402
 from backend.training.retarget_motion import (  # noqa: E402
-    retarget, body_scale, to_robot, torso_frame, to_robot_pos, hand_frame, damp_z,
+    retarget, body_scale, to_robot, torso_frame, to_robot_pos, hand_frame_view, damp_z,
     LAYOUT, DOWN, R_SHOULDER_HALF, R_UPPER, R_FORE, R_REACH, KZ_HAND, E_STRAIGHT, E_FIST, FINGERS,
 )
 
@@ -121,7 +121,7 @@ def audit_one(raw: dict, motion: dict = None) -> dict:
                 Rh = Rf @ Rot.from_euler("Y", g("twist")).as_matrix() @ Rot.from_euler("XYZ", [g("wrist_x"), g("wrist_y"), g("wrist_z")]).as_matrix()
                 H = np.stack([T.T @ h for h in to_robot(fr[hk])])
                 Hrel = H - H[0]
-                Rt = hand_frame(damp_z(Hrel, KZ_HAND), side)
+                Rt = hand_frame_view(Hrel, side)
                 ey = math.degrees(math.acos(np.clip(np.dot(Rh[:, 1], Rt[:, 1]), -1, 1)))
                 ez = math.degrees(math.acos(np.clip(np.dot(Rh[:, 2], Rt[:, 2]), -1, 1)))
                 herr.append(max(ey, ez))

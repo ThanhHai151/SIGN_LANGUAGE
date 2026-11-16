@@ -117,6 +117,7 @@ function applyKeyframe(cur, kf) {
 export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, sequence = [], currentIndex = 0, freezeAt, videoElRef }) {
   const mountRef = useRef(null);
   const rigRef = useRef({});
+  if (import.meta.env.DEV && typeof window !== 'undefined') window.__rigRef = rigRef; // kiểm thử tự động (chỉ khi phát triển)
   const animFrameRef = useRef(null);
   const isPlayingRef = useRef(isPlaying);
   const speedRef = useRef(speed);
@@ -450,6 +451,7 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
     scene.add(avatarGroup);
 
     rigRef.current = {
+      THREE_ns: THREE,
       avatarGroup,
       torsoGroup,
       headGroup,

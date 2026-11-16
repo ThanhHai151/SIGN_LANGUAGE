@@ -117,6 +117,24 @@ def hand_frame(H, side):
     return np.stack([x, y, z], axis=1)
 
 
+def hand_frame_view(H, side, kz=None):
+    """Hướng bàn tay để robot NHÌN TỪ PHÍA TRƯỚC giống video:
+    - hướng ngón tay (trục y) lấy từ điểm đã giảm độ sâu (MediaPipe phóng đại trước–sau → ngón tay chĩa
+      thẳng vào camera thay vì sang ngang như trong video);
+    - hướng LÒNG BÀN TAY lấy từ hình bàn tay 3D đầy đủ rồi chiếu vuông góc với trục ngón. Giảm độ sâu cả
+      bàn tay làm lòng bàn tay bị lật ngược (úp thành ngửa) khi ngón tay chĩa về phía camera."""
+    kz = KZ_HAND if kz is None else kz
+    y = unit(damp_z(H[0] - H[9], kz))
+    xr = (H[17] - H[5]) if side == "right" else (H[5] - H[17])
+    n = np.cross(unit(xr), unit(H[0] - H[9]))       # pháp tuyến lòng bàn tay 3D
+    n = n - np.dot(n, y) * y
+    if np.linalg.norm(n) < 1e-6:
+        return hand_frame(damp_z(H, kz), side)
+    z = unit(n)
+    x = np.cross(y, z)
+    return np.stack([x, y, z], axis=1)
+
+
 def flex_spread(b):
     """Góc gập (quanh X, + về phía lòng bàn tay) và dạng (quanh Z) của một đốt trong khung đốt cha."""
     b = unit(b)
@@ -333,6 +351,100 @@ def _smooth_adaptive(A, d0, side=0.2, angular=False):
     return out
 
 
+SYM_MAX_CM = 7.0        # hai cổ tay đối xứng qua giữa thân (sai khác trung vị ≤ 7 cm)
+SYM_JITTER_RATIO = 2.5  # một tay rung/lật hướng nhiều hơn hẳn tay kia
+SYM_JITTER_MIN = 45.0   # ... và thực sự lật hướng liên tục (độ lệch trung vị giữa hai khung > 45°)
+SYM_AGREE_MIN = 0.3     # ở ≥ 30% số khung, tay rung vẫn trùng hướng với ảnh gương của tay kia (đúng là đối xứng)
+
+
+def _orient_jitter(frames, hk, side):
+    """Độ lệch hướng trung vị giữa hai khung liên tiếp (độ) của một bàn tay; None nếu quá ít khung."""
+    qs = []
+    for fr in frames:
+        if fr.get("p") and fr.get(hk):
+            P = to_robot(fr["p"]); T = torso_frame(P); c = (P[1] + P[2]) / 2
+            H = np.stack([T.T @ (h - c) for h in to_robot(fr[hk])])
+            qs.append(_quat(hand_frame_view(H - H[0], side)))
+        else:
+            qs.append(None)
+    d = [math.degrees(2 * math.acos(min(1.0, abs(float(np.dot(a, b)))))) for a, b in zip(qs, qs[1:]) if a is not None and b is not None]
+    return float(np.median(d)) if len(d) >= 4 else None
+
+
+# Ký hiệu đã ĐỐI CHIẾU VIDEO là hai bàn tay soi gương nhau (hình dạng + hướng). Tự động nhận dạng không đủ tin cậy:
+# nhiều ký hiệu hai tay đặt đối xứng nhưng hình bàn tay khác nhau (một tay dựng đứng, tay kia ngửa) — soi gương
+# sẽ làm sai. Chỉ thêm mã vào đây sau khi đã xem video và thấy robot diễn đúng hơn.
+MIRROR_SIGNS = {
+    "W00110N",  # bạn — hai bàn tay úp, các ngón chéo nhau trước ngực
+}
+
+
+def symmetric_fix(frames, sign_id=None):
+    """Ký hiệu HAI TAY ĐỐI XỨNG (vd. "bạn"): khi hai bàn tay chồng lên nhau, MediaPipe hay đoán sai hướng
+    của một bàn tay (lật úp/ngửa liên tục) trong khi tay kia ổn định. Nếu hai cổ tay chuyển động đối xứng
+    qua giữa thân và một tay rung nhiều hơn hẳn → dùng hình bàn tay đối xứng (soi gương) của tay ổn định cho
+    tay kia, giữ nguyên vị trí cổ tay của mỗi tay."""
+    if sign_id not in MIRROR_SIGNS:
+        return frames
+    both = [fr for fr in frames if fr.get("p") and fr.get("r") and fr.get("l")]
+    if len(both) < 4:
+        return frames
+    dev = []
+    for fr in both:
+        P = to_robot(fr["p"]); T = torso_frame(P); c = (P[1] + P[2]) / 2
+        wr, wl = T.T @ (P[6] - c), T.T @ (P[5] - c)
+        dev.append(100 * float(np.linalg.norm(wr - wl * np.array([-1.0, 1.0, 1.0]))))
+    if float(np.median(dev)) > SYM_MAX_CM:
+        return frames
+    jr, jl = _orient_jitter(frames, "r", "right"), _orient_jitter(frames, "l", "left")
+    if jr is None or jl is None:
+        return frames
+    if jr > SYM_JITTER_RATIO * jl and jr > SYM_JITTER_MIN:
+        bad, good, bs = "r", "l", "right"
+    elif jl > SYM_JITTER_RATIO * jr and jl > SYM_JITTER_MIN:
+        bad, good, bs = "l", "r", "left"
+    else:
+        return frames
+    agree = []
+    for fr in both:
+        P = to_robot(fr["p"]); T = torso_frame(P); c = (P[1] + P[2]) / 2
+        Hb = np.stack([T.T @ (h - c) for h in to_robot(fr[bad])])
+        Hg = np.stack([T.T @ (h - c) for h in to_robot(fr[good])])
+        Rb = hand_frame_view(Hb - Hb[0], bs)
+        Rm = hand_frame_view((Hg - Hg[0]) * np.array([-1.0, 1.0, 1.0]), bs)
+        a = max(math.degrees(math.acos(np.clip(Rb[:, 1] @ Rm[:, 1], -1, 1))), math.degrees(math.acos(np.clip(Rb[:, 2] @ Rm[:, 2], -1, 1))))
+        agree.append(a < 45)
+    if float(np.mean(agree)) < SYM_AGREE_MIN:
+        return frames
+    out = []
+    for fr in frames:
+        if fr.get(good) and fr.get(bad):
+            fr = dict(fr)
+            G = np.asarray(fr[good], dtype=float).reshape(21, 3)
+            B = np.asarray(fr[bad], dtype=float).reshape(21, 3)
+            M = (G - G[0]) * np.array([-1.0, 1.0, 1.0]) + B[0]   # soi gương qua mặt phẳng giữa thân (trục x)
+            fr[bad] = [int(round(v)) for v in M.reshape(-1)]
+            fr["sym"] = good
+        out.append(fr)
+    return out
+
+
+def _medoid_quats(Q, half=2):
+    """Lọc trung vị theo thời gian cho hướng bàn tay (quaternion): tại mỗi khung chọn hướng nằm "giữa" nhất
+    trong cửa sổ ±half khung (tổng góc lệch tới các khung khác nhỏ nhất). Loại các khung MediaPipe lật ngược
+    hướng bàn tay trong chốc lát (hay gặp khi hai bàn tay chồng lên nhau) mà vẫn giữ nguyên chuyển động xoay
+    đều (trung vị của dãy đơn điệu là phần tử giữa)."""
+    n = len(Q)
+    out = Q.copy()
+    ang = lambda a, b: 2 * math.acos(min(1.0, abs(float(np.dot(a, b)))))  # noqa: E731
+    for i in range(n):
+        lo, hi = max(0, i - half), min(n, i + half + 1)
+        best = min(range(lo, hi), key=lambda j: sum(ang(Q[j], Q[k]) for k in range(lo, hi)))
+        q = Q[best]
+        out[i] = q if np.dot(q, Q[i]) >= 0 else -q
+    return out
+
+
 def _fill(A):
     """Nội suy tuyến tính các hàng NaN của mảng (n, d); None nếu không có hàng hợp lệ nào."""
     ok = ~np.isnan(A[:, 0])
@@ -366,6 +478,8 @@ def retarget(raw, smooth=True):
     sides = {"right": (2, 4, 6, "r"), "left": (1, 3, 5, "l")}
     G = {s: {"W": nan3(), "pole": nan3(), "fdir": nan3(), "Q": np.full((n, 4), np.nan), "F": [None] * n} for s in sides}
 
+    frames_in = symmetric_fix(frames_in, raw.get("id")) if smooth else frames_in
+
     # 1) Hình học từng khung trong khung thân người
     for i, fr in enumerate(frames_in):
         if not fr.get("p"):
@@ -386,7 +500,7 @@ def retarget(raw, smooth=True):
             if fr.get(hk):
                 H = np.stack([loc(h) for h in to_robot(fr[hk])])
                 Hrel = H - H[0]
-                Rh = hand_frame(damp_z(Hrel, KZ_HAND), side)   # hướng bàn tay: giảm độ sâu
+                Rh = hand_frame_view(Hrel, side)               # hướng bàn tay (xem hand_frame_view)
                 Rh_shape = hand_frame(Hrel, side)              # hình dạng ngón: dùng 3D đầy đủ
                 g["Q"][i] = _quat(Rh)
                 g["F"][i] = finger_angles((Rh_shape.T @ Hrel.T).T, side)
@@ -409,6 +523,8 @@ def retarget(raw, smooth=True):
                 for k in range(a + 1, b):
                     Q[k] = _slerp(Q[a], Q[b], (k - a) / (b - a))
             lo, hi = okq[0], okq[-1]
+            if smooth and hi - lo >= 4:
+                Q[lo:hi + 1] = _medoid_quats(Q[lo:hi + 1], half=1)
             Qs = _smooth_adaptive(Q[lo:hi + 1], ROT_D0, angular=True) if (smooth and hi > lo) else Q[lo:hi + 1]
             for k in range(lo, hi + 1):
                 Rh[k] = _qmat(Qs[k - lo])
@@ -560,7 +676,7 @@ def fk_check(motion, raw):
             errs["wrist_xy_cm"].append(100 * float(np.linalg.norm((wr - tgt)[:2])))
             Rh = Rf @ Rot.from_euler("Y", g("twist")).as_matrix() @ Rot.from_euler("XYZ", [g("wrist_x"), g("wrist_y"), g("wrist_z")]).as_matrix()
             H = np.stack([T.T @ h for h in to_robot(fr[hk])])
-            Rt = hand_frame(damp_z(H - H[0], KZ_HAND), side)
+            Rt = hand_frame_view(H - H[0], side)
             errs["hand_y"].append(math.degrees(math.acos(np.clip(np.dot(Rh[:, 1], Rt[:, 1]), -1, 1))))
             errs["hand_z"].append(math.degrees(math.acos(np.clip(np.dot(Rh[:, 2], Rt[:, 2]), -1, 1))))
     return {k: (round(float(np.median(v)), 1) if v else None) for k, v in errs.items()}
