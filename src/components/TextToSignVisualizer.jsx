@@ -19,12 +19,17 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   const timerRef = useRef(null);
   const recognitionRef = useRef(null);
 
-  // Bảng chữ cái ngón tay tiếng Việt (QIPEDC) + chữ ngoại lai + dấu thanh
+  // Bảng chữ cái ngón tay tiếng Việt (QIPEDC): chữ gốc; rà chuột vào chữ gốc → hiện các chữ có dấu để chọn
   const ALPHABET_LIST = [
-    'A', 'Ă', 'Â', 'B', 'C', 'D', 'Đ', 'E', 'Ê', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'Ô', 'Ơ',
-    'P', 'Q', 'R', 'S', 'T', 'U', 'Ư', 'V', 'X', 'Y', 'F', 'J', 'W', 'Z',
-    'sắc', 'huyền', 'hỏi', 'ngã', 'nặng',
+    'A', 'B', 'C', 'D', 'E', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O',
+    'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'X', 'Y', 'F', 'J', 'W', 'Z',
   ];
+  const LETTER_VARIANTS = { A: ['Ă', 'Â'], D: ['Đ'], E: ['Ê'], O: ['Ô', 'Ơ'], U: ['Ư'] };
+  const TONE_LIST = [
+    { key: 'sắc', mark: '´' }, { key: 'huyền', mark: '`' }, { key: 'hỏi', mark: '?' },
+    { key: 'ngã', mark: '~' }, { key: 'nặng', mark: '.' },
+  ];
+  const [hoverLetter, setHoverLetter] = useState(null);
 
   const PHRASE_SUGGESTIONS = [
     'Xin chào',
@@ -83,6 +88,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
       type: 'fingerspelling',
       duration_ms: 2200,
       pose_key: char,
+      word: char.toLowerCase(),
       description: `Bảng chữ cái ngón tay VSL: Chữ ${char}`,
       avatar_pose: {}
     }]);
@@ -617,27 +623,90 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
               🎯 Kiểm tra trực tiếp từng chữ cái và dấu thanh (học từ video bảng chữ cái QIPEDC):
             </span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '6px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: '6px' }}>
             {ALPHABET_LIST.map((char) => {
-              const isSelected = currentStep?.word === char.toLowerCase() || currentGloss === char;
+              const variants = LETTER_VARIANTS[char] || [];
+              const sel = (c) => currentStep?.type === 'fingerspelling' && currentStep?.word === c.toLowerCase();
+              const isSelected = sel(char) || variants.some(sel);
+              const btnStyle = (on) => ({
+                padding: '8px 0',
+                width: '100%',
+                borderRadius: 'var(--radius-sm)',
+                border: on ? '2px solid var(--primary)' : '1px solid var(--border-subtle)',
+                background: on ? 'linear-gradient(135deg, var(--primary) 0%, #0284c7 100%)' : 'rgba(255, 255, 255, 0.05)',
+                color: on ? '#fff' : 'var(--text-main)',
+                fontWeight: '700',
+                fontSize: '14px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              });
+              const shown = sel(char) ? char : (variants.find(sel) || char);
+              return (
+                <div
+                  key={char}
+                  style={{ position: 'relative' }}
+                  onMouseEnter={() => variants.length && setHoverLetter(char)}
+                  onMouseLeave={() => setHoverLetter((h) => (h === char ? null : h))}
+                >
+                  <button
+                    onClick={() => handleSelectDirectLetter(char)}
+                    onFocus={() => variants.length && setHoverLetter(char)}
+                    style={{ ...btnStyle(isSelected), position: 'relative' }}
+                    title={variants.length ? `Chữ ${char} — rà chuột để chọn ${variants.join(', ')}` : `Chữ ${char}`}
+                  >
+                    {shown}
+                    {variants.length > 0 && (
+                      <span style={{ position: 'absolute', right: 3, bottom: 1, fontSize: 9, opacity: 0.6 }}>▾</span>
+                    )}
+                  </button>
+                  {hoverLetter === char && variants.length > 0 && (
+                    <div
+                      style={{
+                        position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', zIndex: 20,
+                        paddingTop: 4, display: 'flex',
+                      }}
+                    >
+                      <div style={{
+                        display: 'flex', gap: 4, padding: 4, borderRadius: 8,
+                        background: 'rgba(15, 23, 42, 0.97)', border: '1px solid var(--border-subtle)',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+                      }}>
+                        {[char, ...variants].map((v) => (
+                          <button
+                            key={v}
+                            onClick={() => { handleSelectDirectLetter(v); setHoverLetter(null); }}
+                            style={{ ...btnStyle(sel(v)), width: 38 }}
+                            title={`Chữ ${v}`}
+                          >
+                            {v}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginRight: 4 }}>Dấu thanh:</span>
+            {TONE_LIST.map(({ key, mark }) => {
+              const on = currentStep?.type === 'fingerspelling' && currentStep?.word === key;
               return (
                 <button
-                  key={char}
-                  onClick={() => handleSelectDirectLetter(char)}
+                  key={key}
+                  onClick={() => handleSelectDirectLetter(key)}
                   style={{
-                    padding: '8px 0',
+                    padding: '6px 10px',
                     borderRadius: 'var(--radius-sm)',
-                    border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border-subtle)',
-                    background: isSelected ? 'linear-gradient(135deg, var(--primary) 0%, #0284c7 100%)' : 'rgba(255, 255, 255, 0.05)',
-                    color: isSelected ? '#fff' : 'var(--text-main)',
-                    fontWeight: '700',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
+                    border: on ? '2px solid var(--primary)' : '1px solid var(--border-subtle)',
+                    background: on ? 'linear-gradient(135deg, var(--primary) 0%, #0284c7 100%)' : 'rgba(255, 255, 255, 0.05)',
+                    color: on ? '#fff' : 'var(--text-main)',
+                    fontWeight: '600', fontSize: '12.5px', cursor: 'pointer',
                   }}
-                  title={char === char.toLowerCase() ? `Dấu ${char}` : `Chữ ${char}`}
+                  title={`Dấu ${key}`}
                 >
-                  {char === char.toLowerCase() ? ({ 'sắc': '´', 'huyền': '`', 'hỏi': '?', 'ngã': '~', 'nặng': '.' }[char] || char) : char}
+                  {key} <span style={{ opacity: 0.7 }}>{mark}</span>
                 </button>
               );
             })}
