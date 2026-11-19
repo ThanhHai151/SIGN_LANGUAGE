@@ -786,6 +786,10 @@ class VSLRecognizer:
                     sign_info["entry_id"] = entry["id"]
                     sign_info["variants"] = entry.get("variants", [])
                     sign_info["image_url"] = entry.get("image_url") or entry.get("thumb_url") or ""
+                    # Video tham chiếu theo chuẩn của ứng dụng: ký hiệu miền Nam / dùng chung (QIPEDC)
+                    if "qipedc.moet.gov.vn" in (entry.get("video_url") or ""):
+                        sign_info["video_url"] = entry["video_url"]
+                    sign_info["region"] = entry.get("region")
                 else:
                     sign_info["image_url"] = ""
                 pred_term = sign_info["term"]
@@ -843,6 +847,7 @@ class VSLRecognizer:
                 "image_url": sign_info.get("image_url", ""),
                 "entry_id": sign_info.get("entry_id"),
                 "variants": sign_info.get("variants", []),
+                "region": sign_info.get("region"),
                 "confirmed": confirmed,
                 "new_token": new_token_added,
                 "replaced_token": replaced_token_label,

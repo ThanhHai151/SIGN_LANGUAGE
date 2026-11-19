@@ -180,9 +180,9 @@ def get_lexicon(
     elif filter == "camera":
         items = sorted([e for e in items if e.get("sstcn_index") is not None], key=lambda e: e["sstcn_index"])
     elif filter == "robot":
-        from backend.models.lexicon import motion_id_of, motion_ids
+        from backend.models.lexicon import motion_id_of, motion_ids, robot_pose_key
         avail = motion_ids()
-        items = [e for e in items if e.get("pose_key") or motion_id_of(e, avail)]
+        items = [e for e in items if robot_pose_key(e) or motion_id_of(e, avail)]
     elif filter == "alphabet":
         items = [e for e in items if e.get("fingerspelling")]
     if q:
@@ -285,6 +285,35 @@ def learn_motion(req: LearnRequest):
     → chuyển sang góc khớp robot, lưu lại và trả về để robot diễn ngay."""
     from backend.models.motion_learn import learn
     return learn(req.model_dump() if hasattr(req, "model_dump") else req.dict())
+
+
+@app.post("/api/motion/import")
+async def import_raw_motions(request: Request):
+    """Nhập HÀNG LOẠT điểm khớp đã trích từ video (công cụ cho nhà phát triển).
+
+    Nhận form (application/x-www-form-urlencoded) với trường data = base64(gzip(JSON danh sách
+    {id, fps, dur, frames})) — gửi được bằng một form POST thông thường từ trang QIPEDC (nơi kịch bản
+    extract_motion_browser.js lưu kết quả), không cần quyền gọi API khác nguồn. Mỗi mục được kiểm tra
+    và xử lý y như /api/motion/learn (lưu điểm khớp gốc, chuyển sang robot, viết diễn tả)."""
+    import gzip
+    from urllib.parse import parse_qs
+    from backend.models.motion_learn import learn
+    body = await request.body()
+    try:
+        data = parse_qs(body.decode("ascii")).get("data", [""])[0]
+        raws = json.loads(gzip.decompress(base64.b64decode(data)).decode("utf-8"))
+        if not isinstance(raws, list):
+            raise ValueError
+    except Exception:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail="Dữ liệu không hợp lệ")
+
+    def run():
+        ok, bad = [], []
+        for raw in raws[:400]:
+            r = learn(raw if isinstance(raw, dict) else {})
+            (ok if r.get("success") else bad).append(str((raw or {}).get("id"))[:40] if r.get("success") else [str((raw or {}).get("id"))[:40], r.get("reason")])
+        return {"success": True, "imported": len(ok), "failed": bad, "ids": ok}
+    return await run_in_threadpool(run)
 
 
 @app.get("/api/lexicon/{entry_id}")
@@ -883,6 +912,32 @@ def recognize_frame(req: FrameRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/letters")
+def fingerspell_alphabet():
+    """Toàn bộ bảng chữ cái ngón tay (chữ cái + dấu thanh) — giao diện tải sẵn một lần để chọn chữ là robot diễn ngay."""
+    from backend.nlp.text_to_vsl import letter_clips, _letter_item, remove_accents
+    from backend.models.lexicon import motion_ids
+    lex, avail = load_lexicon(), motion_ids()
+    tones = ("sắc", "huyền", "hỏi", "ngã", "nặng")
+    items = {k: _letter_item(k, "" if k in tones else remove_accents(k).upper(), lex, avail, k, is_tone=k in tones)
+             for k in letter_clips()}
+    return {"success": True, "letters": items}
+
+
+@app.get("/api/letter/{name}")
+def fingerspell_letter(name: str):
+    """Một chữ cái của bảng chữ cái ngón tay tiếng Việt (A, Ă, Â… hoặc dấu thanh: sắc, huyền, hỏi, ngã, nặng)
+    — robot diễn đoạn giữ hình chữ cái học từ video QIPEDC."""
+    from backend.nlp.text_to_vsl import letter_clips, _letter_item, remove_accents
+    from backend.models.lexicon import motion_ids
+    key = norm_key(name)
+    if key not in letter_clips():
+        raise HTTPException(status_code=404, detail="Không có chữ cái này")
+    is_tone = key in ("sắc", "huyền", "hỏi", "ngã", "nặng")
+    item = _letter_item(key, "" if is_tone else remove_accents(key).upper(), load_lexicon(), motion_ids(), key, is_tone=is_tone)
+    return {"success": True, "sequence": [item]}
+
 
 @app.post("/api/text_to_sign")
 def convert_text_to_sign(req: TextToSignRequest):

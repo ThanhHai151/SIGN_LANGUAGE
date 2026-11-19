@@ -6,7 +6,7 @@ import SignDescription from './SignDescription';
 
 /**
  * Từ điển VSL — duyệt BỘ TỪ VỰNG THỐNG NHẤT:
- *  ~3.300 từ Danh mục NNKH QIPEDC (Bộ GD&ĐT, video người Điếc 3 miền Bắc/Trung/Nam)
+ *  ~3.300 từ Danh mục NNKH QIPEDC (Bộ GD&ĐT) — chỉ dùng video ký hiệu miền Nam hoặc dùng chung cả nước
  *  + 102 từ giáo trình (mô hình camera nhận diện được) + từ có tư thế robot 3D.
  */
 const PAGE = 60;
@@ -231,6 +231,8 @@ export default function VSLDictionaryExplorer({ onSelectSignFor3D }) {
                       <span className="badge badge-emerald" style={{ fontSize: '10px' }}><Camera size={10} /> Camera</span>
                     )}
                     {(item.pose_key || item.motion_id) && <span className="badge badge-cyan" style={{ fontSize: '10px' }}><Bot size={10} /> Robot</span>}
+                    {item.region === 'N' && <span className="badge" style={{ fontSize: '10px' }}>Miền Nam</span>}
+                    {item.no_south && !item.fingerspelling && <span className="badge" style={{ fontSize: '10px', color: '#fbbf24' }}>Chưa có miền Nam</span>}
                   </div>
                   {(item.definition || item.how_to) && (
                     <p style={{
@@ -288,8 +290,18 @@ export default function VSLDictionaryExplorer({ onSelectSignFor3D }) {
               <button onClick={() => setModal(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><X size={22} /></button>
             </div>
 
-            {videoOf(modal) && (
-              <SmoothVideo url={videoOf(modal)} poster={modal.thumb_url} />
+            {videoOf(modal) ? (
+              <>
+                <SmoothVideo url={videoOf(modal)} poster={modal.thumb_url} />
+                <p style={{ fontSize: 11.5, color: 'var(--text-muted)', margin: '6px 0 0' }}>
+                  Video: {modal.region_label || 'QIPEDC'} · ứng dụng lấy ký hiệu miền Nam làm chuẩn
+                </p>
+              </>
+            ) : !modal.fingerspelling && (
+              <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.35)', fontSize: 13, lineHeight: 1.5 }}>
+                Danh mục QIPEDC chưa có video ký hiệu <strong>miền Nam</strong> (hoặc dùng chung cả nước) cho từ này.
+                Khi diễn trong câu, robot sẽ đánh vần từ bằng bảng chữ cái ngón tay.
+              </div>
             )}
 
             {modal.definition && <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '12px 0 0', lineHeight: 1.5 }}><strong>Nghĩa: </strong>{modal.definition}</p>}

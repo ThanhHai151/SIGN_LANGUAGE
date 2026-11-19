@@ -8,7 +8,8 @@ import {
   sendSequenceForRecognition,
   sendLandmarksForRecognition,
   clearCurrentSentence,
-  speakVietnamese
+  speakVietnamese,
+  mediaUrl
 } from '../services/api';
 import WordDebugPanel from './WordDebugPanel';
 import { isWordDebugEnabled, isWordDebugActive, logWordDebugReset, logWordDebugEvent } from '../services/wordDebugApi';
@@ -1133,7 +1134,8 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
                 type: data.category || 'dynamic_sign',
                 description: data.description,
                 category: data.category,
-                video_url: data.video_url
+                video_url: data.video_url,
+                region: data.region
               });
 
               if (data.category) setActiveSignCategory(data.category);
@@ -1909,7 +1911,7 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
                   marginInline: 'auto'
                 }}
               >
-                <Film size={13} style={{ color: 'var(--primary)' }} /> Xem video giáo trình mẫu
+                <Film size={13} style={{ color: 'var(--primary)' }} /> {currentResult.region === 'N' ? 'Xem video ký hiệu miền Nam' : (currentResult.video_url || '').includes('qipedc') ? 'Xem video ký hiệu (dùng chung cả nước)' : 'Xem video giáo trình mẫu'}
               </button>
             )}
           </div>
@@ -2091,7 +2093,7 @@ export default function CameraSignRecognizer({ ttsEnabled }) {
             </div>
 
             <video
-              src={previewVideoUrl}
+              src={mediaUrl(previewVideoUrl)}
               controls
               autoPlay
               loop
