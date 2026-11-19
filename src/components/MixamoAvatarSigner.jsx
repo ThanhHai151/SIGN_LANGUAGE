@@ -2,22 +2,12 @@ import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { createRestPose, resolveVietnameseSign } from '../utils/MixamoPoseAdapter';
-import { setupHandGUI } from '../utils/handPoseTuner';
-
-const TONE_LABELS = {
-  'DẤU SẮC': 'TONE_SAC', 'DẤU HUYỀN': 'TONE_HUYEN', 'DẤU HỎI': 'TONE_HOI',
-  'DẤU NGÃ': 'TONE_NGA', 'DẤU NẶNG': 'TONE_NANG'
-};
+import { createRestPose, findMixamoBone, getMixamoBoneName, getMixamoToneSymbol, resolveVietnameseSign } from '../utils/MixamoPoseAdapter';
 
 function normalizeSignToken(value) {
   if (typeof value !== 'string') return '';
   const token = value.trim().normalize('NFC').toUpperCase().replace(/^ALPHA_/, '');
-  return TONE_LABELS[token] || token;
-}
-
-function findBone(bonesMap, name) {
-  return bonesMap.get(name) || bonesMap.get(`mixamorig${name}`) || bonesMap.get(name.replace(/^mixamorig/, '')) || null;
+  return getMixamoToneSymbol(token);
 }
 
 function interpolateTargets(fromTargets, toTargets, progress) {
@@ -80,8 +70,6 @@ function sampleActionQueue(queue, elapsedMs) {
 
 export default function MixamoAvatarSigner({ activeLetter, currentStep, currentSign, isPlaying = false, sequence = [], currentIndex = 0 }) {
   const mountRef = useRef(null);
-  const bonesMapRef = useRef(new Map());
-  const handGUIRef = useRef(null);
   const [modelLoaded, setModelLoaded] = React.useState(false);
   const [activeView, setActiveView] = React.useState('half');
   const viewPresetsRef = useRef(null);
@@ -90,19 +78,15 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
   const viewTransitionRef = useRef(false);
   const poseTargetsRef = useRef(createRestPose());
   const poseAnimationRef = useRef(null);
-  const restPositionsRef = useRef(new Map());
-  const signTokenRef = useRef('A');
   const gloss = activeLetter || currentSign || currentStep?.avatar_symbol || currentStep?.gloss || currentStep?.token;
   const signToken = normalizeSignToken(gloss);
 
   const hasNextStep = currentIndex < sequence.length - 1;
 
-  useEffect(() => { signTokenRef.current = signToken || 'A'; }, [signToken]);
 
   useEffect(() => {
     const actions = resolveVietnameseSign(signToken, { hasNextStep });
 
-    if (modelLoaded) handGUIRef.current?.setLetter(signToken, { apply: false });
     if (actions.length) {
       poseAnimationRef.current = { actions, startedAt: performance.now(), token: signToken };
       poseTargetsRef.current = sampleActionQueue(actions, 0);
@@ -115,6 +99,8 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
   useEffect(() => {
     const container = mountRef.current;
     if (!container) return undefined;
+    const bonesMap = new Map();
+    const restPositions = new Map();
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#0b1120');
@@ -155,34 +141,69 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.enableZoom = false;
+    controls.enableZoom = true;
     controls.enablePan = true;
     controls.screenSpacePanning = true;
     controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
+    controls.mouseButtons.MIDDLE = null;
     controls.target.copy(viewPresets.half.target);
     controls.minDistance = 0.35;
     controls.maxDistance = 8;
     controls.update();
 
-    const handleWheel = (event) => {
+    // Touchpads report two-finger scrolling as wheel input. Intercept scrolling
+    // before OrbitControls, while leaving ctrl-wheel pinch zoom to its handler.
+    const handleWheelPan = (event) => {
+      if (event.ctrlKey || !Number.isFinite(event.deltaY) || event.deltaY === 0) return;
       event.preventDefault();
-      const nextTargetY = THREE.MathUtils.clamp(
-        controls.target.y - event.deltaY * 0.002,
-        0.6,
+      event.stopImmediatePropagation();
+      viewTransitionRef.current = false;
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? container.clientHeight : 1;
+      const nextY = THREE.MathUtils.clamp(
+        controls.target.y - event.deltaY * unit * 0.002,
+        viewPresets.full.target.y,
         1.7
       );
-      const verticalDelta = nextTargetY - controls.target.y;
-      controls.target.y = nextTargetY;
-      camera.position.y += verticalDelta;
+      const deltaY = nextY - controls.target.y;
+      controls.target.y = nextY;
+      camera.position.y += deltaY;
       controls.update();
     };
-    renderer.domElement.addEventListener('wheel', handleWheel, { passive: false });
+    renderer.domElement.addEventListener('wheel', handleWheelPan, { capture: true, passive: false });
+
+    // Safari also exposes pinch through gesture events with a cumulative scale.
+    let gestureScale = 1;
+    const handleGestureStart = (event) => {
+      event.preventDefault();
+      gestureScale = 1;
+    };
+    const handleGestureChange = (event) => {
+      if (!Number.isFinite(event.scale) || event.scale <= 0) return;
+      event.preventDefault();
+      const scale = event.scale / gestureScale;
+      gestureScale = event.scale;
+      if (scale === 1) return;
+
+      viewTransitionRef.current = false;
+      if (scale > 1) controls.dollyIn(1 / scale);
+      else controls.dollyOut(scale);
+    };
+    renderer.domElement.addEventListener('gesturestart', handleGestureStart, { passive: false });
+    renderer.domElement.addEventListener('gesturechange', handleGestureChange, { passive: false });
 
     let activePanPointerId = null;
+    let lastPanY = 0;
     const activeTouchPointers = new Map();
     const handlePointerDown = (event) => {
       if (event.pointerType === 'mouse' && event.button === 2) {
         activePanPointerId = event.pointerId;
+        lastPanY = event.clientY;
+        viewTransitionRef.current = false;
+        // Two-finger touchpad clicks are reported as secondary mouse input.
+        // Keep this drag out of OrbitControls so only vertical panning applies.
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        renderer.domElement.setPointerCapture(event.pointerId);
       } else if (event.pointerType === 'touch') {
         activeTouchPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       }
@@ -203,7 +224,9 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
       event.preventDefault();
       event.stopImmediatePropagation();
       const deltaX = isSingleTouch ? event.clientX - previous.x : 0;
-      const deltaY = isSingleTouch ? event.clientY - previous.y : event.movementY;
+      const deltaY = isSingleTouch ? event.clientY - previous.y : event.clientY - lastPanY;
+      if (isMousePan) lastPanY = event.clientY;
+      viewTransitionRef.current = false;
       if (isSingleTouch) activeTouchPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
 
       if (isSingleTouch && deltaX) {
@@ -219,7 +242,12 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
       controls.update();
     };
     const handlePointerUp = (event) => {
-      if (event.pointerId === activePanPointerId) activePanPointerId = null;
+      if (event.pointerId === activePanPointerId) {
+        activePanPointerId = null;
+        if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+          renderer.domElement.releasePointerCapture(event.pointerId);
+        }
+      }
       activeTouchPointers.delete(event.pointerId);
     };
     const preventContextMenu = (event) => event.preventDefault();
@@ -227,6 +255,7 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
     renderer.domElement.addEventListener('pointermove', handlePointerMove, { capture: true, passive: false });
     renderer.domElement.addEventListener('pointerup', handlePointerUp, true);
     renderer.domElement.addEventListener('pointercancel', handlePointerUp, true);
+    renderer.domElement.addEventListener('lostpointercapture', handlePointerUp, true);
     renderer.domElement.addEventListener('contextmenu', preventContextMenu);
 
     const resize = () => {
@@ -241,6 +270,7 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
     resize();
 
     let disposed = false;
+    const bindShoulders = new Map();
     const loader = new GLTFLoader();
     loader.load('/models/avatar.glb', (gltf) => {
       if (disposed) return;
@@ -256,35 +286,19 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
       avatarRoot.add(model);
       controls.update();
 
-      const boneNames = [];
+      const skeletonBones = new Set();
       model.traverse((object) => {
-        if (object.isBone) {
-          bonesMapRef.current.set(object.name, object);
-          restPositionsRef.current.set(object.name.replace(/^mixamorig/, ''), object.position.clone());
-          if (/arm|forearm|hand|shoulder|thumb|index|middle|ring|pinky/i.test(object.name)) {
-            boneNames.push(object.name);
-          }
-        }
+        if (object.isSkinnedMesh) object.skeleton.bones.forEach((bone) => skeletonBones.add(bone));
       });
-      handGUIRef.current?.destroy();
-      handGUIRef.current = setupHandGUI(bonesMapRef.current, {
-        symbol: signTokenRef.current,
-        onPoseChange: (pose) => {
-          poseAnimationRef.current = null;
-          poseTargetsRef.current = pose;
-        },
-        onPreviewSequence: (actions, selectedToken) => {
-          if (!actions.length) return;
-          poseAnimationRef.current = {
-            actions,
-            startedAt: performance.now(),
-            token: selectedToken
-          };
-          poseTargetsRef.current = sampleActionQueue(actions, 0);
+      for (const bone of skeletonBones) {
+        const name = getMixamoBoneName(bone.name);
+        bonesMap.set(name, bone);
+        restPositions.set(name, bone.position.clone());
+        if (name === 'RightShoulder' || name === 'LeftShoulder') {
+          bindShoulders.set(bone, bone.quaternion.clone());
         }
-      });
+      }
       setModelLoaded(true);
-      console.info('Mixamo arm and finger bones:', boneNames);
     }, undefined, (error) => {
       if (!disposed) console.error('Could not load Mixamo avatar:', error);
     });
@@ -316,21 +330,27 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
         );
       }
       const easing = 1 - Math.exp(-deltaSeconds * 16);
+      const posedShoulders = new Set();
       for (const target of poseTargetsRef.current) {
-        const bone = findBone(bonesMapRef.current, target.bone);
+        const bone = findMixamoBone(bonesMap, target.bone);
         if (!bone?.rotation) continue;
+        if (bindShoulders.has(bone)) posedShoulders.add(bone);
         const targetQuaternion = new THREE.Quaternion().setFromEuler(
           new THREE.Euler(target.rot[0], target.rot[1], target.rot[2], bone.rotation.order)
         );
         bone.quaternion.slerp(targetQuaternion, easing);
         if (target.bone === 'RightHand') {
-          const restPosition = restPositionsRef.current.get('RightHand');
+          const restPosition = restPositions.get('RightHand');
           if (restPosition) {
             const offset = target.pos || [0, 0, 0];
             const targetPosition = restPosition.clone().add(new THREE.Vector3(...offset));
             bone.position.lerp(targetPosition, easing);
           }
         }
+      }
+      // Legacy poses omit clavicles. Return those joints to their imported bind rotations.
+      for (const [bone, rotation] of bindShoulders) {
+        if (!posedShoulders.has(bone)) bone.quaternion.slerp(rotation, easing);
       }
       controls.update();
       renderer.render(scene, camera);
@@ -339,16 +359,17 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
 
     return () => {
       disposed = true;
-      handGUIRef.current?.destroy();
-      handGUIRef.current = null;
       cancelAnimationFrame(frameId);
       resizeObserver.disconnect();
       controls.dispose();
-      renderer.domElement.removeEventListener('wheel', handleWheel);
+      renderer.domElement.removeEventListener('wheel', handleWheelPan, true);
+      renderer.domElement.removeEventListener('gesturestart', handleGestureStart);
+      renderer.domElement.removeEventListener('gesturechange', handleGestureChange);
       renderer.domElement.removeEventListener('pointerdown', handlePointerDown, true);
       renderer.domElement.removeEventListener('pointermove', handlePointerMove, true);
       renderer.domElement.removeEventListener('pointerup', handlePointerUp, true);
       renderer.domElement.removeEventListener('pointercancel', handlePointerUp, true);
+      renderer.domElement.removeEventListener('lostpointercapture', handlePointerUp, true);
       renderer.domElement.removeEventListener('contextmenu', preventContextMenu);
       scene.traverse((object) => {
         object.geometry?.dispose();
@@ -380,7 +401,7 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
 
   return (
     <>
-      <div ref={mountRef} style={{ position: 'absolute', inset: 0, cursor: 'grab' }} title="Chuột phải hoặc vuốt một ngón dọc để dịch góc nhìn; vuốt ngang để xoay" />
+      <div ref={mountRef} style={{ position: 'absolute', inset: 0, cursor: 'grab' }} title="Chụm, mở hai ngón hoặc cuộn bánh xe để zoom. Kéo chuột trái để xoay, kéo chuột phải để dịch góc nhìn." />
       <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 5, display: 'flex', flexDirection: 'column', gap: '4px', padding: '5px', borderRadius: '9px', background: 'rgba(8, 15, 28, 0.88)', border: '1px solid rgba(148, 163, 184, 0.25)' }}>
         {viewButtons.map((view) => (
           <button key={view.id} type="button" className={`btn ${activeView === view.id ? 'btn-primary' : 'btn-secondary'}`} onClick={() => selectView(view.id)} style={{ justifyContent: 'flex-start', padding: '5px 8px', fontSize: '11px' }} aria-pressed={activeView === view.id}>

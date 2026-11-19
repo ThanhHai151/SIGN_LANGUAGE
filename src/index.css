@@ -256,6 +256,22 @@ h1, h2, h3, h4, h5, h6 {
   100% { top: 98%; opacity: 0.3; }
 }
 
+.sign-details-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  /* Let the avatar column set the grid row height. Scroll any extra content here. */
+  align-self: stretch;
+  contain: size;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+.sign-details-scroll > * {
+  flex-shrink: 0;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

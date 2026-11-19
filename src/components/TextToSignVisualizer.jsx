@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Play, Pause, RotateCcw, SkipBack, SkipForward, Mic, MicOff, Send, Sparkles, Info, Check, Layers } from 'lucide-react';
 import RobotSigner3D, { SPELL_LETTER_MS } from './RobotSigner3D';
 import MixamoAvatarSigner from './MixamoAvatarSigner';
-import { resolveVietnameseSign } from '../utils/MixamoPoseAdapter';
+import { createMixamoPlayback, getMixamoToneDescription, getMixamoToneSymbol, resolveVietnameseSign } from '../utils/MixamoPoseAdapter';
 import AvatarSequenceCaption from './AvatarSequenceCaption';
 import SignDescription from './SignDescription';
 import { convertTextToVSL, fetchMotion } from '../services/api';
@@ -47,7 +47,7 @@ const AVATAR_FINGER_DESCRIPTIONS = {
 
 export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   const [inputText, setInputText] = useState('Xin chào bạn');
-  const [sequence, setSequence] = useState([]);
+  const [sourceSequence, setSequence] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.25); // mặc định nhanh hơn một chút cho câu liền mạch
@@ -56,6 +56,14 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   const [translationId, setTranslationId] = useState(0); // mỗi lần dịch câu mới
   const [viewModel, setViewModel] = useState('avatar');
   const [directSelectedLetter, setDirectSelectedLetter] = useState('');
+  const sequence = useMemo(() => viewModel === 'avatar'
+    ? createMixamoPlayback(sourceSequence) : sourceSequence, [sourceSequence, viewModel]);
+
+  useEffect(() => {
+    setCurrentIndex(0);
+    setIsPlaying(false);
+    setDirectSelectedLetter('');
+  }, [viewModel]);
 
   const timerRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -89,10 +97,12 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     const text = textToTranslate || inputText;
     if (!text || !text.trim()) return;
 
+    const version = ++seqVersionRef.current;
     setLoading(true);
     setDirectSelectedLetter('');
     try {
       const resp = await convertTextToVSL(text);
+      if (version !== seqVersionRef.current) return;
       if (resp && resp.success && resp.sequence) {
         setSequence(resp.sequence);
         setTranslationId((n) => n + 1);
@@ -102,15 +112,18 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     } catch (err) {
       console.error('Error translating text to VSL:', err);
     } finally {
-      setLoading(false);
+      if (version === seqVersionRef.current) setLoading(false);
     }
   };
 
   // Chọn trực tiếp 1 chữ cái để kiểm tra giải phẫu ngón tay
   const handleSelectDirectLetter = (char) => {
+    seqVersionRef.current += 1;
+    setLoading(false);
     setDirectSelectedLetter(char);
     setInputText(`Chữ ${char}`);
     setSequence([{
+      avatar_symbol: char,
       token: char,
       gloss: char,
       label: `Chữ ${char}`,
@@ -168,6 +181,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   const seqVersionRef = useRef(0);
   const [learning, setLearning] = useState({}); // video_id → tiến độ 0..1 | 'done' | 'failed'
   useEffect(() => {
+    if (viewModel !== 'robot') return;
     const version = ++seqVersionRef.current;
     const todo = [...new Set(sequence.filter((s) => s.video_id && !s.motion_id).map((s) => s.video_id))];
     if (!todo.length) return;
@@ -192,7 +206,8 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
       setCurrentIndex(firstLearned);
       setIsPlaying(true);
     });
-  }, [translationId]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => { seqVersionRef.current += 1; };
+  }, [translationId, viewModel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Nhận yêu cầu diễn một từ từ tab Từ điển
   useEffect(() => {
@@ -240,9 +255,10 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const currentStep = sequence[currentIndex] || null;
-  const stepLabel = (step) => viewModel === 'avatar' && step?.avatar_symbol
-    ? `Chữ ${step.avatar_symbol}` : step?.label;
-  const currentGloss = (viewModel === 'avatar' && currentStep?.avatar_symbol) || currentStep?.gloss || currentStep?.token || 'A';
+  const currentRenderer = viewModel;
+  const stepLabel = (step) => step?.avatar_symbol && !step.avatar_symbol.startsWith('TONE_')
+    && viewModel === 'avatar' ? `Chữ ${step.avatar_symbol}` : step?.label;
+  const currentGloss = (currentRenderer === 'avatar' && currentStep?.avatar_symbol) || currentStep?.gloss || currentStep?.token || 'A';
   const activeLetter = directSelectedLetter || (isPlaying && /^[a-z]$/i.test(currentGloss.trim()) ? currentGloss.trim() : '');
   const poseData = getHandPoseByGloss(currentGloss);
   const commonProps = {
@@ -460,9 +476,11 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   };
 
   const fingerSymbol = currentGloss.trim().normalize('NFC').toUpperCase().replace(/^ALPHA_/, '');
+  const toneDescription = currentRenderer === 'avatar' ? getMixamoToneDescription(fingerSymbol) : undefined;
+  const isStandaloneTone = toneDescription && getMixamoToneSymbol(fingerSymbol).startsWith('TONE_');
   const baseSymbol = VIETNAMESE_MARKED_LETTERS[fingerSymbol]?.base ?? fingerSymbol;
-  const avatarDescriptions = viewModel === 'avatar' ? AVATAR_FINGER_DESCRIPTIONS[baseSymbol] : undefined;
-  const fingerRows = viewModel === 'avatar' && fingerSymbol === 'P'
+  const avatarDescriptions = currentRenderer === 'avatar' ? AVATAR_FINGER_DESCRIPTIONS[baseSymbol] : undefined;
+  const fingerRows = currentRenderer === 'avatar' && fingerSymbol === 'P'
     ? [
       { name: 'Cổ tay', color: 'var(--primary)' },
       { name: 'Ngón cái', color: 'var(--accent-warning)' },
@@ -471,7 +489,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
       { name: 'Ngón áp út', color: 'var(--accent-warning)' },
       { name: 'Ngón út', color: 'var(--accent-warning)' }
     ]
-    : viewModel === 'avatar' && fingerSymbol === 'Q'
+    : currentRenderer === 'avatar' && fingerSymbol === 'Q'
       ? [
         { name: 'Cổ tay', color: 'var(--primary)' },
         { name: 'Ngón cái', color: 'var(--primary)' },
@@ -516,22 +534,21 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
           position: 'relative'
         }}>
           <div style={{ position: 'absolute', top: '12px', left: '12px', zIndex: 5, display: 'flex', gap: '4px', padding: '4px', borderRadius: '10px', background: 'rgba(8, 15, 28, 0.88)', border: '1px solid var(--border-subtle)', backdropFilter: 'blur(10px)' }}>
-            <button type="button" onClick={() => setViewModel('avatar')} className={`btn ${viewModel === 'avatar' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '7px 10px', fontSize: '12px' }} aria-pressed={viewModel === 'avatar'}>
+            <button type="button" onClick={() => setViewModel('avatar')} disabled={loading} className={`btn ${viewModel === 'avatar' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '7px 10px', fontSize: '12px' }} aria-pressed={viewModel === 'avatar'}>
               👧 Avatar 3D
             </button>
-            <button type="button" onClick={() => setViewModel('robot')} className={`btn ${viewModel === 'robot' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '7px 10px', fontSize: '12px' }} aria-pressed={viewModel === 'robot'}>
+            <button type="button" onClick={() => setViewModel('robot')} disabled={loading} className={`btn ${viewModel === 'robot' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '7px 10px', fontSize: '12px' }} aria-pressed={viewModel === 'robot'}>
               🤖 Robot
             </button>
           </div>
-          {viewModel === 'robot' ? (
-            <RobotSigner3D {...commonProps} />
-          ) : (
-            <MixamoAvatarSigner {...commonProps} />
-          )}
+          {viewModel === 'robot' ? <RobotSigner3D {...commonProps} /> : <MixamoAvatarSigner {...commonProps} />}
         </div>
 
         {viewModel === 'avatar' && (
           <AvatarSequenceCaption sequence={sequence} currentIndex={currentIndex} />
+        )}
+        {viewModel === 'avatar' && translationId > 0 && !loading && !sequence.length && (
+          <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Nội dung này chưa có ký hiệu phát được trên Avatar Mixamo.</p>
         )}
 
         {/* Điều khiển Playback */}
@@ -562,6 +579,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
                 if (isPlaying) setDirectSelectedLetter('');
                 setIsPlaying(!isPlaying);
               }}
+              disabled={!sequence.length}
               className="btn btn-primary"
               style={{ padding: '8px 16px' }}
             >
@@ -581,6 +599,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
 
             <button
               onClick={() => { setCurrentIndex(0); setIsPlaying(true); }}
+              disabled={!sequence.length}
               className="btn btn-secondary"
               style={{ padding: '8px 12px' }}
               title="Phát lại từ đầu"
@@ -613,7 +632,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
       </div>
 
       {/* CỘT PHẢI: BẢNG SOI GIẢI PHẪU CƠ NGÓN TAY VÀ CHỌN CHỮ CÁI A-Z */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="sign-details-scroll" role="region" aria-label="Chi tiết và công cụ ký hiệu" tabIndex={0}>
         
         {/* Diễn tả cụ thể ký hiệu đang diễn */}
         {currentStep && (
@@ -647,12 +666,19 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
                 </div>
               );
             })()}
-            <SignDescription step={currentStep} />
+            {!isStandaloneTone && <SignDescription step={currentStep} />}
+            {toneDescription && (
+              <div style={{ display: 'grid', gap: 6, fontSize: 12.5 }}>
+                {!isStandaloneTone && <strong>Dấu thanh</strong>}
+                <div><strong>Hình dạng tay.</strong> {toneDescription.handshape}</div>
+                <div><strong>Chuyển động.</strong> {toneDescription.motion}</div>
+              </div>
+            )}
           </div>
         )}
 
         {/* Bảng Kiểm tra Chi tiết Trạng thái Đốt Ngón Tay (Finger Anatomical Inspector) — chỉ khi robot có tư thế */}
-        {(currentStep?.has_pose ?? true) && (
+        {!isStandaloneTone && (currentStep?.has_pose ?? true) && (
         <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h3 style={{ fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
