@@ -915,27 +915,24 @@ def recognize_frame(req: FrameRequest):
 
 @app.get("/api/letters")
 def fingerspell_alphabet():
-    """Toàn bộ bảng chữ cái ngón tay (chữ cái + dấu thanh) — giao diện tải sẵn một lần để chọn chữ là robot diễn ngay."""
+    """Toàn bộ bảng chữ cái ngón tay (chữ cái, không có dấu thanh) — giao diện tải sẵn một lần để chọn chữ là robot diễn ngay."""
     from backend.nlp.text_to_vsl import letter_clips, _letter_item, remove_accents
     from backend.models.lexicon import motion_ids
     lex, avail = load_lexicon(), motion_ids()
-    tones = ("sắc", "huyền", "hỏi", "ngã", "nặng")
-    items = {k: _letter_item(k, "" if k in tones else remove_accents(k).upper(), lex, avail, k, is_tone=k in tones)
-             for k in letter_clips()}
+    items = {k: _letter_item(k, remove_accents(k).upper(), lex, avail, k) for k in letter_clips()}
     return {"success": True, "letters": items}
 
 
 @app.get("/api/letter/{name}")
 def fingerspell_letter(name: str):
-    """Một chữ cái của bảng chữ cái ngón tay tiếng Việt (A, Ă, Â… hoặc dấu thanh: sắc, huyền, hỏi, ngã, nặng)
+    """Một chữ cái của bảng chữ cái ngón tay tiếng Việt (A, Ă, Â…; không có dấu thanh)
     — robot diễn đoạn giữ hình chữ cái học từ video QIPEDC."""
     from backend.nlp.text_to_vsl import letter_clips, _letter_item, remove_accents
     from backend.models.lexicon import motion_ids
     key = norm_key(name)
     if key not in letter_clips():
         raise HTTPException(status_code=404, detail="Không có chữ cái này")
-    is_tone = key in ("sắc", "huyền", "hỏi", "ngã", "nặng")
-    item = _letter_item(key, "" if is_tone else remove_accents(key).upper(), load_lexicon(), motion_ids(), key, is_tone=is_tone)
+    item = _letter_item(key, remove_accents(key).upper(), load_lexicon(), motion_ids(), key)
     return {"success": True, "sequence": [item]}
 
 

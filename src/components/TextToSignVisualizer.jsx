@@ -66,10 +66,6 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'X', 'Y', 'F', 'J', 'W', 'Z',
   ];
   const LETTER_VARIANTS = { A: ['Ă', 'Â'], D: ['Đ'], E: ['Ê'], O: ['Ô', 'Ơ'], U: ['Ư'] };
-  const TONE_LIST = [
-    { key: 'sắc', mark: '´' }, { key: 'huyền', mark: '`' }, { key: 'hỏi', mark: '?' },
-    { key: 'ngã', mark: '~' }, { key: 'nặng', mark: '.' },
-  ];
   const [hoverLetter, setHoverLetter] = useState(null);
 
   const PHRASE_SUGGESTIONS = [
@@ -127,11 +123,8 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   // Chọn trực tiếp 1 chữ cái: robot diễn hình chữ cái học từ video bảng chữ cái QIPEDC
   const handleSelectDirectLetter = async (char) => {
     const key = char.toLowerCase();
-    const isTone = char === key;
-    // Avatar Mixamo diễn theo ký hiệu: chữ cái (Ă, Ơ…) hoặc dấu thanh TONE_SAC…
-    const toneSymbol = { 'sắc': 'TONE_SAC', 'huyền': 'TONE_HUYEN', 'hỏi': 'TONE_HOI', 'ngã': 'TONE_NGA', 'nặng': 'TONE_NANG' }[key];
-    setDirectSelectedLetter(isTone ? toneSymbol : char);
-    setInputText(isTone ? `Dấu ${char}` : `Chữ ${char}`);
+    setDirectSelectedLetter(char);
+    setInputText(`Chữ ${char}`);
     setIsPlaying(false);
     let item = lettersRef.current?.[key];
     if (!item) {
@@ -151,10 +144,10 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     setSequence([{
       token: char,
       gloss: base,
-      label: isTone ? `Dấu ${char}` : `Chữ ${char}`,
+      label: `Chữ ${char}`,
       type: 'fingerspelling',
       duration_ms: 2200,
-      pose_key: isTone ? null : base,
+      pose_key: base,
       word: key,
       description: `Bảng chữ cái ngón tay VSL: Chữ ${char} (tư thế tham khảo — hãy khởi động lại backend để dùng bảng chữ cái học từ video)`,
       avatar_pose: {}
@@ -823,29 +816,6 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
                     </div>
                   )}
                 </div>
-              );
-            })}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginRight: 4 }}>Dấu thanh:</span>
-            {TONE_LIST.map(({ key, mark }) => {
-              const on = currentStep?.type === 'fingerspelling' && currentStep?.word === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => handleSelectDirectLetter(key)}
-                  style={{
-                    padding: '6px 10px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: on ? '2px solid var(--primary)' : '1px solid var(--border-subtle)',
-                    background: on ? 'linear-gradient(135deg, var(--primary) 0%, #0284c7 100%)' : 'rgba(255, 255, 255, 0.05)',
-                    color: on ? '#fff' : 'var(--text-main)',
-                    fontWeight: '600', fontSize: '12.5px', cursor: 'pointer',
-                  }}
-                  title={`Dấu ${key} cho ${viewModel === 'avatar' ? 'avatar' : 'robot'}`}
-                >
-                  {key} <span style={{ opacity: 0.7 }}>{mark}</span>
-                </button>
               );
             })}
           </div>
