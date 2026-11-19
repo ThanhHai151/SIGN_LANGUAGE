@@ -60,15 +60,18 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   const timerRef = useRef(null);
   const recognitionRef = useRef(null);
 
-  // Bảng chữ cái ngón tay đầy đủ 29 chữ cái tiếng Việt chuẩn VSL (không có F, J, W, Z)
+  // Bảng chữ cái ngón tay tiếng Việt (QIPEDC): chữ gốc; rà chuột vào chữ gốc → hiện các chữ có dấu để chọn
   const ALPHABET_LIST = [
-    'A', 'Ă', 'Â', 'B', 'C', 'D', 'Đ', 'E', 'Ê', 'G', 'H', 'I', 'K', 'L', 'M', 
-    'N', 'O', 'Ô', 'Ơ', 'P', 'Q', 'R', 'S', 'T', 'U', 'Ư', 'V', 'X', 'Y'
+    'A', 'B', 'C', 'D', 'E', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O',
+    'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'X', 'Y', 'F', 'J', 'W', 'Z',
   ];
-  const VIETNAMESE_ALPHABET_LIST = [
-    'A', 'Ă', 'Â', 'B', 'C', 'D', 'Đ', 'E', 'Ê', 'G', 'H', 'I', 'K', 'L', 'M',
-    'N', 'O', 'Ô', 'Ơ', 'P', 'Q', 'R', 'S', 'T', 'U', 'Ư', 'V', 'X', 'Y'
+  const LETTER_VARIANTS = { A: ['Ă', 'Â'], D: ['Đ'], E: ['Ê'], O: ['Ô', 'Ơ'], U: ['Ư'] };
+  const TONE_LIST = [
+    { key: 'sắc', mark: '´' }, { key: 'huyền', mark: '`' }, { key: 'hỏi', mark: '?' },
+    { key: 'ngã', mark: '~' }, { key: 'nặng', mark: '.' },
   ];
+  const [hoverLetter, setHoverLetter] = useState(null);
+
   const PHRASE_SUGGESTIONS = [
     'Xin chào',
     'Cảm ơn',
@@ -106,21 +109,57 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     }
   };
 
-  // Chọn trực tiếp 1 chữ cái để kiểm tra giải phẫu ngón tay
-  const handleSelectDirectLetter = (char) => {
-    setDirectSelectedLetter(char);
-    setInputText(`Chữ ${char}`);
+  // Bảng chữ cái tải sẵn MỘT LẦN (kèm chuyển động robot) → bấm chữ nào robot diễn ngay, không chờ mạng
+  const lettersRef = useRef(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('http://127.0.0.1:8000/api/letters')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.letters) return;
+        lettersRef.current = data.letters;
+        Object.values(data.letters).forEach((it) => { if (it.motion_id) fetchMotion(it.motion_id); });
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  // Chọn trực tiếp 1 chữ cái: robot diễn hình chữ cái học từ video bảng chữ cái QIPEDC
+  const handleSelectDirectLetter = async (char) => {
+    const key = char.toLowerCase();
+    const isTone = char === key;
+    // Avatar Mixamo diễn theo ký hiệu: chữ cái (Ă, Ơ…) hoặc dấu thanh TONE_SAC…
+    const toneSymbol = { 'sắc': 'TONE_SAC', 'huyền': 'TONE_HUYEN', 'hỏi': 'TONE_HOI', 'ngã': 'TONE_NGA', 'nặng': 'TONE_NANG' }[key];
+    setDirectSelectedLetter(isTone ? toneSymbol : char);
+    setInputText(isTone ? `Dấu ${char}` : `Chữ ${char}`);
+    setIsPlaying(false);
+    let item = lettersRef.current?.[key];
+    if (!item) {
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/api/letter/${encodeURIComponent(char)}`);
+        const data = res.ok ? await res.json() : null;
+        item = data?.sequence?.[0];
+      } catch { /* mất kết nối backend */ }
+    }
+    if (item) {
+      setSequence([item]);
+      setCurrentIndex(0);
+      return;
+    }
+    // Backend chưa có bảng chữ cái học từ video → tư thế vẽ tay của chữ không dấu (Ă, Â → A; Đ → D)
+    const base = char.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'D').toUpperCase();
     setSequence([{
       token: char,
-      gloss: char,
-      label: `Chữ ${char}`,
+      gloss: base,
+      label: isTone ? `Dấu ${char}` : `Chữ ${char}`,
       type: 'fingerspelling',
       duration_ms: 2200,
-      description: `Bảng chữ cái ngón tay VSL: Chữ ${char}`,
+      pose_key: isTone ? null : base,
+      word: key,
+      description: `Bảng chữ cái ngón tay VSL: Chữ ${char} (tư thế tham khảo — hãy khởi động lại backend để dùng bảng chữ cái học từ video)`,
       avatar_pose: {}
     }]);
     setCurrentIndex(0);
-    setIsPlaying(false);
   };
 
   // Quản lý phát tự động
@@ -240,7 +279,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const currentStep = sequence[currentIndex] || null;
-  const stepLabel = (step) => viewModel === 'avatar' && step?.avatar_symbol
+  const stepLabel = (step) => viewModel === 'avatar' && step?.avatar_symbol && !step.avatar_symbol.startsWith('TONE_')
     ? `Chữ ${step.avatar_symbol}` : step?.label;
   const currentGloss = (viewModel === 'avatar' && currentStep?.avatar_symbol) || currentStep?.gloss || currentStep?.token || 'A';
   const activeLetter = directSelectedLetter || (isPlaying && /^[a-z]$/i.test(currentGloss.trim()) ? currentGloss.trim() : '');
@@ -613,7 +652,15 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
       </div>
 
       {/* CỘT PHẢI: BẢNG SOI GIẢI PHẪU CƠ NGÓN TAY VÀ CHỌN CHỮ CÁI A-Z */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div
+        className="side-scroll"
+        style={{
+          display: 'flex', flexDirection: 'column', gap: '20px',
+          // Cột phải có thanh cuộn riêng: kéo lên/xuống để xem từng khung trong khi robot vẫn đứng yên bên trái
+          position: 'sticky', top: '16px', alignSelf: 'start',
+          maxHeight: 'calc(100vh - 32px)', overflowY: 'scroll', paddingRight: '10px',
+        }}
+      >
         
         {/* Diễn tả cụ thể ký hiệu đang diễn */}
         {currentStep && (
@@ -622,12 +669,23 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
               <strong style={{ fontSize: '20px', fontFamily: 'Outfit, sans-serif' }}>{stepLabel(currentStep)}</strong>
               {currentStep.pos && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{currentStep.pos}</span>}
               <span style={{ flex: 1 }} />
+              {currentStep.type === 'vocabulary' && currentStep.region_label && (
+                <span className="badge badge-cyan" style={{ fontSize: '10.5px' }} title="Ứng dụng lấy ký hiệu miền Nam làm chuẩn">
+                  {currentStep.region_label}
+                </span>
+              )}
               <span className="badge badge-emerald" style={{ fontSize: '10.5px' }}>Diễn tả ký hiệu</span>
             </div>
             {currentStep.definition && (
               <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                 <strong style={{ color: 'var(--text-main)' }}>Nghĩa: </strong>{currentStep.definition}
               </p>
+            )}
+            {currentStep.type === 'vocabulary' && !currentStep.video_id && !currentStep.motion_id && !currentStep.pose_key && (
+              <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.35)', fontSize: 12.5, color: 'var(--text-main)', lineHeight: 1.5 }}>
+                Danh mục QIPEDC chưa có ký hiệu <strong>miền Nam</strong> (hoặc dùng chung cả nước) cho từ này,
+                nên robot đánh vần bằng bảng chữ cái ngón tay thay vì đoán ký hiệu.
+              </div>
             )}
             {currentStep.video_id && !currentStep.motion_id && (() => {
               const st = learning[currentStep.video_id];
@@ -637,7 +695,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
                   <span style={{ fontSize: 12.5, color: 'var(--text-main)' }}>
                     {st === 'failed'
                       ? 'Chưa học được ký hiệu này từ video — robot đánh vần thay thế.'
-                      : `Robot đang học ký hiệu này từ video người thật… ${pct}% (trong lúc chờ, robot đánh vần từ)`}
+                      : `Robot đang học ký hiệu miền Nam này từ video người thật… ${pct}% (trong lúc chờ, robot đánh vần từ)`}
                   </span>
                   {st !== 'failed' && (
                     <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
@@ -698,30 +756,95 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
         <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
-              {viewModel === 'avatar' ? '🔤 Bảng chữ cái tiếng Việt' : '🎯 Bảng chữ cái tiếng Việt (Robot)'}
+              {viewModel === 'avatar'
+                ? '🔤 Bảng chữ cái tiếng Việt (avatar) — rà chuột vào A, D, E, O, U để chọn chữ có dấu'
+                : '🎯 Bảng chữ cái tiếng Việt (robot, học từ video QIPEDC) — rà chuột vào A, D, E, O, U để chọn chữ có dấu'}
             </span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '6px' }}>
-            {(viewModel === 'avatar' ? VIETNAMESE_ALPHABET_LIST : ALPHABET_LIST).map((char) => {
-              const isSelected = currentGloss === char;
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: '6px' }}>
+            {ALPHABET_LIST.map((char) => {
+              const variants = LETTER_VARIANTS[char] || [];
+              const sel = (c) => currentStep?.type === 'fingerspelling' && currentStep?.word === c.toLowerCase();
+              const isSelected = sel(char) || variants.some(sel);
+              const btnStyle = (on) => ({
+                padding: '8px 0',
+                width: '100%',
+                borderRadius: 'var(--radius-sm)',
+                border: on ? '2px solid var(--primary)' : '1px solid var(--border-subtle)',
+                background: on ? 'linear-gradient(135deg, var(--primary) 0%, #0284c7 100%)' : 'rgba(255, 255, 255, 0.05)',
+                color: on ? '#fff' : 'var(--text-main)',
+                fontWeight: '700',
+                fontSize: '14px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              });
+              const shown = sel(char) ? char : (variants.find(sel) || char);
+              return (
+                <div
+                  key={char}
+                  style={{ position: 'relative' }}
+                  onMouseEnter={() => variants.length && setHoverLetter(char)}
+                  onMouseLeave={() => setHoverLetter((h) => (h === char ? null : h))}
+                >
+                  <button
+                    onClick={() => handleSelectDirectLetter(char)}
+                    onFocus={() => variants.length && setHoverLetter(char)}
+                    style={{ ...btnStyle(isSelected), position: 'relative' }}
+                    title={variants.length ? `Chữ ${char} — rà chuột để chọn ${variants.join(', ')}` : `Chữ ${char}`}
+                  >
+                    {shown}
+                    {variants.length > 0 && (
+                      <span style={{ position: 'absolute', right: 3, bottom: 1, fontSize: 9, opacity: 0.6 }}>▾</span>
+                    )}
+                  </button>
+                  {hoverLetter === char && variants.length > 0 && (
+                    <div
+                      style={{
+                        position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', zIndex: 20,
+                        paddingTop: 4, display: 'flex',
+                      }}
+                    >
+                      <div style={{
+                        display: 'flex', gap: 4, padding: 4, borderRadius: 8,
+                        background: 'rgba(15, 23, 42, 0.97)', border: '1px solid var(--border-subtle)',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+                      }}>
+                        {[char, ...variants].map((v) => (
+                          <button
+                            key={v}
+                            onClick={() => { handleSelectDirectLetter(v); setHoverLetter(null); }}
+                            style={{ ...btnStyle(sel(v)), width: 38 }}
+                            title={`Chữ ${v}`}
+                          >
+                            {v}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginRight: 4 }}>Dấu thanh:</span>
+            {TONE_LIST.map(({ key, mark }) => {
+              const on = currentStep?.type === 'fingerspelling' && currentStep?.word === key;
               return (
                 <button
-                  key={char}
-                  onClick={() => handleSelectDirectLetter(char)}
+                  key={key}
+                  onClick={() => handleSelectDirectLetter(key)}
                   style={{
-                    padding: '8px 0',
+                    padding: '6px 10px',
                     borderRadius: 'var(--radius-sm)',
-                    border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border-subtle)',
-                    background: isSelected ? 'linear-gradient(135deg, var(--primary) 0%, #0284c7 100%)' : 'rgba(255, 255, 255, 0.05)',
-                    color: isSelected ? '#fff' : 'var(--text-main)',
-                    fontWeight: '700',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
+                    border: on ? '2px solid var(--primary)' : '1px solid var(--border-subtle)',
+                    background: on ? 'linear-gradient(135deg, var(--primary) 0%, #0284c7 100%)' : 'rgba(255, 255, 255, 0.05)',
+                    color: on ? '#fff' : 'var(--text-main)',
+                    fontWeight: '600', fontSize: '12.5px', cursor: 'pointer',
                   }}
-                  title={`Chọn chữ ${char} cho ${viewModel === 'avatar' ? 'avatar' : 'robot'}`}
+                  title={`Dấu ${key} cho ${viewModel === 'avatar' ? 'avatar' : 'robot'}`}
                 >
-                  {char}
+                  {key} <span style={{ opacity: 0.7 }}>{mark}</span>
                 </button>
               );
             })}

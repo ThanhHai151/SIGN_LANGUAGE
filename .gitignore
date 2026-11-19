@@ -32,6 +32,7 @@ __pycache__/
 
 # Bộ đệm video/ảnh mẫu QIPEDC (tự tạo khi chạy backend)
 backend/data/media_cache/
+backend/data/raw_motion/
 
 # File nhat ky chan doan (tao khi VSL_DIAGNOSTIC=1)
 backend/data/diagnostics/
