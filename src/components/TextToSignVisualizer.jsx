@@ -54,7 +54,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   const [isListening, setIsListening] = useState(false);
   const [loading, setLoading] = useState(false);
   const [translationId, setTranslationId] = useState(0); // mỗi lần dịch câu mới
-  const [viewModel, setViewModel] = useState('avatar');
+  const [viewModel, setViewModel] = useState('robot'); // mặc định hiển thị robot
   const [directSelectedLetter, setDirectSelectedLetter] = useState('');
 
   const timerRef = useRef(null);
