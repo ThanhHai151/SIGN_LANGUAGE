@@ -6,6 +6,3 @@ services:
     region: singapore
     healthCheckPath: /healthz
     autoDeployTrigger: commit
-    envVars:
-      - key: VSL_PREVIEW_PASSWORD
-        generateValue: true
