@@ -4,5 +4,6 @@ services:
     runtime: docker
     plan: free
     region: singapore
+    branch: main
     healthCheckPath: /healthz
     autoDeployTrigger: commit

@@ -15,7 +15,11 @@ from backend.vision.qipedc_live import indexed_entry_ids
 def healthz():
     ready = bool(getattr(recognizer.sstcn_model, "has_weights", False))
     return JSONResponse(
-        {"ready": ready, "qipedc_indexed_count": len(indexed_entry_ids())},
+        {
+            "ready": ready,
+            "qipedc_indexed_count": len(indexed_entry_ids()),
+            "commit": os.environ.get("RENDER_GIT_COMMIT"),
+        },
         status_code=200 if ready else 503,
     )
 

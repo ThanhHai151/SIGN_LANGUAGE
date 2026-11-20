@@ -2,18 +2,18 @@
 
 ## Ứng dụng
 
-Docker build React với Node 24 và phục vụ giao diện cùng API FastAPI trên một cổng. Trang dùng HTTPS của hosting để truy cập webcam. Trình duyệt chạy MediaPipe cho webcam, còn FastAPI xử lý chuỗi điểm khớp và suy luận. Dữ liệu đi kèm gồm 3.363 mục từ, 3.285 tệp chuyển động 3D, 11 mẫu so khớp QIPEDC (gồm `mấy giờ?` và `năn nỉ`), nhân vật Avatar và các trọng số hiện có. Checkpoint mặc định có 102 lớp, trong đó 63 lớp được dùng trong chế độ Từ vựng. Video QIPEDC được lấy theo yêu cầu.
+Docker build React với Node 24 và phục vụ giao diện cùng API FastAPI trên một cổng. Trang dùng HTTPS của hosting để truy cập webcam. Trình duyệt chạy MediaPipe cho webcam, còn FastAPI xử lý chuỗi điểm khớp và suy luận. Dữ liệu đi kèm gồm 3.363 mục từ, 3.285 tệp chuyển động 3D, bộ mẫu QIPEDC cho chế độ Tự do, nhân vật Avatar và các trọng số hiện có. Checkpoint mặc định có 102 lớp, trong đó 63 lớp được dùng trong chế độ Từ vựng. Video QIPEDC được lấy theo yêu cầu.
 
 ```bash
 docker build -t vsl-connect:cloud .
 docker run --rm -p 127.0.0.1:7860:7860 vsl-connect:cloud
 ```
 
-Truy cập <http://127.0.0.1:7860> để thử cả hai chiều dịch. Dùng `GET /healthz` để kiểm tra checkpoint đã nạp.
+Truy cập <http://127.0.0.1:7860> để thử cả hai chiều dịch. Dùng `GET /healthz` để kiểm tra checkpoint đã nạp và số mục trong bộ mẫu QIPEDC. Trên Render, trường `commit` cho biết phiên bản đang chạy.
 
-Mở liên kết triển khai, đăng nhập Render bằng GitHub và bấm **Deploy Blueprint**. Render đọc `render.yaml` từ nhánh `cloud-deploy`, tạo dịch vụ **Free** ở Singapore, kiểm tra `/healthz` và tự sinh mật khẩu `VSL_PREVIEW_PASSWORD`. Các commit được đẩy lên nhánh `cloud-deploy` sẽ tự kích hoạt một lượt build và deploy. [Triển khai trên Render Free](https://render.com/deploy?repo=https://github.com/ThanhHai151/SIGN_LANGUAGE/tree/cloud-deploy)
+Mở liên kết triển khai, đăng nhập Render bằng GitHub và bấm **Deploy Blueprint**. Blueprint dùng nhánh `main` để build dịch vụ **Free** ở Singapore và kiểm tra `/healthz`. Khi dịch vụ đã kết nối kho GitHub và bật **Auto-Deploy → On Commit**, mỗi lần push commit hoặc gộp pull request vào `main` sẽ kích hoạt build và deploy. [Triển khai trên Render Free](https://render.com/deploy?repo=https://github.com/ThanhHai151/SIGN_LANGUAGE/tree/main)
 
-Sau lần deploy đầu, mở URL `.onrender.com` trong Dashboard. Đăng nhập bằng tên `vsl` và lấy mật khẩu từ mục **Environment** của dịch vụ. Bản thử nghiệm phục vụ một người sử dụng tại một thời điểm vì backend còn giữ trạng thái phiên trên tiến trình. Dữ liệu hiệu chỉnh và bộ đệm phát sinh trên Render Free mất khi dịch vụ thay container. Sau một thời gian rảnh, yêu cầu đầu tiên có thể chờ dịch vụ khởi động. [Giới hạn Render Free](https://render.com/docs/free)
+Sau lần deploy đầu, mở URL `.onrender.com` trong Dashboard. Nếu dịch vụ có cấu hình `VSL_PREVIEW_PASSWORD`, đăng nhập bằng tên `vsl` và mật khẩu trong mục **Environment**. Bản thử nghiệm phục vụ một người sử dụng tại một thời điểm vì backend còn giữ trạng thái phiên trên tiến trình. Dữ liệu hiệu chỉnh và bộ đệm phát sinh trên Render Free mất khi dịch vụ thay container. Sau một thời gian rảnh, yêu cầu đầu tiên có thể chờ dịch vụ khởi động. [Giới hạn Render Free](https://render.com/docs/free)
 
 ## Dữ liệu huấn luyện
 

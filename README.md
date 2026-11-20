@@ -8,7 +8,7 @@ Dataset đầy đủ: [GitHub Releases — SSTCN dataset v1](https://github.com/
 
 Từ thư mục gốc repo, chạy `./start.sh` để khởi động frontend và backend.
 
-[Triển khai trên Render Free](https://render.com/deploy?repo=https://github.com/ThanhHai151/SIGN_LANGUAGE/tree/cloud-deploy) · [Hướng dẫn triển khai và huấn luyện trên cloud](docs/CLOUD_DEPLOYMENT.md)
+[Triển khai nhánh main trên Render Free](https://render.com/deploy?repo=https://github.com/ThanhHai151/SIGN_LANGUAGE/tree/main) · [Hướng dẫn triển khai và huấn luyện trên cloud](docs/CLOUD_DEPLOYMENT.md)
 
 ## Chạy bản build trên máy cá nhân
 

@@ -54,6 +54,14 @@
     "sha256": "51f6a9198cdfb39c41e4459bc7a424327001095ec0095bee4baeb3fb77552d2d"
   },
   {
+    "entry_id": "q-nan-ni",
+    "source": "https://qipedc.moet.gov.vn/videos/D0261.mp4",
+    "file": "v3_D0261_close.npy",
+    "sha256": "68dfe1bed5310a579a1aff8390780d3ce0e1307c397db939366b60fee876eb3f",
+    "crop_xyxy": [0.22, 0.09, 0.78, 0.79],
+    "frame_stride": 1
+  },
+  {
     "entry_id": "q-cau-nguyen",
     "source": "https://qipedc.moet.gov.vn/videos/W00450.mp4",
     "file": "v3_W00450.npy",

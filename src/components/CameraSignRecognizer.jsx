@@ -61,7 +61,11 @@ const LIVE_QIPEDC_WINDOW_MS = 2800;
 function newLiveWordState() {
   return { lastHand: -Infinity, lastRequest: -Infinity, firstMotion: null,
     candidate: null, votes: 0, token: null, template: false, quiet: 0,
-    templateCandidate: null, templateVotes: 0 };
+    templateCandidate: null, templateVotes: 0, pending: null };
+}
+
+function trackedHandCount(frame) {
+  return Number(Boolean(frame[33]?.some(Boolean))) + Number(Boolean(frame[54]?.some(Boolean)));
 }
 
 // 21 liên kết xương chuẩn MediaPipe Hands (vẽ gộp 1 lần duy nhất để đạt tốc độ tối đa)
@@ -1271,11 +1275,12 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
     if (currentRecognitionMode === 'sequence') {
       const liveWords = currentConversionMode === 'words' && wordCaptureModeRef.current === 'continuous' &&
         recordPhaseRef.current === 'idle';
-      const liveState = liveWordsRef.current;
+      let liveState = liveWordsRef.current;
       if (liveWords) {
-        if (hasHands) liveState.lastHand = now;
         if (now - liveState.lastHand > 500) {
-          if (Number.isFinite(liveState.lastHand)) {
+          // Cho lượt nhận diện đang chạy trả kết quả sau khi hạ tay.
+          // Khi tay xuất hiện trở lại, bắt đầu cửa sổ mới ngay cả khi còn yêu cầu cũ.
+          if (Number.isFinite(liveState.lastHand) && (hasHands || !isInferringRef.current)) {
             liveWordsRef.current = newLiveWordState();
             sequenceBufferRef.current = [];
             windowTimestampsRef.current = [];
@@ -1284,9 +1289,11 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
               setCurrentResult({ sign: 'NEUTRAL', label: 'Đang chờ động tác từ vựng…', confidence: 0 });
               setTopKPredictions([]);
             }
+            liveState = liveWordsRef.current;
           }
-          return;
+          if (!hasHands) return;
         }
+        if (hasHands) liveState.lastHand = now;
       } else if (!hasHands) {
         missingHandsCountRef.current = (missingHandsCountRef.current || 0) + 1;
         // Chỉ reset buffer khi tay thực sự biến mất khỏi khung hình > 4 frame liên tiếp (~150ms)
@@ -1340,14 +1347,14 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
       const progressPercent = Math.min(100, Math.round((currentLen / SEQ_LEN) * 100));
       updateHUDProgress(progressPercent, Math.min(currentLen, SEQ_LEN));
 
-      // Khi đã đủ 30 frame và không có suy luận nào đang chạy
       const enoughFrames = liveWords
         ? currentLen >= 12 && now - windowTimestampsRef.current[0] >= 1150 && now - liveState.lastRequest >= 320
         : currentLen >= SEQ_LEN;
-      if (enoughFrames && !isInferringRef.current) {
-        isInferringRef.current = true;
+      const canQueue = liveWords && !selectedTopicRef.current && hasHands && !liveState.template;
+      if (enoughFrames && (!isInferringRef.current || canQueue)) {
         const currentGen = requestGenRef.current;
         const requestMode = currentConversionMode;
+        const requestTopic = requestMode === 'words' ? selectedTopicRef.current || null : null;
         const sequencePayload = sequenceBufferRef.current.slice(liveWords ? 0 : -SEQ_LEN);
 
         // Tính thời lượng thực tế của cửa sổ 30 frame
@@ -1389,123 +1396,142 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
           };
         }
 
-        // Gửi suy luận hoàn toàn không chặn luồng (Non-blocking Async)
-        // Kèm topic_id (lọc chủ đề học từ KVSL) & timestamps (adaptive FPS-invariant resampling)
-        sendSequenceForRecognition(
-          sequencePayload,
-          confidenceThreshold,
-          requestMode,
-          debugMeta,
-          {
-            topic_id: requestMode === 'words' ? (selectedTopicRef.current || null) : null,
-            timestamps: recentTimestamps,
-            live_words: liveWords,
-            qipedc_entries: liveWords ? liveQipedcWords?.map(({ id }) => id) : null,
-            aspect_ratio: holisticCanvasRef.current?.width / holisticCanvasRef.current?.height || 1,
-            include_diagnostic: diagnostic.includesTime(now),
-          }
-        )
-          .then((resp) => {
-            if (currentGen !== requestGenRef.current || conversionModeRef.current !== requestMode) {
-              return; // Bỏ qua response đến trễ sau khi đổi mode
+        const submit = () => {
+          isInferringRef.current = true;
+          sendSequenceForRecognition(
+            sequencePayload,
+            confidenceThreshold,
+            requestMode,
+            debugMeta,
+            {
+              topic_id: requestTopic,
+              timestamps: recentTimestamps,
+              live_words: liveWords,
+              qipedc_entries: liveWords ? liveQipedcWords?.map(({ id }) => id) : null,
+              aspect_ratio: holisticCanvasRef.current?.width / holisticCanvasRef.current?.height || 1,
+              include_diagnostic: diagnostic.includesTime(now),
             }
-            if (!resp?.success || resp.data?.success === false) {
-              diagnostic.addPrediction(now, null, recentTimestamps, 'sstcn', null, true);
-            }
-            if (resp && resp.success && resp.data) {
-              const data = resp.data;
-              let token = data.confirmed && data.sign !== 'NEUTRAL' ? data.new_token : null;
-              let replaced = null;
-              if (liveWords) {
-                if (liveWordsRef.current !== liveState || wordCaptureModeRef.current !== 'continuous') return;
-                token = null;
-                liveState.quiet = data.motion_detected === false ? liveState.quiet + 1 : 0;
-                if (liveState.quiet >= 3) {
-                  Object.assign(liveState, { token: null, template: false, firstMotion: null, candidate: null, votes: 0 });
-                }
-                if (liveState.template) {
-                  diagnostic.addPrediction(now, data, recentTimestamps, 'sstcn');
-                  return;
-                }
-                if (data.source === 'qipedc_template' && data.match_method === 'trajectory') {
-                  liveState.templateVotes = liveState.templateCandidate === data.entry_id ? liveState.templateVotes + 1 : 1;
-                  liveState.templateCandidate = data.entry_id;
-                  if (liveState.templateVotes < 2) {
-                    liveState.candidate = null;
-                    liveState.votes = 0;
+          )
+            .then((resp) => {
+              if (currentGen !== requestGenRef.current || conversionModeRef.current !== requestMode) {
+                return; // Bỏ qua response đến trễ sau khi đổi mode
+              }
+              if (!resp?.success || resp.data?.success === false) {
+                diagnostic.addPrediction(now, null, recentTimestamps, 'sstcn', null, true);
+              }
+              if (resp && resp.success && resp.data) {
+                const data = resp.data;
+                let token = data.confirmed && data.sign !== 'NEUTRAL' ? data.new_token : null;
+                let replaced = null;
+                if (liveWords) {
+                  if (liveWordsRef.current !== liveState || wordCaptureModeRef.current !== 'continuous' ||
+                      (selectedTopicRef.current || null) !== requestTopic) return;
+                  token = null;
+                  liveState.quiet = data.motion_detected === false ? liveState.quiet + 1 : 0;
+                  if (liveState.quiet >= 3) {
+                    Object.assign(liveState, { token: null, template: false, firstMotion: null, candidate: null, votes: 0 });
+                  }
+                  if (liveState.template) {
                     diagnostic.addPrediction(now, data, recentTimestamps, 'sstcn');
-                    setCurrentResult({ sign: 'NEUTRAL', label: 'Đang xác nhận mẫu QIPEDC…', confidence: 0 });
-                    setTopKPredictions([]);
                     return;
                   }
-                } else {
-                  liveState.templateCandidate = null;
-                  liveState.templateVotes = 0;
-                }
-                if (data.source === 'qipedc_template') {
-                  token = data.sign;
-                  replaced = liveState.token;
-                  liveState.template = true;
-                } else if (data.sign === 'NEUTRAL' || !data.sign) {
-                  liveState.candidate = null;
-                  liveState.votes = 0;
-                } else {
-                  liveState.firstMotion ??= now;
-                  liveState.votes = liveState.candidate === data.sign ? liveState.votes + 1 : 1;
-                  liveState.candidate = data.sign;
-                  if (!liveState.token && liveState.votes >= 3 && now - liveState.firstMotion >= 900) token = data.sign;
-                }
-                if (token) liveState.token = token;
-              }
-              diagnostic.addPrediction(now, data, recentTimestamps, 'sstcn', token && token !== replaced ? token : null);
-              setLatestPilotResult(data);
-              setCurrentResult({
-                sign: data.sign,
-                label: data.label,
-                confidence: data.confidence,
-                type: data.category || 'dynamic_sign',
-                description: data.description,
-                category: data.category,
-                video_url: data.video_url,
-                region: data.region,
-                source: data.source,
-                matchMethod: data.match_method,
-              });
-
-              if (data.top_k) setTopKPredictions(data.top_k);
-
-              if (token && token !== replaced) {
-                setSentence((previous) => {
-                  if (previous && replaced && (previous === replaced || previous.endsWith(` ${replaced}`))) {
-                    return `${previous.slice(0, -replaced.length)}${token}`;
-                  }
-                  return previous ? `${previous} ${token}` : token;
-                });
-                setRecognizedTokens((previous) => [
-                  ...(replaced && previous.at(-1)?.token === replaced ? previous.slice(0, -1) : previous.slice(-7)),
-                  { token, confidence: data.confidence, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) },
-                ]);
-
-                if (ttsEnabled) {
-                  let textToSpeak = data.tts_text;
-                  if (!textToSpeak) {
-                    if (data.type === 'digit' || requestMode === 'digits') {
-                      textToSpeak = DIGIT_TTS_MAP[data.sign] || (data.sign ? DIGIT_TTS_MAP[data.sign.replace(/^Số\s*/, '')] : null) || data.sign;
-                    } else {
-                      textToSpeak = token;
+                  if (data.source === 'qipedc_template' && data.match_method === 'trajectory') {
+                    liveState.templateVotes = liveState.templateCandidate === data.entry_id ? liveState.templateVotes + 1 : 1;
+                    liveState.templateCandidate = data.entry_id;
+                    if (liveState.templateVotes < 2) {
+                      liveState.candidate = null;
+                      liveState.votes = 0;
+                      diagnostic.addPrediction(now, data, recentTimestamps, 'sstcn');
+                      setCurrentResult({ sign: 'NEUTRAL', label: 'Đang xác nhận mẫu QIPEDC…', confidence: 0 });
+                      setTopKPredictions([]);
+                      return;
                     }
+                  } else {
+                    liveState.templateCandidate = null;
+                    liveState.templateVotes = 0;
                   }
-                  speakVietnamese(textToSpeak);
+                  if (data.source === 'qipedc_template') {
+                    token = data.sign;
+                    replaced = liveState.token;
+                    liveState.template = true;
+                  } else if (data.sign === 'NEUTRAL' || !data.sign) {
+                    liveState.candidate = null;
+                    liveState.votes = 0;
+                  } else {
+                    liveState.firstMotion ??= now;
+                    liveState.votes = liveState.candidate === data.sign ? liveState.votes + 1 : 1;
+                    liveState.candidate = data.sign;
+                    if (!liveState.token && liveState.votes >= 3 && now - liveState.firstMotion >= 900) token = data.sign;
+                  }
+                  if (token) liveState.token = token;
+                }
+                diagnostic.addPrediction(now, data, recentTimestamps, 'sstcn', token && token !== replaced ? token : null);
+                setLatestPilotResult(data);
+                setCurrentResult({
+                  sign: data.sign,
+                  label: data.label,
+                  confidence: data.confidence,
+                  type: data.category || 'dynamic_sign',
+                  description: data.description,
+                  category: data.category,
+                  video_url: data.video_url,
+                  region: data.region,
+                  source: data.source,
+                  matchMethod: data.match_method,
+                });
+
+                if (data.top_k) setTopKPredictions(data.top_k);
+
+                if (token && token !== replaced) {
+                  setSentence((previous) => {
+                    if (previous && replaced && (previous === replaced || previous.endsWith(` ${replaced}`))) {
+                      return `${previous.slice(0, -replaced.length)}${token}`;
+                    }
+                    return previous ? `${previous} ${token}` : token;
+                  });
+                  setRecognizedTokens((previous) => [
+                    ...(replaced && previous.at(-1)?.token === replaced ? previous.slice(0, -1) : previous.slice(-7)),
+                    { token, confidence: data.confidence, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) },
+                  ]);
+
+                  if (ttsEnabled) {
+                    let textToSpeak = data.tts_text;
+                    if (!textToSpeak) {
+                      if (data.type === 'digit' || requestMode === 'digits') {
+                        textToSpeak = DIGIT_TTS_MAP[data.sign] || (data.sign ? DIGIT_TTS_MAP[data.sign.replace(/^Số\s*/, '')] : null) || data.sign;
+                      } else {
+                        textToSpeak = token;
+                      }
+                    }
+                    speakVietnamese(textToSpeak);
+                  }
                 }
               }
-            }
-          })
-          .catch((err) => console.warn('Lỗi suy luận chuỗi SSTCN:', err))
-          .finally(() => {
-            if (currentGen === requestGenRef.current) {
-              isInferringRef.current = false;
-            }
-          });
+            })
+            .catch((err) => console.warn('Lỗi suy luận chuỗi SSTCN:', err))
+            .finally(() => {
+              if (currentGen === requestGenRef.current) {
+                isInferringRef.current = false;
+                if (liveWords && liveWordsRef.current === liveState && wordCaptureModeRef.current === 'continuous') {
+                  const pending = liveState.pending;
+                  liveState.pending = null;
+                  if (pending && !liveState.template && (selectedTopicRef.current || null) === requestTopic) pending.submit();
+                }
+              }
+            });
+        };
+
+        if (isInferringRef.current) {
+          // Giữ một cửa sổ có nhiều dữ liệu bàn tay trong lúc máy chủ xử lý cửa sổ trước.
+          const coverage = sequencePayload.reduce((sum, frame) => sum + trackedHandCount(frame), 0);
+          const score = coverage + sequencePayload.length * 0.25 * trackedHandCount(sequencePayload.at(-1));
+          const minImprovement = sequencePayload.length * 0.08;
+          if (!liveState.pending || score >= liveState.pending.score + minImprovement) {
+            liveState.pending = { score, submit };
+          }
+        } else {
+          submit();
+        }
       }
     }
 

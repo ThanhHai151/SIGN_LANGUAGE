@@ -1,9 +1,12 @@
+from pathlib import Path
+
 import numpy as np
+import pytest
 from fastapi.testclient import TestClient
 
 from backend.app import app, recognizer
 from backend.models import video_cache
-from backend.vision import qipedc_practice
+from backend.vision import qipedc_live, qipedc_practice
 from backend.vision.qipedc_practice import reference_path
 from backend.vision.skeleton_norm import MIRRORED_JOINTS, reflect_legacy_left_hand
 
@@ -360,3 +363,32 @@ def test_live_compressed_index_matches_two_stage_and_exposes_metadata(tmp_path, 
         prep = client.post("/api/qipedc/live/prepare?entry_id=q-chao").json()
         assert prep["indexed_count"] == 2
         assert prep["entries"][0]["ready"] is True and prep["entries"][0]["builtin"] is True
+
+
+@pytest.mark.parametrize(("entry_id", "recording_id", "shift_y"), [
+    ("q-ky-nang", "D0097", -0.12),
+    ("q-xin-loi", "W03990", -0.12),
+    ("q-nan-ni", "D0261_close", 0.08),
+])
+def test_live_bilateral_shape_match_handles_changes_in_signing_height(
+    tmp_path, monkeypatch, entry_id, recording_id, shift_y,
+):
+    from backend.training.build_qipedc_live_index import pack_index
+
+    folder = Path(__file__).resolve().parents[1] / "data" / "qipedc_reference"
+    templates = {
+        "q-ky-nang": "D0097", "q-xin-loi": "W03990", "q-kha-nang": "D0096",
+        "q-nan-ni": "D0261", "q-cau-nguyen": "W00450", "q-vai-lay": "W03770",
+    }
+    index = tmp_path / "live_index.npz"
+    pack_index([(key, folder / f"v3_{video}.npy") for key, video in templates.items()], index)
+    monkeypatch.setattr(qipedc_live, "index_path", lambda: index)
+    monkeypatch.setenv("VSL_QIPEDC_REFERENCE_DIR", str(folder))
+
+    frames = np.load(folder / f"v3_{recording_id}.npy", allow_pickle=False)
+    hands = frames[:, 33:]
+    hands[np.any(hands != 0, axis=-1)] += [0.02, shift_y, 0]
+    result = qipedc_live.match_live_words(frames, 1.0, [])
+
+    assert result["entry_id"] == entry_id
+    assert result["match_method"] in {"trajectory", "hand_shape"}
