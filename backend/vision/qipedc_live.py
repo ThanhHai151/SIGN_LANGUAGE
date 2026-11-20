@@ -29,13 +29,25 @@ MAX_EXTRA_WORDS = 12
 FRAMES = 24
 COARSE_BINS = 6
 STAGE1_TOP_K = 24
+DTW_REFERENCE_BATCH_SIZE = 6
 MAX_DISTANCE = 0.35
 MIN_SEPARATION = 0.05
 MAX_BILATERAL_DISTANCE = 0.52
 MIN_BILATERAL_SEPARATION = 0.08
+MAX_HAND_SHAPE_DISTANCE = 0.35
+MIN_HAND_SHAPE_SEPARATION = 0.05
 HAND_MISMATCH_PENALTY = 0.10
 RAISED_WRIST_MAX_Y = 0.68
 REFLECT_X = np.tile([-1, 1], 7).astype(np.float32)
+HAND_SHAPE_WEIGHTS = np.repeat(np.array([0.6, 0.3, 2.0], dtype=np.float32), [2, 2, 10])
+WRIST_WEIGHT = 0.60
+FINGERTIP_WEIGHT = 0.95
+WARP_DIAGONALS = []
+for _diagonal in range(2, 2 * FRAMES + 1):
+    _i = np.arange(max(1, _diagonal - FRAMES), min(FRAMES, _diagonal - 1) + 1)
+    _j = _diagonal - _i
+    _within_band = np.abs(_i - _j) <= 5
+    WARP_DIAGONALS.append((_i[_within_band], _j[_within_band]))
 
 _DEFAULT_SEED_DIR = Path(__file__).resolve().parents[1] / "data" / "qipedc_reference"
 _DEFAULT_CACHE_DIR = Path(video_cache.ROOT) / "data" / "media_cache"
@@ -122,8 +134,8 @@ def _variants(raw, aspect_ratio, *, reference=False):
     palm_size = np.maximum(0.04, np.linalg.norm(hands[:, :, 9] - hands[:, :, 0], axis=-1))
     shape = (tips - wrist[:, :, None]) / palm_size[:, :, None, None]
     features = np.concatenate((
-        0.60 * (wrist - mouth[:, None]),
-        0.95 * (tips.mean(axis=2) - mouth[:, None]),
+        WRIST_WEIGHT * (wrist - mouth[:, None]),
+        FINGERTIP_WEIGHT * (tips.mean(axis=2) - mouth[:, None]),
         0.22 * shape.reshape(len(clip), -1, 10),
     ), axis=-1)
     if not bilateral and active[0]:
@@ -155,26 +167,62 @@ def prepare_live_reference(video_id):
     return video_id == TIME_SIGN_VIDEO or _reference_variants(reference_path(video_id)) is not None
 
 
-def _distance(recording, reference):
+def _variant_distances(recording, reference):
     sample, sample_hands, cut = recording
     template, template_hands, ref_cut = reference
-    if sample.shape[2] != template.shape[2]:
-        return np.inf
-    together = sample_hands[:, None, :, None] & template_hands[None, :, None, :]
-    different = sample_hands[:, None, :, None] ^ template_hands[None, :, None, :]
-    delta = np.linalg.norm(sample[:, None, :, None] - template[None, :, None, :], axis=-1)
-    cost = (np.minimum(delta, 3) * together + HAND_MISMATCH_PENALTY * different).sum(axis=-1)
-    cost /= np.maximum(1, together.sum(axis=-1))
-    cost += 0.7 * ~together.any(axis=-1)
+    n_sample, sample_frames, hands, feature_count = sample.shape
+    n_template, template_frames, _, _ = template.shape
+    # Compute squared Euclidean distances without allocating a feature vector for each frame pair.
+    source = sample.transpose(2, 0, 1, 3).reshape(hands, -1, feature_count)
+    target = template.transpose(2, 0, 1, 3).reshape(hands, -1, feature_count)
+    source_seen = sample_hands.transpose(2, 0, 1).reshape(hands, -1, 1)
+    target_seen = template_hands.transpose(2, 0, 1).reshape(hands, 1, -1)
+    together = source_seen & target_seen
+    different = source_seen ^ target_seen
+    source_squared = (source * source).sum(axis=2)
+    target_squared = (target * target).sum(axis=2)
+    squared_distances = source_squared[:, :, None] + target_squared[:, None, :] - 2 * (source @ target.transpose(0, 2, 1))
+    delta = np.sqrt(np.maximum(squared_distances, 0))
+    shared = together.sum(axis=0, dtype=np.float32)
+    cost = (np.minimum(delta, 3) * together).sum(axis=0) + HAND_MISMATCH_PENALTY * different.sum(axis=0, dtype=np.float32)
+    cost /= np.maximum(1, shared)
+    cost += 0.7 * (shared == 0)
+    cost = cost.reshape(n_sample, sample_frames, n_template, template_frames).transpose(0, 2, 1, 3)
     # Score all short endpoint trims together. Restrict the temporal warp
     # so that matching a single pose cannot explain the entire trajectory.
     dp = np.full((FRAMES + 1, FRAMES + 1, len(sample), len(template)), np.inf, dtype=np.float32)
     dp[0, 0] = 0
-    for i in range(1, FRAMES + 1):
-        for j in range(max(1, i - 5), min(FRAMES, i + 5) + 1):
-            dt = cost[:, :, i - 1, j - 1]
-            dp[i, j] = np.minimum(dp[i - 1, j - 1] + dt, np.minimum(dp[i - 1, j], dp[i, j - 1])) + dt
-    return float((dp[-1, -1] / (2 * FRAMES) + cut[:, None] + ref_cut).min())
+    for i, j in WARP_DIAGONALS:
+        dt = cost[:, :, i - 1, j - 1].transpose(2, 0, 1)
+        dp[i, j] = np.minimum(dp[i - 1, j - 1] + dt, np.minimum(dp[i - 1, j], dp[i, j - 1])) + dt
+    return dp[-1, -1] / (2 * FRAMES) + cut[:, None] + ref_cut
+
+
+def _score_templates(recording, references):
+    hands = recording[0].shape[2]
+    usable = [(entry, ref) for entry, ref in references.items() if ref[0].shape[2] == hands]
+    scores = {}
+    for offset in range(0, len(usable), DTW_REFERENCE_BATCH_SIZE):
+        batch = usable[offset:offset + DTW_REFERENCE_BATCH_SIZE]
+        ids, templates = zip(*batch)
+        combined = tuple(np.concatenate(parts, axis=0) for parts in zip(*templates))
+        first_variant = np.cumsum([0, *(len(ref[0]) for ref in templates[:-1])])
+        distances = np.minimum.reduceat(_variant_distances(recording, combined), first_variant, axis=1)
+        scores.update(zip(ids, distances.T))
+    return scores
+
+
+def _relative_hand_features(features, observed):
+    """Emphasize how the wrists and finger shapes differ between the two hands."""
+    seen = observed[..., None]
+    center = (features * seen).sum(axis=2, keepdims=True) / np.maximum(1, seen.sum(axis=2, keepdims=True))
+    return (features - 0.8 * center.astype(features.dtype)) * HAND_SHAPE_WEIGHTS
+
+
+def _duplicate_hand_fraction(features, observed):
+    # Holistic can return the same outline as both hand tracks when palms overlap.
+    gap = np.linalg.norm(features[:, :, 0] - features[:, :, 1], axis=-1)
+    return float((observed.all(axis=2) & (gap < 0.09)).mean())
 
 
 def _coarse_pool(features, observed):
@@ -221,10 +269,15 @@ def _load_index_cached(path_str, mtime_ns):
                 starts = np.r_[0, boundaries]
                 ends = np.r_[boundaries, len(v2e)]
                 slices = list(zip(starts.tolist(), ends.tolist()))
-            buckets[hands] = {
+            bucket = buckets[hands] = {
                 "ids": ids, "features": feats, "observed": obs,
                 "penalties": pens, "var_to_entry": v2e, "coarse": coarse, "slices": slices,
             }
+            if hands == 2:
+                bucket["relative_coarse"] = _coarse_pool(_relative_hand_features(feats, obs), obs)
+            for key in ("coarse", "relative_coarse"):
+                if key in bucket:
+                    bucket[key + "_squared"] = np.einsum("vthd,vthd->vth", bucket[key], bucket[key])
     return {"buckets": buckets, "all_ids": tuple(all_ids), "id_set": frozenset(all_ids)}
 
 
@@ -243,17 +296,20 @@ def indexed_entry_ids():
     return idx["all_ids"] if idx is not None else ()
 
 
-def _stage1_candidates(recording, bucket, top_k=STAGE1_TOP_K):
+def _stage1_candidates(recording, bucket, top_k=STAGE1_TOP_K, *, coarse_key="coarse"):
     n_entries = len(bucket["ids"])
     if n_entries == 0:
         return []
     sample_f, sample_o, sample_cut = recording
     sample_coarse = _coarse_pool(sample_f, sample_o)  # [V_s, 6, H, 14]
-    tmpl_coarse = bucket["coarse"]                    # [N_v, 6, H, 14]
+    tmpl_coarse = bucket[coarse_key]                    # [N_v, 6, H, 14]
+    tmpl_squared = bucket[coarse_key + "_squared"]
     tmpl_pen = bucket["penalties"]                    # [N_v]
     best_var = np.full(len(tmpl_coarse), np.inf, dtype=np.float32)
     for sv, cut in zip(sample_coarse, sample_cut):
-        diff = np.linalg.norm(tmpl_coarse - sv[None], axis=-1).mean(axis=(1, 2)) + tmpl_pen + float(cut)
+        dot = np.einsum("vthd,thd->vth", tmpl_coarse, sv)
+        squared = tmpl_squared + (sv * sv).sum(axis=-1) - 2 * dot
+        diff = np.sqrt(np.maximum(squared, 0)).mean(axis=(1, 2)) + tmpl_pen + float(cut)
         np.minimum(best_var, diff, out=best_var)
     entry_best = np.full(n_entries, np.inf, dtype=np.float32)
     np.minimum.at(entry_best, bucket["var_to_entry"], best_var)
@@ -262,27 +318,77 @@ def _stage1_candidates(recording, bucket, top_k=STAGE1_TOP_K):
     return np.argpartition(entry_best, top_k)[:top_k].tolist()
 
 
+def _indexed_references(recording, bucket, *, coarse_key="coarse"):
+    for entry_idx in _stage1_candidates(recording, bucket, coarse_key=coarse_key):
+        start, end = bucket["slices"][entry_idx]
+        yield bucket["ids"][entry_idx], (
+            bucket["features"][start:end], bucket["observed"][start:end], bucket["penalties"][start:end],
+        )
+
+
+def _match_result(score, entry_id, method="trajectory"):
+    return {"motion_detected": True, "status": "word_matched", "entry_id": entry_id, "match_method": method,
+            "similarity": round(1.0 - score, 3)}
+
+
+def _bilateral_shape_match(frames, aspect_ratio, recording, bucket, references):
+    f, o, p = recording
+    paired = o[0].all(axis=1)
+    if paired.sum() < 5:
+        return None
+    sample = (_relative_hand_features(f, o), o, p)
+    sample_duplicates = _duplicate_hand_fraction(f, o)
+
+    def adapt(reference):
+        feat, observed, penalties = reference
+        duplicates = max(0, _duplicate_hand_fraction(feat, observed) - sample_duplicates)
+        return _relative_hand_features(feat, observed), observed, penalties + 0.20 * duplicates
+
+    candidates = dict(references)
+    if bucket is not None:
+        candidates.update(_indexed_references(sample, bucket, coarse_key="relative_coarse"))
+    scores = _score_templates(sample, {key: adapt(ref) for key, ref in candidates.items() if ref[0].shape[2] == 2})
+
+    # A closer view of the public năn nỉ sample preserves fingertips during contact.
+    alternate = reference_path("D0261_close")
+    if not alternate.is_file() and (archive := index_path()) is not None:
+        alternate = archive.with_name(alternate.name)
+    if alternate.is_file() and (ref := _reference_variants(alternate)) is not None and ref[0].shape[2] == 2:
+        alternate_scores = _variant_distances(sample, adapt(ref)).min(axis=1)
+        scores["q-nan-ni"] = np.minimum(scores.get("q-nan-ni", np.inf), alternate_scores)
+
+    ranked = sorted((float(distances.min()), entry_id) for entry_id, distances in scores.items())
+    if not ranked or ranked[0][0] > MAX_HAND_SHAPE_DISTANCE:
+        return None
+    distance, entry_id = ranked[0]
+    separation = MIN_HAND_SHAPE_SEPARATION
+    if distance <= 0.30 and paired.mean() >= 0.80 and sample_duplicates <= 0.05:
+        separation = 0.020
+    elif entry_id == "q-nan-ni" and lost_hand_during_interaction(frames, aspect_ratio):
+        separation = 0.018
+    if len(ranked) > 1 and ranked[1][0] - distance < separation:
+        return None
+    # Two different endpoint trims can corroborate the same motion in one window.
+    # This lets the camera use a stable match even if the next request is slow.
+    first = scores[entry_id]
+    rivals = [value for key, value in scores.items() if key != entry_id]
+    runner_up = np.min(rivals, axis=0) if rivals else np.full_like(first, np.inf)
+    agreed = (first <= MAX_HAND_SHAPE_DISTANCE) & (runner_up - first >= separation)
+    method = "hand_shape" if agreed.sum() >= 2 else "trajectory"
+    return _match_result(distance, entry_id, method)
+
+
 def match_live_words(frames, aspect_ratio, entries):
     """Accept a reference only when the absolute match and lead over rivals are sufficient."""
     if (recording := _variants(frames, aspect_ratio)) is None:
         return None
     hands = recording[0].shape[2]
-    ranked = []
-    seen = set()
-
     idx = _active_index()
-    if idx is not None:
-        bucket = idx["buckets"].get(hands)
-        if bucket and bucket["ids"]:
-            for entry_idx in _stage1_candidates(recording, bucket):
-                entry_id = bucket["ids"][entry_idx]
-                s, e = bucket["slices"][entry_idx]
-                ref = (bucket["features"][s:e], bucket["observed"][s:e], bucket["penalties"][s:e])
-                ranked.append((_distance(recording, ref), entry_id))
-                seen.add(entry_id)
+    bucket = idx["buckets"][hands] if idx is not None else None
+    references = dict(_indexed_references(recording, bucket)) if bucket is not None else {}
 
     for entry_id, video_id in entries or ():
-        if entry_id in seen:
+        if entry_id in references:
             continue
         if idx is not None and entry_id in idx["id_set"]:
             continue
@@ -291,17 +397,17 @@ def match_live_words(frames, aspect_ratio, entries):
             continue
         reference = _reference_variants(path)
         if reference is not None:
-            ranked.append((_distance(recording, reference), entry_id))
-            seen.add(entry_id)
+            references[entry_id] = reference
 
-    ranked.sort()
+    ranked = sorted((float(distances.min()), entry_id) for entry_id, distances in _score_templates(recording, references).items())
     bilateral = hands == 2
     max_distance = MAX_BILATERAL_DISTANCE if bilateral else MAX_DISTANCE
     min_separation = MIN_BILATERAL_SEPARATION if bilateral else MIN_SEPARATION
-    if not ranked or ranked[0][0] > max_distance:
-        return None
-    if len(ranked) > 1 and ranked[1][0] - ranked[0][0] < min_separation:
+    in_range = bool(ranked and ranked[0][0] <= max_distance)
+    if in_range and (len(ranked) == 1 or ranked[1][0] - ranked[0][0] >= min_separation):
+        return _match_result(*ranked[0])
+    if bilateral and (recovered := _bilateral_shape_match(frames, aspect_ratio, recording, bucket, references)):
+        return recovered
+    if in_range:
         return {"motion_detected": True, "status": "ambiguous_word"}
-    distance, entry_id = ranked[0]
-    return {"motion_detected": True, "status": "word_matched", "entry_id": entry_id, "match_method": "trajectory",
-            "similarity": round(1.0 - distance, 3)}
+    return None

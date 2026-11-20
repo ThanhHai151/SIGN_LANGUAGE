@@ -136,7 +136,9 @@ export default function CameraDiagnostic({ capture, cameraActive, stream, mode, 
                       <td>{event.label || 'Đang chờ'}{event.confidence !== null && ` (${percent(event.confidence)})`}
                         <small>{SOURCES[event.source] || event.source}{event.caption && ' · Đã ghi phụ đề'}</small>
                       </td>
-                      <td>{event.matchMethod === 'phases' ? 'Khớp pha chỉ cổ tay và đưa tay lên rồi mở ngón' : REASONS[event.status] || '—'}
+                      <td>{event.matchMethod === 'phases' ? 'Khớp pha chỉ cổ tay và đưa tay lên rồi mở ngón'
+                        : event.matchMethod === 'hand_shape' ? 'Khớp tư thế hai tay ở nhiều đoạn của động tác'
+                          : REASONS[event.status] || '—'}
                         {event.wristMs !== null && <button type="button" onClick={() => seek(event.wristMs)}>Chỉ cổ tay · {seconds(event.wristMs)}</button>}
                         {event.liftMs !== null && <button type="button" onClick={() => seek(event.liftMs)}>
                           {event.matchMethod === 'phases' ? 'Mở ngón' : 'Đưa tay lên'} · {seconds(event.liftMs)}
