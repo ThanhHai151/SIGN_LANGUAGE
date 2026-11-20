@@ -27,6 +27,7 @@ backend/data/sources/**
 !backend/data/qipedc_reference/
 backend/data/qipedc_reference/**
 !backend/data/qipedc_reference/*.npy
+!backend/data/qipedc_reference/live_index.npz
 !backend/data/qipedc_reference/sources.json
 !backend/data/sstcn/
 backend/data/sstcn/**

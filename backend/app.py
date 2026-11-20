@@ -29,7 +29,7 @@ from backend.models.vsl_dictionary import ALL_SIGNS, VSL_ALPHABET, VSL_VOCABULAR
 from backend.vision.recognizer import VSLRecognizer
 from backend.vision.qipedc_live import (
     BUILTIN_WORDS, DEFAULT_WORDS, MAX_EXTRA_WORDS,
-    lost_hand_during_interaction, match_live_words, prepare_live_reference,
+    indexed_entry_ids, lost_hand_during_interaction, match_live_words, prepare_live_reference,
 )
 from backend.vision.qipedc_practice import TIME_SIGN_ENTRY, TIME_SIGN_VIDEO
 from backend.vision.alphabet_classifier import O_D_TI_MAX, O_IDX_STRAIGHT_MAX
@@ -220,7 +220,7 @@ def get_lexicon(
         items = items[offset:offset + limit]
     return {
         "success": True,
-        "meta": {**lex["meta"], "live_qipedc_ids": BUILTIN_WORDS},
+        "meta": {**lex["meta"], "live_qipedc_ids": list(dict.fromkeys((*BUILTIN_WORDS, *indexed_entry_ids())))},
         "total": total,
         "entries": [compact_entry(e) for e in items],
     }
@@ -288,17 +288,21 @@ def _live_qipedc_entries(extra_ids=()):
 
 @app.post("/api/qipedc/live/prepare")
 def prepare_qipedc_live(entry_id: Optional[str] = None):
+    indexed = frozenset(indexed_entry_ids())
     ids = (entry_id,) if entry_id else BUILTIN_WORDS
     prepared = []
     for item in ids:
         entry, video_id = _qipedc_practice_entry(item, None)
-        try:
-            ready = prepare_live_reference(video_id)
-        except (ImportError, OSError, RuntimeError, ValueError):
-            ready = False
+        if item in indexed:
+            ready = True
+        else:
+            try:
+                ready = prepare_live_reference(video_id)
+            except (ImportError, OSError, RuntimeError, ValueError):
+                ready = False
         prepared.append({"id": item, "word": entry["word"], "ready": ready,
-                         "builtin": item in BUILTIN_WORDS})
-    return {"entries": prepared, "max_extra_words": MAX_EXTRA_WORDS}
+                         "builtin": item in BUILTIN_WORDS or item in indexed})
+    return {"entries": prepared, "indexed_count": len(indexed), "max_extra_words": MAX_EXTRA_WORDS}
 
 
 @app.post("/api/qipedc/practice/{entry_id}/prepare")

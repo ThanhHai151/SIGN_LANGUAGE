@@ -280,3 +280,83 @@ def test_live_words_wait_when_a_hand_disappears_during_two_hand_motion(tmp_path,
         released = client.post(path, json={**payload, "sequence": motion.tolist()}).json()["data"]
         assert released["sign"] == "Mẹ"
         assert len(calls) == 1
+
+
+def test_live_bilateral_words_trim_waist_frames_and_tolerate_reference_occlusion(tmp_path, monkeypatch):
+    monkeypatch.setattr(video_cache, "CACHE_DIR", tmp_path)
+    reference_path("D0261").parent.mkdir()
+
+    # Build a chest-level two-hand sign (like "năn nỉ"), then pad the reference with waist-level
+    # entry/exit frames and occlude one hand during the raised signing phase.
+    raised = np.zeros((16, 75, 3), dtype=np.float32)
+    raised[:, 9] = [0.47, 0.35, 0]
+    raised[:, 10] = [0.53, 0.35, 0]
+    raised[:, 11] = [0.63, 0.51, 0]
+    raised[:, 12] = [0.37, 0.51, 0]
+    y_wave = np.sin(np.linspace(0, 2 * np.pi, len(raised))) * 0.04
+    raised[:, 33:54, 0] = 0.52 + np.linspace(0, 0.03, 21)
+    raised[:, 33:54, 1] = (0.56 + y_wave)[:, None] - np.linspace(0, 0.10, 21)
+    raised[:, 54:, 0] = 0.48 - np.linspace(0, 0.03, 21)
+    raised[:, 54:, 1] = (0.56 + y_wave)[:, None] - np.linspace(0, 0.10, 21)
+
+    waist = raised[:6].copy()
+    waist[:, 33:54, 1] = 0.90 + np.linspace(0, 0.08, 21)
+    waist[:, 54:, 1] = 0.90 + np.linspace(0, 0.08, 21)
+
+    studio_ref = np.concatenate([waist, raised.copy(), waist], axis=0)
+    # Simulate self-occlusion of the right hand in the middle of the studio reference.
+    studio_ref[8:20, 54:] = 0
+    np.save(reference_path("D0261"), studio_ref)
+
+    with TestClient(app) as client:
+        res = client.post("/api/recognize_sequence", json={
+            "sequence": raised.tolist(),
+            "live_words": True,
+            "mode": "words",
+            "include_diagnostic": True,
+        }).json()["data"]
+        assert res["entry_id"] == "q-nan-ni"
+        assert res["match_method"] == "trajectory"
+
+
+def test_live_compressed_index_matches_two_stage_and_exposes_metadata(tmp_path, monkeypatch):
+    from backend.training.build_qipedc_live_index import pack_index
+
+    monkeypatch.setattr(video_cache, "CACHE_DIR", tmp_path)
+    practice_dir = tmp_path / "practice"
+    practice_dir.mkdir()
+
+    sign_a = np.zeros((20, 75, 3), dtype=np.float32)
+    sign_a[:, 9] = [0.47, 0.35, 0]
+    sign_a[:, 10] = [0.53, 0.35, 0]
+    sign_a[:, 11] = [0.63, 0.51, 0]
+    sign_a[:, 12] = [0.37, 0.51, 0]
+    sign_a[:, 54:, 0] = np.linspace(0.56, 0.50, 21)
+    sign_a[:, 54:, 1] = np.r_[np.linspace(0.70, 0.41, 10), np.linspace(0.41, 0.54, 10)][:, None] - np.linspace(0, 0.12, 21)
+    path_a = practice_dir / "v3_D0440.npy"
+    np.save(path_a, sign_a)
+
+    sign_b = sign_a.copy()
+    sign_b[:, 54:, 0] -= 0.30
+    sign_b[:, 54:, 1] -= 0.25
+    path_b = practice_dir / "v3_W00489.npy"
+    np.save(path_b, sign_b)
+
+    n_uni, n_bi, skipped = pack_index([("q-an-du", path_a), ("q-chao", path_b)], practice_dir / "live_index.npz")
+    assert (n_uni, n_bi, skipped) == (2, 0, 0)
+    # Remove individual .npy files to verify matching uses only the compressed index.
+    path_a.unlink()
+    path_b.unlink()
+
+    with TestClient(app) as client:
+        res = client.post("/api/recognize_sequence", json={
+            "sequence": sign_b.tolist(),
+            "live_words": True,
+            "mode": "words",
+        }).json()["data"]
+        assert res["entry_id"] == "q-chao"
+        assert res["match_method"] == "trajectory"
+
+        prep = client.post("/api/qipedc/live/prepare?entry_id=q-chao").json()
+        assert prep["indexed_count"] == 2
+        assert prep["entries"][0]["ready"] is True and prep["entries"][0]["builtin"] is True
