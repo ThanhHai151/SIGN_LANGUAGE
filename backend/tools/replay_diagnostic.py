@@ -166,8 +166,8 @@ def replay_session_sequential(records: List[Dict[str, Any]], session_id: Optiona
         frame_progression = []
 
         for r in sess_records:
-            raw_lm = r.get("raw_landmarks", [])
-            if not raw_lm or len(raw_lm) < 21:
+            raw_lm = r.get("raw_landmarks")
+            if not isinstance(raw_lm, list) or (raw_lm and len(raw_lm) < 21):
                 continue
 
             # Sử dụng timestamp thực tế từ log để giả lập đồng hồ máy tính

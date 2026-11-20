@@ -42,14 +42,28 @@ class TestVSLSystem(unittest.TestCase):
         self.assertIn("XIN_CHAO", data["vocabulary"])
 
     def test_nlp_text_to_sign_greeting(self):
-        """Kiểm tra NLP chuyển đổi câu chào và cảm ơn"""
+        """Câu chào: "xin chào", "bạn" diễn bằng ký hiệu; "cảm ơn" (chưa có video miền Nam) được đánh vần đủ dấu"""
         result = text_to_vsl_glosses("Xin chào, cảm ơn bạn rất nhiều!")
         labels = [r["label"] for r in result]
         self.assertIn("Xin chào", labels)
-        self.assertIn("Cảm ơn", labels)
         self.assertIn("Bạn", labels)
+        spelled = [r["label"] for r in result if r.get("spelled_word") == "cảm ơn"]
+        self.assertEqual(spelled, ["Chữ C", "Chữ A", "Chữ M", "Dấu hỏi", "Chữ Ơ", "Chữ N"])
         # "rất" là hư từ → bỏ qua, không đánh vần
-        self.assertNotIn("Chữ R", labels)
+        self.assertNotIn("rất", {r.get("spelled_word") for r in result})
+
+    def test_fingerspelling_uses_learned_letters(self):
+        """Đánh vần dùng chuyển động học từ video bảng chữ cái QIPEDC, đủ chữ có dấu và dấu thanh"""
+        result = text_to_vsl_glosses("Nguyễn Thượng")   # tên riêng không có trong từ điển
+        self.assertEqual([r["label"] for r in result],
+                         ["Chữ N", "Chữ G", "Chữ U", "Chữ Y", "Chữ Ê", "Chữ N", "Dấu ngã",
+                          "Chữ T", "Chữ H", "Chữ Ư", "Chữ Ơ", "Chữ N", "Chữ G", "Dấu nặng"])
+        for r in result:
+            self.assertEqual(r["type"], "fingerspelling")
+            self.assertTrue(r["motion_id"], r["label"])
+            self.assertLess(r["clip"][0], r["clip"][1])
+        res = self.client.get("/api/letter/Ư").json()
+        self.assertEqual(res["sequence"][0]["motion_id"], "D0515N")
 
     def test_nlp_fingerspelling_proper_name(self):
         """Kiểm tra NLP tự động chuyển tên riêng chưa có trong từ điển sang đánh vần chữ cái"""
@@ -115,13 +129,11 @@ class TestVSLSystem(unittest.TestCase):
         self.assertTrue(seq[0]["video_url"].startswith("https://qipedc.moet.gov.vn/videos/"))
 
     def test_nlp_two_handed_phrases(self):
-        """Kiểm tra dịch thuật các từ vựng 2 tay mới: Xin vui lòng, Giúp đỡ, Gia đình"""
+        """"giúp đỡ" có ký hiệu hai tay học từ video; các từ chưa có video được đánh vần"""
         result = text_to_vsl_glosses("Xin vui lòng giúp đỡ gia đình tôi")
-        glosses = [r["gloss"] for r in result]
-        self.assertIn("XIN_VUI_LONG", glosses)
-        self.assertIn("GIUP_DO", glosses)
-        self.assertIn("GIA_DINH", glosses)
-        self.assertIn("TOI", glosses)
+        self.assertIn("giúp đỡ", [r["token"] for r in result if r["type"] == "vocabulary" and r.get("motion_id")])
+        spelled = {r.get("spelled_word") for r in result if r["type"] == "fingerspelling"}
+        self.assertTrue({"gia đình", "tôi"} <= spelled, spelled)
 
     def test_two_handed_help_recognition(self):
         """Kiểm tra nhận diện 2 tay cho cử chỉ Giúp đỡ (tay phải nắm, tay trái đỡ dưới)"""
@@ -145,22 +157,33 @@ class TestVSLSystem(unittest.TestCase):
         self.assertTrue(data["success"])
         self.assertEqual(data["data"]["sign"], "GIUP_DO")
 
+    def _assert_exact(self, result):
+        """Nguyên tắc chính xác: mỗi ký hiệu phải là ký hiệu của ĐÚNG từ được gõ (hoặc cách gọi khác của
+        cùng khái niệm trong SAME_SIGN_WORDS) — không dùng ký hiệu của từ gần nghĩa."""
+        from backend.nlp.text_to_vsl import headword_keys, SAME_SIGN_WORDS, CLASSIFIERS
+        from backend.models.lexicon import norm_key
+        for r in result:
+            if r["type"] != "vocabulary":
+                continue
+            keys = headword_keys(r["word"])
+            ok = (r["token"] in keys or norm_key(SAME_SIGN_WORDS.get(r["token"], "")) in keys
+                  or any(f"{cl} {r['token']}" in keys for cl in CLASSIFIERS))   # "chó" = "con chó"
+            self.assertTrue(ok, f'"{r["token"]}" bị diễn bằng ký hiệu của "{r["word"]}"')
+
     def test_nlp_everyday_compound_phrases(self):
-        """Kiểm tra các cụm từ học bài, nấu ăn, lau nhà, đi ngủ được nhận diện thành cụm từ chứ không đánh vần chữ cái"""
+        """Cụm từ có trong bộ ký hiệu (nấu ăn, lau nhà) được diễn bằng ký hiệu; hư từ bị bỏ; không ghép sai nghĩa"""
         result = text_to_vsl_glosses("Tôi đang học bài và nấu ăn rồi lau nhà sau đó đi ngủ")
-        glosses = [r["gloss"] for r in result]
-        types = [r["type"] for r in result]
-
-        self.assertIn("HOC_BAI", glosses)
-        self.assertIn("NAU_AN", glosses)
-        self.assertIn("LAU_NHA", glosses)
-        self.assertIn("DI_NGU", glosses)
-
-        # Hư từ "và", "rồi" bị bỏ qua, không có chữ cái fingerspelling thừa
-        self.assertNotIn("fingerspelling", types)
+        signed = [r["token"] for r in result if r["type"] == "vocabulary" and r.get("motion_id")]
+        self.assertIn("nấu ăn", signed)
+        self.assertIn("lau nhà", signed)
+        self.assertIn("học", signed)
+        tokens = [r["token"] for r in result]
+        self.assertNotIn("và", tokens)   # hư từ "và", "rồi", "đang" bị bỏ qua
+        self.assertNotIn("rồi", tokens)
+        self._assert_exact(result)
 
     def test_nlp_full_long_discourse_sentence(self):
-        """Kiểm tra nguyên văn đoạn văn dài tự sự của người dùng được dịch 100% sang cụm từ có nghĩa, không có fingerspelling"""
+        """Đoạn văn dài: từ có ký hiệu được diễn bằng ký hiệu của chính từ đó, từ chưa có ký hiệu được đánh vần cả từ"""
         text = (
             "Những ngày cuối tuần của tôi không có lịch trình cụ thể vì chúng phụ thuộc vào mức độ bận rộn của tôi trong tuần. "
             "Tôi thường dành một ít thời gian cho việc học tập hoặc các dự án cá nhân, nhưng tôi cũng đảm bảo mình có đủ thời gian để thư giãn. "
@@ -168,33 +191,31 @@ class TestVSLSystem(unittest.TestCase):
         )
         result = text_to_vsl_glosses(text)
         self.assertGreater(len(result), 15)
-        
-        # Đảm bảo 100% token là vocabulary cụm từ, không có fingerspelling
-        fingerspelling_tokens = [r for r in result if r["type"] == "fingerspelling"]
-        self.assertEqual(len(fingerspelling_tokens), 0, f"Còn sót các ký tự fingerspelling: {fingerspelling_tokens}")
-        
-        glosses = [r["gloss"] for r in result]
-        self.assertIn("CUOI_TUAN", glosses)
-        self.assertIn("LICH_TRINH", glosses)
-        # Phần lớn ký hiệu có video mẫu người thật
-        with_video = [r for r in result if r.get("video_url")]
-        self.assertGreater(len(with_video), len(result) // 2)
-        self.assertIn("PHU_THUOC", glosses)
-        self.assertIn("BAN_RON", glosses)
-        self.assertIn("TRONG_TUAN", glosses)
-        self.assertIn("THOI_GIAN", glosses)
-        self.assertIn("HOC_BAI", glosses)
-        self.assertIn("DU_AN", glosses)
-        self.assertIn("DAM_BAO", glosses)
-        self.assertIn("THU_GIAN", glosses)
-        self.assertIn("NEU", glosses)       # "Nếu có thể" → ký hiệu NẾU
-        self.assertIn("THICH", glosses)
-        self.assertIn("GAP_GO", glosses)
-        self.assertIn("BAN", glosses)       # "bạn bè" → ký hiệu BẠN
-        self.assertIn("KHAM_PHA", glosses)
-        self.assertIn("DIA_DIEM", glosses)
-        self.assertIn("CO_HOI", glosses)
-        self.assertIn("THOI_QUEN", glosses)
+        self._assert_exact(result)
+        signed = [r["token"] for r in result if r["type"] == "vocabulary" and r.get("motion_id")]
+        for w in ("cuối tuần", "không có", "phụ thuộc", "học tập", "dự án", "thư giãn", "gặp gỡ", "khám phá",
+                  "địa điểm", "mới", "cơ hội", "thói quen"):
+            self.assertIn(w, signed)
+        # Từ ghép chưa có ký hiệu ("lịch trình", "bạn bè") được đánh vần CẢ TỪ, không tách ra từng tiếng để diễn sai nghĩa
+        spelled_words = {r.get("spelled_word") for r in result if r["type"] == "fingerspelling"}
+        self.assertIn("lịch trình", spelled_words)
+        self.assertIn("bạn bè", spelled_words)
+        # Mọi ký hiệu được diễn đều có video mẫu người thật (miền Nam / dùng chung)
+        self.assertTrue(all(r.get("video_url") for r in result if r.get("motion_id") and r["type"] == "vocabulary"))
+
+    def test_single_noun_without_classifier(self):
+        """Gõ riêng "chó", "táo", "trường" vẫn ra ký hiệu "con chó", "quả táo", "nhà trường"; "công nhân" không thành "con công" """
+        for text, word in (("chó", "con chó"), ("táo", "quả táo"), ("trường", "nhà trường"), ("Nhà tôi có con chó", "con chó")):
+            words = [r["word"] for r in text_to_vsl_glosses(text) if r["type"] == "vocabulary"]
+            self.assertIn(word, words, text)
+        self.assertNotIn("con công", [r["word"] for r in text_to_vsl_glosses("công nhân")])
+
+    def test_nlp_compound_not_split_into_wrong_signs(self):
+        """"sinh nhật", "công nhân", "kết hôn": không được diễn "nhật" (nước Nhật), "nhân" (phép nhân), "hôn" """
+        for text, bad in (("Chúc mừng sinh nhật", "nhật"), ("Chú tôi là công nhân", "nhân"), ("Bố mẹ kết hôn", "hôn"), ("Không sao", "sao")):
+            result = text_to_vsl_glosses(text)
+            self.assertNotIn(bad, [r["token"] for r in result if r["type"] == "vocabulary"], text)
+            self._assert_exact(result)
 
     # ------------------------------------------------------------------
     # Bộ từ vựng thống nhất (QIPEDC + giáo trình 102 + robot)
@@ -225,17 +246,31 @@ class TestVSLSystem(unittest.TestCase):
     def test_camera_and_text_share_vocabulary(self):
         """Từ nhận diện được bằng camera cũng dịch ngược được từ văn bản về CÙNG mục từ"""
         from backend.models.lexicon import get_entry_by_sstcn
-        for idx in [51, 52, 60, 75, 80, 84, 98]:  # Tôi, Chào, Bạn, Ăn, Gia đình, Mẹ, Bác sĩ
+        for idx, word in [(52, "chào"), (60, "bạn"), (84, "mẹ")]:
             entry = get_entry_by_sstcn(idx)
-            seq = text_to_vsl_glosses(entry["keys"][0])
+            seq = text_to_vsl_glosses(word)
             self.assertEqual(seq[0]["entry_id"], entry["id"], entry["word"])
 
-    def test_regional_variants(self):
-        """Mục từ QIPEDC có video biến thể vùng miền Bắc / Trung / Nam"""
+    def test_south_standard(self):
+        """Chuẩn miền Nam: chỉ còn video miền Nam / dùng chung; từ chỉ có video miền Bắc/Trung → không có video"""
         data = self.client.get("/api/lexicon", params={"q": "địa chỉ"}).json()
         entry = next(e for e in data["entries"] if e["word"] == "địa chỉ")
-        regions = {v["region"] for v in entry["variants"]}
-        self.assertTrue({"B", "T", "N"} <= regions)
+        self.assertEqual({v["region"] for v in entry["variants"]} - {"GT"}, {"N"})
+        self.assertTrue(entry["video_url"].endswith("N.mp4"))
+        self.assertEqual(entry["region"], "N")
+        lex = self.client.get("/api/lexicon").json()["entries"]
+        for e in lex:
+            for v in e.get("variants", []):
+                self.assertNotIn(v["region"], ("B", "T"), e["word"])
+        # "bạn": robot / video dùng ký hiệu miền Nam
+        seq = self.client.post("/api/text_to_sign", json={"text": "bạn"}).json()["sequence"]
+        self.assertTrue(seq[0]["video_id"].endswith("N"))
+        # từ không có video miền Nam: không dùng tư thế vẽ tay, robot đánh vần
+        no_south = next(e for e in lex if e.get("no_south") and e.get("source") == "QIPEDC")
+        self.assertIsNone(no_south["video_url"])
+        seq = self.client.post("/api/text_to_sign", json={"text": no_south["keys"][0]}).json()["sequence"]
+        self.assertTrue(all(r["type"] == "fingerspelling" for r in seq))
+        self.assertTrue(all(r["spelled_word"] == no_south["keys"][0] for r in seq))
 
     # ------------------------------------------------------------------
     # Chuyển động robot học từ video QIPEDC
@@ -328,9 +363,10 @@ class TestVSLSystem(unittest.TestCase):
             bad = self.client.post("/api/motion/learn", json={"id": "../x", "frames": []}).json()
             self.assertFalse(bad["success"])
         finally:
-            p = os.path.join(MOTION_DIR, "ZZLEARN.json")
-            if os.path.exists(p):
-                os.remove(p)
+            from backend.models.motion_learn import RAW_DIR
+            for p in (os.path.join(MOTION_DIR, "ZZLEARN.json"), os.path.join(RAW_DIR, "ZZLEARN.json")):
+                if os.path.exists(p):
+                    os.remove(p)
             shutil.move(bak, DESC_PATH)
 
 if __name__ == "__main__":

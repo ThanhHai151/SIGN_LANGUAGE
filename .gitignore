@@ -32,6 +32,7 @@ __pycache__/
 
 # Bộ đệm video/ảnh mẫu QIPEDC (tự tạo khi chạy backend)
 backend/data/media_cache/
+backend/data/raw_motion/
 
 # File nhat ky chan doan (tao khi VSL_DIAGNOSTIC=1)
 backend/data/diagnostics/
@@ -41,5 +42,8 @@ backend/data/sstcn/archives/
 backend/data/sstcn/raw/
 backend/data/sstcn/prepared*/
 backend/data/sstcn/demo_videos/
+backend/data/vsl_unified/
+backend/data/personal_calibration/
+/vsl-chan-doan*.webm
 backend/runs/
 .venv-sstcn/

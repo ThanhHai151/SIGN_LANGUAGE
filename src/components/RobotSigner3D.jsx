@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { getHandPoseByGloss, NATURAL_FINGERS_REST } from '../utils/handPoses';
@@ -114,9 +115,10 @@ function applyKeyframe(cur, kf) {
   });
 }
 
-export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, sequence = [], currentIndex = 0, freezeAt, videoElRef }) {
+export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, sequence = [], currentIndex = 0, freezeAt, videoElRef, controlsTarget }) {
   const mountRef = useRef(null);
   const rigRef = useRef({});
+  if (import.meta.env.DEV && typeof window !== 'undefined') window.__rigRef = rigRef; // kiểm thử tự động (chỉ khi phát triển)
   const animFrameRef = useRef(null);
   const isPlayingRef = useRef(isPlaying);
   const speedRef = useRef(speed);
@@ -124,6 +126,7 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
   const captionRef = useRef(null);
 
   const [cameraMode, setCameraMode] = useState('full');
+  const [spellIdx, setSpellIdx] = useState(-1); // chữ cái đang đánh vần tạm (từ chưa học động tác)
   const cameraModeRef = useRef('full');
   const targetCamPosRef = useRef(new THREE.Vector3(0, 1.12, 2.15));
   const targetCamLookRef = useRef(new THREE.Vector3(0, 0.98, 0));
@@ -449,6 +452,7 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
     scene.add(avatarGroup);
 
     rigRef.current = {
+      THREE_ns: THREE,
       avatarGroup,
       torsoGroup,
       headGroup,
@@ -738,7 +742,11 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
     if (motionId) {
       fetchMotion(motionId).then((data) => {
         // bỏ qua kết quả về muộn của ký hiệu trước (đã chuyển sang ký hiệu khác)
-        if (!cancelled && data && data.keyframes?.length) rig.motion = { data, start: undefined };
+        if (!cancelled && data && data.keyframes?.length) {
+          // Bước có đoạn phát riêng (vd. chữ cái khi đánh vần: chỉ đoạn giữ hình chữ cái) → phát đúng đoạn đó
+          const clip = Array.isArray(currentStep?.clip) ? currentStep.clip : null;
+          rig.motion = { data: clip ? { ...data, active: clip } : data, start: undefined };
+        }
       });
     }
 
@@ -760,10 +768,21 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
       const letters = currentStep.spell;
       let i = 0;
       rig.currentPose.smoothTime = 0.1;
-      const run = () => { applyStatic(getHandPoseByGloss(letters[i % letters.length])); i += 1; };
+      const run = () => {
+        const k = i % letters.length;
+        applyStatic(getHandPoseByGloss(letters[k]));
+        setSpellIdx(k);
+        // màn hình ngực hiện đúng chữ cái robot đang làm
+        const sc = screenRef.current;
+        if (sc) {
+          const from = sc.anim ? sc.anim.to : sc.shown;
+          sc.anim = { from, to: { text: letters[k], sub: `ĐÁNH VẦN ${k + 1}/${letters.length}` }, start: undefined };
+        }
+        i += 1;
+      };
       run();
       const iv = setInterval(() => { if (!rig.motion) run(); }, SPELL_LETTER_MS / Math.max(0.25, speed));
-      return () => { cancelled = true; clearInterval(iv); };
+      return () => { cancelled = true; clearInterval(iv); setSpellIdx(-1); };
     }
 
     // 2) Tư thế vẽ tay (handPoses.js); từ chưa có tư thế robot → tư thế nghỉ (xem video mẫu)
@@ -835,6 +854,24 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
     { id: 'hand_left', icon: <ZoomIn size={13} />, label: 'Tay trái', title: 'Phóng to tay trái' }
   ];
 
+  const viewControls = (
+    <div className={controlsTarget ? 'control-grid model-view-controls' : undefined}
+      style={controlsTarget ? undefined : {
+        position: 'absolute', top: 12, right: 12, display: 'grid', gap: 4, padding: 4,
+        borderRadius: 10, background: 'rgba(8, 15, 28, 0.85)', border: '1px solid var(--border-subtle)'
+      }}>
+      {cameraButtons.map((button) => (
+        <button key={button.id} type="button" onClick={() => switchCameraMode(button.id)}
+          className={`btn ${cameraMode === button.id ? 'btn-primary' : 'btn-secondary'}`}
+          aria-pressed={cameraMode === button.id} title={button.title}>
+          {button.icon} {button.label}
+        </button>
+      ))}
+      <button type="button" onClick={resetRotation} className="btn btn-secondary model-reset"
+        title="Khôi phục góc nhìn thẳng"><RotateCcw size={13} /> Xoay lại</button>
+    </div>
+  );
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
       <style>{`
@@ -853,27 +890,35 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
           title="Kéo chuột để xoay robot 360°"
         />
 
-        {/* Thanh góc nhìn (dọc, góc phải) */}
-        <div style={{
-          position: 'absolute', top: '12px', right: '12px', display: 'flex', flexDirection: 'column',
-          gap: '4px', background: 'rgba(8, 15, 28, 0.85)', padding: '4px', borderRadius: '10px',
-          border: '1px solid var(--border-subtle)', backdropFilter: 'blur(10px)'
-        }}>
-          {cameraButtons.map((b) => (
-            <button
-              key={b.id}
-              onClick={() => switchCameraMode(b.id)}
-              className={`btn ${cameraMode === b.id ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ padding: '5px 9px', fontSize: '11px', justifyContent: 'flex-start' }}
-              title={b.title}
-            >
-              {b.icon} {b.label}
-            </button>
-          ))}
-          <button onClick={resetRotation} className="btn btn-secondary" style={{ padding: '5px 9px', fontSize: '11px', justifyContent: 'flex-start' }} title="Khôi phục góc nhìn thẳng">
-            <RotateCcw size={13} /> Xoay lại
-          </button>
-        </div>
+        {/* Đánh vần tạm: dãy chữ cái, sáng chữ robot đang làm */}
+        {isTempSpell(currentStep) && spellIdx >= 0 && (
+          <div style={{
+            position: 'absolute', left: 12, right: 150, top: 12, display: 'flex', flexDirection: 'column', gap: 6,
+            background: 'rgba(8, 15, 28, 0.85)', padding: '8px 10px', borderRadius: 10,
+            border: '1px solid var(--border-subtle)', backdropFilter: 'blur(10px)', pointerEvents: 'none'
+          }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              {currentStep.video_id
+                ? <>Đang đánh vần “{currentStep.label}” (chờ robot học ký hiệu)</>
+                : <>Đánh vần “{currentStep.label}” (chưa có ký hiệu miền Nam)</>}
+            </span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {currentStep.spell.map((ch, k) => (
+                <span key={k} style={{
+                  minWidth: 26, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: 6, fontWeight: 800, fontSize: k === spellIdx ? 18 : 14, fontFamily: 'Outfit, sans-serif',
+                  color: k === spellIdx ? '#fff' : k < spellIdx ? 'var(--text-secondary)' : 'var(--text-muted)',
+                  background: k === spellIdx ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${k === spellIdx ? 'var(--primary)' : 'var(--border-subtle)'}`,
+                  transform: k === spellIdx ? 'translateY(-2px)' : 'none',
+                  transition: 'all .18s ease'
+                }}>{ch}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {controlsTarget === undefined ? viewControls : controlsTarget && createPortal(viewControls, controlsTarget)}
       </div>
 
       {/* ===== Dải thông tin dưới khung 3D (không che robot) ===== */}

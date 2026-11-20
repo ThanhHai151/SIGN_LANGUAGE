@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Search, BookOpen, Film, Play, X, Camera, Bot, Star, Sparkles, WifiOff } from 'lucide-react';
-import { fetchLexicon, fetchLexiconEntry, prefetchVideos, warmVideo } from '../services/api';
+import { fetchLexicon, fetchLexiconEntry, prefetchVideos, prepareQipedcLive, warmVideo } from '../services/api';
 import SmoothVideo from './SmoothVideo';
 import SignDescription from './SignDescription';
 
 /**
  * Từ điển VSL — duyệt BỘ TỪ VỰNG THỐNG NHẤT:
- *  ~3.300 từ Danh mục NNKH QIPEDC (Bộ GD&ĐT, video người Điếc 3 miền Bắc/Trung/Nam)
+ *  ~3.300 từ Danh mục NNKH QIPEDC (Bộ GD&ĐT) — chỉ dùng video ký hiệu miền Nam hoặc dùng chung cả nước
  *  + 102 từ giáo trình (mô hình camera nhận diện được) + từ có tư thế robot 3D.
  */
 const PAGE = 60;
@@ -21,7 +21,7 @@ const FILTERS = [
 
 const strip = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
 
-export default function VSLDictionaryExplorer({ onSelectSignFor3D }) {
+export default function VSLDictionaryExplorer({ onSelectSignFor3D, onPractice, liveQipedcWords = [], onAddLiveWord, onRemoveLiveWord }) {
   const [entries, setEntries] = useState([]);
   const [meta, setMeta] = useState(null);
   const [status, setStatus] = useState('loading');
@@ -31,6 +31,38 @@ export default function VSLDictionaryExplorer({ onSelectSignFor3D }) {
   const [shown, setShown] = useState(PAGE);
   const [modal, setModal] = useState(null);
   const [modalDetail, setModalDetail] = useState(null);
+  const [liveRegistration, setLiveRegistration] = useState(null);
+  const modalInLiveWords = liveQipedcWords.some((item) => item.id === modal?.id);
+  const modalBuiltin = meta?.live_qipedc_ids?.includes(modal?.id);
+  const liveIds = useMemo(() => new Set([...(meta?.live_qipedc_ids || []), ...liveQipedcWords.map((item) => item.id)]),
+    [meta, liveQipedcWords]);
+
+  const toggleLiveWord = async (entry) => {
+    if (modalInLiveWords) {
+      onRemoveLiveWord(entry.id);
+      setLiveRegistration({ id: entry.id, message: 'Đã bỏ khỏi danh sách Tự do.' });
+      return;
+    }
+    setLiveRegistration({ id: entry.id, pending: true });
+    let message;
+    try {
+      const result = await prepareQipedcLive(entry.id);
+      const prepared = result.entries[0];
+      if (!prepared?.ready) {
+        message = 'Chưa lấy đủ điểm bàn tay từ video mẫu. Hãy thử lại.';
+      } else if (prepared.builtin) {
+        message = 'Ký hiệu này đã có sẵn trong Tự do.';
+      } else if (liveQipedcWords.length >= result.max_extra_words) {
+        message = `Danh sách đã có ${result.max_extra_words} ký hiệu thêm. Hãy bỏ một ký hiệu trước khi thêm.`;
+      } else {
+        onAddLiveWord(prepared);
+        message = 'Đã thêm vào Camera → Từ → Tự do → Tất cả.';
+      }
+    } catch {
+      message = 'Chưa chuẩn bị được video mẫu. Hãy thử lại.';
+    }
+    setLiveRegistration({ id: entry.id, message });
+  };
   // Mở chi tiết từ → tải phần diễn tả ký hiệu (phân tích từ video)
   useEffect(() => {
     if (!modal?.id) return undefined;
@@ -58,10 +90,10 @@ export default function VSLDictionaryExplorer({ onSelectSignFor3D }) {
   const counts = useMemo(() => ({
     common: entries.filter((e) => e.common && !e.fingerspelling).length,
     all: entries.length,
-    camera: entries.filter((e) => e.sstcn_index !== null && e.sstcn_index !== undefined).length,
+    camera: entries.filter((e) => e.sstcn_index != null || liveIds.has(e.id)).length,
     robot: entries.filter((e) => e.pose_key || e.motion_id).length,
     alphabet: entries.filter((e) => e.fingerspelling).length,
-  }), [entries]);
+  }), [entries, liveIds]);
 
   const posOptions = useMemo(() => {
     const c = {};
@@ -74,8 +106,9 @@ export default function VSLDictionaryExplorer({ onSelectSignFor3D }) {
 
   const filtered = useMemo(() => {
     let list = entries;
-    if (filter === 'common') list = list.filter((e) => e.common && !e.fingerspelling);
-    else if (filter === 'camera') list = list.filter((e) => e.sstcn_index !== null && e.sstcn_index !== undefined).sort((a, b) => a.sstcn_index - b.sstcn_index);
+    if (filter === 'common' && !searchTerm.trim()) list = list.filter((e) => e.common && !e.fingerspelling);
+    else if (filter === 'camera') list = list.filter((e) => e.sstcn_index != null || liveIds.has(e.id))
+      .sort((a, b) => (a.sstcn_index ?? Infinity) - (b.sstcn_index ?? Infinity));
     else if (filter === 'robot') list = list.filter((e) => e.pose_key || e.motion_id);
     else if (filter === 'alphabet') list = list.filter((e) => e.fingerspelling);
     if (pos) list = list.filter((e) => (e.pos || '').trim() === pos);
@@ -96,7 +129,7 @@ export default function VSLDictionaryExplorer({ onSelectSignFor3D }) {
       list = scored.sort((a, b) => a[0] - b[0] || a[1].rank - b[1].rank).map((x) => x[1]);
     }
     return list;
-  }, [entries, filter, pos, searchTerm]);
+  }, [entries, filter, pos, searchTerm, liveIds]);
 
   // Nhờ backend tải trước video của các ô đầu danh sách (chờ người dùng gõ xong 0,6 giây)
   useEffect(() => {
@@ -173,7 +206,7 @@ export default function VSLDictionaryExplorer({ onSelectSignFor3D }) {
       {status === 'offline' && (
         <div className="glass-panel" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
           <WifiOff size={26} />
-          Không kết nối được Backend (http://127.0.0.1:8000). Hãy chạy <code>python -m uvicorn backend.app:app --reload</code> rồi tải lại trang.
+          Không tải được từ điển. Hãy tải lại trang để thử kết nối với máy chủ.
         </div>
       )}
 
@@ -227,10 +260,12 @@ export default function VSLDictionaryExplorer({ onSelectSignFor3D }) {
                     {item.pos && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.pos}</span>}
                   </div>
                   <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                    {item.sstcn_index !== null && item.sstcn_index !== undefined && (
+                    {(item.sstcn_index != null || liveIds.has(item.id)) && (
                       <span className="badge badge-emerald" style={{ fontSize: '10px' }}><Camera size={10} /> Camera</span>
                     )}
                     {(item.pose_key || item.motion_id) && <span className="badge badge-cyan" style={{ fontSize: '10px' }}><Bot size={10} /> Robot</span>}
+                    {item.region === 'N' && <span className="badge" style={{ fontSize: '10px' }}>Miền Nam</span>}
+                    {item.no_south && !item.fingerspelling && <span className="badge" style={{ fontSize: '10px', color: '#fbbf24' }}>Chưa có miền Nam</span>}
                   </div>
                   {(item.definition || item.how_to) && (
                     <p style={{
@@ -241,6 +276,11 @@ export default function VSLDictionaryExplorer({ onSelectSignFor3D }) {
                     </p>
                   )}
                   <div style={{ flex: 1 }} />
+                  {onPractice && videoOf(item) && (
+                    <button type="button" className="btn btn-secondary" onClick={() => onPractice(item)}>
+                      <Camera size={14} /> Luyện bằng camera
+                    </button>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid var(--border-subtle)' }}>
                     {videoOf(item) ? (
                       <button onClick={() => openModal(item)} style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
@@ -288,8 +328,33 @@ export default function VSLDictionaryExplorer({ onSelectSignFor3D }) {
               <button onClick={() => setModal(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><X size={22} /></button>
             </div>
 
-            {videoOf(modal) && (
-              <SmoothVideo url={videoOf(modal)} poster={modal.thumb_url} />
+            {videoOf(modal) ? (
+              <>
+                <SmoothVideo url={videoOf(modal)} poster={modal.thumb_url} />
+                {onPractice && (
+                  <button type="button" className="btn btn-primary" onClick={() => onPractice(modal)}>
+                    <Camera size={14} /> Luyện bằng camera
+                  </button>
+                )}
+                {onAddLiveWord && (
+                  <button type="button" className="btn btn-secondary" onClick={() => toggleLiveWord(modal)}
+                    disabled={modalBuiltin || Boolean(liveRegistration?.pending)} style={{ marginInlineStart: 8, marginBlockStart: 8 }}>
+                    {liveRegistration?.pending && liveRegistration.id === modal.id ? 'Đang chuẩn bị mẫu…'
+                      : modalBuiltin ? 'Có sẵn trong Tự do' : modalInLiveWords ? 'Bỏ khỏi Tự do' : 'Thêm vào Tự do'}
+                  </button>
+                )}
+                {liveRegistration?.id === modal.id && liveRegistration.message && (
+                  <p role="status" style={{ fontSize: 12, marginBlock: 8 }}>{liveRegistration.message}</p>
+                )}
+                <p style={{ fontSize: 11.5, color: 'var(--text-muted)', margin: '6px 0 0' }}>
+                  Video: {modal.region_label || 'QIPEDC'} · ứng dụng lấy ký hiệu miền Nam làm chuẩn
+                </p>
+              </>
+            ) : !modal.fingerspelling && (
+              <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.35)', fontSize: 13, lineHeight: 1.5 }}>
+                Danh mục QIPEDC chưa có video ký hiệu <strong>miền Nam</strong> (hoặc dùng chung cả nước) cho từ này.
+                Khi diễn trong câu, robot sẽ đánh vần từ bằng bảng chữ cái ngón tay.
+              </div>
             )}
 
             {modal.definition && <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '12px 0 0', lineHeight: 1.5 }}><strong>Nghĩa: </strong>{modal.definition}</p>}

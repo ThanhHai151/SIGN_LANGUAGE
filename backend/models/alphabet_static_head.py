@@ -91,9 +91,9 @@ class VSLStaticAlphabetHead(nn.Module):
         feat_72 = arr[:72]
         self.eval()
         with torch.no_grad():
-            inp = torch.from_numpy(feat_72).unsqueeze(0)
+            inp = torch.from_numpy(feat_72).unsqueeze(0).to(self.net[0].weight)
             logits = self.forward(inp)
-            probs = F.softmax(logits, dim=-1).squeeze(0).numpy()
+            probs = F.softmax(logits, dim=-1).squeeze(0).cpu().numpy()
             
         top_indices = np.argsort(probs)[::-1]
         top_1_idx = int(top_indices[0])

@@ -21,12 +21,17 @@ from fastapi.responses import Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional, Union, Dict, Any, Literal
 
 from backend.models.sign_model import CLASSES
 from backend.models.vsl_dictionary import ALL_SIGNS, VSL_ALPHABET, VSL_VOCABULARY
 from backend.vision.recognizer import VSLRecognizer
+from backend.vision.qipedc_live import (
+    BUILTIN_WORDS, DEFAULT_WORDS, MAX_EXTRA_WORDS,
+    lost_hand_during_interaction, match_live_words, prepare_live_reference,
+)
+from backend.vision.qipedc_practice import TIME_SIGN_ENTRY, TIME_SIGN_VIDEO
 from backend.vision.alphabet_classifier import O_D_TI_MAX, O_IDX_STRAIGHT_MAX
 from backend.nlp.text_to_vsl import text_to_vsl_glosses
 from backend.models import video_cache
@@ -110,21 +115,43 @@ class PilotEvaluationRequest(BaseModel):
     frames: Optional[List[Dict[str, Any]]] = None
 
 class SequenceRequest(BaseModel):
-    sequence: List[List[List[float]]]  # Chuỗi 30 frames x 75 joints x 3 coords
+    sequence: List[List[List[float]]]  # Chuỗi T frames x 75 joints x 3 coords
     threshold: Optional[float] = 0.65
     mode: Optional[str] = None
+    topic_id: Optional[str] = None
+    timestamps: Optional[List[float]] = None
     debug_meta: Optional[Dict[str, Any]] = None
+    live_words: bool = False
+    qipedc_entries: List[str] = Field(default_factory=list, max_length=MAX_EXTRA_WORDS)
+    include_diagnostic: bool = False
+    aspect_ratio: float = Field(default=1.0, ge=0.25, le=4.0)
+
+class CalibrationSampleRequest(BaseModel):
+    label: str
+    entry_id: Optional[str] = None
+    sequence: List[List[List[float]]]
+    timestamps: Optional[List[float]] = None
+    signer_id: Optional[str] = "personal"
+
+class QipedcPracticeRequest(BaseModel):
+    sequence: List[List[List[float]]] = Field(min_length=4, max_length=180)
+    aspect_ratio: float = Field(default=1.0, ge=0.25, le=4.0)
+    mirror: bool = False
 
 class TextToSignRequest(BaseModel):
     text: str
 
 @app.get("/api/health")
 def health_check():
+    sstcn_meta = recognizer.get_sstcn_topics_info()
     return {
         "status": "online",
         "pytorch_version": torch.__version__,
         "cuda_available": torch.cuda.is_available(),
-        "sstcn_classes": 102,
+        "sstcn_classes": sstcn_meta["num_classes"],
+        "sstcn_word_classes": sstcn_meta["word_classes_count"],
+        "sstcn_preprocessing_version": sstcn_meta["preprocessing_version"],
+        "sstcn_topics_count": len(sstcn_meta["topics"]),
         "total_classes": len(CLASSES),
         "total_vocabulary": len(VSL_VOCABULARY),
         "total_alphabet": len(VSL_ALPHABET),
@@ -180,9 +207,9 @@ def get_lexicon(
     elif filter == "camera":
         items = sorted([e for e in items if e.get("sstcn_index") is not None], key=lambda e: e["sstcn_index"])
     elif filter == "robot":
-        from backend.models.lexicon import motion_id_of, motion_ids
+        from backend.models.lexicon import motion_id_of, motion_ids, robot_pose_key
         avail = motion_ids()
-        items = [e for e in items if e.get("pose_key") or motion_id_of(e, avail)]
+        items = [e for e in items if robot_pose_key(e) or motion_id_of(e, avail)]
     elif filter == "alphabet":
         items = [e for e in items if e.get("fingerspelling")]
     if q:
@@ -193,7 +220,7 @@ def get_lexicon(
         items = items[offset:offset + limit]
     return {
         "success": True,
-        "meta": lex["meta"],
+        "meta": {**lex["meta"], "live_qipedc_ids": BUILTIN_WORDS},
         "total": total,
         "entries": [compact_entry(e) for e in items],
     }
@@ -238,6 +265,68 @@ def warm_common_videos():
 def mediaid_of(entry):
     m = video_cache.VIDEO_URL_RE.search(entry.get("video_url") or "")
     return m.group(1) if m else None
+
+
+def _qipedc_practice_entry(entry_id, video_id):
+    entry = load_lexicon()["by_id"].get(entry_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Mục từ này chưa có video mẫu QIPEDC.")
+    default = mediaid_of(entry)
+    available = {default, *(mediaid_of({"video_url": variant.get("url")}) for variant in entry.get("variants", []))}
+    selected = video_id or default
+    if not selected or selected not in available:
+        raise HTTPException(status_code=404, detail="Mục từ này chưa có video mẫu QIPEDC phù hợp.")
+    return entry, selected
+
+
+def _live_qipedc_entries(extra_ids=()):
+    entries = load_lexicon()["by_id"]
+    return [(entry_id, video_id)
+            for entry_id in dict.fromkeys((*DEFAULT_WORDS, *extra_ids))
+            if entry_id != TIME_SIGN_ENTRY and (video_id := mediaid_of(entries.get(entry_id, {})))]
+
+
+@app.post("/api/qipedc/live/prepare")
+def prepare_qipedc_live(entry_id: Optional[str] = None):
+    ids = (entry_id,) if entry_id else BUILTIN_WORDS
+    prepared = []
+    for item in ids:
+        entry, video_id = _qipedc_practice_entry(item, None)
+        try:
+            ready = prepare_live_reference(video_id)
+        except (ImportError, OSError, RuntimeError, ValueError):
+            ready = False
+        prepared.append({"id": item, "word": entry["word"], "ready": ready,
+                         "builtin": item in BUILTIN_WORDS})
+    return {"entries": prepared, "max_extra_words": MAX_EXTRA_WORDS}
+
+
+@app.post("/api/qipedc/practice/{entry_id}/prepare")
+def prepare_qipedc_practice(entry_id: str, video_id: Optional[str] = None):
+    from backend.vision.qipedc_practice import prepare_reference
+
+    _, video_id = _qipedc_practice_entry(entry_id, video_id)
+    try:
+        prepare_reference(video_id)
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="Cần cài MediaPipe 0.10.21 để trích xuất video mẫu.") from exc
+    except (OSError, RuntimeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail="Chưa trích được mẫu từ video QIPEDC. Hãy thử lại hoặc chọn video khác.") from exc
+    return {"success": True, "video_id": video_id}
+
+
+@app.post("/api/qipedc/practice/{entry_id}/match")
+def match_qipedc_practice(entry_id: str, req: QipedcPracticeRequest, video_id: Optional[str] = None):
+    from backend.vision.qipedc_practice import compare_recording
+
+    entry, video_id = _qipedc_practice_entry(entry_id, video_id)
+    try:
+        result = compare_recording(video_id, req.sequence, aspect_ratio=req.aspect_ratio, mirror=req.mirror)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"success": True, "entry_id": entry_id, "word": entry["word"], **result}
 
 
 @app.get("/api/media/diagnose")
@@ -285,6 +374,35 @@ def learn_motion(req: LearnRequest):
     → chuyển sang góc khớp robot, lưu lại và trả về để robot diễn ngay."""
     from backend.models.motion_learn import learn
     return learn(req.model_dump() if hasattr(req, "model_dump") else req.dict())
+
+
+@app.post("/api/motion/import")
+async def import_raw_motions(request: Request):
+    """Nhập HÀNG LOẠT điểm khớp đã trích từ video (công cụ cho nhà phát triển).
+
+    Nhận form (application/x-www-form-urlencoded) với trường data = base64(gzip(JSON danh sách
+    {id, fps, dur, frames})) — gửi được bằng một form POST thông thường từ trang QIPEDC (nơi kịch bản
+    extract_motion_browser.js lưu kết quả), không cần quyền gọi API khác nguồn. Mỗi mục được kiểm tra
+    và xử lý y như /api/motion/learn (lưu điểm khớp gốc, chuyển sang robot, viết diễn tả)."""
+    import gzip
+    from urllib.parse import parse_qs
+    from backend.models.motion_learn import learn
+    body = await request.body()
+    try:
+        data = parse_qs(body.decode("ascii")).get("data", [""])[0]
+        raws = json.loads(gzip.decompress(base64.b64decode(data)).decode("utf-8"))
+        if not isinstance(raws, list):
+            raise ValueError
+    except Exception:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail="Dữ liệu không hợp lệ")
+
+    def run():
+        ok, bad = [], []
+        for raw in raws[:400]:
+            r = learn(raw if isinstance(raw, dict) else {})
+            (ok if r.get("success") else bad).append(str((raw or {}).get("id"))[:40] if r.get("success") else [str((raw or {}).get("id"))[:40], r.get("reason")])
+        return {"success": True, "imported": len(ok), "failed": bad, "ids": ok}
+    return await run_in_threadpool(run)
 
 
 @app.get("/api/lexicon/{entry_id}")
@@ -806,19 +924,182 @@ def list_pilot_evaluations():
 @app.post("/api/recognize_sequence")
 def recognize_sequence(req: SequenceRequest, request: Request):
     """
-    Nhận diện chuỗi chuyển động ký hiệu VSL qua mô hình SSTCN_Attention (30 frames x 75 joints).
-    Độ chính xác cao vượt trội (93.87%) trên 102 lớp từ vựng VSL.
+    Nhận diện chuỗi chuyển động ký hiệu VSL qua mô hình SSTCN_Attention (T frames x 75 joints).
+    Hỗ trợ tự động chuẩn hóa body-centric v2, lọc chủ đề topic_id và adaptive timestamp resampling.
     """
     try:
+        mode = req.mode or request.headers.get("x-conversion-mode")
+        live_words = req.live_words and mode == "words"
+        sequence, timestamps = req.sequence, req.timestamps
+        diagnostic = {}
+        if live_words:
+            from backend.vision.qipedc_practice import analyze_live_words
+
+            window = sequence[-120:]
+            details = analyze_live_words(
+                window, req.aspect_ratio,
+                enable_time_sign=req.topic_id in (None, "", "Bài 2 - Số đếm và Thời gian"),
+                timestamps=timestamps[-120:] if timestamps is not None and len(timestamps) == len(sequence) else None,
+            )
+            if details["motion_detected"] and not req.topic_id:
+                entries = _live_qipedc_entries(req.qipedc_entries)
+                if details["status"] == "matched":
+                    entries.append((TIME_SIGN_ENTRY, TIME_SIGN_VIDEO))
+                generic = match_live_words(window, req.aspect_ratio, entries)
+                if generic and generic.get("entry_id") != TIME_SIGN_ENTRY:
+                    details = generic
+            if details["motion_detected"] and details["status"] not in ("matched", "word_matched", "ambiguous_word"):
+                if lost_hand_during_interaction(window, req.aspect_ratio):
+                    details = {"motion_detected": True, "status": "lost_hand_during_interaction"}
+            if req.include_diagnostic:
+                diagnostic = {"diagnostic": details}
+            active = details["motion_detected"]
+            if details["status"] in ("matched", "word_matched"):
+                entry = load_lexicon()["by_id"][details.get("entry_id", TIME_SIGN_ENTRY)]
+                return {"success": True, "data": {
+                    "success": True, "sign": entry["word"], "label": entry["word"],
+                    "entry_id": entry["id"], "category": "QIPEDC", "source": "qipedc_template",
+                    "confidence": details["similarity"], "video_url": entry["video_url"], "top_k": [],
+                    "match_method": details.get("match_method"),
+                    "confirmed": False, "new_token": None,
+                    **diagnostic,
+                }}
+            missing_tracking = details["status"] in ("missing_both_hands", "tracking_gaps", "lost_hand_during_interaction")
+            ambiguous = details["status"] == "ambiguous_word"
+            if ambiguous or missing_tracking or not active or len(sequence) < 30:
+                label = "Động tác gần nhiều ký hiệu. Hãy thử lại." if ambiguous else (
+                    "Chưa đủ dữ liệu bàn tay để xác nhận" if missing_tracking else "Đang chờ động tác từ vựng…"
+                )
+                if details["status"] == "lost_hand_during_interaction":
+                    label = "Mất dấu một tay khi hai tay ở gần nhau. Hãy giữ cả hai cổ tay trong khung."
+                return {"success": True, "data": {
+                    "success": True, "sign": "NEUTRAL", "label": label,
+                    "confidence": 0.0, "top_k": [], "confirmed": False, "new_token": None,
+                    "motion_detected": active,
+                    **diagnostic,
+                }}
+            timestamps = timestamps[-30:] if timestamps is not None and len(timestamps) == len(sequence) else None
+            sequence = sequence[-30:]
         result = recognizer.predict_sequence(
-            sequence_data=req.sequence,
+            sequence_data=sequence,
             threshold=req.threshold,
-            mode=req.mode or request.headers.get("x-conversion-mode"),
-            debug_meta=req.debug_meta
+            mode=mode,
+            debug_meta=req.debug_meta,
+            topic_id=req.topic_id,
+            timestamps=timestamps,
+            confirm=not live_words,
         )
+        result.update(diagnostic)
         return {"success": True, "data": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/sstcn/topics")
+def get_sstcn_topics():
+    """Trả về danh mục chủ đề và từ vựng động của checkpoint SSTCN đang nạp."""
+    try:
+        info = recognizer.get_sstcn_topics_info()
+        return {"success": True, **info}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _calibration_dir() -> str:
+    base = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "personal_calibration")
+    os.makedirs(base, exist_ok=True)
+    return base
+
+
+def _safe_slug(text: str) -> str:
+    cleaned = re.sub(r"[^a-zA-Z0-9_\-]+", "_", norm_key(text).replace(" ", "_")).strip("_")
+    return cleaned or "sign"
+
+
+@app.post("/api/calibration/save_sample")
+def save_calibration_sample(req: CalibrationSampleRequest):
+    """Lưu mẫu 75 khớp Holistic do người dùng tự quay để fine-tune cá nhân (Personal Calibration)."""
+    from backend.vision.skeleton_norm import resample_sequence_by_timestamps, resample_sequence_linear
+
+    try:
+        label = (req.label or "").strip()
+        if not label:
+            raise HTTPException(status_code=400, detail="label không được để trống")
+        arr = np.asarray(req.sequence, dtype=np.float32)
+        if arr.ndim != 3 or arr.shape[1:] != (75, 3) or len(arr) < 4:
+            raise HTTPException(status_code=400, detail=f"Kích thước chuỗi không hợp lệ: {arr.shape}")
+        if not np.all(np.isfinite(arr)):
+            arr = np.nan_to_num(arr, nan=0.0, posinf=0.0, neginf=0.0)
+        if not np.any(arr):
+            raise HTTPException(status_code=400, detail="Chuỗi landmark toàn 0")
+
+        if req.timestamps and len(req.timestamps) == len(arr):
+            resampled = resample_sequence_by_timestamps(arr, req.timestamps, target_len=30)
+        else:
+            resampled = resample_sequence_linear(arr, target_len=30)
+
+        cal_root = _calibration_dir()
+        slug = _safe_slug(label)
+        label_dir = os.path.join(cal_root, slug)
+        os.makedirs(label_dir, exist_ok=True)
+
+        ts_ms = int(time.time() * 1000)
+        npy_name = f"sample_{ts_ms}.npy"
+        meta_name = f"sample_{ts_ms}.json"
+        np.save(os.path.join(label_dir, npy_name), resampled.astype(np.float32))
+        meta = {
+            "label": label,
+            "entry_id": req.entry_id,
+            "signer_id": req.signer_id or "personal",
+            "raw_frames": int(len(arr)),
+            "saved_shape": [30, 75, 3],
+            "created_at_ms": ts_ms,
+            "file": npy_name,
+        }
+        with open(os.path.join(label_dir, meta_name), "w", encoding="utf-8") as f:
+            json.dump(meta, f, ensure_ascii=False, indent=2)
+
+        sample_count = len([f for f in os.listdir(label_dir) if f.endswith(".npy")])
+        return {
+            "success": True,
+            "label": label,
+            "slug": slug,
+            "sample_count": sample_count,
+            "file": npy_name,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/calibration/summary")
+def get_calibration_summary():
+    """Thống kê số lượng mẫu Personal Calibration đã ghi theo từng nhãn."""
+    cal_root = _calibration_dir()
+    items = []
+    total = 0
+    for slug in sorted(os.listdir(cal_root)):
+        sub = os.path.join(cal_root, slug)
+        if not os.path.isdir(sub):
+            continue
+        npys = [f for f in os.listdir(sub) if f.endswith(".npy")]
+        if not npys:
+            continue
+        label = slug
+        metas = sorted([f for f in os.listdir(sub) if f.endswith(".json")])
+        entry_id = None
+        if metas:
+            try:
+                with open(os.path.join(sub, metas[-1]), "r", encoding="utf-8") as f:
+                    m = json.load(f)
+                    label = m.get("label") or slug
+                    entry_id = m.get("entry_id")
+            except Exception:
+                pass
+        total += len(npys)
+        items.append({"slug": slug, "label": label, "entry_id": entry_id, "count": len(npys)})
+    return {"success": True, "total_samples": total, "labels": items}
 
 @app.get("/api/vsl_102_classes")
 def get_vsl_102_classes():
@@ -883,6 +1164,32 @@ def recognize_frame(req: FrameRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/letters")
+def fingerspell_alphabet():
+    """Toàn bộ bảng chữ cái ngón tay (chữ cái + dấu thanh) — giao diện tải sẵn một lần để chọn chữ là robot diễn ngay."""
+    from backend.nlp.text_to_vsl import letter_clips, _letter_item, remove_accents
+    from backend.models.lexicon import motion_ids
+    lex, avail = load_lexicon(), motion_ids()
+    tones = ("sắc", "huyền", "hỏi", "ngã", "nặng")
+    items = {k: _letter_item(k, "" if k in tones else remove_accents(k).upper(), lex, avail, k, is_tone=k in tones)
+             for k in letter_clips()}
+    return {"success": True, "letters": items}
+
+
+@app.get("/api/letter/{name}")
+def fingerspell_letter(name: str):
+    """Một chữ cái của bảng chữ cái ngón tay tiếng Việt (A, Ă, Â… hoặc dấu thanh: sắc, huyền, hỏi, ngã, nặng)
+    — robot diễn đoạn giữ hình chữ cái học từ video QIPEDC."""
+    from backend.nlp.text_to_vsl import letter_clips, _letter_item, remove_accents
+    from backend.models.lexicon import motion_ids
+    key = norm_key(name)
+    if key not in letter_clips():
+        raise HTTPException(status_code=404, detail="Không có chữ cái này")
+    is_tone = key in ("sắc", "huyền", "hỏi", "ngã", "nặng")
+    item = _letter_item(key, "" if is_tone else remove_accents(key).upper(), load_lexicon(), motion_ids(), key, is_tone=is_tone)
+    return {"success": True, "sequence": [item]}
+
 
 @app.post("/api/text_to_sign")
 def convert_text_to_sign(req: TextToSignRequest):

@@ -39,7 +39,11 @@ HAND_POSES_JS = os.path.join(ROOT, "src", "utils", "handPoses.js")
 
 QIPEDC_BASE = "https://qipedc.moet.gov.vn"
 COMMON_TOP_N = 700          # số từ QIPEDC thông dụng nhất được đánh dấu "common"
-REGION_ORDER = ["B", "T", "N"]  # ưu tiên miền Bắc làm mặc định
+# Chuẩn của ứng dụng: KÝ HIỆU MIỀN NAM. Chỉ giữ video miền Nam (hậu tố N) và video dùng chung cả nước
+# (không hậu tố vùng); bỏ hẳn video miền Bắc/Trung. Từ chỉ có video miền Bắc/Trung → không có video
+# (robot đánh vần, từ điển ghi rõ "chưa có ký hiệu miền Nam").
+REGION_ORDER = ["N"]
+SKIPPED_REGIONS = {"B", "T"}
 REGION_NAMES = {"B": "Miền Bắc", "T": "Miền Trung", "N": "Miền Nam"}
 
 # Từ tiếng Việt → khóa tư thế robot có sẵn trong handPoses.js nhưng không có trong VSL_VOCABULARY
@@ -185,20 +189,22 @@ def build():
         for vid in g["ids"]:
             base, region = split_region(vid)
             url = f"{QIPEDC_BASE}/videos/{vid}.mp4"
+            if region in SKIPPED_REGIONS:
+                continue
             if region and region not in videos:
                 videos[region] = url
             else:
                 others.append(url)
         variants = [{"region": r, "label": REGION_NAMES[r], "url": videos[r]} for r in REGION_ORDER if r in videos]
         for i, url in enumerate(others):
-            variants.append({"region": "", "label": "Cách thể hiện" + (f" {i + 1}" if len(others) > 1 else ""), "url": url})
-        primary_id = g["ids"][0]
-        for r in REGION_ORDER:
-            if r in videos:
-                primary_id = next(v for v in g["ids"] if v.endswith(r))
-                break
-        if others and not videos:
-            primary_id = g["ids"][0]
+            variants.append({"region": "", "label": "Toàn quốc" + (f" – cách {i + 1}" if len(others) > 1 else ""), "url": url})
+        # video mặc định: miền Nam → dùng chung cả nước → (không có)
+        primary_id = None
+        if "N" in videos:
+            primary_id = next(v for v in g["ids"] if v.endswith("N"))
+        elif others:
+            primary_id = next(v for v in g["ids"] if split_region(v)[1] not in SKIPPED_REGIONS)
+        region = "N" if "N" in videos else ("" if others else None)
 
         eid = "q-" + slug(g["word"])
         n = 2
@@ -218,10 +224,12 @@ def build():
             "how_to": "",
             "source": "QIPEDC",
             "category": g["pos"] or "Khác",
-            "video_url": f"{QIPEDC_BASE}/videos/{primary_id}.mp4",
-            "thumb_url": f"{QIPEDC_BASE}/thumbs/{primary_id}.png",
+            "video_url": f"{QIPEDC_BASE}/videos/{primary_id}.mp4" if primary_id else None,
+            "thumb_url": f"{QIPEDC_BASE}/thumbs/{primary_id}.png" if primary_id else None,
             "image_url": g["image"],
             "variants": variants,
+            "region": region,          # "N" miền Nam, "" dùng chung cả nước, None: chỉ có miền Bắc/Trung
+            "no_south": primary_id is None,
             "sstcn_index": None,
             "pose_key": None,
             "proper_noun": proper,
@@ -301,6 +309,8 @@ def build():
                 "thumb_url": None,
                 "image_url": None,
                 "variants": [curriculum_variant],
+                "region": "GT",
+                "no_south": True,
                 "sstcn_index": s["index"],
                 "pose_key": None,
                 "proper_noun": False,
@@ -351,6 +361,8 @@ def build():
                 "thumb_url": None,
                 "image_url": None,
                 "variants": [],
+                "region": None,
+                "no_south": True,
                 "sstcn_index": None,
                 "pose_key": key,
                 "proper_noun": False,
@@ -387,10 +399,14 @@ def build():
         "common": sum(1 for e in entries if e["common"]),
         "sstcn_linked": sum(1 for e in entries if e["sstcn_index"] is not None),
         "robot_pose_linked": sum(1 for e in entries if e["pose_key"]),
+        "standard_region": "N",
+        "south": sum(1 for e in entries if e.get("region") == "N"),
+        "nationwide": sum(1 for e in entries if e.get("region") == ""),
+        "no_south": sum(1 for e in entries if e.get("region") is None and e.get("source") == "QIPEDC"),
         "sources": {
             "QIPEDC": {
                 "url": "https://qipedc.moet.gov.vn/dictionary",
-                "description": "Danh mục Ngôn ngữ ký hiệu tiếng Việt (~4.000 ký hiệu) – Dự án QIPEDC, Bộ Giáo dục và Đào tạo; video người Điếc 3 miền Bắc/Trung/Nam.",
+                "description": "Danh mục Ngôn ngữ ký hiệu tiếng Việt (~4.000 ký hiệu) – Dự án QIPEDC, Bộ Giáo dục và Đào tạo; video người Điếc. Ứng dụng lấy ký hiệu MIỀN NAM làm chuẩn: chỉ dùng video miền Nam và video dùng chung cả nước.",
                 "entries": sum(1 for e in entries if e["source"] == "QIPEDC"),
             },
             "Giáo trình VSL (102 từ)": {

@@ -3,7 +3,18 @@
  * Giao tiếp thời gian thực giữa Frontend React và Python FastAPI Backend
  */
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+import { API_BASE_URL } from './apiBase';
+
+export async function fetchLetters() {
+  const response = await fetch(`${API_BASE_URL}/api/letters`);
+  return response.ok ? response.json() : null;
+}
+
+export async function fetchLetter(char) {
+  const response = await fetch(`${API_BASE_URL}/api/letter/${encodeURIComponent(char)}`);
+  const data = response.ok ? await response.json() : null;
+  return data?.sequence?.[0] ?? null;
+}
 
 export async function checkBackendHealth() {
   try {
@@ -118,12 +129,24 @@ export function fetchMotion(id) {
   return motionCache.get(id);
 }
 
-export async function sendSequenceForRecognition(sequence, threshold = 0.65, mode = 'words', debugMeta = null) {
+export async function sendSequenceForRecognition(sequence, threshold = 0.65, mode = 'words', debugMeta = null, options = null) {
   try {
     const payload = { sequence, threshold, mode };
     if (debugMeta) {
       payload.debug_meta = debugMeta;
     }
+    if (options && options.topic_id) {
+      payload.topic_id = options.topic_id;
+    }
+    if (options && Array.isArray(options.timestamps) && options.timestamps.length === sequence.length) {
+      payload.timestamps = options.timestamps;
+    }
+    if (options?.live_words) {
+      payload.live_words = true;
+      payload.aspect_ratio = options.aspect_ratio;
+      if (options.qipedc_entries?.length) payload.qipedc_entries = options.qipedc_entries;
+    }
+    if (options?.include_diagnostic) payload.include_diagnostic = true;
     const res = await fetch(`${API_BASE_URL}/api/recognize_sequence`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -137,6 +160,66 @@ export async function sendSequenceForRecognition(sequence, threshold = 0.65, mod
       success: false,
       error: err.message
     };
+  }
+}
+
+export async function requestQipedcPractice(entryId, videoId, recording) {
+  const action = recording ? 'match' : 'prepare';
+  const res = await fetch(`${API_BASE_URL}/api/qipedc/practice/${encodeURIComponent(entryId)}/${action}?video_id=${encodeURIComponent(videoId)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: recording ? JSON.stringify(recording) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Không chấm được lần ghi này.');
+  return data;
+}
+
+export async function prepareQipedcLive(entryId) {
+  const query = entryId ? `?entry_id=${encodeURIComponent(entryId)}` : '';
+  const response = await fetch(`${API_BASE_URL}/api/qipedc/live/prepare${query}`, { method: 'POST' });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.detail || 'Chưa chuẩn bị được mẫu QIPEDC.');
+  return data;
+}
+
+export async function fetchSSTCNTopics() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/sstcn/topics`);
+    if (!res.ok) throw new Error('Cannot load SSTCN topics');
+    return await res.json();
+  } catch (err) {
+    console.warn('[VSL API] Cannot fetch SSTCN topics:', err);
+    return null;
+  }
+}
+
+export async function saveCalibrationSample({ label, entry_id = null, sequence, timestamps = null, signer_id = 'personal' }) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/calibration/save_sample`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ label, entry_id, sequence, timestamps, signer_id })
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || 'Failed to save calibration sample');
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn('[VSL API] Save calibration error:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function fetchCalibrationSummary() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/calibration/summary`);
+    if (!res.ok) throw new Error('Cannot load calibration summary');
+    return await res.json();
+  } catch (err) {
+    console.warn('[VSL API] Cannot fetch calibration summary:', err);
+    return null;
   }
 }
 
@@ -473,22 +556,29 @@ function clientSideLocalRecognize(landmarks) {
  * Fallback Text-to-Sign Client-side
  */
 function clientSideTextToSign(text) {
-  const words = text.trim().split(/\s+/);
+  // Mất kết nối backend → không có bộ từ vựng để ghép cụm từ / tra chuyển động.
+  // Không giả vờ diễn ký hiệu: robot ĐÁNH VẦN chữ cái ngón tay từng từ (đúng chữ, dù chậm hơn).
+  const toSpell = (w) => w
+    .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase().split('').filter(c => /[A-Z]/.test(c)).slice(0, 12);
+  const words = text.trim().split(/\s+/).map(w => w.replace(/[?!.,;:"“”]+/g, '')).filter(Boolean);
   const sequence = words.map(w => ({
     token: w,
     gloss: w.toUpperCase(),
     label: w.charAt(0).toUpperCase() + w.slice(1),
     type: 'vocabulary',
     duration_ms: 1500,
-    description: `Thực hiện cử chỉ VSL cho từ "${w}"`,
-    avatar_pose: {
-      right_arm: [30, 20, 0],
-      right_wrist: [10, 0, 0],
-      fingers: [1, 1, 1, 1, 1]
-    }
+    description: `Chưa kết nối máy chủ — robot đánh vần chữ cái ngón tay cho từ "${w}"`,
+    pose_key: null,
+    motion_id: null,
+    has_pose: false,
+    spell: toSpell(w),
+    offline: true,
   }));
   return {
     success: true,
+    offline: true,
     input_text: text,
     sequence,
     total_tokens: sequence.length,

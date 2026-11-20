@@ -6,13 +6,15 @@
  * gửi lên backend (/api/motion/learn) để chuyển sang góc khớp robot và lưu lại cho các lần sau.
  */
 import { mediaUrl } from './api';
+import { API_BASE_URL } from './apiBase';
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
 const MP_VER = '0.10.14';
 const MODEL = 'https://storage.googleapis.com/mediapipe-models/holistic_landmarker/holistic_landmarker/float16/latest/holistic_landmarker.task';
+const HAND_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task';
 const FPS = 8;
 
 let holisticPromise = null;
+let handDetector = null; // bộ dò bàn tay độc lập: bù các khung Holistic mất dấu bàn tay
 let ts = 1;
 
 function getHolistic() {
@@ -21,10 +23,19 @@ function getHolistic() {
       const url = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/vision_bundle.mjs`;
       const { FilesetResolver, HolisticLandmarker } = await import(/* @vite-ignore */ url);
       const fs = await FilesetResolver.forVisionTasks(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/wasm`);
+      const { HandLandmarker } = await import(/* @vite-ignore */ url);
+      const make = async (delegate) => {
+        // ngưỡng thấp hơn mặc định (0,5) để bớt mất dấu bàn tay khi tay chuyển động nhanh / ở gần mặt
+        const h = await HolisticLandmarker.createFromOptions(fs, { baseOptions: { modelAssetPath: MODEL, delegate }, runningMode: 'VIDEO', minHandLandmarksConfidence: 0.3 });
+        try {
+          handDetector = await HandLandmarker.createFromOptions(fs, { baseOptions: { modelAssetPath: HAND_MODEL, delegate }, runningMode: 'IMAGE', numHands: 2, minHandDetectionConfidence: 0.3, minHandPresenceConfidence: 0.3 });
+        } catch { handDetector = null; }
+        return h;
+      };
       try {
-        return await HolisticLandmarker.createFromOptions(fs, { baseOptions: { modelAssetPath: MODEL, delegate: 'GPU' }, runningMode: 'VIDEO' });
+        return await make('GPU');
       } catch {
-        return HolisticLandmarker.createFromOptions(fs, { baseOptions: { modelAssetPath: MODEL, delegate: 'CPU' }, runningMode: 'VIDEO' });
+        return make('CPU');
       }
     })().catch((e) => { holisticPromise = null; throw e; });
   }
@@ -59,11 +70,29 @@ async function extract(videoId, onProgress) {
     await new Promise((res) => { v.onseeked = res; v.currentTime = Math.min(t, dur - 0.01); });
     ts += 40;
     const out = holistic.detectForVideo(v, ts);
-    frames.push({
+    const fr = {
       p: pack(out.poseWorldLandmarks?.[0], [0, 11, 12, 13, 14, 15, 16, 23, 24]),
       l: pack(out.leftHandWorldLandmarks?.[0]),
       r: pack(out.rightHandWorldLandmarks?.[0]),
-    });
+    };
+    // Holistic không thấy bàn tay → thử bộ dò bàn tay độc lập, gán cho tay có cổ tay (theo tư thế) gần nhất
+    const pl = out.poseLandmarks?.[0];
+    if (handDetector && pl && (!fr.l || !fr.r)) {
+      try {
+        const hd = handDetector.detect(v);
+        const wrist = { l: pl[15], r: pl[16] };
+        (hd.landmarks || []).forEach((lm, j) => {
+          let best = null;
+          let bd = 1e9;
+          for (const sd of ['l', 'r']) {
+            const d = Math.hypot(lm[0].x - wrist[sd].x, lm[0].y - wrist[sd].y);
+            if (d < bd) { bd = d; best = sd; }
+          }
+          if (best && bd < 0.12 && !fr[best] && hd.worldLandmarks?.[j]) fr[best] = pack(hd.worldLandmarks[j]);
+        });
+      } catch { /* bỏ qua: giữ kết quả Holistic */ }
+    }
+    frames.push(fr);
     onProgress?.((k + 1) / n);
     if (k % 4 === 3) await new Promise((res) => setTimeout(res, 0)); // nhường luồng cho giao diện/robot
   }
