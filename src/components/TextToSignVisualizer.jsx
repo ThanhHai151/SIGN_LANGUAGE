@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, SkipBack, SkipForward, Mic, MicOff, Send, Sparkles, Info, Check, Layers } from 'lucide-react';
+import { Play, Pause, RotateCcw, SkipBack, SkipForward, Mic, MicOff, Send, Box, Type, Layers, List } from 'lucide-react';
 import RobotSigner3D, { SPELL_LETTER_MS } from './RobotSigner3D';
 import MixamoAvatarSigner from './MixamoAvatarSigner';
 import { resolveVietnameseSign } from '../utils/MixamoPoseAdapter';
 import AvatarSequenceCaption from './AvatarSequenceCaption';
 import SignDescription from './SignDescription';
-import { convertTextToVSL, fetchMotion } from '../services/api';
+import { Workspace, WorkspaceDialog } from './Workspace';
+import { convertTextToVSL, fetchLetter, fetchLetters, fetchMotion } from '../services/api';
 import { learnMotion } from '../services/motionLearner';
-import { getHandPoseByGloss } from '../utils/handPoses';
 
 const VIETNAMESE_MARKED_LETTERS = {
   Ă: { base: 'A', mark: 'Dấu breve (˘): bổ sung bằng chuyển động ngắn theo mẫu đánh vần VSL.' },
@@ -45,7 +45,7 @@ const AVATAR_FINGER_DESCRIPTIONS = {
   Y: ['Mở khỏi lòng bàn tay về phía đối diện ngón út', 'Gập vào lòng bàn tay, nằm giữa ngón cái và ngón giữa', 'Gập vào lòng bàn tay cùng ngón trỏ', 'Duỗi và mở sang phía đối diện ngón cái']
 };
 
-export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
+export default function TextToSignVisualizer({ requestText }) {
   const [inputText, setInputText] = useState('Xin chào bạn');
   const [sequence, setSequence] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -56,6 +56,11 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   const [translationId, setTranslationId] = useState(0); // mỗi lần dịch câu mới
   const [viewModel, setViewModel] = useState('avatar');
   const [directSelectedLetter, setDirectSelectedLetter] = useState('');
+  const [controlsTarget, setControlsTarget] = useState(null);
+  const alphabetDialogRef = useRef(null);
+  const detailsDialogRef = useRef(null);
+  const phrasesDialogRef = useRef(null);
+  const tunerHostRef = useRef(null);
 
   const timerRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -70,7 +75,6 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     { key: 'sắc', mark: '´' }, { key: 'huyền', mark: '`' }, { key: 'hỏi', mark: '?' },
     { key: 'ngã', mark: '~' }, { key: 'nặng', mark: '.' },
   ];
-  const [hoverLetter, setHoverLetter] = useState(null);
 
   const PHRASE_SUGGESTIONS = [
     'Xin chào',
@@ -113,8 +117,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
   const lettersRef = useRef(null);
   useEffect(() => {
     let cancelled = false;
-    fetch('http://127.0.0.1:8000/api/letters')
-      .then((r) => (r.ok ? r.json() : null))
+    fetchLetters()
       .then((data) => {
         if (cancelled || !data?.letters) return;
         lettersRef.current = data.letters;
@@ -136,9 +139,7 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     let item = lettersRef.current?.[key];
     if (!item) {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/letter/${encodeURIComponent(char)}`);
-        const data = res.ok ? await res.json() : null;
-        item = data?.sequence?.[0];
+        item = await fetchLetter(char);
       } catch { /* mất kết nối backend */ }
     }
     if (item) {
@@ -283,14 +284,15 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     ? `Chữ ${step.avatar_symbol}` : step?.label;
   const currentGloss = (viewModel === 'avatar' && currentStep?.avatar_symbol) || currentStep?.gloss || currentStep?.token || 'A';
   const activeLetter = directSelectedLetter || (isPlaying && /^[a-z]$/i.test(currentGloss.trim()) ? currentGloss.trim() : '');
-  const poseData = getHandPoseByGloss(currentGloss);
+  const learningProgress = currentStep?.video_id ? learning[currentStep.video_id] : null;
   const commonProps = {
     currentStep,
     isPlaying,
     speed: playbackSpeed,
     sequence,
     currentIndex,
-    activeLetter
+    activeLetter,
+    controlsTarget,
   };
 
   // Phân tích trạng thái giải phẫu 5 ngón tay cho bước hiện tại
@@ -523,510 +525,215 @@ export default function TextToSignVisualizer({ ttsEnabled, requestText }) {
     state: avatarDescriptions?.[index] ?? detail.state
   }));
 
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.25fr) minmax(0, 1.2fr)', gap: '24px', padding: '24px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
-      
-      {/* CỘT TRÁI: ROBOT 3D — dính trên màn hình khi cuộn cột phải */}
-      <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: '16px', alignSelf: 'start' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <h2 style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={20} style={{ color: 'var(--primary)' }} />
-              Mô phỏng Ký hiệu VSL 3D
-            </h2>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              Chuyển đổi giữa avatar Mixamo và robot diễn hoạt ký hiệu
-            </p>
-          </div>
-
-          <span className="badge badge-emerald">
-            {isPlaying ? 'Đang Diễn Hoạt' : 'Tạm Dừng'}
-          </span>
-        </div>
-
-        {/* Khung Canvas 3D */}
-        <div style={{
-          height: '600px',
-          width: '100%',
-          background: 'radial-gradient(circle at center, rgba(30, 41, 59, 0.4) 0%, rgba(7, 11, 18, 0.95) 100%)',
-          borderRadius: 'var(--radius-md)',
-          overflow: 'hidden',
-          border: '1px solid var(--border-subtle)',
-          position: 'relative'
-        }}>
-          <div style={{ position: 'absolute', top: '12px', left: '12px', zIndex: 5, display: 'flex', gap: '4px', padding: '4px', borderRadius: '10px', background: 'rgba(8, 15, 28, 0.88)', border: '1px solid var(--border-subtle)', backdropFilter: 'blur(10px)' }}>
-            <button type="button" onClick={() => setViewModel('avatar')} className={`btn ${viewModel === 'avatar' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '7px 10px', fontSize: '12px' }} aria-pressed={viewModel === 'avatar'}>
-              👧 Avatar 3D
-            </button>
-            <button type="button" onClick={() => setViewModel('robot')} className={`btn ${viewModel === 'robot' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '7px 10px', fontSize: '12px' }} aria-pressed={viewModel === 'robot'}>
-              🤖 Robot
-            </button>
-          </div>
-          {viewModel === 'robot' ? (
-            <RobotSigner3D {...commonProps} />
-          ) : (
-            <MixamoAvatarSigner {...commonProps} />
-          )}
-        </div>
-
-        {viewModel === 'avatar' && (
-          <AvatarSequenceCaption sequence={sequence} currentIndex={currentIndex} />
-        )}
-
-        {/* Điều khiển Playback */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: 'rgba(15, 23, 42, 0.6)',
-          padding: '12px 18px',
-          borderRadius: 'var(--radius-md)',
-          border: '1px solid var(--border-subtle)',
-          flexWrap: 'wrap',
-          gap: '12px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button
-              onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
-              disabled={currentIndex === 0}
-              className="btn btn-secondary"
-              style={{ padding: '8px 12px' }}
-              title="Ký hiệu trước"
-            >
-              <SkipBack size={16} />
-            </button>
-
-            <button
-              onClick={() => {
-                if (isPlaying) setDirectSelectedLetter('');
-                setIsPlaying(!isPlaying);
-              }}
-              className="btn btn-primary"
-              style={{ padding: '8px 16px' }}
-            >
-              {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-              {isPlaying ? 'Tạm Dừng' : 'Phát'}
-            </button>
-
-            <button
-              onClick={() => setCurrentIndex(Math.min(sequence.length - 1, currentIndex + 1))}
-              disabled={currentIndex >= sequence.length - 1}
-              className="btn btn-secondary"
-              style={{ padding: '8px 12px' }}
-              title="Ký hiệu tiếp theo"
-            >
-              <SkipForward size={16} />
-            </button>
-
-            <button
-              onClick={() => { setCurrentIndex(0); setIsPlaying(true); }}
-              className="btn btn-secondary"
-              style={{ padding: '8px 12px' }}
-              title="Phát lại từ đầu"
-            >
-              <RotateCcw size={16} />
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-            <span>Tốc độ:</span>
-            {[0.75, 1.0, 1.25, 1.5].map((spd) => (
-              <button
-                key={spd}
-                onClick={() => setPlaybackSpeed(spd)}
-                style={{
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  border: '1px solid var(--border-subtle)',
-                  background: playbackSpeed === spd ? 'var(--primary)' : 'rgba(255, 255, 255, 0.05)',
-                  color: playbackSpeed === spd ? '#fff' : 'var(--text-muted)',
-                  cursor: 'pointer',
-                  fontWeight: '600'
-                }}
-              >
-                {spd}x
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* CỘT PHẢI: BẢNG SOI GIẢI PHẪU CƠ NGÓN TAY VÀ CHỌN CHỮ CÁI A-Z */}
-      <div
-        className="side-scroll"
-        style={{
-          display: 'flex', flexDirection: 'column', gap: '20px',
-          // Cột phải có thanh cuộn riêng: kéo lên/xuống để xem từng khung trong khi robot vẫn đứng yên bên trái
-          position: 'sticky', top: '16px', alignSelf: 'start',
-          maxHeight: 'calc(100vh - 32px)', overflowY: 'scroll', paddingRight: '10px',
-        }}
-      >
-        
-        {/* Diễn tả cụ thể ký hiệu đang diễn */}
-        {currentStep && (
-          <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
-              <strong style={{ fontSize: '20px', fontFamily: 'Outfit, sans-serif' }}>{stepLabel(currentStep)}</strong>
-              {currentStep.pos && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{currentStep.pos}</span>}
-              <span style={{ flex: 1 }} />
-              {currentStep.type === 'vocabulary' && currentStep.region_label && (
-                <span className="badge badge-cyan" style={{ fontSize: '10.5px' }} title="Ứng dụng lấy ký hiệu miền Nam làm chuẩn">
-                  {currentStep.region_label}
-                </span>
-              )}
-              <span className="badge badge-emerald" style={{ fontSize: '10.5px' }}>Diễn tả ký hiệu</span>
-            </div>
-            {currentStep.definition && (
-              <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                <strong style={{ color: 'var(--text-main)' }}>Nghĩa: </strong>{currentStep.definition}
-              </p>
-            )}
-            {currentStep.type === 'vocabulary' && !currentStep.video_id && !currentStep.motion_id && !currentStep.pose_key && (
-              <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.35)', fontSize: 12.5, color: 'var(--text-main)', lineHeight: 1.5 }}>
-                Danh mục QIPEDC chưa có ký hiệu <strong>miền Nam</strong> (hoặc dùng chung cả nước) cho từ này,
-                nên robot đánh vần bằng bảng chữ cái ngón tay thay vì đoán ký hiệu.
-              </div>
-            )}
-            {currentStep.video_id && !currentStep.motion_id && (() => {
-              const st = learning[currentStep.video_id];
-              const pct = typeof st === 'number' ? Math.round(st * 100) : 0;
-              return (
-                <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(34, 211, 238, 0.08)', border: '1px solid rgba(34, 211, 238, 0.3)', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <span style={{ fontSize: 12.5, color: 'var(--text-main)' }}>
-                    {st === 'failed'
-                      ? 'Chưa học được ký hiệu này từ video — robot đánh vần thay thế.'
-                      : `Robot đang học ký hiệu miền Nam này từ video người thật… ${pct}% (trong lúc chờ, robot đánh vần từ)`}
-                  </span>
-                  {st !== 'failed' && (
-                    <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-                      <div style={{ width: `${pct}%`, height: '100%', background: 'var(--primary)', transition: 'width .2s' }} />
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-            <SignDescription step={currentStep} />
-          </div>
-        )}
-
-        {/* Bảng Kiểm tra Chi tiết Trạng thái Đốt Ngón Tay (Finger Anatomical Inspector) — chỉ khi robot có tư thế */}
-        {(currentStep?.has_pose ?? true) && (
-        <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h3 style={{ fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Layers size={18} style={{ color: 'var(--primary)' }} />
-              Trạng Thái Giải Phẫu Cơ Ngón Tay (Cử chỉ: {stepLabel(currentStep)})
-            </h3>
-            <span className="badge badge-cyan" style={{ fontSize: '11px' }}>
-              Khớp MCP / PIP / DIP
-            </span>
-          </div>
-
-          {/* Danh sách trạng thái từng đốt ngón tay */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {fingerDetails.map((f, idx) => (
-              <div
-                key={idx}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '8px 12px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(15, 23, 42, 0.65)',
-                  border: '1px solid var(--border-subtle)',
-                  fontSize: '12px'
-                }}
-              >
-                <strong style={{ color: f.color, minWidth: '100px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: f.color }} />
-                  {f.name}:
-                </strong>
-                <span style={{ color: 'var(--text-secondary)', textAlign: 'right', flex: 1 }}>
-                  {f.state}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        )}
-
-        {/* Bảng chữ cái riêng theo chế độ avatar/robot */}
-        <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
-              {viewModel === 'avatar'
-                ? '🔤 Bảng chữ cái tiếng Việt (avatar) — rà chuột vào A, D, E, O, U để chọn chữ có dấu'
-                : '🎯 Bảng chữ cái tiếng Việt (robot, học từ video QIPEDC) — rà chuột vào A, D, E, O, U để chọn chữ có dấu'}
-            </span>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: '6px' }}>
-            {ALPHABET_LIST.map((char) => {
-              const variants = LETTER_VARIANTS[char] || [];
-              const sel = (c) => currentStep?.type === 'fingerspelling' && currentStep?.word === c.toLowerCase();
-              const isSelected = sel(char) || variants.some(sel);
-              const btnStyle = (on) => ({
-                padding: '8px 0',
-                width: '100%',
-                borderRadius: 'var(--radius-sm)',
-                border: on ? '2px solid var(--primary)' : '1px solid var(--border-subtle)',
-                background: on ? 'linear-gradient(135deg, var(--primary) 0%, #0284c7 100%)' : 'rgba(255, 255, 255, 0.05)',
-                color: on ? '#fff' : 'var(--text-main)',
-                fontWeight: '700',
-                fontSize: '14px',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              });
-              const shown = sel(char) ? char : (variants.find(sel) || char);
-              return (
-                <div
-                  key={char}
-                  style={{ position: 'relative' }}
-                  onMouseEnter={() => variants.length && setHoverLetter(char)}
-                  onMouseLeave={() => setHoverLetter((h) => (h === char ? null : h))}
-                >
-                  <button
-                    onClick={() => handleSelectDirectLetter(char)}
-                    onFocus={() => variants.length && setHoverLetter(char)}
-                    style={{ ...btnStyle(isSelected), position: 'relative' }}
-                    title={variants.length ? `Chữ ${char} — rà chuột để chọn ${variants.join(', ')}` : `Chữ ${char}`}
-                  >
-                    {shown}
-                    {variants.length > 0 && (
-                      <span style={{ position: 'absolute', right: 3, bottom: 1, fontSize: 9, opacity: 0.6 }}>▾</span>
-                    )}
-                  </button>
-                  {hoverLetter === char && variants.length > 0 && (
-                    <div
-                      style={{
-                        position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', zIndex: 20,
-                        paddingTop: 4, display: 'flex',
-                      }}
-                    >
-                      <div style={{
-                        display: 'flex', gap: 4, padding: 4, borderRadius: 8,
-                        background: 'rgba(15, 23, 42, 0.97)', border: '1px solid var(--border-subtle)',
-                        boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
-                      }}>
-                        {[char, ...variants].map((v) => (
-                          <button
-                            key={v}
-                            onClick={() => { handleSelectDirectLetter(v); setHoverLetter(null); }}
-                            style={{ ...btnStyle(sel(v)), width: 38 }}
-                            title={`Chữ ${v}`}
-                          >
-                            {v}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginRight: 4 }}>Dấu thanh:</span>
-            {TONE_LIST.map(({ key, mark }) => {
-              const on = currentStep?.type === 'fingerspelling' && currentStep?.word === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => handleSelectDirectLetter(key)}
-                  style={{
-                    padding: '6px 10px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: on ? '2px solid var(--primary)' : '1px solid var(--border-subtle)',
-                    background: on ? 'linear-gradient(135deg, var(--primary) 0%, #0284c7 100%)' : 'rgba(255, 255, 255, 0.05)',
-                    color: on ? '#fff' : 'var(--text-main)',
-                    fontWeight: '600', fontSize: '12.5px', cursor: 'pointer',
-                  }}
-                  title={`Dấu ${key} cho ${viewModel === 'avatar' ? 'avatar' : 'robot'}`}
-                >
-                  {key} <span style={{ opacity: 0.7 }}>{mark}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Nhập Văn Bản & Giọng Nói Hỗ Trợ Câu Dài Liên Tục */}
-        <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h3 style={{ fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={16} style={{ color: 'var(--primary)' }} />
-              Dịch Đoạn Văn & Diễn Tả Liên Tục (Continuous VSL Discourse)
-            </h3>
-            <span className="badge badge-cyan" style={{ fontSize: '11px' }}>
-              {sequence.length > 0 ? `${currentIndex + 1} / ${sequence.length} ký hiệu` : 'Sẵn sàng'}
-            </span>
-          </div>
-
-          {/* Nút bấm nhanh đưa toàn bộ câu văn dài của người dùng vào */}
-          <div style={{
-            background: 'rgba(56, 189, 248, 0.08)',
-            border: '1px solid rgba(56, 189, 248, 0.25)',
-            borderRadius: 'var(--radius-md)',
-            padding: '10px 14px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <strong style={{ fontSize: '12px', color: 'var(--primary)' }}>
-                ⭐ Đoạn văn dài mẫu thực tế (Câu chuyện cuối tuần):
-              </strong>
-              <button
-                onClick={() => {
-                  const longSample = "Những ngày cuối tuần của tôi không có lịch trình cụ thể vì chúng phụ thuộc vào mức độ bận rộn của tôi trong tuần. Tôi thường dành một ít thời gian cho việc học tập hoặc các dự án cá nhân, nhưng tôi cũng đảm bảo mình có đủ thời gian để thư giãn. Nếu có thể, tôi thích gặp gỡ bạn bè hoặc khám phá những địa điểm mới, vì điều đó cho tôi cơ hội nghỉ ngơi khỏi thói quen thường ngày.";
-                  setInputText(longSample);
-                  handleTranslate(longSample);
-                }}
-                className="btn btn-primary"
-                style={{ padding: '4px 12px', fontSize: '11px', fontWeight: '700' }}
-              >
-                🚀 Nạp & Diễn Tả Liên Tục Cả Câu
-              </button>
-            </div>
-            <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.4' }}>
-              "Những ngày cuối tuần của tôi không có lịch trình cụ thể... Tôi thường dành một ít thời gian cho việc học tập... thích gặp gỡ bạn bè hoặc khám phá những địa điểm mới..."
-            </p>
-          </div>
-
-          {/* Ô nhập Textarea hỗ trợ đoạn văn dài nhiều câu */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <textarea
-              rows={3}
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              placeholder="Nhập hoặc dán đoạn văn bản dài tiếng Việt muốn nhân vật diễn tả liên tục..."
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--bg-input)',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--text-main)',
-                fontFamily: 'var(--font-heading)',
-                fontSize: '13px',
-                lineHeight: '1.5',
-                outline: 'none',
-                resize: 'vertical'
-              }}
-            />
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-              <button
-                onClick={toggleSpeechRecognition}
-                className={`btn ${isListening ? 'btn-danger' : 'btn-secondary'}`}
-                style={{ padding: '8px 12px', fontSize: '12px' }}
-                title={isListening ? "Đang lắng nghe... Bấm để dừng" : "Nói vào micro"}
-              >
-                {isListening ? <MicOff size={14} /> : <Mic size={14} />}
-                {isListening ? 'Đang nghe...' : 'Giọng nói'}
-              </button>
-
-              <button
-                onClick={() => handleTranslate(inputText)}
-                disabled={loading}
-                className="btn btn-primary"
-                style={{ padding: '8px 20px', fontSize: '13px', fontWeight: '700' }}
-              >
-                <Send size={14} /> {loading ? 'Đang phân tích...' : 'Dịch & Bắt Đầu Diễn Tả'}
-              </button>
-            </div>
-          </div>
-
-          {/* Thanh Tiến Trình & Danh Sách Token Đang Diễn Tả Liên Tục */}
-          {sequence.length > 0 && (
-            <div style={{
-              background: 'rgba(15, 23, 42, 0.7)',
-              borderRadius: 'var(--radius-md)',
-              padding: '12px',
-              border: '1px solid var(--border-subtle)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)' }}>
-                <span>Tiến trình diễn tả liên tục:</span>
-                <strong style={{ color: 'var(--primary)' }}>
-                  {Math.round(((currentIndex + 1) / sequence.length) * 100)}% ({currentIndex + 1}/{sequence.length})
-                </strong>
-              </div>
-
-              {/* Progress Bar */}
-              <div style={{ width: '100%', height: '6px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '3px', overflow: 'hidden' }}>
-                <div style={{
-                  width: `${((currentIndex + 1) / sequence.length) * 100}%`,
-                  height: '100%',
-                  background: 'linear-gradient(90deg, var(--primary) 0%, #10b981 100%)',
-                  transition: 'width 0.3s ease'
-                }} />
-              </div>
-
-              {/* Danh sách các cụm từ đang được phát */}
-              <div style={{
-                display: 'flex',
-                gap: '6px',
-                overflowX: 'auto',
-                paddingBottom: '4px',
-                scrollbarWidth: 'thin'
-              }}>
-                {sequence.map((step, idx) => {
-                  const isActive = idx === currentIndex;
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setCurrentIndex(idx);
-                        setIsPlaying(true);
-                      }}
-                      style={{
-                        padding: '4px 10px',
-                        borderRadius: 'var(--radius-sm)',
-                        fontSize: '11px',
-                        whiteSpace: 'nowrap',
-                        border: isActive ? '1px solid var(--primary)' : '1px solid var(--border-subtle)',
-                        background: isActive ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.04)',
-                        color: isActive ? '#38bdf8' : 'var(--text-muted)',
-                        fontWeight: isActive ? '700' : '500',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                      title={`Bấm để nhảy đến: ${stepLabel(step)}`}
-                    >
-                      {idx + 1}. {stepLabel(step)}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Các cụm từ mẫu sinh hoạt ngắn */}
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', alignSelf: 'center', marginRight: '4px' }}>
-              Gợi ý nhanh:
-            </span>
-            {PHRASE_SUGGESTIONS.map((phrase, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  setInputText(phrase);
-                  handleTranslate(phrase);
-                }}
-                className="btn btn-secondary"
-                style={{ padding: '3px 8px', fontSize: '11px' }}
-              >
-                {phrase}
-              </button>
-            ))}
-          </div>
-        </div>
-
+  const editor = (
+    <div className="control-section text-editor">
+      <label className="control-field">
+        Văn bản tiếng Việt
+        <textarea rows={3} value={inputText} onChange={(event) => setInputText(event.target.value)}
+          placeholder="Nhập hoặc dán văn bản…" />
+      </label>
+      <div className="control-grid text-editor-actions">
+        <button type="button" onClick={toggleSpeechRecognition}
+          className={`btn ${isListening ? 'btn-danger' : 'btn-secondary'}`}
+          aria-pressed={isListening} title={isListening ? 'Dừng nghe' : 'Nói vào micro'}>
+          {isListening ? <MicOff size={15} /> : <Mic size={15} />}
+          {isListening ? 'Dừng nghe' : 'Giọng nói'}
+        </button>
+        <button type="button" onClick={() => handleTranslate(inputText)}
+          disabled={loading || !inputText.trim()} className="btn btn-primary">
+          <Send size={15} /> {loading ? 'Đang dịch…' : 'Dịch'}
+        </button>
       </div>
     </div>
+  );
+
+  const playback = (
+    <div className="playback-controls">
+      <button type="button" onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
+        disabled={currentIndex === 0} className="icon-button" aria-label="Ký hiệu trước" title="Ký hiệu trước"><SkipBack size={16} /></button>
+      <button type="button" disabled={!sequence.length} onClick={() => {
+        if (isPlaying) setDirectSelectedLetter('');
+        setIsPlaying(!isPlaying);
+      }} className="btn btn-primary play-signs">
+        {isPlaying ? <Pause size={15} /> : <Play size={15} />} {isPlaying ? 'Tạm dừng' : 'Phát'}
+      </button>
+      <button type="button" onClick={() => setCurrentIndex(Math.min(sequence.length - 1, currentIndex + 1))}
+        disabled={currentIndex >= sequence.length - 1} className="icon-button" aria-label="Ký hiệu tiếp theo" title="Ký hiệu tiếp theo"><SkipForward size={16} /></button>
+      <button type="button" disabled={!sequence.length} onClick={() => { setCurrentIndex(0); setIsPlaying(true); }}
+        className="icon-button" aria-label="Phát lại từ đầu" title="Phát lại từ đầu"><RotateCcw size={16} /></button>
+    </div>
+  );
+
+  const controls = (
+    <>
+      <div className="desktop-text-editor">{editor}</div>
+      <section className="control-section" aria-label="Mô hình và góc nhìn">
+        <h3>Nhân vật 3D</h3>
+        <div className="control-grid">
+          {['avatar', 'robot'].map((model) => (
+            <button key={model} type="button" onClick={() => setViewModel(model)}
+              className={`btn ${viewModel === model ? 'btn-primary' : 'btn-secondary'}`} aria-pressed={viewModel === model}>
+              {model === 'avatar' ? 'Avatar' : 'Robot'}
+            </button>
+          ))}
+        </div>
+        <div ref={setControlsTarget} className="model-view-target" />
+      </section>
+
+      <section className="control-section" aria-label="Phát ký hiệu">
+        <h3>Phát ký hiệu</h3>
+        <div className="desktop-playback">{playback}</div>
+        <label className="control-field">
+          Tốc độ
+          <select value={playbackSpeed} onChange={(event) => setPlaybackSpeed(Number(event.target.value))}>
+            {[0.75, 1.0, 1.25, 1.5].map((speed) => <option key={speed} value={speed}>{speed}×</option>)}
+          </select>
+        </label>
+      </section>
+
+      <div className="control-section workspace-tool-list text-tools" aria-label="Công cụ văn bản">
+        <button type="button" className="btn btn-secondary" onClick={() => phrasesDialogRef.current?.showModal()}>
+          <List size={15} /> Câu mẫu
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={() => alphabetDialogRef.current?.showModal()}>
+          <Type size={15} /> Bảng chữ cái
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={() => detailsDialogRef.current?.showModal()}>
+          <Layers size={15} /> Chi tiết ký hiệu
+        </button>
+      </div>
+    </>
+  );
+
+  const selectSample = (phrase) => {
+    setInputText(phrase);
+    handleTranslate(phrase);
+    phrasesDialogRef.current?.close();
+  };
+
+  return (
+    <Workspace controls={controls}>
+      <div className="mobile-text-editor">{editor}</div>
+      <div className="workspace-content text-workspace">
+        <section className="glass-panel workspace-stage text-stage" aria-labelledby="text-workspace-title">
+          <header className="workspace-stage-heading">
+            <div className="workspace-heading-title">
+              <Box size={19} aria-hidden="true" />
+              <h1 id="text-workspace-title">Văn bản → Ký hiệu</h1>
+            </div>
+            <span className={`badge ${isPlaying ? 'badge-emerald' : 'badge-neutral'}`}>{isPlaying ? 'Đang diễn' : 'Tạm dừng'}</span>
+          </header>
+          <div className="sign-viewport" aria-label="Mô phỏng 3D">
+            {viewModel === 'robot' ? <RobotSigner3D {...commonProps} />
+              : <MixamoAvatarSigner {...commonProps} tunerHostRef={tunerHostRef} />}
+          </div>
+          {viewModel === 'avatar' && <AvatarSequenceCaption sequence={sequence} currentIndex={currentIndex} />}
+          <div className="mobile-playback">{playback}</div>
+        </section>
+
+        <section className="glass-panel workspace-inspector sign-inspector" aria-labelledby="sign-inspector-title">
+          <div className="workspace-inspector-heading">
+            <h2 id="sign-inspector-title">Ký hiệu đang diễn</h2>
+            {sequence.length > 0 && <span className="badge badge-neutral">{currentIndex + 1}/{sequence.length}</span>}
+          </div>
+          {currentStep ? (
+            <>
+              <h3 className="sign-current-word" aria-live="polite">{stepLabel(currentStep)}</h3>
+              <div className="sign-description" tabIndex={0} aria-label="Mô tả ký hiệu">
+                {currentStep.type === 'vocabulary' && currentStep.region_label && (
+                  <span className="badge badge-cyan">{currentStep.region_label}</span>
+                )}
+                {currentStep.definition && <p>{currentStep.definition}</p>}
+                {currentStep.type === 'vocabulary' && !currentStep.video_id && !currentStep.motion_id && !currentStep.pose_key && (
+                  <p className="sign-notice">Đang diễn từ này bằng bảng chữ cái ngón tay.</p>
+                )}
+                {currentStep.video_id && !currentStep.motion_id && (
+                  <p className="sign-notice" role="status">
+                    {learningProgress === 'failed' ? 'Đang thay thế bằng đánh vần.'
+                      : `Đang chuẩn bị ký hiệu từ video · ${typeof learningProgress === 'number' ? Math.round(learningProgress * 100) : 0}%`}
+                  </p>
+                )}
+              </div>
+            </>
+          ) : (
+            <p className="workspace-empty">{loading ? 'Đang phân tích văn bản…' : 'Nhập văn bản và bấm Dịch để bắt đầu.'}</p>
+          )}
+          {sequence.length > 0 && (
+            <div className="sign-sequence">
+              <h3>Chuỗi ký hiệu</h3>
+              <ol aria-label="Chọn ký hiệu để phát">
+                {sequence.map((step, index) => (
+                  <li key={index}>
+                    <button type="button" aria-current={index === currentIndex ? 'step' : undefined}
+                      onClick={() => { setCurrentIndex(index); setIsPlaying(true); }}>
+                      <span>{index + 1}</span>{stepLabel(step)}
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+        </section>
+      </div>
+
+      <WorkspaceDialog dialogRef={phrasesDialogRef} title="Câu mẫu">
+        <div className="dialog-button-list">
+          {PHRASE_SUGGESTIONS.map((phrase) => (
+            <button type="button" key={phrase} className="btn btn-secondary" onClick={() => selectSample(phrase)}>{phrase}</button>
+          ))}
+        </div>
+        <button type="button" className="btn btn-primary" onClick={() => selectSample(
+          'Những ngày cuối tuần của tôi không có lịch trình cụ thể vì chúng phụ thuộc vào mức độ bận rộn của tôi trong tuần. Tôi thường dành một ít thời gian cho việc học tập hoặc các dự án cá nhân, nhưng tôi cũng đảm bảo mình có đủ thời gian để thư giãn. Nếu có thể, tôi thích gặp gỡ bạn bè hoặc khám phá những địa điểm mới, vì điều đó cho tôi cơ hội nghỉ ngơi khỏi thói quen thường ngày.'
+        )}>Diễn đoạn văn mẫu</button>
+      </WorkspaceDialog>
+
+      <WorkspaceDialog dialogRef={alphabetDialogRef} title="Bảng chữ cái">
+        <div className="alphabet-grid">
+          {ALPHABET_LIST.flatMap((letter) => [letter, ...(LETTER_VARIANTS[letter] || [])]).map((letter) => {
+            const selected = currentStep?.type === 'fingerspelling' && currentStep.word === letter.toLowerCase();
+            return (
+              <button type="button" key={letter} className={`btn ${selected ? 'btn-primary' : 'btn-secondary'}`}
+                aria-pressed={selected} onClick={() => {
+                  handleSelectDirectLetter(letter);
+                  alphabetDialogRef.current?.close();
+                }}>{letter}</button>
+            );
+          })}
+        </div>
+        <div className="dialog-control-group">
+          <h3>Dấu thanh</h3>
+          <div className="dialog-button-list">
+            {TONE_LIST.map(({ key, mark }) => (
+              <button type="button" key={key} className="btn btn-secondary" onClick={() => {
+                handleSelectDirectLetter(key);
+                alphabetDialogRef.current?.close();
+              }}>{key} {mark}</button>
+            ))}
+          </div>
+        </div>
+      </WorkspaceDialog>
+
+      <WorkspaceDialog dialogRef={detailsDialogRef} title="Chi tiết ký hiệu">
+        <h3>{stepLabel(currentStep) || 'Tư thế hiện tại'}</h3>
+        {currentStep?.definition && <p>{currentStep.definition}</p>}
+        {currentStep && <SignDescription step={currentStep} />}
+        {(currentStep?.has_pose ?? true) && (
+          <dl className="finger-details">
+            {fingerDetails.map((finger, index) => (
+              <div key={index}>
+                <dt style={{ color: finger.color }}>{finger.name}</dt>
+                <dd>{finger.state}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+        {viewModel === 'avatar' && (
+          <details className="avatar-tuner">
+            <summary>Tinh chỉnh bàn tay Avatar</summary>
+            <div ref={tunerHostRef} className="avatar-tuner-host" />
+          </details>
+        )}
+      </WorkspaceDialog>
+    </Workspace>
   );
 }

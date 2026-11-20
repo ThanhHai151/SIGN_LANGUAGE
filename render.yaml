@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: vsl-connect-ai
+    runtime: docker
+    plan: free
+    region: singapore
+    healthCheckPath: /healthz
+    autoDeployTrigger: commit
+    envVars:
+      - key: VSL_PREVIEW_PASSWORD
+        generateValue: true

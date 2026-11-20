@@ -40,10 +40,11 @@ function readRigPose(bonesMap, basePose) {
 
 export function setupHandGUI(bonesMap, {
   symbol = 'A',
+  container,
   onPoseChange = () => {},
   onPreviewSequence = () => {}
 } = {}) {
-  const gui = new GUI({ title: 'Hand Pose Tuner' });
+  const gui = new GUI({ title: 'Hand Pose Tuner', container });
   const selection = { symbol: Object.values(VIETNAMESE_SYMBOL_OPTIONS).includes(symbol) ? symbol : 'A' };
   let suppressSelectionApply = false;
 

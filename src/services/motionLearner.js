@@ -6,8 +6,8 @@
  * gửi lên backend (/api/motion/learn) để chuyển sang góc khớp robot và lưu lại cho các lần sau.
  */
 import { mediaUrl } from './api';
+import { API_BASE_URL } from './apiBase';
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
 const MP_VER = '0.10.14';
 const MODEL = 'https://storage.googleapis.com/mediapipe-models/holistic_landmarker/holistic_landmarker/float16/latest/holistic_landmarker.task';
 const HAND_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task';
