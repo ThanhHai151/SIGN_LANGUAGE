@@ -42,5 +42,8 @@ backend/data/sstcn/archives/
 backend/data/sstcn/raw/
 backend/data/sstcn/prepared*/
 backend/data/sstcn/demo_videos/
+backend/data/vsl_unified/
+backend/data/personal_calibration/
+/vsl-chan-doan*.webm
 backend/runs/
 .venv-sstcn/

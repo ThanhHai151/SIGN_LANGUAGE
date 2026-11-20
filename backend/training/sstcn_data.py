@@ -118,10 +118,18 @@ def grouped_split(records, val_fraction=0.15, seed=42):
 
 
 def load_prepared(directory):
+    from backend.vision.skeleton_norm import PREPROCESSING_V2
     directory = Path(directory)
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
-    if manifest["class_names"] != CLASS_NAMES or manifest["preprocessing"] != PREPROCESSING:
-        raise ValueError("Dataset class order or preprocessing contract does not match SSTCN")
+    schema_ver = int(manifest.get("schema_version", 1))
+    if schema_ver <= 1:
+        if manifest["class_names"] != CLASS_NAMES or manifest["preprocessing"] != PREPROCESSING:
+            raise ValueError("Dataset class order or preprocessing contract does not match SSTCN")
+    else:
+        if not isinstance(manifest.get("class_names"), list) or len(manifest["class_names"]) == 0:
+            raise ValueError("Unified dataset manifest must define a non-empty class_names list")
+        if manifest.get("preprocessing") not in (PREPROCESSING, PREPROCESSING_V2):
+            raise ValueError("Unified dataset preprocessing contract does not match v1 or v2")
     x = np.load(directory / "sequences.npy", mmap_mode="r", allow_pickle=False)
     y = np.load(directory / "labels.npy", allow_pickle=False)
     records = manifest["samples"]

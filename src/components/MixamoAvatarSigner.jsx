@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -68,9 +69,10 @@ function sampleActionQueue(queue, elapsedMs) {
   return queue.length ? sampleAction(queue[queue.length - 1], 1) : createRestPose();
 }
 
-export default function MixamoAvatarSigner({ activeLetter, currentStep, currentSign, isPlaying = false, sequence = [], currentIndex = 0 }) {
+export default function MixamoAvatarSigner({ activeLetter, currentStep, currentSign, isPlaying = false, sequence = [], currentIndex = 0, controlsTarget }) {
   const mountRef = useRef(null);
   const [modelLoaded, setModelLoaded] = React.useState(false);
+  const [modelError, setModelError] = React.useState(false);
   const [activeView, setActiveView] = React.useState('half');
   const viewPresetsRef = useRef(null);
   const cameraTargetRef = useRef(null);
@@ -300,7 +302,10 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
       }
       setModelLoaded(true);
     }, undefined, (error) => {
-      if (!disposed) console.error('Could not load Mixamo avatar:', error);
+      if (!disposed) {
+        setModelError(true);
+        console.error('Could not load Mixamo avatar:', error);
+      }
     });
 
     let frameId;
@@ -379,7 +384,7 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, []);
+  }, [tunerHostRef]);
 
   const resetToRestPose = () => {
     poseAnimationRef.current = null;
@@ -395,25 +400,35 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
   };
 
   const viewButtons = [
-    { id: 'half', label: '👤 Bán thân' },
-    { id: 'full', label: '🧍 Toàn thân' },
+    { id: 'half', label: 'Bán thân' },
+    { id: 'full', label: 'Toàn thân' },
   ];
+
+  const viewControls = (
+    <div className={controlsTarget ? 'control-grid model-view-controls' : undefined}
+      style={controlsTarget ? undefined : {
+        position: 'absolute', top: 12, right: 12, zIndex: 5, display: 'grid', gap: 4, padding: 5,
+        borderRadius: 9, background: 'rgba(8, 15, 28, 0.88)', border: '1px solid var(--border-subtle)'
+      }}>
+      {viewButtons.map((view) => (
+        <button key={view.id} type="button" className={`btn ${activeView === view.id ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => selectView(view.id)} aria-pressed={activeView === view.id}>{view.label}</button>
+      ))}
+      <button type="button" className="btn btn-secondary model-reset" disabled={!modelLoaded} onClick={resetToRestPose}>
+        Về tư thế nghỉ
+      </button>
+    </div>
+  );
 
   return (
     <>
       <div ref={mountRef} style={{ position: 'absolute', inset: 0, cursor: 'grab' }} title="Chụm, mở hai ngón hoặc cuộn bánh xe để zoom. Kéo chuột trái để xoay, kéo chuột phải để dịch góc nhìn." />
-      <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 5, display: 'flex', flexDirection: 'column', gap: '4px', padding: '5px', borderRadius: '9px', background: 'rgba(8, 15, 28, 0.88)', border: '1px solid rgba(148, 163, 184, 0.25)' }}>
-        {viewButtons.map((view) => (
-          <button key={view.id} type="button" className={`btn ${activeView === view.id ? 'btn-primary' : 'btn-secondary'}`} onClick={() => selectView(view.id)} style={{ justifyContent: 'flex-start', padding: '5px 8px', fontSize: '11px' }} aria-pressed={activeView === view.id}>
-            {view.label}
-          </button>
-        ))}
-      </div>
-      <div style={{ position: 'absolute', right: '12px', bottom: '12px', zIndex: 5, display: 'flex', gap: '5px', padding: '5px', borderRadius: '9px', background: 'rgba(8, 15, 28, 0.88)', border: '1px solid rgba(148, 163, 184, 0.25)' }}>
-        <button type="button" className="btn btn-secondary" disabled={!modelLoaded} onClick={resetToRestPose} style={{ padding: '5px 8px', fontSize: '11px' }}>
-          Về Tư Thế Nghỉ
-        </button>
-      </div>
+      {!modelLoaded && (
+        <p className="avatar-load-status" role="status">
+          {modelError ? 'Lỗi tải Avatar. Chọn Robot để tiếp tục.' : 'Đang tải Avatar…'}
+        </p>
+      )}
+      {controlsTarget === undefined ? viewControls : controlsTarget && createPortal(viewControls, controlsTarget)}
     </>
   );
 }

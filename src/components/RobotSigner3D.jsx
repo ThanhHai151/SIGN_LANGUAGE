@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { getHandPoseByGloss, NATURAL_FINGERS_REST } from '../utils/handPoses';
@@ -114,7 +115,7 @@ function applyKeyframe(cur, kf) {
   });
 }
 
-export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, sequence = [], currentIndex = 0, freezeAt, videoElRef }) {
+export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, sequence = [], currentIndex = 0, freezeAt, videoElRef, controlsTarget }) {
   const mountRef = useRef(null);
   const rigRef = useRef({});
   if (import.meta.env.DEV && typeof window !== 'undefined') window.__rigRef = rigRef; // kiểm thử tự động (chỉ khi phát triển)
@@ -853,6 +854,24 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
     { id: 'hand_left', icon: <ZoomIn size={13} />, label: 'Tay trái', title: 'Phóng to tay trái' }
   ];
 
+  const viewControls = (
+    <div className={controlsTarget ? 'control-grid model-view-controls' : undefined}
+      style={controlsTarget ? undefined : {
+        position: 'absolute', top: 12, right: 12, display: 'grid', gap: 4, padding: 4,
+        borderRadius: 10, background: 'rgba(8, 15, 28, 0.85)', border: '1px solid var(--border-subtle)'
+      }}>
+      {cameraButtons.map((button) => (
+        <button key={button.id} type="button" onClick={() => switchCameraMode(button.id)}
+          className={`btn ${cameraMode === button.id ? 'btn-primary' : 'btn-secondary'}`}
+          aria-pressed={cameraMode === button.id} title={button.title}>
+          {button.icon} {button.label}
+        </button>
+      ))}
+      <button type="button" onClick={resetRotation} className="btn btn-secondary model-reset"
+        title="Khôi phục góc nhìn thẳng"><RotateCcw size={13} /> Xoay lại</button>
+    </div>
+  );
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
       <style>{`
@@ -899,27 +918,7 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
           </div>
         )}
 
-        {/* Thanh góc nhìn (dọc, góc phải) */}
-        <div style={{
-          position: 'absolute', top: '12px', right: '12px', display: 'flex', flexDirection: 'column',
-          gap: '4px', background: 'rgba(8, 15, 28, 0.85)', padding: '4px', borderRadius: '10px',
-          border: '1px solid var(--border-subtle)', backdropFilter: 'blur(10px)'
-        }}>
-          {cameraButtons.map((b) => (
-            <button
-              key={b.id}
-              onClick={() => switchCameraMode(b.id)}
-              className={`btn ${cameraMode === b.id ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ padding: '5px 9px', fontSize: '11px', justifyContent: 'flex-start' }}
-              title={b.title}
-            >
-              {b.icon} {b.label}
-            </button>
-          ))}
-          <button onClick={resetRotation} className="btn btn-secondary" style={{ padding: '5px 9px', fontSize: '11px', justifyContent: 'flex-start' }} title="Khôi phục góc nhìn thẳng">
-            <RotateCcw size={13} /> Xoay lại
-          </button>
-        </div>
+        {controlsTarget === undefined ? viewControls : controlsTarget && createPortal(viewControls, controlsTarget)}
       </div>
 
       {/* ===== Dải thông tin dưới khung 3D (không che robot) ===== */}

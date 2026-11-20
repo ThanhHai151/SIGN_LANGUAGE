@@ -217,7 +217,7 @@ class TestPilotDiagnosticLogging(unittest.TestCase):
         rec = VSLRecognizer(pilot_logging_enabled=True)
         rec.pilot_filepath = self.log_filepath
 
-        # Q yêu cầu threshold 0.85; giả lập confidence 0.72 < 0.85
+        # Q dùng ngưỡng 0.75; giả lập confidence 0.72 < 0.75.
         mock_head_res = {
             "raw_predicted_letter": "Q",
             "confidence": 0.72,
@@ -237,8 +237,8 @@ class TestPilotDiagnosticLogging(unittest.TestCase):
         self.assertEqual(r["final_sign"], "NEUTRAL")
         self.assertEqual(r["prediction_source"], "none")
         self.assertEqual(r["gating_status"], "rejected")
-        self.assertEqual(r["threshold_applied"], 0.85)
-        self.assertIn("Confidence 0.72 < threshold 0.85", r["reject_reason"])
+        self.assertEqual(r["threshold_applied"], 0.75)
+        self.assertIn("Confidence 0.72 < threshold 0.75", r["reject_reason"])
         rec.disable_pilot_logging()
 
     def test_7_expected_sign_does_not_alter_prediction_behavior(self):
