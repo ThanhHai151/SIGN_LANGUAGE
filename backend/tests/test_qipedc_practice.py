@@ -224,7 +224,8 @@ def test_live_words_match_dictionary_entries_and_reject_indistinguishable_templa
         assert client.post(path, json=live_payload(opposite)).json()["data"]["sign"] == "NEUTRAL"
         assert client.post(path, json=live_payload(opposite, ("q-chao",))).json()["data"]["entry_id"] == "q-chao"
 
-        # A strong dictionary match can disambiguate the separate wrist/lift detector.
+        # A strong dictionary match can disambiguate the separate wrist/lift detector,
+        # while an ambiguous dictionary lookup must not discard a confirmed "mấy giờ?" match.
         with monkeypatch.context() as patch:
             patch.setattr(qipedc_practice, "analyze_live_words", lambda *args, **kwargs: {
                 "motion_detected": True, "status": "matched", "similarity": 0.75,
@@ -236,6 +237,13 @@ def test_live_words_match_dictionary_entries_and_reject_indistinguishable_templa
         ambiguous = client.post(path, json=live_payload(main)).json()["data"]
         assert ambiguous["sign"] == "NEUTRAL"
         assert ambiguous["diagnostic"]["status"] == "ambiguous_word"
+
+        with monkeypatch.context() as patch:
+            patch.setattr(qipedc_practice, "analyze_live_words", lambda *args, **kwargs: {
+                "motion_detected": True, "status": "matched", "similarity": 0.75,
+            })
+            preserved = client.post(path, json=live_payload(main)).json()["data"]
+            assert preserved["entry_id"] == "q-may-gio"
 
 
 def test_legacy_left_hand_reflection_preserves_joints_and_missing_values():
@@ -392,3 +400,83 @@ def test_live_bilateral_shape_match_handles_changes_in_signing_height(
 
     assert result["entry_id"] == entry_id
     assert result["match_method"] in {"trajectory", "hand_shape"}
+
+
+def test_fast_idle_padded_and_clasped_occluded_signs_match_reliably():
+    folder = Path(__file__).resolve().parents[1] / "data" / "qipedc_reference"
+    xin_loi = np.load(folder / "v3_W03990.npy", allow_pickle=False)
+    ky_nang = np.load(folder / "v3_D0097.npy", allow_pickle=False)
+
+    # 1. Fast 2x sign embedded at the end of a long idle rolling window
+    fast_xin_loi = xin_loi[::2]
+    fast_padded = np.concatenate([np.repeat(fast_xin_loi[:1], 24, axis=0), fast_xin_loi], axis=0)
+    res_fast = qipedc_live.match_live_words(fast_padded, 1.0, [])
+    assert res_fast is not None and res_fast["entry_id"] == "q-xin-loi"
+
+    fast_ky_nang = ky_nang[::2]
+    fast_kn_padded = np.concatenate([np.repeat(fast_ky_nang[:1], 24, axis=0), fast_ky_nang], axis=0)
+    res_kn = qipedc_live.match_live_words(fast_kn_padded, 1.0, [])
+    assert res_kn is not None and res_kn["entry_id"] == "q-ky-nang"
+
+    # 2. Clasped-hand self-occlusion: right hand occluded for half of the middle clasp
+    occluded = xin_loi.copy()
+    occluded[len(occluded) // 3: 2 * len(occluded) // 3, 54:75] = 0.0
+    res_occ = qipedc_live.match_live_words(occluded, 1.0, [])
+    assert res_occ is not None and res_occ["entry_id"] == "q-xin-loi"
+
+    # 3. Topic-scoped allowed_ids narrows search cleanly without breaking matching
+    res_topic = qipedc_live.match_live_words(xin_loi, 1.0, [], allowed_ids={"q-xin-loi", "q-nan-ni", "q-ky-nang"})
+    assert res_topic is not None and res_topic["entry_id"] == "q-xin-loi"
+    assert qipedc_live.match_live_words(xin_loi, 1.0, [], allowed_ids={"q-ky-nang"}) is None
+
+
+def test_pose_guided_gap_fill_and_kvsl_2link_ik_augmentation():
+    from backend.training.augmentations import augment_hand_occlusion, augment_inter_hand_shift
+
+    # Pose-guided 2-frame hand dropout follows curved pose[15] wrist path
+    seq = np.zeros((10, 75, 3), dtype=np.float32)
+    seq[:, 11] = [0.6, 0.4, 0.0]
+    seq[:, 12] = [0.4, 0.4, 0.0]
+    seq[:, 15, 0] = np.linspace(0.5, 0.7, 10)
+    seq[:, 15, 1] = 0.5 - 0.1 * np.sin(np.linspace(0, np.pi, 10))
+    seq[:, 33:54] = seq[:, 15:16] + 0.02
+    seq[4:6, 33:54] = 0.0  # 2-frame fast-motion dropout
+    filled = qipedc_practice._fill_short_gaps(seq)
+    assert np.all(np.any(filled[4:6, 33:54] != 0, axis=-1))
+    np.testing.assert_allclose(filled[4, 33, :2], seq[4, 15, :2] + 0.02, atol=1e-4)
+
+    # KVSL 2-link IK preserves upper-arm / forearm bone lengths when shifting wrists
+    ctj = np.zeros((3, 12, 75), dtype=np.float32)
+    ctj[:, :, 11] = np.array([[0.6], [0.4], [0.0]], dtype=np.float32)
+    ctj[:, :, 13] = np.array([[0.65], [0.55], [0.0]], dtype=np.float32)
+    ctj[:, :, 15] = np.array([[0.58], [0.68], [0.0]], dtype=np.float32)
+    ctj[:, :, 33:54] = ctj[:, :, 15:16] + 0.01
+    ctj[:, :, 54:75] = np.array([[0.42], [0.65], [0.0]], dtype=np.float32)[:, :, None]
+    rng = np.random.default_rng(42)
+    orig_upper = float(np.linalg.norm(ctj[:2, 0, 13] - ctj[:2, 0, 11]))
+    aug = augment_inter_hand_shift(ctj, rng, max_delta=0.05)
+    new_upper = float(np.linalg.norm(aug[:2, 0, 13] - aug[:2, 0, 11]))
+    assert np.isclose(new_upper, orig_upper, atol=1e-3)
+    occ_aug = augment_hand_occlusion(ctj, rng, min_frames=2, max_frames=4)
+    assert np.any(occ_aug[:, :, 33:54] == 0) or np.any(occ_aug[:, :, 54:75] == 0)
+
+
+def test_kha_nang_recovers_when_vertical_edge_on_hand_is_occluded():
+    folder = Path(__file__).resolve().parents[1] / "data" / "qipedc_reference"
+    kha_nang = np.load(folder / "v3_D0096.npy", allow_pickle=False)
+
+    # Simulate severe edge-on occlusion of the vertical hand (RH in studio D0096)
+    # during the perpendicular hold while keeping Holistic pose wrists/indices (pose[16, 20]).
+    occluded = kha_nang.copy()
+    occluded[15:23, 54:75] = 0.0
+    # Shift hands closer/higher like a laptop webcam (where trajectory alone loses D0096)
+    mask = np.any(occluded[:, 33:] != 0, axis=-1)
+    occluded[:, 33:][mask] += [0.02, -0.10, 0.0]
+    occluded[:, [15, 16, 19, 20], 1] -= 0.10
+
+    res = qipedc_live.match_live_words(occluded, 1.0, [])
+    assert res is not None and res["entry_id"] == "q-kha-nang"
+
+    # Negative check: 'kỹ năng' and 'xin lỗi' must NOT trigger the perpendicular occlusion matcher.
+    for other in ("v3_D0097.npy", "v3_W03990.npy", "v3_D0261.npy", "v3_W02196.npy"):
+        assert qipedc_live._match_kha_nang_with_occlusion(np.load(folder / other, allow_pickle=False), 1.0) is None
