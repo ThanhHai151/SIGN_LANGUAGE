@@ -21,8 +21,6 @@ def healthz():
 
 
 preview_password = os.environ.get("VSL_PREVIEW_PASSWORD")
-if os.environ.get("RENDER") == "true" and not preview_password:
-    raise RuntimeError("Set VSL_PREVIEW_PASSWORD in the Render service environment.")
 
 if preview_password:
     preview_credentials = base64.b64encode(f"vsl:{preview_password}".encode())
