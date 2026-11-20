@@ -3,7 +3,29 @@ import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { clone as cloneSkinnedModel } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { createRestPose, findMixamoBone, getMixamoBoneName, getMixamoToneSymbol, resolveVietnameseSign } from '../utils/MixamoPoseAdapter';
+
+let avatarScenePromise;
+let activeAvatarInstances = 0;
+
+function loadAvatarScene() {
+  avatarScenePromise ??= new GLTFLoader().loadAsync('/models/avatar.glb')
+    .then(({ scene }) => {
+      const bounds = new THREE.Box3().setFromObject(scene);
+      const size = bounds.getSize(new THREE.Vector3());
+      const center = bounds.getCenter(new THREE.Vector3());
+      const scale = 2.7 / Math.max(size.y, 0.001);
+      scene.scale.setScalar(scale);
+      scene.position.set(-center.x * scale, 0, -center.z * scale);
+      return scene;
+    })
+    .catch((error) => {
+      avatarScenePromise = undefined;
+      throw error;
+    });
+  return avatarScenePromise;
+}
 
 function normalizeSignToken(value) {
   if (typeof value !== 'string') return '';
@@ -272,19 +294,13 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
     resize();
 
     let disposed = false;
+    let model;
     const bindShoulders = new Map();
-    const loader = new GLTFLoader();
-    loader.load('/models/avatar.glb', (gltf) => {
+    loadAvatarScene().then((source) => {
       if (disposed) return;
 
-      const model = gltf.scene;
-      const bounds = new THREE.Box3().setFromObject(model);
-      const size = bounds.getSize(new THREE.Vector3());
-      const center = bounds.getCenter(new THREE.Vector3());
-      const targetHeight = 2.7;
-      const scale = targetHeight / Math.max(size.y, 0.001);
-      model.scale.setScalar(scale);
-      model.position.set(-center.x * scale, 0, -center.z * scale);
+      model = cloneSkinnedModel(source);
+      activeAvatarInstances += 1;
       avatarRoot.add(model);
       controls.update();
 
@@ -301,7 +317,7 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
         }
       }
       setModelLoaded(true);
-    }, undefined, (error) => {
+    }).catch((error) => {
       if (!disposed) {
         setModelError(true);
         console.error('Could not load Mixamo avatar:', error);
@@ -376,15 +392,27 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
       renderer.domElement.removeEventListener('pointercancel', handlePointerUp, true);
       renderer.domElement.removeEventListener('lostpointercapture', handlePointerUp, true);
       renderer.domElement.removeEventListener('contextmenu', preventContextMenu);
-      scene.traverse((object) => {
-        object.geometry?.dispose();
-        if (Array.isArray(object.material)) object.material.forEach((material) => material.dispose());
-        else object.material?.dispose();
-      });
+      if (model) {
+        activeAvatarInstances -= 1;
+        model.traverse((object) => {
+          if (object.isSkinnedMesh) object.skeleton.dispose();
+          // Release GPU allocations once the shared assets are no longer in use.
+          if (activeAvatarInstances !== 0) return;
+          object.geometry?.dispose();
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          for (const material of materials) {
+            if (!material) continue;
+            for (const value of Object.values(material)) {
+              if (value?.isTexture) value.dispose();
+            }
+            material.dispose();
+          }
+        });
+      }
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [tunerHostRef]);
+  }, []);
 
   const resetToRestPose = () => {
     poseAnimationRef.current = null;

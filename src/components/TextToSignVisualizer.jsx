@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Play, Pause, RotateCcw, SkipBack, SkipForward, Mic, MicOff, Send, Box, Type, Layers, List } from 'lucide-react';
 import RobotSigner3D, { SPELL_LETTER_MS } from './RobotSigner3D';
 import MixamoAvatarSigner from './MixamoAvatarSigner';
-import { createMixamoPlayback, getMixamoToneDescription, getMixamoToneSymbol, resolveVietnameseSign } from '../utils/MixamoPoseAdapter';
+import { createMixamoPlayback, resolveVietnameseSign } from '../utils/MixamoPoseAdapter';
 import AvatarSequenceCaption from './AvatarSequenceCaption';
 import SignDescription from './SignDescription';
 import { Workspace, WorkspaceDialog } from './Workspace';
@@ -527,8 +527,6 @@ export default function TextToSignVisualizer({ requestText }) {
   };
 
   const fingerSymbol = currentGloss.trim().normalize('NFC').toUpperCase().replace(/^ALPHA_/, '');
-  const toneDescription = currentRenderer === 'avatar' ? getMixamoToneDescription(fingerSymbol) : undefined;
-  const isStandaloneTone = toneDescription && getMixamoToneSymbol(fingerSymbol).startsWith('TONE_');
   const baseSymbol = VIETNAMESE_MARKED_LETTERS[fingerSymbol]?.base ?? fingerSymbol;
   const avatarDescriptions = currentRenderer === 'avatar' ? AVATAR_FINGER_DESCRIPTIONS[baseSymbol] : undefined;
   const fingerRows = currentRenderer === 'avatar' && fingerSymbol === 'P'

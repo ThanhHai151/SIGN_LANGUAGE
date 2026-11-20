@@ -89,6 +89,23 @@ const D_ARM_POSE = {
   wristRot: [-0.03, -0.12, -0.38]
 };
 
+const I_HAND_SHAPE = {
+  index: 1.5,
+  middle: 1.6,
+  ring: 1.55,
+  pinky: [0, 0, 0],
+  thumb: { jointRotations: [[-1.632, -1.512, -2.312], [0.75, 0.49, -0.02], [0.41, 0.24, 0.41], [0.3, 0, 0]] }
+};
+
+const BREVE_HAND_SHAPE = {
+  index: [-0.052, -0.052, -0.142],
+  middle: [0.948, 1.948, 0.858],
+  ring: [1.038, 1.948, 0.308],
+  pinky: { jointRotations: [[1.128, 0, 0], [1.828, 0, -0.092], [0.698, 0, -0.092]] },
+  thumb: { jointRotations: [[0.398, 0.218, -0.052], [0.308, -0.052, 0.398], [0.128, 0.128, 1.218], [0.125, 0, 0]] },
+  wristRot: [-0.022, 0.148, 0.148]
+};
+
 export const MIXAMO_ALPHABET = {
   A: createLetterPose({ index: 1.57, middle: 1.57, ring: 1.57, pinky: 1.57, thumb: { abduction: 0.3, extension: 0, pitch: 0.1 } }),
   B: createLetterPose({ index: { bend: [0, 0, 0], splay: -0.025 }, middle: { bend: [0, 0, 0], splay: 0 }, ring: { bend: [0, 0, 0], splay: 0.025 }, pinky: { bend: [0, 0, 0], splay: 0.05 }, thumb: { abduction: -0.4, extension: 0.2, pitch: 0.05 } }),
@@ -117,6 +134,17 @@ export const MIXAMO_ALPHABET = {
     thumb: { jointRotations: [[0.75, -0.95, -0.44], [0.75, -0.36, 0.49], [0.49, 0.83, 0.83], [0.15, 0, 0]] }
   }),
   E: createLetterPose({ index: { jointRotations: [[-0.052, -0.05, 0], [1.668, 0, 0], [1.578, 0, 0]] }, middle: { jointRotations: [[0.218, 0.03, 0], [1.578, 0, 0], [1.45, 0, 0]] }, ring: { jointRotations: [[0.308, 0.03, 0], [1.398, 0, 0], [1.45, 0, 0]] }, pinky: { jointRotations: [[0.308, 0.19, 0], [1.398, 0, 0], [1.45, 0, 0]] }, thumb: { jointRotations: [[1.488, -1.412, 0.398], [-0.412, 0.398, 1.038], [-0.052, 1.038, 1.758], [0.45, 0, 0]] } }),
+  F: createLetterPose({
+    armRot: [0.2953, -1.2631, -0.8959],
+    forearmRot: [-2.307, 0.4325, -0.3541],
+    wristRot: [-1.0213, 1.1743, 2.0917],
+    // Rotate the pinched fingers together about the line through their base joints.
+    index: { jointRotations: [[0.321, 0.1556, 0.307], [1.17, -0.47, -0.34], [1.11, 0.16, -0.03]] },
+    middle: { bend: [0, 0, 0], splay: -0.07 },
+    ring: [0, 0, 0],
+    pinky: { bend: [0, 0, 0], splay: 0.09 },
+    thumb: { jointRotations: [[0.5783, -0.2025, -0.5823], [0.61, -0.82, 0.7], [0.58, 0.26, 0.61], [0.28, 0, 0]] }
+  }),
   G: createLetterPose({
     shoulderRot: [1.03, 0.25, 2.25],
     armRot: [-0.81, -1.00, -1.87],
@@ -139,7 +167,8 @@ export const MIXAMO_ALPHABET = {
     pinky: 1.65,
     thumb: { jointRotations: [[-0.30, -0.30, -0.41], [1.67, -0.69, 0.77], [0.40, 0.68, 0.03], [0.07, 0, 0]] }
   }),
-  I: createLetterPose({ index: 1.5, middle: 1.6, ring: 1.55, pinky: [0, 0, 0], thumb: { jointRotations: [[-1.632, -1.512, -2.312], [0.75, 0.49, -0.02], [0.41, 0.24, 0.41], [0.3, 0, 0]] } }),
+  I: createLetterPose(I_HAND_SHAPE),
+  J: createLetterPose(I_HAND_SHAPE),
   K: createLetterPose({
     shoulderRot: [1.55, 0.22, 1.66],
     armRot: [-0.10, -0.80, -1.45],
@@ -202,6 +231,13 @@ export const MIXAMO_ALPHABET = {
   }),
   U: createLetterPose({ index: { jointRotations: [[-0.142, -0.052, -0.052], [0, 0, 0], [0, 0, 0]] }, middle: { jointRotations: [[-0.142, -0.092, -0.092], [0, 0, 0], [0, 0, 0]] }, ring: 1.65, pinky: 1.65, thumb: { jointRotations: [[-0.232, 0, 0.128], [1.218, -0.322, 0.678], [0.578, 0.858, -0.692], [0.175, 0, 0]] } }),
   V: createLetterPose({ index: { jointRotations: [[-0.052, -0.052, -0.322], [0, 0, 0], [0, 0, 0]] }, middle: { jointRotations: [[-0.052, -0.142, 0.128], [0, 0, 0], [0, 0, 0]] }, ring: 1.65, pinky: 1.65, thumb: { jointRotations: [[-0.232, 0, 0.128], [1.218, -0.322, 0.678], [0.578, 0.858, -0.692], [0.175, 0, 0]] } }),
+  W: createLetterPose({
+    index: { bend: [0, 0, 0], splay: -0.14 },
+    middle: [0, 0, 0],
+    ring: { bend: [0, 0, 0], splay: 0.14 },
+    pinky: { jointRotations: [[1.11, 0, -0.43], [1.29, 0, 0], [0.82, 0, 0]] },
+    thumb: { jointRotations: [[0.28, -0.77, 0.12], [0.85, 0, 0], [1.22, 0, 0], [0, 0, 0]] }
+  }),
   X: createLetterPose({
     shoulderRot: [1.57, 0.24, 1.58],
     armRot: [-0.01, -0.30, -1.50],
@@ -214,6 +250,7 @@ export const MIXAMO_ALPHABET = {
     thumb: { jointRotations: [[0.54, 0.42, -0.28], [-0.47, -0.66, -0.09], [0.10, 0, 0], [0.05, 0, 0]] }
   }),
   Y: createLetterPose({ index: 1.65, middle: 1.65, ring: 1.65, pinky: { jointRotations: [[0, -0.002, 0.348], [0, 0, 0], [0, 0, 0]] }, thumb: { abduction: 1.142, extension: 0, pitch: -0.232 }, wristRot: [0, 0, 0.408] }),
+  Z: createLetterPose({ ...BREVE_HAND_SHAPE, armRot: [0, -0.35, -1.5] }),
 };
 
 // Các pose dưới đây là cấu hình khởi đầu theo đặc tả của pilot; cần được
@@ -242,14 +279,7 @@ export const DIACRITIC_POSES = {
     wristRot: [-0.022, 0.148, 0.148]
   }),
   // Dấu Ă
-  BREVE: createMarkPose({
-    index: [-0.052, -0.052, -0.142],
-    middle: [0.948, 1.948, 0.858],
-    ring: [1.038, 1.948, 0.308],
-    pinky: { jointRotations: [[1.128, 0, 0], [1.828, 0, -0.092], [0.698, 0, -0.092]] },
-    thumb: { jointRotations: [[0.398, 0.218, -0.052], [0.308, -0.052, 0.398], [0.128, 0.128, 1.218], [0.125, 0, 0]] },
-    wristRot: [-0.022, 0.148, 0.148]
-  }),
+  BREVE: createMarkPose(BREVE_HAND_SHAPE),
   POINTING_POSE: createMarkPose({
     index: [0, 0, 0], middle: [1.55, 1.6, 1.55],
     ring: [1.6, 1.6, 1.55], pinky: [1.55, 1.6, 1.55],
@@ -425,8 +455,33 @@ export function getSavedPoseOverrides() {
   }
 }
 
-// Rotations relative to BREVE, calibrated on the Mixamo rig from the front.
 export const MIXAMO_LETTER_ANIMATIONS = {
+  J: {
+    durationMs: 1050,
+    keyframes: [
+      { t: 0.0, targets: createLetterPose({ ...I_HAND_SHAPE, wristRot: [0.15, 0, 0.05] }) },
+      { t: 0.28, targets: createLetterPose({ ...I_HAND_SHAPE, forearmRot: [-1.35, 0, -0.15], wristRot: [0.25, -0.12, 0.35] }) },
+      { t: 0.58, targets: createLetterPose({ ...I_HAND_SHAPE, armRot: [0.05, 0, -1.42], forearmRot: [-1.2, -0.08, -0.12], wristRot: [0.38, -0.42, 0.42] }) },
+      { t: 0.82, targets: createLetterPose({ ...I_HAND_SHAPE, armRot: [-0.08, 0.05, -1.52], forearmRot: [-1.42, 0.08, -0.2], wristRot: [-0.28, -0.35, -0.18] }) },
+      { t: 1.0, targets: createLetterPose({ ...I_HAND_SHAPE, wristRot: [-0.12, 0.02, -0.3] }) }
+    ]
+  },
+  // Start toward the avatar's center and draw the top stroke outward.
+  Z: {
+    durationMs: 1500,
+    keyframes: [
+      { t: 0, arm: [-0.061, 0.136, -0.093], forearm: [0.148, -0.027, -0.058] },
+      { t: 0.16, arm: [-0.061, 0.136, -0.093], forearm: [0.148, -0.027, -0.058] },
+      { t: 0.28, arm: [-0.005, 0.153, -0.032], forearm: [0.157, -0.027, -0.002] },
+      { t: 0.40, arm: [0.043, 0.204, 0.031], forearm: [0.212, -0.029, 0.052] },
+      { t: 0.54, arm: [0, 0, 0], forearm: [0, 0, 0] },
+      { t: 0.68, arm: [-0.062, -0.167, -0.004], forearm: [-0.151, 0.045, -0.078] },
+      { t: 0.78, arm: [0.015, -0.154, 0.03], forearm: [-0.146, 0.023, 0.004] },
+      { t: 0.88, arm: [0.086, -0.097, 0.063], forearm: [-0.09, 0.001, 0.079] },
+      { t: 1, arm: [0.086, -0.097, 0.063], forearm: [-0.09, 0.001, 0.079] }
+    ]
+  },
+  // Rotations relative to BREVE, calibrated on the Mixamo rig from the front.
   BREVE_ARC: {
     durationMs: 620,
     keyframes: [
@@ -583,6 +638,17 @@ function resolveSignActions(token) {
 
   if (normalized === 'Đ') {
     return [poseAction(getPoseForSymbol(normalized), 0.45, 'Đ')];
+  }
+
+  if (normalized === 'J') {
+    const { durationMs, keyframes } = MIXAMO_LETTER_ANIMATIONS.J;
+    return [{ type: 'keyframes', label: 'J', keyframes, duration: durationMs / 1000 }];
+  }
+
+  if (normalized === 'Z') {
+    const pose = getPoseForSymbol(normalized);
+    const { durationMs, keyframes } = MIXAMO_LETTER_ANIMATIONS.Z;
+    return [{ type: 'motion', label: 'Z', pose, trajectory: armTrajectory(pose, keyframes), duration: durationMs / 1000 }];
   }
 
   if (MIXAMO_ALPHABET[normalized]) {
