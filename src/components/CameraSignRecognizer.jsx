@@ -186,7 +186,12 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
     Promise.allSettled([prepareQipedcLive(), ...extra.map((id) => prepareQipedcLive(id))]).then((results) => {
       if (!active) return;
       const entries = results.flatMap((result) => result.status === 'fulfilled' ? result.value.entries : []);
-      setLiveReferenceStatus({ entries, failed: results.some((result) => result.status === 'rejected') || entries.some((item) => !item.ready) });
+      const indexedCount = results.find((result) => result.status === 'fulfilled')?.value?.indexed_count || 0;
+      setLiveReferenceStatus({
+        entries,
+        indexedCount,
+        failed: results.some((result) => result.status === 'rejected') || entries.some((item) => !item.ready),
+      });
     });
     return () => { active = false; };
   }, [practiceEntry, conversionMode, wordCaptureMode, cameraActive, liveQipedcWords]);
@@ -2135,9 +2140,11 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
 
       <WorkspaceDialog dialogRef={calibrationDialogRef} title="Mẫu và hiệu chỉnh">
         <div className="dialog-control-group">
-          <h3>Mẫu QIPEDC đang sẵn sàng</h3>
-          <p>{liveReferenceStatus?.entries.filter((item) => item.ready).map((item) => item.word).join(' · ') ||
-            (cameraActive ? 'Các mẫu chưa sẵn sàng.' : 'Bật camera ở chế độ Tự do để chuẩn bị mẫu.')}</p>
+          <h3>Mẫu QIPEDC đang sẵn sàng{liveReferenceStatus?.indexedCount ? ` · ${liveReferenceStatus.indexedCount + 1} từ` : ''}</h3>
+          <p>{liveReferenceStatus?.indexedCount
+            ? 'Camera đã nạp sẵn bộ mẫu QIPEDC và có thể dùng thêm các mục bạn chọn trong từ điển.'
+            : liveReferenceStatus?.entries.filter((item) => item.ready).map((item) => item.word).join(' · ') ||
+              (cameraActive ? 'Các mẫu chưa sẵn sàng.' : 'Bật camera ở chế độ Tự do để chuẩn bị mẫu.')}</p>
           {liveReferenceStatus?.failed && <p>Một số video mẫu chưa sẵn sàng.</p>}
         </div>
         <div className="dialog-control-group">
