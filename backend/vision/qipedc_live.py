@@ -283,6 +283,18 @@ def index_path():
     return None
 
 
+def _relative_coarse_chunked(features, observed, chunk_size=1024):
+    """Compute relative_coarse in small chunks to avoid a ~200 MB temporary RAM spike on Render Free."""
+    total, _, hands, dims = features.shape
+    out = np.empty((total, COARSE_BINS, hands, dims), dtype=np.float32)
+    for start in range(0, total, chunk_size):
+        end = min(start + chunk_size, total)
+        f_chunk = features[start:end].astype(np.float32, copy=False)
+        o_chunk = observed[start:end]
+        out[start:end] = _coarse_pool(_relative_hand_features(f_chunk, o_chunk), o_chunk)
+    return out
+
+
 @lru_cache(maxsize=2)
 def _load_index_cached(path_str, mtime_ns):
     del mtime_ns
@@ -292,7 +304,8 @@ def _load_index_cached(path_str, mtime_ns):
         for hands, prefix in ((1, "uni"), (2, "bi")):
             ids = [str(x) for x in data[f"{prefix}_ids"].tolist()]
             all_ids.extend(ids)
-            feats = data[f"{prefix}_features"].astype(np.float32)
+            # Keep Stage-2 features in compact float16 (~28 MB vs ~57 MB); cast only top-K slices to float32.
+            feats = data[f"{prefix}_features"]
             obs = data[f"{prefix}_observed"].astype(bool)
             pens = data[f"{prefix}_penalties"].astype(np.float32)
             v2e = data[f"{prefix}_var_to_entry"].astype(np.int32)
@@ -308,7 +321,7 @@ def _load_index_cached(path_str, mtime_ns):
                 "penalties": pens, "var_to_entry": v2e, "coarse": coarse, "slices": slices,
             }
             if hands == 2:
-                bucket["relative_coarse"] = _coarse_pool(_relative_hand_features(feats, obs), obs)
+                bucket["relative_coarse"] = _relative_coarse_chunked(feats, obs)
             for key in ("coarse", "relative_coarse"):
                 if key in bucket:
                     bucket[key + "_squared"] = np.einsum("vthd,vthd->vth", bucket[key], bucket[key])
@@ -365,7 +378,9 @@ def _indexed_references(recording, bucket, *, coarse_key="coarse", allowed_ids=N
     for entry_idx in _stage1_candidates(recording, bucket, coarse_key=coarse_key, allowed_ids=allowed_ids):
         start, end = bucket["slices"][entry_idx]
         yield bucket["ids"][entry_idx], (
-            bucket["features"][start:end], bucket["observed"][start:end], bucket["penalties"][start:end],
+            bucket["features"][start:end].astype(np.float32, copy=False),
+            bucket["observed"][start:end],
+            bucket["penalties"][start:end],
         )
 
 
