@@ -9,15 +9,14 @@ import { Eye, ZoomIn, RotateCcw, Crosshair } from 'lucide-react';
 /**
  * RobotSigner3D — Robot diễn hoạt Ngôn ngữ Ký hiệu VSL
  *
- * Thay thế Avatar3D (nhân vật da người) bằng một robot dễ quan sát hơn:
  * - Mỗi ngón tay một màu riêng (Cái / Trỏ / Giữa / Áp út / Út) → nhìn rõ ngón nào duỗi, ngón nào gập.
  * - Mặt lòng bàn tay màu xanh phát sáng, mu bàn tay màu trắng → biết ngay bàn tay đang hướng về đâu.
  * - Khớp ngón màu tối tương phản, bàn tay phóng to hơn.
  * - Màn hình LED trên ngực hiển thị từ đang diễn, mắt LED đổi màu khi đang diễn hoạt.
  * - Lớp phụ đề: câu đầy đủ với từ hiện tại được tô sáng, kèm chú thích màu ngón tay.
  *
- * Hệ khung xương (vị trí pivot + trục xoay khớp) giữ NGUYÊN như Avatar3D cũ để
- * dùng lại toàn bộ dữ liệu tư thế trong utils/handPoses.js.
+ * Hệ khung xương (vị trí pivot + trục xoay khớp) tương thích với dữ liệu tư thế
+ * trong utils/handPoses.js.
  */
 
 export const FINGER_COLORS = {
@@ -136,7 +135,7 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
   const freezeRef = useRef(freezeAt);
   useEffect(() => { freezeRef.current = freezeAt; }, [freezeAt]);
 
-  // ---------- Bàn tay robot (giữ nguyên toạ độ khớp của Avatar3D) ----------
+  // ---------- Bàn tay robot ----------
   const createRobotHand = (mats, isLeft = false) => {
     const handGroup = new THREE.Group();
     const flip = isLeft ? -1 : 1;
@@ -393,7 +392,7 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
 
     torsoGroup.add(headGroup);
 
-    // Cánh tay (giữ nguyên vị trí vai/khuỷu/cổ tay của Avatar3D)
+    // Cánh tay
     const buildArm = (side) => {
       const isLeft = side === 'left';
       const shoulder = new THREE.Group();

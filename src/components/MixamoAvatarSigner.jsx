@@ -91,7 +91,7 @@ function sampleActionQueue(queue, elapsedMs) {
   return queue.length ? sampleAction(queue[queue.length - 1], 1) : createRestPose();
 }
 
-export default function MixamoAvatarSigner({ activeLetter, currentStep, currentSign, isPlaying = false, sequence = [], currentIndex = 0, controlsTarget }) {
+export default function MixamoAvatarSigner({ activeLetter, currentStep, isPlaying = false, sequence = [], currentIndex = 0, controlsTarget }) {
   const mountRef = useRef(null);
   const [modelLoaded, setModelLoaded] = React.useState(false);
   const [modelError, setModelError] = React.useState(false);
@@ -102,7 +102,7 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
   const viewTransitionRef = useRef(false);
   const poseTargetsRef = useRef(createRestPose());
   const poseAnimationRef = useRef(null);
-  const gloss = activeLetter || currentSign || currentStep?.avatar_symbol || currentStep?.gloss || currentStep?.token;
+  const gloss = activeLetter || currentStep?.avatar_symbol || currentStep?.gloss || currentStep?.token;
   const signToken = normalizeSignToken(gloss);
 
   const hasNextStep = currentIndex < sequence.length - 1;
@@ -118,7 +118,7 @@ export default function MixamoAvatarSigner({ activeLetter, currentStep, currentS
       poseAnimationRef.current = null;
       poseTargetsRef.current = createRestPose();
     }
-  }, [activeLetter, currentSign, currentStep, currentIndex, hasNextStep, isPlaying, modelLoaded, signToken]);
+  }, [activeLetter, currentStep, currentIndex, hasNextStep, isPlaying, modelLoaded, signToken]);
 
   useEffect(() => {
     const container = mountRef.current;

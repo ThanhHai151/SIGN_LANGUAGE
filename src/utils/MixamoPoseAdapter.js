@@ -552,11 +552,6 @@ export function getPoseForSymbol(value) {
   return withSavedOverrides(symbol, createRestPose());
 }
 
-// Giữ tên cũ để các caller hiện có tương thích, đồng thời chấp nhận Unicode.
-export function getPoseForLetter(char) {
-  return getPoseForSymbol(char);
-}
-
 const poseAction = (data, duration = 0.4, label = 'pose') => ({ type: 'pose', label, data: copyTargets(data), duration });
 
 export function resolveVietnameseSign(token, { hasNextStep = false } = {}) {
@@ -567,16 +562,29 @@ export function resolveVietnameseSign(token, { hasNextStep = false } = {}) {
 /** Expand only poses this Mixamo renderer can play, preserving Vietnamese marks. */
 export function createMixamoPlayback(steps) {
   return steps.flatMap((step) => {
-    const spellingSymbol = step.type === 'fingerspelling' ? step.token || step.gloss : '';
-    const text = String(step.avatar_symbol || spellingSymbol || step.word || step.label || step.token || step.gloss || '')
+    // token is the matched input phrase. word can include dictionary aliases and notes.
+    const text = String(step.avatar_symbol || step.token || step.word || step.gloss || '')
       .normalize('NFC').trim().replace(/^ALPHA_/i, '');
-    const symbols = resolveVietnameseSign(text).length ? [text] : [...text];
+    const symbols = step.avatar_symbol || step.type === 'fingerspelling' || resolveVietnameseSign(text).length
+      ? [text]
+      : text.toUpperCase().split(/\s+/u).flatMap((syllable) => {
+        let tone;
+        const letters = [...syllable].map((letter) => {
+          const toned = splitTonedLetter(letter);
+          if (!toned) return letter;
+          tone = toned.tone;
+          return toned.letter;
+        });
+        return tone ? [...letters, tone] : letters;
+      });
     return symbols.flatMap((value) => {
       const symbol = getMixamoToneSymbol(value.normalize('NFC').toUpperCase());
       if (!resolveVietnameseSign(symbol).length) return [];
       return [{
         token: symbol, gloss: symbol, avatar_symbol: symbol,
-        label: symbol.startsWith('TONE_') ? step.label || symbol : `Chữ ${symbol}`,
+        label: symbol.startsWith('TONE_')
+          ? Object.keys(TONE_LABELS).find((label) => TONE_LABELS[label] === symbol)?.toLowerCase().replace(/^d/, 'D') || symbol
+          : `Chữ ${symbol}`,
         type: 'fingerspelling', word: text, has_pose: true,
         duration_ms: 800,
         description: `Đánh vần “${text}” bằng ký tự ${symbol}`
@@ -652,7 +660,7 @@ function resolveSignActions(token) {
   }
 
   if (MIXAMO_ALPHABET[normalized]) {
-    return [poseAction(getPoseForLetter(normalized), 0.4, normalized)];
+    return [poseAction(getPoseForSymbol(normalized), 0.4, normalized)];
   }
   if (DIACRITIC_POSES[normalized]) {
     return [poseAction(getPoseForSymbol(normalized), 0.4, normalized)];
@@ -674,14 +682,4 @@ export function getMixamoBoneName(name) {
 
 export function findMixamoBone(bonesMap, name) {
   return bonesMap?.get(name) ?? bonesMap?.get(getMixamoBoneName(name)) ?? bonesMap?.get(`mixamorig${name}`) ?? null;
-}
-
-export function applyMixamoPose(bonesMap, targets) {
-  if (!bonesMap || !Array.isArray(targets)) return;
-
-  for (const target of targets) {
-    const bone = findMixamoBone(bonesMap, target.bone);
-    if (!bone?.rotation || !Array.isArray(target.rot)) continue;
-    bone.rotation.set(target.rot[0], target.rot[1], target.rot[2]);
-  }
 }
