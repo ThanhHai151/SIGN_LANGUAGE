@@ -80,13 +80,33 @@ def _visible_clip(frames):
 
 def _fill_short_gaps(clip):
     clip = clip.copy()
-    for joints in (slice(11, 12), slice(12, 13), slice(33, 54), slice(54, 75)):
+    for joints in (slice(11, 12), slice(12, 13)):
         points = clip[:, joints]
         valid = np.flatnonzero(np.any(points, axis=(1, 2)))
         for left, right in zip(valid, valid[1:]):
             gap = right - left - 1
-            if 0 < gap <= 2:
+            if 0 < gap <= 3:
                 scale = np.arange(1, gap + 1, dtype=np.float32)[:, None, None] / (gap + 1)
+                points[left + 1:right] = points[left] + scale * (points[right] - points[left])
+    for joints, pose_wrist_idx in ((slice(33, 54), 15), (slice(54, 75), 16)):
+        points = clip[:, joints]
+        pose_wrist = clip[:, pose_wrist_idx]
+        valid = np.flatnonzero(np.any(points, axis=(1, 2)))
+        for left, right in zip(valid, valid[1:]):
+            gap = right - left - 1
+            if gap <= 0:
+                continue
+            scale = np.arange(1, gap + 1, dtype=np.float32)[:, None, None] / (gap + 1)
+            # Bridge 1-2 frame fast-motion/rotation dropouts along the tracked pose wrist curve
+            # when Holistic pose wrist is continuously present across the gap.
+            if gap <= 2 and np.all(np.any(pose_wrist[left:right + 1] != 0, axis=1)):
+                err_l = points[left, 0] - pose_wrist[left]
+                err_r = points[right, 0] - pose_wrist[right]
+                wrist_path = pose_wrist[left + 1:right] + err_l + scale[:, 0, :] * (err_r - err_l)
+                shape_l = points[left] - points[left, :1]
+                shape_r = points[right] - points[right, :1]
+                points[left + 1:right] = wrist_path[:, None, :] + shape_l + scale * (shape_r - shape_l)
+            elif gap <= 2:
                 points[left + 1:right] = points[left] + scale * (points[right] - points[left])
     return clip
 
@@ -208,12 +228,13 @@ def analyze_live_words(frames, aspect_ratio, enable_time_sign, timestamps=None):
     hands = _tracked_hands(clip)
     body = normalize_sequence_tjc_v2(clip)
 
-    # Check hand motion relative to the shoulders, using percentiles to ignore isolated jitter.
+    # Check hand motion relative to the shoulders, using [5, 95] percentiles so isolated
+    # single-frame jitter is ignored while fast round-trip signs still pass the motion gate.
     motion = False
     for side, start in enumerate((33, 54)):
         tracked = body[hands[:, side], start:start + 21, :2]
         if len(tracked) >= 4:
-            extent = np.percentile(tracked, 90, axis=0) - np.percentile(tracked, 10, axis=0)
+            extent = np.percentile(tracked, 95, axis=0) - np.percentile(tracked, 5, axis=0)
             motion |= float(np.linalg.norm(extent, axis=1).mean()) >= 0.16
     if not motion:
         return {"motion_detected": False, "status": "no_motion"}

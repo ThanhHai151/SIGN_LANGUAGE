@@ -945,13 +945,24 @@ def recognize_sequence(req: SequenceRequest, request: Request):
                 enable_time_sign=req.topic_id in (None, "", "Bài 2 - Số đếm và Thời gian"),
                 timestamps=timestamps[-120:] if timestamps is not None and len(timestamps) == len(sequence) else None,
             )
-            if details["motion_detected"] and not req.topic_id:
-                entries = _live_qipedc_entries(req.qipedc_entries)
-                if details["status"] == "matched":
-                    entries.append((TIME_SIGN_ENTRY, TIME_SIGN_VIDEO))
-                generic = match_live_words(window, req.aspect_ratio, entries)
-                if generic and generic.get("entry_id") != TIME_SIGN_ENTRY:
-                    details = generic
+            if details["motion_detected"]:
+                allowed_ids = None
+                if req.topic_id:
+                    lex = load_lexicon()
+                    topic_matches = {
+                        e["id"] for e in lex["entries"]
+                        if e.get("category") == req.topic_id and e.get("id")
+                    }
+                    allowed_ids = topic_matches if topic_matches else None
+                if not req.topic_id or allowed_ids is not None:
+                    entries = _live_qipedc_entries(req.qipedc_entries)
+                    if details["status"] == "matched":
+                        entries.append((TIME_SIGN_ENTRY, TIME_SIGN_VIDEO))
+                    generic = match_live_words(window, req.aspect_ratio, entries, allowed_ids=allowed_ids)
+                    if generic and generic.get("entry_id") != TIME_SIGN_ENTRY and (
+                        details["status"] != "matched" or generic.get("status") == "word_matched"
+                    ):
+                        details = generic
             if details["motion_detected"] and details["status"] not in ("matched", "word_matched", "ambiguous_word"):
                 if lost_hand_during_interaction(window, req.aspect_ratio):
                     details = {"motion_detected": True, "status": "lost_hand_during_interaction"}
