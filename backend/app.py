@@ -31,6 +31,13 @@ from backend.vision.qipedc_live import (
     indexed_entry_ids, lost_hand_during_interaction, match_live_words, prepare_live_reference,
 )
 from backend.vision.qipedc_practice import TIME_SIGN_ENTRY, TIME_SIGN_VIDEO
+from backend.vision.word_scope import (
+    allowed_live_word_ids,
+    approved_live_word_ids,
+    validate_extra_qipedc_word,
+    validate_word_result_scope,
+    verify_reference_video_id,
+)
 from backend.vision.alphabet_classifier import O_D_TI_MAX, O_IDX_STRAIGHT_MAX
 from backend.nlp.text_to_vsl import text_to_vsl_glosses
 from backend.models import video_cache
@@ -222,9 +229,14 @@ def get_lexicon(
     total = len(items)
     if limit:
         items = items[offset:offset + limit]
+    indexed_ids = indexed_entry_ids()
+    live_allowed = allowed_live_word_ids(lex, indexed_ids=indexed_ids, builtin_ids=BUILTIN_WORDS)
     return {
         "success": True,
-        "meta": {**lex["meta"], "live_qipedc_ids": list(dict.fromkeys((*BUILTIN_WORDS, *indexed_entry_ids())))},
+        "meta": {
+            **lex["meta"],
+            "live_qipedc_ids": [eid for eid in dict.fromkeys((*BUILTIN_WORDS, *indexed_ids)) if eid in live_allowed],
+        },
         "total": total,
         "entries": [compact_entry(e) for e in items],
     }
@@ -283,20 +295,53 @@ def _qipedc_practice_entry(entry_id, video_id):
     return entry, selected
 
 
-def _live_qipedc_entries(extra_ids=()):
-    entries = load_lexicon()["by_id"]
-    return [(entry_id, video_id)
-            for entry_id in dict.fromkeys((*DEFAULT_WORDS, *extra_ids))
-            if entry_id != TIME_SIGN_ENTRY and (video_id := mediaid_of(entries.get(entry_id, {})))]
+def _live_qipedc_entries(extra_ids=(), allowed_ids=None):
+    lex = load_lexicon()
+    entries = []
+    for entry_id in dict.fromkeys((*DEFAULT_WORDS, *extra_ids)):
+        if entry_id == TIME_SIGN_ENTRY:
+            continue
+        if allowed_ids is not None and entry_id not in allowed_ids:
+            continue
+        validation = validate_extra_qipedc_word(entry_id, lex)
+        if validation["allowed"] and validation["video_id"]:
+            entries.append((entry_id, validation["video_id"]))
+    return entries
 
 
 @app.post("/api/qipedc/live/prepare")
 def prepare_qipedc_live(entry_id: Optional[str] = None):
-    indexed = frozenset(indexed_entry_ids())
+    lex = load_lexicon()
+    raw_indexed = indexed_entry_ids()
+    approved_scope = (
+        approved_live_word_ids(lex, indexed_ids=raw_indexed, builtin_ids=BUILTIN_WORDS)
+        if raw_indexed
+        else None
+    )
+    eligible_ids = allowed_live_word_ids(
+        lex,
+        indexed_ids=raw_indexed,
+        builtin_ids=BUILTIN_WORDS,
+        allowed_override=approved_scope,
+    )
+    indexed = frozenset(eid for eid in raw_indexed if eid in eligible_ids)
     ids = (entry_id,) if entry_id else BUILTIN_WORDS
     prepared = []
     for item in ids:
-        entry, video_id = _qipedc_practice_entry(item, None)
+        entry = lex["by_id"].get(item)
+        if entry is None:
+            raise HTTPException(status_code=404, detail="Mục từ này chưa có video mẫu QIPEDC.")
+        validation = validate_extra_qipedc_word(item, lex, allowed_override=approved_scope)
+        if not validation["allowed"]:
+            prepared.append({
+                "id": item,
+                "word": entry["word"],
+                "ready": False,
+                "builtin": False,
+                "reject_reason": validation["reason"],
+            })
+            continue
+        video_id = validation["video_id"]
         if item in indexed:
             ready = True
         else:
@@ -304,8 +349,12 @@ def prepare_qipedc_live(entry_id: Optional[str] = None):
                 ready = prepare_live_reference(video_id)
             except (ImportError, OSError, RuntimeError, ValueError):
                 ready = False
-        prepared.append({"id": item, "word": entry["word"], "ready": ready,
-                         "builtin": item in BUILTIN_WORDS or item in indexed})
+        prepared.append({
+            "id": item,
+            "word": entry["word"],
+            "ready": ready,
+            "builtin": item in BUILTIN_WORDS or item in indexed,
+        })
     return {"entries": prepared, "indexed_count": len(indexed), "max_extra_words": MAX_EXTRA_WORDS}
 
 
@@ -940,6 +989,13 @@ def recognize_sequence(req: SequenceRequest, request: Request):
         live_words = req.live_words and mode == "words"
         sequence, timestamps = req.sequence, req.timestamps
         diagnostic = {}
+        lex = load_lexicon() if mode == "words" else None
+        raw_indexed = indexed_entry_ids() if mode == "words" else ()
+        approved_scope = (
+            approved_live_word_ids(lex, indexed_ids=raw_indexed, builtin_ids=BUILTIN_WORDS)
+            if mode == "words" and raw_indexed
+            else None
+        )
 
         allow_short = req.allow_short_sequences if req.allow_short_sequences is not None else FEATURE_ALLOW_SHORT_SEQUENCES
         min_required_len = MIN_GESTURE_FRAMES if allow_short else 30
@@ -955,42 +1011,98 @@ def recognize_sequence(req: SequenceRequest, request: Request):
         if live_words:
             from backend.vision.qipedc_practice import analyze_live_words
 
+            valid_extra_ids = []
+            rejected_extra_words = []
+            for extra_id in req.qipedc_entries or ():
+                check = validate_extra_qipedc_word(extra_id, lex, allowed_override=approved_scope)
+                if check["allowed"]:
+                    valid_extra_ids.append(extra_id)
+                else:
+                    rejected_extra_words.append({"entry_id": extra_id, "reason": check["reason"]})
+
+            allowed_live_ids = allowed_live_word_ids(
+                lex,
+                indexed_ids=raw_indexed,
+                builtin_ids=BUILTIN_WORDS,
+                extra_ids=valid_extra_ids,
+                topic_id=req.topic_id,
+                allowed_override=approved_scope,
+            )
+            enable_time_sign = (
+                TIME_SIGN_ENTRY in allowed_live_ids
+                and req.topic_id in (None, "", "Bài 2 - Số đếm và Thời gian")
+                and verify_reference_video_id(TIME_SIGN_VIDEO)["eligible"]
+            )
+
             window = sequence[-120:]
             details = analyze_live_words(
                 window, req.aspect_ratio,
-                enable_time_sign=req.topic_id in (None, "", "Bài 2 - Số đếm và Thời gian"),
+                enable_time_sign=enable_time_sign,
                 timestamps=timestamps[-120:] if timestamps is not None and len(timestamps) == len(sequence) else None,
             )
             if details["motion_detected"]:
-                allowed_ids = None
-                if req.topic_id:
-                    lex = load_lexicon()
-                    topic_matches = {
-                        e["id"] for e in lex["entries"]
-                        if e.get("category") == req.topic_id and e.get("id")
-                    }
-                    allowed_ids = topic_matches if topic_matches else None
-                if not req.topic_id or allowed_ids is not None:
-                    entries = _live_qipedc_entries(req.qipedc_entries)
-                    if details["status"] == "matched":
+                if allowed_live_ids:
+                    entries = _live_qipedc_entries(valid_extra_ids, allowed_ids=allowed_live_ids)
+                    if details["status"] == "matched" and TIME_SIGN_ENTRY in allowed_live_ids:
                         entries.append((TIME_SIGN_ENTRY, TIME_SIGN_VIDEO))
-                    generic = match_live_words(window, req.aspect_ratio, entries, allowed_ids=allowed_ids)
+                    generic = match_live_words(window, req.aspect_ratio, entries, allowed_ids=allowed_live_ids)
                     if generic and generic.get("entry_id") != TIME_SIGN_ENTRY and (
                         details["status"] != "matched" or generic.get("status") == "word_matched"
                     ):
                         details = generic
-            if details["motion_detected"] and details["status"] not in ("matched", "word_matched", "ambiguous_word"):
+                elif details["status"] != "matched":
+                    details = {"motion_detected": True, "status": "no_eligible_candidates"}
+            if rejected_extra_words:
+                details = {**details, "rejected_extra_words": rejected_extra_words}
+            if details["motion_detected"] and details["status"] not in ("matched", "word_matched", "ambiguous_word", "no_eligible_candidates"):
                 if lost_hand_during_interaction(window, req.aspect_ratio):
                     details = {"motion_detected": True, "status": "lost_hand_during_interaction"}
             if req.include_diagnostic:
                 diagnostic = {"diagnostic": details}
             active = details["motion_detected"]
             if details["status"] in ("matched", "word_matched"):
-                entry = load_lexicon()["by_id"][details.get("entry_id", TIME_SIGN_ENTRY)]
+                matched_entry_id = details.get("entry_id", TIME_SIGN_ENTRY)
+                scope_check = validate_word_result_scope(
+                    matched_entry_id,
+                    source="qipedc_template",
+                    lex=lex,
+                    allowed_ids=allowed_live_ids,
+                    include_pending_gt_sstcn=False,
+                )
+                if not scope_check["valid"]:
+                    details = {
+                        **details,
+                        "status": "scope_rejected",
+                        "rejected_entry_id": matched_entry_id,
+                        "reject_reason": scope_check["reject_reason"],
+                    }
+                    if req.include_diagnostic:
+                        diagnostic = {"diagnostic": details}
+                    return {"success": True, "data": {
+                        "success": True,
+                        "sign": "NEUTRAL",
+                        "label": "Từ nằm ngoài phạm vi nhận diện cho phép",
+                        "confidence": 0.0,
+                        "top_k": [],
+                        "confirmed": False,
+                        "new_token": None,
+                        "tts_speak": None,
+                        "motion_detected": active,
+                        "scope_rejected": True,
+                        "reject_reason": scope_check["reject_reason"],
+                        "word_scope_valid": False,
+                        **diagnostic,
+                    }}
+                entry = lex["by_id"][matched_entry_id]
                 return {"success": True, "data": {
                     "success": True, "sign": entry["word"], "label": entry["word"],
                     "entry_id": entry["id"], "category": "QIPEDC", "source": "qipedc_template",
-                    "confidence": details["similarity"], "video_url": entry["video_url"], "top_k": [],
+                    "confidence": details["similarity"],
+                    "video_url": scope_check["selected_video_url"] or entry["video_url"],
+                    "region": scope_check["region"],
+                    "word_scope_valid": True,
+                    "scope_rejected": False,
+                    "top_k": [],
                     "match_method": details.get("match_method"),
                     "confirmed": False, "new_token": None,
                     **diagnostic,
@@ -1020,6 +1132,11 @@ def recognize_sequence(req: SequenceRequest, request: Request):
             if len(sequence) >= 30:
                 timestamps = timestamps[-30:] if timestamps is not None and len(timestamps) == len(sequence) else None
                 sequence = sequence[-30:]
+        word_scope_kwargs = (
+            {"allowed_word_ids": approved_scope, "include_pending_gt_sstcn": False}
+            if mode == "words"
+            else {}
+        )
         result = recognizer.predict_sequence(
             sequence_data=sequence,
             threshold=req.threshold,
@@ -1029,8 +1146,74 @@ def recognize_sequence(req: SequenceRequest, request: Request):
             timestamps=timestamps,
             confirm=not live_words,
             allow_short_sequences=allow_short,
+            **word_scope_kwargs,
         )
-        if fallback_label and result.get("sign") == "NEUTRAL":
+        if mode == "words" and isinstance(result, dict) and result.get("success", True):
+            raw_top_k = result.get("top_k") or []
+            filtered_top_k = []
+            for item in raw_top_k:
+                if not isinstance(item, dict):
+                    continue
+                item_idx = item.get("index")
+                item_entry = lex["by_sstcn"].get(item_idx) if item_idx is not None else None
+                item_entry_id = item.get("entry_id") or (item_entry["id"] if item_entry else None)
+                item_check = validate_word_result_scope(
+                    item_entry_id,
+                    source="sstcn",
+                    lex=lex,
+                    allowed_ids=approved_scope,
+                    include_pending_gt_sstcn=False,
+                    sign_label=item.get("term"),
+                )
+                if item_check["valid"]:
+                    filtered_top_k.append({**item, "entry_id": item_check["entry_id"]})
+            result["top_k"] = filtered_top_k
+
+            if result.get("scope_rejected"):
+                result["top_k"] = []
+                if req.include_diagnostic:
+                    base_diag = diagnostic.get("diagnostic") if isinstance(diagnostic.get("diagnostic"), dict) else {}
+                    diagnostic = {"diagnostic": {**base_diag, "status": "scope_rejected", "reject_reason": result.get("reject_reason")}}
+            elif result.get("sign") not in (None, "", "NEUTRAL"):
+                scope_check = validate_word_result_scope(
+                    result.get("entry_id"),
+                    source="sstcn",
+                    lex=lex,
+                    allowed_ids=approved_scope,
+                    include_pending_gt_sstcn=False,
+                    sign_label=result.get("sign"),
+                )
+                if not scope_check["valid"]:
+                    rejected_payload = {
+                        "status": "scope_rejected",
+                        "rejected_sign": result.get("sign"),
+                        "rejected_entry_id": scope_check.get("entry_id") or result.get("entry_id"),
+                        "reject_reason": scope_check["reject_reason"],
+                    }
+                    if req.include_diagnostic:
+                        base_diag = diagnostic.get("diagnostic") if isinstance(diagnostic.get("diagnostic"), dict) else {}
+                        diagnostic = {"diagnostic": {**base_diag, **rejected_payload}}
+                    result = {
+                        **result,
+                        "sign": "NEUTRAL",
+                        "label": "Từ nằm ngoài phạm vi nhận diện cho phép",
+                        "confidence": 0.0,
+                        "confirmed": False,
+                        "new_token": None,
+                        "replaced_token": None,
+                        "tts_speak": None,
+                        "top_k": [],
+                        "entry_id": None,
+                        "video_url": "",
+                        "region": scope_check.get("region"),
+                        "scope_rejected": True,
+                        "reject_reason": scope_check["reject_reason"],
+                        "word_scope_valid": False,
+                    }
+                else:
+                    result["word_scope_valid"] = True
+                    result["scope_rejected"] = False
+        if fallback_label and result.get("sign") == "NEUTRAL" and not result.get("scope_rejected"):
             result["label"] = fallback_label
         result.update(diagnostic)
         return {"success": True, "data": result}
