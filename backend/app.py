@@ -58,6 +58,10 @@ app.add_middleware(GZipMiddleware, minimum_size=2000)
 # Khởi tạo động cơ nhận diện
 recognizer = VSLRecognizer()
 
+# Feature flag & cấu hình nhận diện cử chỉ ngắn (< 30 frame)
+FEATURE_ALLOW_SHORT_SEQUENCES = os.environ.get("VSL_ALLOW_SHORT_SEQUENCES", "1").lower() in ("1", "true", "yes")
+MIN_GESTURE_FRAMES = 12
+
 # Pydantic Request Models
 class LandmarkRequest(BaseModel):
     landmarks: Optional[List[List[float]]] = None
@@ -124,6 +128,7 @@ class SequenceRequest(BaseModel):
     qipedc_entries: List[str] = Field(default_factory=list, max_length=MAX_EXTRA_WORDS)
     include_diagnostic: bool = False
     aspect_ratio: float = Field(default=1.0, ge=0.25, le=4.0)
+    allow_short_sequences: Optional[bool] = None
 
 class CalibrationSampleRequest(BaseModel):
     label: str
@@ -935,6 +940,18 @@ def recognize_sequence(req: SequenceRequest, request: Request):
         live_words = req.live_words and mode == "words"
         sequence, timestamps = req.sequence, req.timestamps
         diagnostic = {}
+
+        allow_short = req.allow_short_sequences if req.allow_short_sequences is not None else FEATURE_ALLOW_SHORT_SEQUENCES
+        min_required_len = MIN_GESTURE_FRAMES if allow_short else 30
+
+        if len(sequence) < min_required_len:
+            return {"success": True, "data": {
+                "success": True, "sign": "NEUTRAL", "label": "Đang chờ động tác từ vựng…",
+                "confidence": 0.0, "top_k": [], "confirmed": False, "new_token": None,
+                "motion_detected": False,
+                **diagnostic,
+            }}
+
         if live_words:
             from backend.vision.qipedc_practice import analyze_live_words
 
@@ -978,22 +995,31 @@ def recognize_sequence(req: SequenceRequest, request: Request):
                     "confirmed": False, "new_token": None,
                     **diagnostic,
                 }}
-            missing_tracking = details["status"] in ("missing_both_hands", "tracking_gaps", "lost_hand_during_interaction")
-            ambiguous = details["status"] == "ambiguous_word"
-            if ambiguous or missing_tracking or not active or len(sequence) < 30:
-                label = "Động tác gần nhiều ký hiệu. Hãy thử lại." if ambiguous else (
-                    "Chưa đủ dữ liệu bàn tay để xác nhận" if missing_tracking else "Đang chờ động tác từ vựng…"
-                )
-                if details["status"] == "lost_hand_during_interaction":
-                    label = "Mất dấu một tay khi hai tay ở gần nhau. Hãy giữ cả hai cổ tay trong khung."
+
+            fallback_label = None
+            if details["status"] == "missing_both_hands" or not active or len(sequence) < min_required_len:
+                label = "Chưa đủ dữ liệu bàn tay để xác nhận" if details["status"] == "missing_both_hands" else "Đang chờ động tác từ vựng…"
                 return {"success": True, "data": {
                     "success": True, "sign": "NEUTRAL", "label": label,
                     "confidence": 0.0, "top_k": [], "confirmed": False, "new_token": None,
                     "motion_detected": active,
                     **diagnostic,
                 }}
-            timestamps = timestamps[-30:] if timestamps is not None and len(timestamps) == len(sequence) else None
-            sequence = sequence[-30:]
+            elif details["status"] == "ambiguous_word":
+                fallback_label = "Động tác gần nhiều ký hiệu. Hãy thử lại."
+            elif details["status"] == "lost_hand_during_interaction":
+                fallback_label = "Mất dấu một tay khi hai tay ở gần nhau. Hãy giữ cả hai cổ tay trong khung."
+            elif details["status"] == "tracking_gaps":
+                fallback_label = "Chưa đủ dữ liệu bàn tay để xác nhận"
+
+            if len(sequence) >= 30:
+                timestamps = timestamps[-30:] if timestamps is not None and len(timestamps) == len(sequence) else None
+                sequence = sequence[-30:]
+        else:
+            fallback_label = None
+            if len(sequence) >= 30:
+                timestamps = timestamps[-30:] if timestamps is not None and len(timestamps) == len(sequence) else None
+                sequence = sequence[-30:]
         result = recognizer.predict_sequence(
             sequence_data=sequence,
             threshold=req.threshold,
@@ -1002,7 +1028,10 @@ def recognize_sequence(req: SequenceRequest, request: Request):
             topic_id=req.topic_id,
             timestamps=timestamps,
             confirm=not live_words,
+            allow_short_sequences=allow_short,
         )
+        if fallback_label and result.get("sign") == "NEUTRAL":
+            result["label"] = fallback_label
         result.update(diagnostic)
         return {"success": True, "data": result}
     except Exception as e:

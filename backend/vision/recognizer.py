@@ -763,6 +763,7 @@ class VSLRecognizer:
         topic_id=None,
         timestamps=None,
         confirm=True,
+        allow_short_sequences=None,
     ):
         """
         Nhận diện chuỗi chuyển động qua SSTCN_Attention (tự động hỗ trợ 102 lớp cũ
@@ -779,6 +780,10 @@ class VSLRecognizer:
 
         if threshold is None:
             threshold = self.confidence_threshold
+
+        if allow_short_sequences is None:
+            allow_short_sequences = os.environ.get("VSL_ALLOW_SHORT_SEQUENCES", "1").lower() in ("1", "true", "yes")
+        min_allowed_len = 12 if allow_short_sequences else 30
 
         num_classes = int(getattr(self.sstcn_model, "num_classes", 102))
         class_names = getattr(self.sstcn_model, "class_names", None)
@@ -802,6 +807,28 @@ class VSLRecognizer:
                 return {
                     "success": False,
                     "error": f"Kích thước chuỗi không hợp lệ: {arr.shape}. Yêu cầu: (T, 75, 3) với T >= 4"
+                }
+
+            if len(arr) < min_allowed_len:
+                return {
+                    "success": True,
+                    "sign": "NEUTRAL",
+                    "label": "Đang chờ động tác từ vựng…",
+                    "index": num_classes,
+                    "confidence": 0.0,
+                    "category": "Trạng thái",
+                    "description": f"Chuỗi cử chỉ ({len(arr)} frame) chưa đạt độ dài tối thiểu {min_allowed_len} frame",
+                    "video_url": "",
+                    "image_url": "",
+                    "entry_id": None,
+                    "variants": [],
+                    "confirmed": False,
+                    "new_token": None,
+                    "replaced_token": None,
+                    "tts_speak": None,
+                    "sentence": " ".join(self.sentence_tokens),
+                    "top_k": [],
+                    "inference_time_ms": 0.0,
                 }
 
             # Làm sạch NaN/Inf nếu có từ dữ liệu biên

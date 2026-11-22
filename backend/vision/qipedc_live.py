@@ -22,7 +22,7 @@ from backend.vision.skeleton_norm import normalize_sequence_tjc_v2
 DEFAULT_WORDS = (
     "q-an-du", "q-an-vua", "q-an-it", "q-com-2", "q-nem", "q-lau-mieng", "q-thom",
     "q-nan-ni", "q-cau-nguyen", "q-vai-lay",
-    "q-xin-loi", "q-ky-nang", "q-kha-nang",
+    "q-xin-loi", "q-ky-nang", "q-kha-nang", "q-khong-co",
 )
 BUILTIN_WORDS = (TIME_SIGN_ENTRY, *DEFAULT_WORDS)
 MAX_EXTRA_WORDS = 12
@@ -234,7 +234,17 @@ def _variant_distances(recording, reference):
 
 def _score_templates(recording, references):
     hands = recording[0].shape[2]
-    usable = [(entry, ref) for entry, ref in references.items() if ref[0].shape[2] == hands]
+    usable = []
+    for entry, ref in references.items():
+        if ref[0].shape[2] == hands:
+            usable.append((entry, ref))
+        elif hands == 1 and ref[0].shape[2] == 2 and entry in ("q-khong-co",):
+            # Cử chỉ đối xứng hai tay có biến thể thực tế một tay
+            # Trích xuất tay phải (index 1) và tay trái (index 0) tạo thành template 1 tay
+            ref_r = (ref[0][:, :, 1:2, :], ref[1][:, :, 1:2], ref[2])
+            ref_l = (ref[0][:, :, :1, :], ref[1][:, :, :1], ref[2])
+            usable.append((entry, ref_r))
+            usable.append((entry, ref_l))
     scores = {}
     for offset in range(0, len(usable), DTW_REFERENCE_BATCH_SIZE):
         batch = usable[offset:offset + DTW_REFERENCE_BATCH_SIZE]
@@ -242,7 +252,9 @@ def _score_templates(recording, references):
         combined = tuple(np.concatenate(parts, axis=0) for parts in zip(*templates))
         first_variant = np.cumsum([0, *(len(ref[0]) for ref in templates[:-1])])
         distances = np.minimum.reduceat(_variant_distances(recording, combined), first_variant, axis=1)
-        scores.update(zip(ids, distances.T))
+        for entry_id, dist in zip(ids, distances.T):
+            if entry_id not in scores or dist.min() < scores[entry_id].min():
+                scores[entry_id] = dist
     return scores
 
 

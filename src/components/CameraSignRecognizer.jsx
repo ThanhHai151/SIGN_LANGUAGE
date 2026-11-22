@@ -59,6 +59,16 @@ const SEQ_LEN = 30; // 30 frames cho SSTCN_Attention (~2 giây cử chỉ)
 const FRAME_STEP = 6; // Sliding window: cập nhật mỗi 6 frame (~300ms) để nhận diện tức thì
 const LIVE_QIPEDC_WINDOW_MS = 2800;
 
+export function isShortGesturesEnabled() {
+  if (typeof window === 'undefined') return true;
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('shortGestures')) {
+    return urlParams.get('shortGestures') !== '0';
+  }
+  const saved = localStorage.getItem('vsl_allow_short_sequences');
+  return saved !== '0';
+}
+
 function newLiveWordState() {
   return { lastHand: -Infinity, lastRequest: -Infinity, firstMotion: null,
     candidate: null, votes: 0, token: null, template: false, quiet: 0,
@@ -142,6 +152,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
   const lastFrameSendTimeRef = useRef(0);
   const frameLatencyHistoryRef = useRef([]);
   const windowTimestampsRef = useRef([]);
+  const isStandardFlushedRef = useRef(false);
 
   useEffect(() => {
     trackerEngineRef.current = trackerEngine;
@@ -1209,6 +1220,23 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
       canvas
     );
 
+    // POSE WRIST GUARD: Phát hiện cổ tay còn giơ cao trong không gian tương tác (ngăn Flush non khi bị occlusion giữa cử chỉ)
+    const poseLms = results.poseLandmarks;
+    let poseWristsRaised = false;
+    if (poseLms && poseLms.length >= 17) {
+      const leftShoulderY = poseLms[11]?.y;
+      const rightShoulderY = poseLms[12]?.y;
+      const leftWristY = poseLms[15]?.y;
+      const rightWristY = poseLms[16]?.y;
+      if (typeof leftShoulderY === 'number' && typeof rightShoulderY === 'number') {
+        const shoulderY = (leftShoulderY + rightShoulderY) / 2;
+        if ((typeof leftWristY === 'number' && leftWristY < shoulderY + 0.18) ||
+            (typeof rightWristY === 'number' && rightWristY < shoulderY + 0.18)) {
+          poseWristsRaised = true;
+        }
+      }
+    }
+
     handleMotionAndSequence(
       () => extract75KeypointsFromHolistic(results),
       Boolean(results.leftHandLandmarks || results.rightHandLandmarks),
@@ -1220,7 +1248,8 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
         handednessScore: null,
         modelComplexity: detailedTrackingRef.current ? 1 : 0,
         processingResolution: holisticCanvasRef.current
-          ? `${holisticCanvasRef.current.width}x${holisticCanvasRef.current.height}` : null
+          ? `${holisticCanvasRef.current.width}x${holisticCanvasRef.current.height}` : null,
+        poseWristsRaised,
       }
     );
   };
@@ -1257,6 +1286,12 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
    */
   const handleMotionAndSequence = (getKeypointsFn, hasHands, primaryWrist, leftHand, rightHand, diagMeta = null) => {
     const now = performance.now();
+    const allowShort = isShortGesturesEnabled();
+    const poseWristsRaised = Boolean(diagMeta?.poseWristsRaised);
+
+    if (hasHands) {
+      isStandardFlushedRef.current = false;
+    }
 
     // 1. Kiểm tra trạng thái chuyển động
     if (primaryWrist) {
@@ -1303,10 +1338,10 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
         const settledAfterMotion = Boolean(
           hasHands && liveState.hadFastMotion && liveState.stillSince !== null && (now - liveState.stillSince >= 240)
         );
-        const releasedAfterMotion = Boolean(!hasHands && Number.isFinite(liveState.lastHand) && (now - liveState.lastHand >= 140));
+        const releasedAfterMotion = Boolean(!hasHands && !poseWristsRaised && Number.isFinite(liveState.lastHand) && (now - liveState.lastHand >= 140));
         if (
           !liveState.token && !liveState.template && !liveState.flushed &&
-          bufLen >= 8 && bufDuration >= 420 && (settledAfterMotion || releasedAfterMotion)
+          bufLen >= (allowShort ? 12 : 30) && bufDuration >= 420 && (settledAfterMotion || releasedAfterMotion)
         ) {
           isEndOfGestureFlush = true;
           liveState.flushed = true;
@@ -1331,6 +1366,25 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
         if (hasHands) liveState.lastHand = now;
       } else if (!hasHands) {
         missingHandsCountRef.current = (missingHandsCountRef.current || 0) + 1;
+        const bufLen = sequenceBufferRef.current.length;
+        const bufDuration = bufLen >= 2 ? now - windowTimestampsRef.current[0] : 0;
+
+        // End-of-Gesture Flush cho Standard mode:
+        // Khi hạ tay (!hasHands && !poseWristsRaised), có >= 12 frame, và mất tay >= 3 frame (~100ms)
+        // nhưng chưa tới 8 frame (trước khi reset buffer)
+        if (
+          allowShort &&
+          !isStandardFlushedRef.current &&
+          !isInferringRef.current &&
+          bufLen >= 12 &&
+          bufDuration >= 350 &&
+          missingHandsCountRef.current >= 3 &&
+          !poseWristsRaised
+        ) {
+          isEndOfGestureFlush = true;
+          isStandardFlushedRef.current = true;
+        }
+
         // Chịu được tối đa 8 frame mất tay liên tiếp (~250ms) khi xoay cạnh tay hoặc vung nhanh
         if (missingHandsCountRef.current >= 8) {
           if (sequenceBufferRef.current.length > 0) {
@@ -1347,8 +1401,10 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
             windowTimestampsRef.current = [];
             updateHUDProgress(0, 0);
           }
+          if (!isEndOfGestureFlush) return;
+        } else if (!isEndOfGestureFlush) {
+          return;
         }
-        return;
       }
       missingHandsCountRef.current = 0;
 
@@ -1384,25 +1440,36 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
       updateHUDProgress(progressPercent, Math.min(currentLen, SEQ_LEN));
 
       const enoughFrames = liveWords
-        ? (isEndOfGestureFlush || (currentLen >= 12 && now - windowTimestampsRef.current[0] >= 850 && now - liveState.lastRequest >= 240))
-        : currentLen >= SEQ_LEN;
+        ? (isEndOfGestureFlush || (currentLen >= SEQ_LEN && now - windowTimestampsRef.current[0] >= 850 && now - liveState.lastRequest >= 240))
+        : (isEndOfGestureFlush || currentLen >= SEQ_LEN);
       const canQueue = liveWords && (hasHands || isEndOfGestureFlush) && !liveState.template;
       if (enoughFrames && (!isInferringRef.current || canQueue)) {
         const currentGen = requestGenRef.current;
         const requestMode = currentConversionMode;
         const requestTopic = requestMode === 'words' ? selectedTopicRef.current || null : null;
         const finalFlushRequest = isEndOfGestureFlush;
-        const sequencePayload = sequenceBufferRef.current.slice(liveWords ? 0 : -SEQ_LEN);
+        const isStandardShortFlush = !liveWords && isEndOfGestureFlush;
+        const sequencePayload = (liveWords || isStandardShortFlush)
+          ? sequenceBufferRef.current.slice(0)
+          : sequenceBufferRef.current.slice(-SEQ_LEN);
 
-        // Tính thời lượng thực tế của cửa sổ 30 frame
-        const recentTimestamps = windowTimestampsRef.current.slice(liveWords ? 0 : -SEQ_LEN);
+        // Tính thời lượng thực tế của cửa sổ
+        const recentTimestamps = (liveWords || isStandardShortFlush)
+          ? windowTimestampsRef.current.slice(0)
+          : windowTimestampsRef.current.slice(-SEQ_LEN);
         const windowDurationMs = recentTimestamps.length >= 2
           ? Math.round(recentTimestamps[recentTimestamps.length - 1] - recentTimestamps[0])
           : 0;
 
         // SLIDING WINDOW: Loại bỏ 6 frame cũ nhất, giữ lại 24 frame để frame tiếp theo nhanh chóng đầy lại!
-        if (liveWords) liveState.lastRequest = now;
-        else {
+        if (liveWords) {
+          liveState.lastRequest = now;
+        } else if (isStandardShortFlush) {
+          // Sau khi flush cử chỉ ngắn ở standard mode, xóa sạch buffer ngay để không gửi lặp lại
+          sequenceBufferRef.current = [];
+          windowTimestampsRef.current = [];
+          updateHUDProgress(0, 0);
+        } else {
           sequenceBufferRef.current.splice(0, FRAME_STEP);
           windowTimestampsRef.current.splice(0, FRAME_STEP);
         }
@@ -1447,6 +1514,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
               qipedc_entries: liveWords ? liveQipedcWords?.map(({ id }) => id) : null,
               aspect_ratio: holisticCanvasRef.current?.width / holisticCanvasRef.current?.height || 1,
               include_diagnostic: diagnostic.includesTime(now),
+              allow_short_sequences: allowShort,
             }
           )
             .then((resp) => {
@@ -1478,7 +1546,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
                   if (data.source === 'qipedc_template' && data.match_method === 'trajectory') {
                     liveState.templateVotes = liveState.templateCandidate === data.entry_id ? liveState.templateVotes + 1 : 1;
                     liveState.templateCandidate = data.entry_id;
-                    const strongSingleShot = (typeof data.confidence === 'number' && data.confidence >= 0.80) || finalFlushRequest;
+                    const strongSingleShot = (typeof data.confidence === 'number' && data.confidence >= 0.72) || finalFlushRequest;
                     if (!strongSingleShot && liveState.templateVotes < 2) {
                       liveState.candidate = null;
                       liveState.votes = 0;
@@ -1503,9 +1571,10 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
                     liveState.votes = liveState.candidate === data.sign ? liveState.votes + 1 : 1;
                     liveState.candidate = data.sign;
                     const conf = typeof data.confidence === 'number' ? data.confidence : 0;
+                    const flushThreshold = Math.min(confidenceThreshold, 0.68);
                     const readyWord =
                       (liveState.votes >= 2 && (now - liveState.firstMotion >= 500 || conf >= 0.85)) ||
-                      (finalFlushRequest && conf >= 0.80);
+                      (finalFlushRequest && conf >= flushThreshold);
                     if (!liveState.token && readyWord) token = data.sign;
                   }
                   if (token) liveState.token = token;
