@@ -666,18 +666,42 @@ class VSLRecognizer:
         }
 
     def get_sstcn_topics_info(self):
-        """Trả về danh sách chủ đề và lớp từ của checkpoint SSTCN đang nạp."""
+        """Trả về danh sách chủ đề và lớp từ hợp lệ (QIPEDC toàn quốc / miền Nam) của checkpoint SSTCN."""
+        from backend.models.lexicon import load_lexicon
+        from backend.vision.word_scope import allowed_sstcn_word_indices
+
         model = self.sstcn_model
+        lex = load_lexicon()
         num_classes = int(getattr(model, "num_classes", 102))
         class_names = list(getattr(model, "class_names", [SIGN_DICT_102.get(i, f"class_{i}") for i in range(num_classes)]))
         entry_ids = list(getattr(model, "entry_ids", [None] * num_classes))
         topic_map = dict(getattr(model, "topic_map", {}) or {})
-        word_indices = list(getattr(model, "word_class_indices", list(range(39, num_classes))))
         prep_ver = int(getattr(model, "preprocessing_version", 1))
+
+        active_word_indices, scope_meta = allowed_sstcn_word_indices(
+            model,
+            lex=lex,
+            include_pending_gt_sstcn=False,
+        )
+        active_set = set(active_word_indices)
+        excluded_gt_count = sum(
+            1 for item in scope_meta.get("excluded", [])
+            if item.get("reason") == "unverified_gt_curriculum"
+        )
+
+        def _entry_id_of(idx: int) -> Optional[str]:
+            if idx < len(entry_ids) and entry_ids[idx] and not str(entry_ids[idx]).startswith("gt-"):
+                return entry_ids[idx]
+            lex_entry = lex.get("by_sstcn", {}).get(idx)
+            if lex_entry and not str(lex_entry.get("id", "")).startswith("gt-"):
+                return lex_entry["id"]
+            return None
 
         topics_list = []
         for topic_name, indices in sorted(topic_map.items()):
-            valid_idx = [int(i) for i in indices if 0 <= int(i) < num_classes]
+            valid_idx = [int(i) for i in indices if int(i) in active_set]
+            if not valid_idx:
+                continue
             topics_list.append({
                 "id": topic_name,
                 "label": topic_name,
@@ -687,16 +711,17 @@ class VSLRecognizer:
             })
         return {
             "num_classes": num_classes,
-            "word_classes_count": len(word_indices),
+            "word_classes_count": len(active_word_indices),
+            "excluded_gt_count": excluded_gt_count,
             "preprocessing_version": prep_ver,
             "topics": topics_list,
             "words": [
                 {
                     "index": i,
                     "term": class_names[i],
-                    "entry_id": entry_ids[i] if i < len(entry_ids) else None,
+                    "entry_id": _entry_id_of(i),
                 }
-                for i in word_indices
+                for i in active_word_indices
             ],
         }
 
@@ -764,6 +789,8 @@ class VSLRecognizer:
         timestamps=None,
         confirm=True,
         allow_short_sequences=None,
+        allowed_word_ids=None,
+        include_pending_gt_sstcn=False,
     ):
         """
         Nhận diện chuỗi chuyển động qua SSTCN_Attention (tự động hỗ trợ 102 lớp cũ
@@ -910,30 +937,75 @@ class VSLRecognizer:
             with torch.no_grad():
                 logits = self.sstcn_model(tensor_input)
                 allowed_indices = None
+                scope_meta = {}
 
-                if topic_id and topic_id in topic_map:
-                    topic_indices = [int(i) for i in topic_map[topic_id] if 0 <= int(i) < logits.shape[1]]
-                    if mode == "words" and word_indices:
-                        word_set = set(word_indices)
-                        filtered = [i for i in topic_indices if i in word_set]
-                        allowed_indices = filtered if filtered else topic_indices
-                    else:
-                        allowed_indices = topic_indices
-                elif mode == "words" and word_indices and len(word_indices) < logits.shape[1]:
-                    allowed_indices = [int(i) for i in word_indices if 0 <= int(i) < logits.shape[1]]
+                if mode == "words":
+                    from backend.vision.word_scope import allowed_sstcn_word_indices, validate_word_result_scope
+
+                    allowed_indices, scope_meta = allowed_sstcn_word_indices(
+                        self.sstcn_model,
+                        topic_id=topic_id,
+                        include_pending_gt_sstcn=include_pending_gt_sstcn,
+                        allowed_override=allowed_word_ids,
+                    )
+                    if not allowed_indices:
+                        reject_reason = scope_meta.get("reject_reason") or "no_eligible_word_classes"
+                        inference_latency_ms = round((time.time() - t_infer_start) * 1000, 2)
+                        from backend.vision.word_debugger import word_debugger
+                        word_debugger.record_prediction(
+                            arr_input=arr,
+                            top_k_list=[],
+                            max_prob=0.0,
+                            pred_term="NEUTRAL",
+                            threshold=threshold,
+                            inference_latency_ms=inference_latency_ms,
+                            debug_meta={**(debug_meta or {}), "scope_reject_reason": reject_reason},
+                            checkpoint_info=self.get_sstcn_checkpoint_info(),
+                        )
+                        return {
+                            "success": True,
+                            "sign": "NEUTRAL",
+                            "label": "Không có từ hợp lệ trong phạm vi nhận diện.",
+                            "index": num_classes,
+                            "confidence": 0.0,
+                            "category": "Trạng thái",
+                            "description": "",
+                            "video_url": "",
+                            "image_url": "",
+                            "entry_id": None,
+                            "variants": [],
+                            "region": None,
+                            "topic_id": topic_id,
+                            "preprocessing_version": prep_ver,
+                            "confirmed": False,
+                            "new_token": None,
+                            "replaced_token": None,
+                            "tts_speak": None,
+                            "sentence": " ".join(self.sentence_tokens),
+                            "top_k": [],
+                            "inference_time_ms": inference_latency_ms,
+                            "scope_rejected": True,
+                            "reject_reason": reject_reason,
+                            "word_scope_valid": False,
+                        }
+                elif topic_id and topic_id in topic_map:
+                    allowed_indices = [int(i) for i in topic_map[topic_id] if 0 <= int(i) < logits.shape[1]]
 
                 if allowed_indices:
                     masked_logits = torch.full_like(logits, -float('inf'))
                     idx_tensor = torch.tensor(allowed_indices, dtype=torch.long, device=logits.device)
                     masked_logits[:, idx_tensor] = logits[:, idx_tensor]
                     probs = torch.softmax(masked_logits, dim=1).squeeze(0)
+                    sub_probs = probs[idx_tensor]
+                    k = min(5, len(allowed_indices))
+                    top_k_probs_t, top_k_local = torch.topk(sub_probs, k=k)
+                    top_k_probs = top_k_probs_t.cpu().tolist()
+                    top_k_indices = [allowed_indices[int(j)] for j in top_k_local.cpu().tolist()]
                 else:
                     probs = torch.softmax(logits, dim=1).squeeze(0)
-
-                # Lấy Top 1 và Top 5
-                top_k_probs, top_k_indices = torch.topk(probs, k=min(5, len(probs)))
-                top_k_probs = top_k_probs.cpu().numpy()
-                top_k_indices = top_k_indices.cpu().numpy()
+                    top_k_probs_t, top_k_indices_t = torch.topk(probs, k=min(5, len(probs)))
+                    top_k_probs = top_k_probs_t.cpu().tolist()
+                    top_k_indices = top_k_indices_t.cpu().tolist()
 
                 max_prob = float(top_k_probs[0])
                 pred_idx = int(top_k_indices[0])
@@ -945,14 +1017,45 @@ class VSLRecognizer:
             replaced_token_label = None
             tts_speak_token = None
             current_time = time.time()
+            scope_rejected = False
+            reject_reason = None
+            word_scope_valid = True
 
             # Kiểm tra ngưỡng tin cậy
             if max_prob >= threshold and pred_idx < num_classes:
                 sign_info = self._resolve_sstcn_sign_info(pred_idx)
                 pred_term = sign_info["term"]
 
-                # Kiểm tra debounce cooldown
-                if confirm and (pred_term != self.last_confirmed_sign or current_time - self.last_confirmed_time > self.cooldown_sec):
+                if mode == "words":
+                    scope_check = validate_word_result_scope(
+                        sign_info.get("entry_id"),
+                        source="sstcn",
+                        allowed_ids=allowed_word_ids,
+                        include_pending_gt_sstcn=include_pending_gt_sstcn,
+                        sign_label=pred_term,
+                    )
+                    if not scope_check["valid"]:
+                        scope_rejected = True
+                        word_scope_valid = False
+                        reject_reason = scope_check["reject_reason"]
+                        pred_idx = num_classes
+                        sign_info = {
+                            "index": num_classes,
+                            "term": "NEUTRAL",
+                            "label": "Từ nằm ngoài phạm vi nhận diện cho phép",
+                            "description": "",
+                            "category": "Trạng thái",
+                            "video_url": "",
+                            "image_url": "",
+                            "entry_id": None,
+                            "variants": [],
+                            "region": scope_check.get("region"),
+                        }
+
+                # Kiểm tra debounce cooldown (chỉ khi không bị loại khỏi phạm vi)
+                if not scope_rejected and confirm and (
+                    pred_term != self.last_confirmed_sign or current_time - self.last_confirmed_time > self.cooldown_sec
+                ):
                     self.last_confirmed_sign = pred_term
                     self.last_confirmed_time = current_time
                     confirmed = True
@@ -970,6 +1073,22 @@ class VSLRecognizer:
                     "image_url": ""
                 }
 
+            model_entry_ids = getattr(self.sstcn_model, "entry_ids", None)
+            lex_by_sstcn = None
+            if mode == "words":
+                from backend.models.lexicon import load_lexicon
+                lex_by_sstcn = load_lexicon().get("by_sstcn", {})
+
+            def _top_k_entry_id(cls_idx: int):
+                if model_entry_ids and 0 <= cls_idx < len(model_entry_ids) and model_entry_ids[cls_idx]:
+                    if not str(model_entry_ids[cls_idx]).startswith("gt-"):
+                        return model_entry_ids[cls_idx]
+                if lex_by_sstcn and cls_idx in lex_by_sstcn:
+                    eid = lex_by_sstcn[cls_idx].get("id")
+                    if eid and not str(eid).startswith("gt-"):
+                        return eid
+                return None
+
             top_k_list = [
                 {
                     "index": int(idx),
@@ -978,6 +1097,7 @@ class VSLRecognizer:
                         if class_names and 0 <= int(idx) < len(class_names)
                         else SIGN_DICT_102.get(int(idx), "UNKNOWN")
                     ),
+                    **({"entry_id": _top_k_entry_id(int(idx))} if mode == "words" else {}),
                     "confidence": round(float(p), 3)
                 }
                 for p, idx in zip(top_k_probs, top_k_indices)
@@ -985,6 +1105,7 @@ class VSLRecognizer:
 
             if mode == "words":
                 from backend.vision.word_debugger import word_debugger
+                word_debug_meta = {**(debug_meta or {}), **({"scope_reject_reason": reject_reason} if reject_reason else {})}
                 word_debugger.record_prediction(
                     arr_input=arr,
                     top_k_list=top_k_list,
@@ -992,16 +1113,16 @@ class VSLRecognizer:
                     pred_term=sign_info["term"],
                     threshold=threshold,
                     inference_latency_ms=inference_latency_ms,
-                    debug_meta=debug_meta,
+                    debug_meta=word_debug_meta,
                     checkpoint_info=self.get_sstcn_checkpoint_info()
                 )
 
-            return {
+            response = {
                 "success": True,
                 "sign": sign_info["term"],
                 "label": sign_info.get("label", sign_info["term"]),
                 "index": pred_idx,
-                "confidence": round(max_prob, 2),
+                "confidence": 0.0 if scope_rejected else round(max_prob, 2),
                 "category": sign_info.get("category", ""),
                 "description": sign_info.get("description", ""),
                 "video_url": sign_info.get("video_url", ""),
@@ -1016,9 +1137,14 @@ class VSLRecognizer:
                 "replaced_token": replaced_token_label,
                 "tts_speak": tts_speak_token,
                 "sentence": " ".join(self.sentence_tokens),
-                "top_k": top_k_list,
+                "top_k": [] if scope_rejected else top_k_list,
                 "inference_time_ms": inference_latency_ms
             }
+            if mode == "words":
+                response["scope_rejected"] = scope_rejected
+                response["reject_reason"] = reject_reason
+                response["word_scope_valid"] = word_scope_valid
+            return response
 
         except Exception as e:
             return {
@@ -2458,15 +2584,16 @@ class VSLRecognizer:
         nn_sign, nn_conf = "NEUTRAL", 0.0
         if has_mlp:
             with torch.no_grad():
-                tensor_in = torch.from_numpy(feature_vector[:72]).unsqueeze(0)
+                feat_slice = feature_vector[:72]
+                tensor_in = torch.tensor(feat_slice.tolist() if hasattr(feat_slice, "tolist") else feat_slice, dtype=torch.float32).unsqueeze(0)
                 logits = self.model(tensor_in).clone()
                 if is_letters_filter:
                     # Logit masking: loai bo hoan toan 57 lop tu vung (index >= 27)
                     logits[:, 27:] = -float('inf')
-                probs = torch.softmax(logits, dim=-1).squeeze(0).numpy()
-                top_idx = int(np.argmax(probs))
+                probs_t = torch.softmax(logits, dim=-1).squeeze(0)
+                top_idx = int(torch.argmax(probs_t).item())
                 nn_sign = IDX_TO_CLASS[top_idx] if top_idx < len(IDX_TO_CLASS) else "NEUTRAL"
-                nn_conf = float(probs[top_idx]) if top_idx < len(probs) else 0.0
+                nn_conf = float(probs_t[top_idx].item()) if top_idx < probs_t.numel() else 0.0
                 if is_letters_filter and nn_sign not in ALLOWED_LETTERS:
                     nn_sign, nn_conf = "NEUTRAL", 0.0
 
