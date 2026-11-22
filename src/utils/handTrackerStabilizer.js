@@ -157,9 +157,10 @@ const MAX_CLASP_VISUAL_BRIDGE_MS = 560;
 
 export class HandTrackerStabilizer {
   constructor() {
-    this.poseFilter = new OneEuroPointSet(1.6, 0.06, 1.0);
-    this.leftFilter = new OneEuroPointSet(1.9, 0.10, 1.0);
-    this.rightFilter = new OneEuroPointSet(1.9, 0.10, 1.0);
+    // Cấu hình Zero-Lag: minCutoff triệt tiêu rung giật khi dừng tay, beta cao giúp bám dính tức thì khi chuyển động
+    this.poseFilter = new OneEuroPointSet(1.8, 0.20, 1.0);
+    this.leftFilter = new OneEuroPointSet(2.2, 0.35, 1.0);
+    this.rightFilter = new OneEuroPointSet(2.2, 0.35, 1.0);
     this.reset();
   }
 
@@ -171,6 +172,17 @@ export class HandTrackerStabilizer {
       left: { lastHand: null, lastPoseWrist: null, lastPalmVec: null, missFrames: 0, lastSeenTs: -Infinity },
       right: { lastHand: null, lastPoseWrist: null, lastPalmVec: null, missFrames: 0, lastSeenTs: -Infinity },
     };
+  }
+
+  /**
+   * Lọc mượt mà hai bàn tay cho chế độ MediaPipe Hands (Zero-Lag One-Euro Filter)
+   */
+  processHands(rawLeft, rawRight, tsMs = performance.now()) {
+    const left = rawLeft && rawLeft.length >= 21 ? this.leftFilter.filter(rawLeft, tsMs) : null;
+    const right = rawRight && rawRight.length >= 21 ? this.rightFilter.filter(rawRight, tsMs) : null;
+    if (!rawLeft) this.leftFilter.reset();
+    if (!rawRight) this.rightFilter.reset();
+    return { left, right };
   }
 
   /**

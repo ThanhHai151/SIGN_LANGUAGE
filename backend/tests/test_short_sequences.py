@@ -8,7 +8,11 @@ from fastapi.testclient import TestClient
 
 from backend.app import app, FEATURE_ALLOW_SHORT_SEQUENCES, MIN_GESTURE_FRAMES
 from backend.vision.recognizer import VSLRecognizer
-from backend.vision.skeleton_norm import resample_sequence_linear, resample_sequence_by_timestamps
+from backend.vision.skeleton_norm import (
+    resample_sequence_linear,
+    resample_sequence_by_timestamps,
+    trim_trailing_hand_drop,
+)
 
 
 class TestShortSequences(unittest.TestCase):
@@ -118,6 +122,35 @@ class TestShortSequences(unittest.TestCase):
         data = resp.json()["data"]
         self.assertEqual(data["sign"], "NEUTRAL")
         self.assertEqual(data["confidence"], 0.0)
+
+    def test_trim_trailing_hand_drop_empty_tail(self):
+        """Kiểm tra cắt tỉa frame rỗng ở đuôi chuỗi ngắn."""
+        seq = self.real_seq[:20].copy()
+        # Đặt 3 frame cuối thành zeros cho cả hai bàn tay
+        seq[17:, 33:75, :] = 0.0
+        ts = [1000.0 + i * 33.33 for i in range(20)]
+        trimmed, trimmed_ts = trim_trailing_hand_drop(seq, timestamps=ts, min_len=12)
+        self.assertEqual(len(trimmed), 17)
+        self.assertEqual(len(trimmed_ts), 17)
+
+    def test_trim_trailing_hand_drop_downward_motion(self):
+        """Kiểm tra cắt tỉa frame buông tay (wrist hạ nhanh hướng xuống đất)."""
+        seq = self.real_seq[:20].copy()
+        # Giả lập 3 frame cuối cổ tay phải (khớp 54) rơi nhanh
+        for i, idx in enumerate([17, 18, 19]):
+            seq[idx, 54, 1] = seq[idx - 1, 54, 1] + 0.03
+        ts = [1000.0 + i * 33.33 for i in range(20)]
+        trimmed, trimmed_ts = trim_trailing_hand_drop(seq, timestamps=ts, min_len=12)
+        self.assertLess(len(trimmed), 20)
+        self.assertGreaterEqual(len(trimmed), 12)
+        self.assertEqual(len(trimmed), len(trimmed_ts))
+
+    def test_trim_preserves_min_length(self):
+        """Kiểm tra hàm cắt tỉa không bao giờ cắt quá ngưỡng min_len (12)."""
+        seq = self.real_seq[:14].copy()
+        seq[12:, 33:75, :] = 0.0
+        trimmed, _ = trim_trailing_hand_drop(seq, min_len=12)
+        self.assertGreaterEqual(len(trimmed), 12)
 
 
 if __name__ == "__main__":

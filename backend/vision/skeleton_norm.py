@@ -13,7 +13,7 @@ Design lessons combined from KVSL, SignLang, and REPO:
 - Preserve missing landmarks strictly as 0.0.
 """
 
-from typing import Sequence, Optional
+from typing import Sequence, Optional, Tuple, List
 import numpy as np
 
 LEFT_SHOULDER_IDX = 11
@@ -180,3 +180,90 @@ def resample_sequence_by_timestamps(
     w = np.clip((target_ts - ts[idx_lo]) / dt, 0.0, 1.0).astype(np.float32)
     w = w.reshape((-1,) + (1,) * (arr.ndim - 1))
     return (arr[idx_lo] * (1.0 - w) + arr[idx_hi] * w).astype(np.float32)
+
+
+def trim_trailing_hand_drop(
+    frames: np.ndarray,
+    timestamps: Optional[Sequence[float]] = None,
+    min_len: int = 12,
+    drop_threshold_y: float = 0.015,
+) -> Tuple[np.ndarray, Optional[List[float]]]:
+    """
+    Cắt tỉa các frame buông/hạ tay (hand-drop exit frames) ở cuối chuỗi cử chỉ
+    trước khi nội suy, nhằm bảo tồn hình thái chuyển động có nghĩa và tránh nhiễu
+    làm giảm độ tin cậy của mô hình nhận diện.
+
+    frames: mảng [T, 75, 3] hoặc [T, 225]
+    timestamps: danh sách thời gian tương ứng (nếu có)
+    min_len: độ dài tối thiểu được giữ lại (mặc định 12)
+    drop_threshold_y: ngưỡng gia tốc hạ xuống của cổ tay (trục Y hướng xuống đất)
+    """
+    arr = np.asarray(frames, dtype=np.float32)
+    T = len(arr)
+    if T <= min_len:
+        return arr, list(timestamps) if timestamps is not None else None
+
+    # Đảm bảo hình dạng [T, 75, 3] để kiểm tra tọa độ
+    orig_shape = arr.shape
+    reshaped = arr.reshape(T, 75, 3) if arr.ndim == 2 and arr.shape[1] == 225 else arr
+    if reshaped.ndim != 3 or reshaped.shape[1] < 75:
+        return arr, list(timestamps) if timestamps is not None else None
+
+    cut_idx = T
+    max_trim = min(6, T - min_len)  # Cắt tỉa tối đa 6 frame buông tay
+
+    for _ in range(max_trim):
+        t = cut_idx - 1
+        if cut_idx <= min_len:
+            break
+
+        prev_t = t - 1
+        frame_curr = reshaped[t]
+        frame_prev = reshaped[prev_t]
+
+        # Kiểm tra năng lượng bàn tay: 33..53 (Trái), 54..74 (Phải)
+        left_hand_energy = float(np.sum(np.abs(frame_curr[33:54])))
+        right_hand_energy = float(np.sum(np.abs(frame_curr[54:75])))
+        prev_left_energy = float(np.sum(np.abs(frame_prev[33:54])))
+        prev_right_energy = float(np.sum(np.abs(frame_prev[54:75])))
+
+        # Trường hợp 1: Frame đuôi mất sạch bàn tay (zeros) trong khi trước đó có cử chỉ tay
+        if (left_hand_energy < 1e-4 and right_hand_energy < 1e-4):
+            earlier_hand_energy = float(np.sum(np.abs(reshaped[:t, 33:75])))
+            if earlier_hand_energy > 1e-3:
+                cut_idx = t
+                continue
+
+        # Trường hợp 2: Bàn tay đang rơi tự do xuống dưới (wrist Y tăng nhanh)
+        is_dropping = False
+
+        # Tay phải (khớp 54 là cổ tay phải)
+        if right_hand_energy > 1e-4 and prev_right_energy > 1e-4:
+            dy_rwrist = float(frame_curr[54, 1] - frame_prev[54, 1])
+            if dy_rwrist > drop_threshold_y:
+                is_dropping = True
+
+        # Tay trái (khớp 33 là cổ tay trái)
+        if left_hand_energy > 1e-4 and prev_left_energy > 1e-4:
+            dy_lwrist = float(frame_curr[33, 1] - frame_prev[33, 1])
+            if dy_lwrist > drop_threshold_y:
+                is_dropping = True
+
+        # Cổ tay Pose (15 và 16) nếu tay hand không rõ
+        if not is_dropping:
+            dy_pose_lwrist = float(frame_curr[15, 1] - frame_prev[15, 1])
+            dy_pose_rwrist = float(frame_curr[16, 1] - frame_prev[16, 1])
+            if (dy_pose_lwrist > drop_threshold_y and frame_curr[15, 1] > 0.4) or \
+               (dy_pose_rwrist > drop_threshold_y and frame_curr[16, 1] > 0.4):
+                is_dropping = True
+
+        if is_dropping:
+            cut_idx = t
+        else:
+            # Nếu frame này không phải là hạ tay, dừng cắt tỉa ngay
+            break
+
+    trimmed_arr = arr[:cut_idx].copy()
+    trimmed_ts = list(timestamps[:cut_idx]) if timestamps is not None else None
+    return trimmed_arr, trimmed_ts
+

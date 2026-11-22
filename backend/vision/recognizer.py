@@ -776,6 +776,7 @@ class VSLRecognizer:
             reflect_legacy_left_hand,
             resample_sequence_by_timestamps,
             resample_sequence_linear,
+            trim_trailing_hand_drop,
         )
 
         if threshold is None:
@@ -834,6 +835,11 @@ class VSLRecognizer:
             # Làm sạch NaN/Inf nếu có từ dữ liệu biên
             if not np.all(np.isfinite(arr)):
                 arr = np.nan_to_num(arr, nan=0.0, posinf=0.0, neginf=0.0)
+
+            # Lọc bỏ các frame buông/hạ tay (Hand-drop Trimming) trước khi nội suy
+            # Giúp giữ nguyên vẹn hình thái cử chỉ có nghĩa và nâng cao độ tin cậy của SSTCN
+            if allow_short_sequences and len(arr) >= 14:
+                arr, timestamps = trim_trailing_hand_drop(arr, timestamps=timestamps, min_len=min_allowed_len)
 
             # Adaptive temporal resampling theo timestamp thực tế (nếu có) hoặc nội suy đều về 30 frame
             if timestamps is not None and len(timestamps) == len(arr) and len(arr) >= 4:

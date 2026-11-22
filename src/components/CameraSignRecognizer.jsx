@@ -153,6 +153,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
   const frameLatencyHistoryRef = useRef([]);
   const windowTimestampsRef = useRef([]);
   const isStandardFlushedRef = useRef(false);
+  const lastFlushTimeRef = useRef(0);
 
   useEffect(() => {
     trackerEngineRef.current = trackerEngine;
@@ -579,8 +580,8 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
       tracker.setOptions({
         maxNumHands: 2,
         modelComplexity: 0, // Lite mode = 60 FPS (mượt mà như bản cũ)
-        minDetectionConfidence: 0.35, // Hạ ngưỡng để giữ bám tay khi lật ngửa/nghiêng cạnh
-        minTrackingConfidence: 0.30
+        minDetectionConfidence: 0.45, // Nâng từ 0.35 -> chống bắt nhầm nền
+        minTrackingConfidence: 0.35   // Nâng từ 0.30 -> chống trôi landmark
       });
       tracker.onResults(onHandsResultsFast);
       tracker._engineType = 'hands';
@@ -593,9 +594,9 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
       });
       tracker.setOptions({
         modelComplexity: detailedTrackingRef.current ? 1 : 0,
-        smoothLandmarks: false,
-        minDetectionConfidence: 0.25, // Hạ ngưỡng phát hiện nhạy hơn cho tư thế bàn tay ngửa/úp/cạnh
-        minTrackingConfidence: 0.20   // Giữ bám tay tốt hơn khi xoay ngửa hoặc che khuất
+        smoothLandmarks: true, // BẬT bộ lọc mượt mà nội tại của MediaPipe cho Pose
+        minDetectionConfidence: 0.45, // Nâng từ 0.25 -> loại bỏ hiện tượng nhảy vọt vào nếp áo
+        minTrackingConfidence: 0.35   // Nâng từ 0.20 -> loại bỏ bám dính pixel rác
       });
       tracker.onResults(onHolisticResultsFast);
       tracker._engineType = 'holistic';
@@ -1095,19 +1096,10 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    // Trong chế độ chẩn đoán (Pilot HUD), tắt bù trễ để hiển thị chính xác 21 raw landmarks từ MediaPipe
-    let leftHand;
-    let rightHand;
-    if (showPilotHUDRef.current) {
-      prevLeftHandRef.current = leftHandRaw ? leftHandRaw.map(l => ({ x: l.x, y: l.y })) : null;
-      prevRightHandRef.current = rightHandRaw ? rightHandRaw.map(l => ({ x: l.x, y: l.y })) : null;
-      leftHand = leftHandRaw;
-      rightHand = rightHandRaw;
-    } else {
-      // Bù đắp độ trễ chuyển động cho từng tay
-      leftHand = extrapolateLandmarks(leftHandRaw, prevLeftHandRef);
-      rightHand = extrapolateLandmarks(rightHandRaw, prevRightHandRef);
-    }
+    // Landmarks đã được lọc làm mịn qua Zero-Lag One-Euro Filter (HandTrackerStabilizer),
+    // không chạy qua extrapolate thô để triệt tiêu hoàn toàn rung giật khi dừng tay.
+    const leftHand = leftHandRaw;
+    const rightHand = rightHandRaw;
 
     // 1. Thân trên (Pose - nếu dùng Holistic)
     if (upperPose && window.drawConnectors && window.POSE_CONNECTIONS) {
@@ -1173,16 +1165,20 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
       });
     }
 
-    diagnostic.trackFrame(leftHand, rightHand);
-    // Vẽ overlay (bật raw landmarks không bù trễ khi đang ở chế độ chẩn đoán Pilot HUD)
-    renderSkeletonsOverlay(ctx, leftHand, rightHand, null, canvas);
+    // Ổn định tay qua Zero-Lag One-Euro Filter
+    const stabilizedHands = stabilizerRef.current.processHands(leftHand, rightHand, extractTs * 1000);
+    const drawLeft = stabilizedHands.left || leftHand;
+    const drawRight = stabilizedHands.right || rightHand;
+
+    diagnostic.trackFrame(drawLeft, drawRight);
+    renderSkeletonsOverlay(ctx, drawLeft, drawRight, null, canvas);
 
     handleMotionAndSequence(
       () => extract75KeypointsFromHands(results),
-      Boolean(leftHand || rightHand),
-      rightHand?.[0] || leftHand?.[0],
-      leftHand,
-      rightHand,
+      Boolean(drawLeft || drawRight),
+      drawRight?.[0] || drawLeft?.[0],
+      drawLeft,
+      drawRight,
       {
         landmarkExtractTs: extractTs,
         handednessScore: rightHand ? rightScore : (leftHand ? leftScore : null),
@@ -1192,14 +1188,28 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
     );
   };
 
-  // Xử lý luồng kết quả từ MediaPipe Holistic (Khôi phục bám tay siêu nhạy nguyên bản MediaPipe như bản cũ)
+  // Xử lý luồng kết quả từ MediaPipe Holistic (Zero-Lag Stabilizer & Chống rung giật)
   const onHolisticResultsFast = (results) => {
     measureFPS();
+    const nowPerf = performance.now();
 
-    diagnostic.trackFrame(results.leftHandLandmarks, results.rightHandLandmarks, results.poseLandmarks || []);
+    // Ổn định thị giác và tách đôi tay qua Zero-Lag Stabilizer
+    const stabilized = stabilizerRef.current.process(
+      results.poseLandmarks,
+      results.leftHandLandmarks,
+      results.rightHandLandmarks,
+      nowPerf
+    );
+    const modelResults = {
+      poseLandmarks: stabilized.pose || results.poseLandmarks,
+      leftHandLandmarks: stabilized.modelLeft,
+      rightHandLandmarks: stabilized.modelRight,
+    };
+
+    diagnostic.trackFrame(stabilized.modelLeft, stabilized.modelRight, modelResults.poseLandmarks || []);
     if (practiceEntry) {
-      const left = results.poseLandmarks?.[11];
-      const right = results.poseLandmarks?.[12];
+      const left = modelResults.poseLandmarks?.[11];
+      const right = modelResults.poseLandmarks?.[12];
       if (!practiceTrackingReadyRef.current && left && right && (left.visibility ?? 1) >= 0.5 && (right.visibility ?? 1) >= 0.5) {
         practiceTrackingReadyRef.current = true;
         setPracticeTrackingReady(true);
@@ -1211,17 +1221,18 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    // Vẽ trực tiếp landmarks với hàm bù độ trễ chuyển động extrapolateLandmarks (không qua One-Euro níu trễ, không xóa tay)
+    // Vẽ trực tiếp landmarks đã lọc Zero-Lag (không rung giật khi dừng tay, bám sát khi vung)
     renderSkeletonsOverlay(
       ctx,
-      results.leftHandLandmarks,
-      results.rightHandLandmarks,
-      results.poseLandmarks,
-      canvas
+      stabilized.drawLeft,
+      stabilized.drawRight,
+      modelResults.poseLandmarks,
+      canvas,
+      { leftBridged: stabilized.leftBridged, rightBridged: stabilized.rightBridged }
     );
 
     // POSE WRIST GUARD: Phát hiện cổ tay còn giơ cao trong không gian tương tác (ngăn Flush non khi bị occlusion giữa cử chỉ)
-    const poseLms = results.poseLandmarks;
+    const poseLms = modelResults.poseLandmarks || results.poseLandmarks;
     let poseWristsRaised = false;
     if (poseLms && poseLms.length >= 17) {
       const leftShoulderY = poseLms[11]?.y;
@@ -1230,22 +1241,26 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
       const rightWristY = poseLms[16]?.y;
       if (typeof leftShoulderY === 'number' && typeof rightShoulderY === 'number') {
         const shoulderY = (leftShoulderY + rightShoulderY) / 2;
-        if ((typeof leftWristY === 'number' && leftWristY < shoulderY + 0.18) ||
-            (typeof rightWristY === 'number' && rightWristY < shoulderY + 0.18)) {
+        const shoulderWidth = Math.max(0.08, Math.hypot((poseLms[11]?.x || 0) - (poseLms[12]?.x || 0), leftShoulderY - rightShoulderY));
+        const maxRaisedY = shoulderY + 0.85 * shoulderWidth;
+        if ((typeof leftWristY === 'number' && leftWristY <= maxRaisedY) ||
+            (typeof rightWristY === 'number' && rightWristY <= maxRaisedY)) {
           poseWristsRaised = true;
         }
       }
     }
 
     handleMotionAndSequence(
-      () => extract75KeypointsFromHolistic(results),
-      Boolean(results.leftHandLandmarks || results.rightHandLandmarks),
-      results.rightHandLandmarks?.[0] || results.leftHandLandmarks?.[0],
-      results.leftHandLandmarks,
-      results.rightHandLandmarks,
+      () => extract75KeypointsFromHolistic(modelResults),
+      Boolean(stabilized.modelLeft || stabilized.modelRight),
+      stabilized.drawRight?.[0] || stabilized.drawLeft?.[0],
+      stabilized.modelLeft,
+      stabilized.modelRight,
       {
         landmarkExtractTs: extractTs,
         handednessScore: null,
+        maxWristSpeed: stabilized.maxWristSpeed,
+        handsClasped: stabilized.handsClasped,
         modelComplexity: detailedTrackingRef.current ? 1 : 0,
         processingResolution: holisticCanvasRef.current
           ? `${holisticCanvasRef.current.width}x${holisticCanvasRef.current.height}` : null,
@@ -1341,10 +1356,12 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
         const releasedAfterMotion = Boolean(!hasHands && !poseWristsRaised && Number.isFinite(liveState.lastHand) && (now - liveState.lastHand >= 140));
         if (
           !liveState.token && !liveState.template && !liveState.flushed &&
+          now - lastFlushTimeRef.current >= 450 &&
           bufLen >= (allowShort ? 12 : 30) && bufDuration >= 420 && (settledAfterMotion || releasedAfterMotion)
         ) {
           isEndOfGestureFlush = true;
           liveState.flushed = true;
+          lastFlushTimeRef.current = now;
         }
 
         if (!isEndOfGestureFlush && now - liveState.lastHand > 500) {
@@ -1371,11 +1388,12 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
 
         // End-of-Gesture Flush cho Standard mode:
         // Khi hạ tay (!hasHands && !poseWristsRaised), có >= 12 frame, và mất tay >= 3 frame (~100ms)
-        // nhưng chưa tới 8 frame (trước khi reset buffer)
+        // nhưng chưa tới maxMissingHands (trước khi reset buffer)
         if (
           allowShort &&
           !isStandardFlushedRef.current &&
           !isInferringRef.current &&
+          now - lastFlushTimeRef.current >= 450 &&
           bufLen >= 12 &&
           bufDuration >= 350 &&
           missingHandsCountRef.current >= 3 &&
@@ -1383,10 +1401,14 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
         ) {
           isEndOfGestureFlush = true;
           isStandardFlushedRef.current = true;
+          lastFlushTimeRef.current = now;
         }
 
-        // Chịu được tối đa 8 frame mất tay liên tiếp (~250ms) khi xoay cạnh tay hoặc vung nhanh
-        if (missingHandsCountRef.current >= 8) {
+        // Chịu được mất tay liên tiếp khi xoay cạnh tay hoặc chuyển pha cử chỉ nhiều pha:
+        // Nếu cổ tay vẫn giơ trong không gian tương tác (poseWristsRaised), cho phép tới 20 frame (~650ms).
+        // Nếu đã hạ tay xuống (!poseWristsRaised), chịu 8 frame (~250ms) rồi mới reset buffer.
+        const maxMissingHands = poseWristsRaised ? 20 : 8;
+        if (missingHandsCountRef.current >= maxMissingHands) {
           if (sequenceBufferRef.current.length > 0) {
             if (currentConversionMode === 'words') {
               logWordDebugReset(
@@ -1394,7 +1416,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
                 'no_hands_detected',
                 missingHandsCountRef.current,
                 trackerEngineRef.current,
-                8
+                maxMissingHands
               );
             }
             sequenceBufferRef.current = [];
