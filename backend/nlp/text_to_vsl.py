@@ -345,12 +345,12 @@ def _phrase_keys() -> set:
 LETTER_CLIPS_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "letter_clips.json")
 _letter_cache = {"mtime": None, "clips": {}}
 
-# Dấu thanh (ký tự kết hợp Unicode) → tên dấu trong bảng chữ cái ngón tay
+# Dấu thanh (ký tự kết hợp Unicode). Khi đánh vần, robot BỎ dấu thanh: chỉ làm các chữ cái (giữ ă â ê ô ơ ư đ).
 TONE_MARKS = {"\u0301": "sắc", "\u0300": "huyền", "\u0309": "hỏi", "\u0303": "ngã", "\u0323": "nặng"}
 
 
 def letter_clips() -> dict:
-    """Chữ cái / dấu thanh → {motion_id, clip}: đoạn giữ hình chữ cái trong video bảng chữ cái QIPEDC
+    """Chữ cái → {motion_id, clip}: đoạn giữ hình chữ cái trong video bảng chữ cái QIPEDC
     (backend/training/build_letter_clips.py)."""
     try:
         mtime = os.path.getmtime(LETTER_CLIPS_PATH)
@@ -414,19 +414,17 @@ def _letter_item(name: str, ascii_key: str, lex: dict, available: set, group: st
 
 
 def _spell_items(word: str, lex: dict, group: str = None, available: set = None) -> list:
-    """Đánh vần một từ theo bảng chữ cái ngón tay tiếng Việt: từng chữ cái (kể cả Ă Â Ê Ô Ơ Ư Đ),
-    dấu thanh làm sau các chữ cái của mỗi tiếng."""
+    """Đánh vần một từ theo bảng chữ cái ngón tay tiếng Việt: từng chữ cái (kể cả Ă Â Ê Ô Ơ Ư Đ).
+    Bỏ dấu thanh (sắc, huyền, hỏi, ngã, nặng): "cảm ơn" → C A M Ơ N."""
     available = motion_ids() if available is None else available
     group = group or word
     items = []
     for syl in word.split():
-        letters, tone = split_syllable(syl)
+        letters, _tone = split_syllable(syl)   # dấu thanh bị bỏ
         for c in letters:
             ascii_key = remove_accents(c).upper()
             if c in letter_clips() or ascii_key in VSL_ALPHABET:
                 items.append(_letter_item(c, ascii_key, lex, available, group))
-        if tone and tone in letter_clips():
-            items.append(_letter_item(tone, "", lex, available, group, is_tone=True))
     return items
 
 

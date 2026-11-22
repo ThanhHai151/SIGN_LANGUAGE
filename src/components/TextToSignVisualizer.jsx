@@ -54,7 +54,7 @@ export default function TextToSignVisualizer({ requestText }) {
   const [isListening, setIsListening] = useState(false);
   const [loading, setLoading] = useState(false);
   const [translationId, setTranslationId] = useState(0); // mỗi lần dịch câu mới
-  const [viewModel, setViewModel] = useState('avatar');
+  const [viewModel, setViewModel] = useState('robot'); // mặc định hiển thị robot
   const [directSelectedLetter, setDirectSelectedLetter] = useState('');
   const [controlsTarget, setControlsTarget] = useState(null);
   const alphabetDialogRef = useRef(null);
@@ -71,10 +71,6 @@ export default function TextToSignVisualizer({ requestText }) {
     'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'X', 'Y', 'F', 'J', 'W', 'Z',
   ];
   const LETTER_VARIANTS = { A: ['Ă', 'Â'], D: ['Đ'], E: ['Ê'], O: ['Ô', 'Ơ'], U: ['Ư'] };
-  const TONE_LIST = [
-    { key: 'sắc', mark: '´' }, { key: 'huyền', mark: '`' }, { key: 'hỏi', mark: '?' },
-    { key: 'ngã', mark: '~' }, { key: 'nặng', mark: '.' },
-  ];
 
   const PHRASE_SUGGESTIONS = [
     'Xin chào',
@@ -130,11 +126,8 @@ export default function TextToSignVisualizer({ requestText }) {
   // Chọn trực tiếp 1 chữ cái: robot diễn hình chữ cái học từ video bảng chữ cái QIPEDC
   const handleSelectDirectLetter = async (char) => {
     const key = char.toLowerCase();
-    const isTone = char === key;
-    // Avatar Mixamo diễn theo ký hiệu: chữ cái (Ă, Ơ…) hoặc dấu thanh TONE_SAC…
-    const toneSymbol = { 'sắc': 'TONE_SAC', 'huyền': 'TONE_HUYEN', 'hỏi': 'TONE_HOI', 'ngã': 'TONE_NGA', 'nặng': 'TONE_NANG' }[key];
-    setDirectSelectedLetter(isTone ? toneSymbol : char);
-    setInputText(isTone ? `Dấu ${char}` : `Chữ ${char}`);
+    setDirectSelectedLetter(char);
+    setInputText(`Chữ ${char}`);
     setIsPlaying(false);
     let item = lettersRef.current?.[key];
     if (!item) {
@@ -152,10 +145,10 @@ export default function TextToSignVisualizer({ requestText }) {
     setSequence([{
       token: char,
       gloss: base,
-      label: isTone ? `Dấu ${char}` : `Chữ ${char}`,
+      label: `Chữ ${char}`,
       type: 'fingerspelling',
       duration_ms: 2200,
-      pose_key: isTone ? null : base,
+      pose_key: base,
       word: key,
       description: `Bảng chữ cái ngón tay VSL: Chữ ${char} (tư thế tham khảo — hãy khởi động lại backend để dùng bảng chữ cái học từ video)`,
       avatar_pose: {}
@@ -699,17 +692,6 @@ export default function TextToSignVisualizer({ requestText }) {
                 }}>{letter}</button>
             );
           })}
-        </div>
-        <div className="dialog-control-group">
-          <h3>Dấu thanh</h3>
-          <div className="dialog-button-list">
-            {TONE_LIST.map(({ key, mark }) => (
-              <button type="button" key={key} className="btn btn-secondary" onClick={() => {
-                handleSelectDirectLetter(key);
-                alphabetDialogRef.current?.close();
-              }}>{key} {mark}</button>
-            ))}
-          </div>
         </div>
       </WorkspaceDialog>
 
