@@ -1,0 +1,33 @@
+{
+  "summary": {
+    "session_timestamp": "20261118_164610",
+    "signer_id": "signer_01",
+    "mode": "free",
+    "blind_mode": false,
+    "total_trials": 1,
+    "evaluated_trials": 0
+  },
+  "records": [
+    {
+      "trial_index": 1,
+      "timestamp": "2026-11-18T09:45:55.501316+00:00",
+      "signer_id": "signer_01",
+      "mode": "free",
+      "target_word": "FREE_PLAY",
+      "target_class_index": -1,
+      "distance": "standard",
+      "model_a_pred": "tự lập",
+      "model_a_conf": 0.1979,
+      "model_a_correct": null,
+      "model_b_pred": "nghĩ",
+      "model_b_conf": 0.11,
+      "model_b_correct": null,
+      "model_c_pred": "nghĩ",
+      "model_c_conf": 0.1102,
+      "model_c_correct": null,
+      "shoulder_width": 0.3904,
+      "scale_factor": 0.4365,
+      "inference_time_ms": 61.93
+    }
+  ]
+}

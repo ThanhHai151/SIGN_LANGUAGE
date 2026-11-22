@@ -1,0 +1,2050 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  FlaskConical, Play, Square, RotateCcw, Save, AlertTriangle,
+  CheckCircle2, XCircle, Download, BarChart3, SkipForward, Pause,
+  FileJson, Sparkles, Check, ChevronRight, X, Clock, HelpCircle,
+  Eye, EyeOff, Video, Info, ShieldAlert, Activity
+} from 'lucide-react';
+import {
+  savePilotEvaluation,
+  setPilotLogging,
+  flushPilotLogs
+} from '../services/api';
+import {
+  VSL_ALPHABET_29,
+  PILOT_DURATION_SEC,
+  PILOT_REPETITIONS,
+  createPilotSessionId,
+  createPilotTrialId,
+  evaluateTrialFrames,
+  buildEvaluationReport,
+  phaseAtElapsedSeconds,
+  DYNAMIC_DIACRITICS,
+  computePinkyMetrics,
+  getEpochSecondsNow
+} from './pilotProtocol.js';
+import { SIGN_CONVENTIONS } from './signConventions.js';
+
+export { VSL_ALPHABET_29 };
+
+export default function PilotTestingHUD({
+  isActive,
+  onToggleActive,
+  onMetadataUpdate,
+  cameraActive,
+  latestRecognition,
+  videoElementRef
+}) {
+  // --- Session Configuration ---
+  const [sessionId, setSessionId] = useState(() => createPilotSessionId());
+  const [testMode, setTestMode] = useState('single_letter'); // 'single_letter' | 'all_29_letters'
+  const [selectedLetter, setSelectedLetter] = useState('A');
+  const [currentRep, setCurrentRep] = useState(1);
+  const [totalReps, setTotalReps] = useState(5); // 5 lượt thăm dò hoặc 10 lượt tiêu chuẩn
+  const trialDurationSec = PILOT_DURATION_SEC;
+
+  // --- Trial States ---
+  // 'IDLE' | 'COUNTDOWN' | 'RECORDING' | 'TRIAL_REVIEW' | 'SESSION_COMPLETE'
+  const [trialState, setTrialState] = useState('IDLE');
+  const [countdownRemaining, setCountdownRemaining] = useState(3);
+  const [recordingElapsedSec, setRecordingElapsedSec] = useState(0.0);
+  const [autoAdvance, setAutoAdvance] = useState(true);
+  const [saveFrameLogs, setSaveFrameLogs] = useState(true);
+  const [showConventionGuide, setShowConventionGuide] = useState(true);
+  const [showPinkyDiagnostics, setShowPinkyDiagnostics] = useState(false);
+  const [latestPinkyMetrics, setLatestPinkyMetrics] = useState(() => computePinkyMetrics(null));
+
+  // --- Realtime Frame & Prediction Buffer ---
+  const [currentFrameStats, setCurrentFrameStats] = useState({
+    totalFrames: 0,
+    matchFrames: 0,
+    mismatchFrames: 0,
+    neutralFrames: 0,
+    lastSign: 'NEUTRAL',
+    lastConfidence: 0.0,
+    isMatch: false
+  });
+
+  // --- Results Store ---
+  // Structure: { [letter]: [ { rep: 1, matchPct: 88, status: 'PASS', confusions: {...}, frames: [...] }, ... ] }
+  const [resultsByLetter, setResultsByLetter] = useState({});
+  const [lastTrialSummary, setLastTrialSummary] = useState(null);
+  const [showScoreboard, setShowScoreboard] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null); // { type: 'success'|'error', message: string }
+
+  // --- Refs for Monotonic Loop & Clean State ---
+  const trialStateRef = useRef(trialState);
+  trialStateRef.current = trialState;
+
+  const selectedLetterRef = useRef(selectedLetter);
+  selectedLetterRef.current = selectedLetter;
+
+  const currentRepRef = useRef(currentRep);
+  currentRepRef.current = currentRep;
+
+  const totalRepsRef = useRef(totalReps);
+  totalRepsRef.current = totalReps;
+
+  const sessionIdRef = useRef(sessionId);
+  sessionIdRef.current = sessionId;
+
+  const trialGenerationRef = useRef(0);
+
+  const trialFramesRef = useRef([]);
+  const recordingStartTimeRef = useRef(0);
+  const timerRafRef = useRef(null);
+  const countdownIntervalRef = useRef(null);
+  const autoAdvanceTimeoutRef = useRef(null);
+  const handleNextTrialRef = useRef(null);
+  const frameCounterRef = useRef(0);
+  const backendFrameCountRef = useRef(0);
+  const lastBackendFpsTimeRef = useRef(performance.now());
+  const backendFpsRef = useRef(0);
+
+  // Chuyển đổi trạng thái lượt thử đồng bộ kèm tăng generation để hủy bỏ triệt để in-flight requests cũ
+  const transitionTrialState = useCallback((newState) => {
+    trialStateRef.current = newState;
+    trialGenerationRef.current += 1;
+    setTrialState(newState);
+  }, []);
+
+  // Gửi metadata sang CameraSignRecognizer
+  useEffect(() => {
+    if (!onMetadataUpdate) return;
+
+    const getFrameMetadata = () => {
+      if (trialStateRef.current !== 'RECORDING') return null;
+
+      frameCounterRef.current += 1;
+      const currentSessId = sessionIdRef.current;
+      const currentLetter = selectedLetterRef.current;
+      const currentRep = currentRepRef.current;
+      const currentGen = trialGenerationRef.current;
+      const trialId = createPilotTrialId(currentSessId, currentLetter, currentRep);
+
+      return {
+        session_id: currentSessId,
+        trial_id: trialId,
+        expected_sign: currentLetter,
+        rep_idx: currentRep,
+        trial_generation: currentGen,
+        frame_idx: frameCounterRef.current,
+        client_capture_ts: getEpochSecondsNow(),
+        signer_id: 'signer_01'
+      };
+    };
+
+    const onFrameResult = (data, requestMeta, errorOptions = {}) => {
+      // Gate 1: Chỉ chấp nhận frame khi HUD đang ở trạng thái RECORDING
+      if (trialStateRef.current !== 'RECORDING') return;
+
+      // Gate 2: Bắt buộc request phải mang snapshot pilot metadata hợp lệ được tạo trong pha RECORDING
+      if (!requestMeta) return;
+
+      // Gate 3: Đối chiếu generation của request với generation của trial đang chạy
+      if (requestMeta.trial_generation !== trialGenerationRef.current) return;
+
+      // Gate 4: Đối chiếu session_id với phiên kiểm thử hiện tại
+      if (requestMeta.session_id !== sessionIdRef.current) return;
+
+      // Gate 5: Đối chiếu rep_idx và chữ cái mục tiêu
+      if (requestMeta.rep_idx !== currentRepRef.current) return;
+      if (requestMeta.expected_sign !== selectedLetterRef.current) return;
+
+      // Gate 6: Đối chiếu trial_id chuẩn xác
+      const expectedTrialId = createPilotTrialId(sessionIdRef.current, selectedLetterRef.current, currentRepRef.current);
+      if (requestMeta.trial_id !== expectedTrialId) return;
+
+      const expected = selectedLetterRef.current;
+
+      // Tính toán thời gian trôi qua và phase cho lượt thử hiện tại (đo từ thời điểm bắt đầu lượt)
+      const elapsedSec = recordingStartTimeRef.current > 0
+        ? (performance.now() - recordingStartTimeRef.current) / 1000
+        : 0.0;
+      const phase = phaseAtElapsedSeconds(elapsedSec);
+
+      // Tracking bàn tay từ snapshot bất biến của request (true / false)
+      let handDetected = null;
+      if (typeof requestMeta.hand_detected === 'boolean') {
+        handDetected = requestMeta.hand_detected;
+      } else if (typeof requestMeta.has_hands === 'boolean') {
+        handDetected = requestMeta.has_hands;
+      }
+
+      // Xác định trạng thái lỗi backend / network exception (Task 1.3G)
+      const isBackendError = Boolean(errorOptions?.backendError || data?.backend_error);
+      const backendErrorMessage = errorOptions?.backendErrorMessage || data?.backend_error_message || data?.error || null;
+
+      let frameRecord;
+      if (isBackendError) {
+        // Nhánh Backend Error: ghi nhận lỗi minh bạch, không tính là match, không tạo confirmed giả
+        frameRecord = {
+          frame_idx: trialFramesRef.current.length + 1,
+          expected_sign: expected,
+          predicted_sign: 'NEUTRAL',
+          confidence: 0.0,
+          timestamp: requestMeta.timestamp ?? requestMeta.landmark_extract_ts ?? requestMeta.client_capture_ts ?? getEpochSecondsNow(),
+          is_match: false,
+          landmarks: null,
+          hand_detected: handDetected,
+          prediction_source: 'none',
+          gating_status: null,
+          classifier_status: 'BACKEND_ERROR',
+          reject_reason: backendErrorMessage || 'Backend recognition error',
+          head_confidence: null,
+          confirmed: false,
+          new_token: null,
+          phase: phase,
+          elapsed_sec: Number(elapsedSec.toFixed(3)),
+          backend_error: true,
+          backend_error_message: backendErrorMessage,
+          frame_status: 'BACKEND_ERROR'
+        };
+      } else {
+        // Nhánh Valid Prediction bình thường từ backend
+        const predicted = data?.sign || 'NEUTRAL';
+        const conf = Number(data?.confidence || 0);
+        const isMatch = (predicted === expected);
+
+        // Nguồn dự đoán và trạng thái phân loại
+        const predictionSource = data?.prediction_source ?? data?.source ?? null;
+        const gatingStatus = data?.gating_status ?? data?.classifier_details?.gating_status ?? null;
+        const classifierStatus = data?.classifier_details?.status ?? null;
+        const rejectReason = data?.classifier_details?.reject_reason ?? null;
+
+        // Độ tin cậy thô của static head nếu có
+        let headConfidence = null;
+        if (typeof data?.classifier_details?.head_confidence === 'number') {
+          headConfidence = data.classifier_details.head_confidence;
+        } else if (predictionSource === 'static_head' || data?.classifier_details?.source === 'static_head') {
+          if (typeof data?.classifier_details?.confidence === 'number') {
+            headConfidence = data.classifier_details.confidence;
+          } else if (typeof data?.confidence === 'number') {
+            headConfidence = data.confidence;
+          }
+        }
+
+        const rawLms = requestMeta?.raw_landmarks || data?.landmarks || null;
+        const features = data?.classifier_details?.features || null;
+        const pinkyMetrics = computePinkyMetrics(rawLms, features);
+        if (rawLms || features) {
+          setLatestPinkyMetrics(pinkyMetrics);
+        }
+
+        // Tính toán Backend FPS thực tế đồng bộ trước khi ghi bản ghi frame
+        backendFrameCountRef.current += 1;
+        const nowMs = performance.now();
+        const fpsWindowMs = nowMs - lastBackendFpsTimeRef.current;
+        if (fpsWindowMs >= 1000) {
+          backendFpsRef.current = Math.round((backendFrameCountRef.current * 1000) / fpsWindowMs);
+          backendFrameCountRef.current = 0;
+          lastBackendFpsTimeRef.current = nowMs;
+        } else if (backendFpsRef.current === 0 && fpsWindowMs >= 200) {
+          backendFpsRef.current = Math.round((backendFrameCountRef.current * 1000) / fpsWindowMs);
+        }
+
+        const frameTimestamp = requestMeta.timestamp ?? requestMeta.landmark_extract_ts ?? requestMeta.client_capture_ts ?? getEpochSecondsNow();
+        const pinkyExtVal = typeof features?.pinky_ext === 'boolean'
+          ? features.pinky_ext
+          : (rawLms && rawLms.length >= 21 ? rawLms[20][1] < rawLms[18][1] : null);
+        const pinkyCurlVal = features?.pinky_curl !== undefined
+          ? Number(features.pinky_curl)
+          : (pinkyMetrics.hasData ? Number(pinkyMetrics.curl.toFixed(4)) : null);
+        const dPinkyWristNormVal = features?.d_PW !== undefined
+          ? Number(features.d_PW)
+          : (pinkyMetrics.hasData ? Number(pinkyMetrics.d_pw.toFixed(4)) : null);
+
+        frameRecord = {
+          frame_idx: trialFramesRef.current.length + 1,
+          expected_sign: expected,
+          predicted_sign: predicted,
+          confidence: conf,
+          timestamp: frameTimestamp,
+          client_capture_ts: requestMeta.client_capture_ts ?? null,
+          landmark_extract_ts: requestMeta.landmark_extract_ts ?? null,
+          request_send_ts: requestMeta.request_send_ts ?? null,
+          is_match: isMatch,
+          landmarks: rawLms,
+          handedness: requestMeta.handedness ?? (handDetected ? 'Right' : null),
+          handedness_score: requestMeta.handedness_score ?? null,
+          mediapipe_model_complexity: requestMeta.mediapipe_model_complexity ?? null,
+          processing_resolution: requestMeta.processing_resolution ?? null,
+          camera_fps: requestMeta.camera_fps ?? null,
+          backend_fps: backendFpsRef.current,
+          pinky_pip_angle: pinkyMetrics.hasData ? pinkyMetrics.pipAngle : null,
+          pinky_dip_angle: pinkyMetrics.hasData ? pinkyMetrics.dipAngle : null,
+          pinky_curl: pinkyCurlVal,
+          pinky_extended: pinkyExtVal,
+          d_pinky_wrist_norm: dPinkyWristNormVal,
+          hand_detected: handDetected,
+          prediction_source: predictionSource,
+          gating_status: gatingStatus,
+          classifier_status: classifierStatus,
+          reject_reason: rejectReason,
+          head_confidence: headConfidence,
+          confirmed: Boolean(data?.confirmed),
+          new_token: data?.new_token ?? null,
+          replaced_token: data?.replaced_token ?? null,
+          tts_speak: data?.tts_speak ?? null,
+          classifier_details: data?.classifier_details || null,
+          diacritic_fsm: data?.classifier_details?.diacritic_fsm || null,
+          phase: phase,
+          elapsed_sec: Number(elapsedSec.toFixed(3)),
+          backend_error: false,
+          backend_error_message: null,
+          frame_status: 'VALID'
+        };
+      }
+
+      trialFramesRef.current.push(frameRecord);
+
+      const fsmDetails = data?.classifier_details?.diacritic_fsm;
+      const baseLabel = fsmDetails?.base_label ||
+        (['A', 'E', 'O', 'U', 'D'].includes(data?.classifier_details?.letter) ? data?.classifier_details?.letter : '—');
+      const fsmStateLabel = fsmDetails?.state || (data?.confirmed ? 'CONFIRMED' : 'IDLE');
+
+      setCurrentFrameStats(prev => {
+        const isNeutral = (frameRecord.predicted_sign === 'NEUTRAL' || frameRecord.predicted_sign === 'unknown');
+        return {
+          totalFrames: prev.totalFrames + 1,
+          matchFrames: prev.matchFrames + (frameRecord.is_match ? 1 : 0),
+          mismatchFrames: prev.mismatchFrames + (!frameRecord.is_match && !isNeutral && !isBackendError ? 1 : 0),
+          neutralFrames: prev.neutralFrames + (isNeutral ? 1 : 0),
+          backendErrorFrames: (prev.backendErrorFrames || 0) + (isBackendError ? 1 : 0),
+          lastSign: frameRecord.predicted_sign,
+          lastConfidence: frameRecord.confidence,
+          isMatch: frameRecord.is_match,
+          cameraFps: requestMeta?.camera_fps || prev.cameraFps || 0,
+          backendFps: backendFpsRef.current || prev.backendFps || 0,
+          baseSign: baseLabel,
+          fsmState: fsmStateLabel,
+          trackingStatus: handDetected ? 'VALID' : 'NO_HAND',
+          logStatus: trialStateRef.current === 'RECORDING' ? 'LOGGING' : 'IDLE'
+        };
+      });
+    };
+
+    onMetadataUpdate({ getFrameMetadata, onFrameResult });
+  }, [onMetadataUpdate, transitionTrialState]);
+
+  // Clean-up timers on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRafRef.current) cancelAnimationFrame(timerRafRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+      if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
+    };
+  }, []);
+
+  // --- Lượt thử hoàn tất (End of 5.0s) ---
+  const handleCompleteTrial = useCallback(() => {
+    if (timerRafRef.current) cancelAnimationFrame(timerRafRef.current);
+
+    const letter = selectedLetterRef.current;
+    const rep = currentRepRef.current;
+    const frames = [...trialFramesRef.current];
+
+    // Đánh giá kết quả của lượt
+    const summary = evaluateTrialFrames(frames, letter, trialDurationSec);
+    summary.rep = rep;
+    summary.letter = letter;
+    summary.frames = frames;
+
+    // Hạch toán chỉ số Trial Validity độc lập (Task 1.3G)
+    const validFrames = frames.filter(f => f.frame_status === 'VALID');
+    const backendErrorFrames = frames.filter(f => f.backend_error === true);
+    summary.valid_frames = validFrames.length;
+    summary.backend_error_frames = backendErrorFrames.length;
+    summary.validity_ratio = frames.length > 0
+      ? Number((validFrames.length / frames.length).toFixed(4))
+      : 0.0;
+    summary.is_trial_valid = (validFrames.length >= 5 && backendErrorFrames.length === 0);
+
+    setLastTrialSummary(summary);
+    transitionTrialState('TRIAL_REVIEW');
+
+    // Cập nhật kết quả vào store
+    setResultsByLetter(prev => {
+      const existing = prev[letter] || [];
+      // Thay thế lượt thử nếu đã tồn tại rep này (do retry), hoặc thêm mới
+      const updated = [...existing.filter(t => t.rep !== rep), summary].sort((a, b) => a.rep - b.rep);
+      return { ...prev, [letter]: updated };
+    });
+
+    // Auto advance nếu bật (tự động chuyển lượt và quay tiếp sau 500ms)
+    if (autoAdvance) {
+      autoAdvanceTimeoutRef.current = setTimeout(() => {
+        if (handleNextTrialRef.current) {
+          handleNextTrialRef.current(summary);
+        }
+      }, 500);
+    }
+  }, [trialDurationSec, autoAdvance, transitionTrialState]);
+
+  // --- Bắt đầu 5.0s Recording ---
+  const startRecordingPeriod = useCallback(() => {
+    trialFramesRef.current = [];
+    frameCounterRef.current = 0;
+    backendFrameCountRef.current = 0;
+    backendFpsRef.current = 0;
+    lastBackendFpsTimeRef.current = performance.now();
+    setCurrentFrameStats({
+      totalFrames: 0,
+      matchFrames: 0,
+      mismatchFrames: 0,
+      neutralFrames: 0,
+      lastSign: 'NEUTRAL',
+      lastConfidence: 0.0,
+      isMatch: false
+    });
+    setRecordingElapsedSec(0.0);
+    transitionTrialState('RECORDING');
+
+    recordingStartTimeRef.current = performance.now();
+    let lastUiTickMs = -100;
+
+    const loop = () => {
+      const nowMs = performance.now();
+      const elapsed = (nowMs - recordingStartTimeRef.current) / 1000;
+
+      if (elapsed >= trialDurationSec) {
+        setRecordingElapsedSec(trialDurationSec);
+        handleCompleteTrial();
+      } else {
+        // Điều tiết cập nhật DOM đồng hồ đếm 0.1s/lần (10Hz) để tránh re-render 60fps tranh CPU với MediaPipe
+        if (nowMs - lastUiTickMs >= 100) {
+          lastUiTickMs = nowMs;
+          setRecordingElapsedSec(Number(Math.min(elapsed, trialDurationSec).toFixed(1)));
+        }
+        timerRafRef.current = requestAnimationFrame(loop);
+      }
+    };
+
+    timerRafRef.current = requestAnimationFrame(loop);
+  }, [trialDurationSec, handleCompleteTrial, transitionTrialState]);
+
+  // --- Bắt đầu Trial (Bỏ qua đếm ngược 3s, quay liền luôn) ---
+  const handleStartTrial = () => {
+    if (!cameraActive) {
+      alert('Vui lòng bật Camera trước khi bắt đầu kiểm thử!');
+      return;
+    }
+
+    if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    setSaveStatus(null);
+    startRecordingPeriod();
+  };
+
+  // --- Chuyển sang lượt thử tiếp theo (Tự động quay tiếp cho tới 10 lượt) ---
+  const handleNextTrial = (prevSummary = null) => {
+    if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
+
+    const letter = selectedLetterRef.current;
+    const rep = currentRepRef.current;
+
+    if (rep < totalRepsRef.current) {
+      // Tiếp tục lượt tiếp theo của chữ hiện tại và quay liền luôn
+      const nextRep = rep + 1;
+      currentRepRef.current = nextRep;
+      setCurrentRep(nextRep);
+      startRecordingPeriod();
+    } else {
+      // Đã xong 10 lượt của chữ này
+      if (testMode === 'all_29_letters') {
+        const currIdx = VSL_ALPHABET_29.indexOf(letter);
+        if (currIdx < VSL_ALPHABET_29.length - 1) {
+          // Sang chữ tiếp theo
+          const nextLetter = VSL_ALPHABET_29[currIdx + 1];
+          selectedLetterRef.current = nextLetter;
+          setSelectedLetter(nextLetter);
+          currentRepRef.current = 1;
+          setCurrentRep(1);
+          transitionTrialState('IDLE');
+        } else {
+          // Hoàn thành cả 29 chữ!
+          transitionTrialState('SESSION_COMPLETE');
+          setShowScoreboard(true);
+        }
+      } else {
+        // Hoàn thành 10 lượt của chữ đơn
+        transitionTrialState('SESSION_COMPLETE');
+        setShowScoreboard(true);
+      }
+    }
+  };
+  handleNextTrialRef.current = handleNextTrial;
+
+  // --- Thử lại lượt này (Retry) ---
+  const handleRetryTrial = () => {
+    if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
+    transitionTrialState('IDLE');
+    handleStartTrial();
+  };
+
+  // --- Bỏ qua lượt này (Skip) ---
+  const handleSkipTrial = () => {
+    if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
+    const letter = selectedLetterRef.current;
+    const rep = currentRepRef.current;
+
+    const skipSummary = {
+      rep,
+      letter,
+      totalFrames: 0,
+      activeFrames: 0,
+      matchFrames: 0,
+      mismatchFrames: 0,
+      neutralFrames: 0,
+      matchPct: 0.0,
+      avgConfidence: 0.0,
+      confusions: {},
+      topConfusion: null,
+      status: 'SKIPPED',
+      isPassed: false,
+      durationSec: 0,
+      frames: [],
+      valid_frames: 0,
+      backend_error_frames: 0,
+      validity_ratio: 0.0,
+      is_trial_valid: false
+    };
+
+    setResultsByLetter(prev => {
+      const existing = prev[letter] || [];
+      const updated = [...existing.filter(t => t.rep !== rep), skipSummary].sort((a, b) => a.rep - b.rep);
+      return { ...prev, [letter]: updated };
+    });
+
+    handleNextTrial();
+  };
+
+  // --- Dừng phiên thử nghiệm ---
+  const handleStopSession = () => {
+    if (timerRafRef.current) cancelAnimationFrame(timerRafRef.current);
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
+    transitionTrialState('IDLE');
+  };
+
+  // --- Tạo lại phiên mới ---
+  const handleResetSession = () => {
+    handleStopSession();
+    const newSessId = createPilotSessionId();
+    sessionIdRef.current = newSessId;
+    setSessionId(newSessId);
+    setResultsByLetter({});
+    currentRepRef.current = 1;
+    setCurrentRep(1);
+    setLastTrialSummary(null);
+    setShowScoreboard(false);
+    setSaveStatus(null);
+  };
+
+  // --- Lưu file JSON vào backend\data\diagnostics & tự động tải về máy ---
+  const handleSaveDiagnostics = async () => {
+    setSaveStatus({ type: 'loading', message: 'Đang lưu báo cáo JSON vào backend/data/diagnostics...' });
+
+    try {
+      const report = buildEvaluationReport(sessionId, resultsByLetter, {
+        trialsPerLetter: totalReps,
+        trialDurationSec,
+        mode: testMode,
+        testedTarget: testMode === 'single_letter' ? selectedLetter : 'ALL_29'
+      });
+
+      // Lấy toàn bộ frame nếu bật
+      let allFrames = [];
+      if (saveFrameLogs) {
+        Object.values(resultsByLetter).forEach(trials => {
+          trials.forEach(t => {
+            if (t.frames && t.frames.length) {
+              allFrames = allFrames.concat(t.frames);
+            }
+          });
+        });
+      }
+
+      // Bổ sung chỉ số kiểm định chất lượng phiên (Task 1.3G Session Validity Audit)
+      let totalValidFrames = 0;
+      let totalBackendErrorFrames = 0;
+      allFrames.forEach(f => {
+        if (f.frame_status === 'VALID') totalValidFrames += 1;
+        if (f.backend_error) totalBackendErrorFrames += 1;
+      });
+      report.validity = {
+        total_recorded_frames: allFrames.length,
+        valid_frames: totalValidFrames,
+        backend_error_frames: totalBackendErrorFrames,
+        session_validity_ratio: allFrames.length > 0 ? Number((totalValidFrames / allFrames.length).toFixed(4)) : 0.0,
+        is_clean_holdout: (allFrames.length >= 10 && totalBackendErrorFrames === 0)
+      };
+
+      const res = await savePilotEvaluation(sessionId, report, allFrames.length ? allFrames : null);
+
+      if (res && res.success) {
+        setSaveStatus({
+          type: 'success',
+          message: `Đã lưu thành công vào: backend/data/diagnostics/${res.filename}`,
+          filepath: res.filepath,
+          filename: res.filename
+        });
+
+        // Đồng thời tự động kích hoạt tải file JSON về máy người dùng
+        try {
+          const jsonStr = JSON.stringify(report, null, 2);
+          const blob = new Blob([jsonStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const downloadAnchor = document.createElement('a');
+          downloadAnchor.href = url;
+          downloadAnchor.download = res.filename || `pilot_eval_29_${sessionId}.json`;
+          document.body.appendChild(downloadAnchor);
+          downloadAnchor.click();
+          setTimeout(() => {
+            if (document.body.contains(downloadAnchor)) {
+              document.body.removeChild(downloadAnchor);
+            }
+            URL.revokeObjectURL(url);
+          }, 500);
+        } catch (downloadErr) {
+          console.warn('[HUD] Không thể tự động kích hoạt tải trình duyệt:', downloadErr);
+        }
+      } else {
+        setSaveStatus({
+          type: 'error',
+          message: res?.error || 'Lỗi khi lưu vào backend'
+        });
+      }
+    } catch (err) {
+      setSaveStatus({
+        type: 'error',
+        message: err.message || 'Lỗi kết nối khi gửi dữ liệu lưu'
+      });
+    }
+  };
+
+  // --- Tải file JSON về máy trực tiếp (Dùng Blob URL chuẩn browser) ---
+  const handleDownloadJSON = () => {
+    try {
+      const report = buildEvaluationReport(sessionId, resultsByLetter, {
+        trialsPerLetter: totalReps,
+        trialDurationSec,
+        mode: testMode,
+        testedTarget: testMode === 'single_letter' ? selectedLetter : 'ALL_29'
+      });
+
+      const jsonStr = JSON.stringify(report, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.href = url;
+      downloadAnchor.download = `pilot_eval_29_${sessionId}.json`;
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      setTimeout(() => {
+        if (document.body.contains(downloadAnchor)) {
+          document.body.removeChild(downloadAnchor);
+        }
+        URL.revokeObjectURL(url);
+      }, 500);
+
+      setSaveStatus({
+        type: 'success',
+        message: `Đã tải file JSON về máy: pilot_eval_29_${sessionId}.json`
+      });
+    } catch (err) {
+      setSaveStatus({
+        type: 'error',
+        message: `Lỗi khi tải file JSON: ${err.message}`
+      });
+    }
+  };
+
+  // Nếu HUD chưa được bật mở từ nút ngoài Camera
+  if (!isActive) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-8px' }}>
+        <button
+          onClick={onToggleActive}
+          className="btn btn-secondary"
+          style={{
+            fontSize: '11px',
+            padding: '5px 12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: 'rgba(30, 41, 59, 0.85)',
+            borderColor: 'rgba(56, 189, 248, 0.4)',
+            color: '#38bdf8',
+            fontWeight: '600'
+          }}
+          title="Bật công cụ Controlled Pilot để kiểm thử 29 chữ cái và ghi file JSON chẩn đoán"
+        >
+          <FlaskConical size={14} style={{ color: '#38bdf8' }} />
+          🧪 Controlled Pilot (Test 29 chữ)
+        </button>
+      </div>
+    );
+  }
+
+  // Báo cáo tóm tắt hiện tại
+  const currentReport = buildEvaluationReport(sessionId, resultsByLetter, {
+    trialsPerLetter: totalReps,
+    trialDurationSec,
+    mode: testMode,
+    testedTarget: selectedLetter
+  });
+
+  const letterTrials = resultsByLetter[selectedLetter] || [];
+  const completedLetterTrials = letterTrials.filter(t => t.status !== 'SKIPPED');
+  const isSelectedDynamic = Boolean(DYNAMIC_DIACRITICS[selectedLetter]);
+  const letterPassedTrials = completedLetterTrials.filter(t => t.status === 'PASS').length;
+  const letterFailedTrials = completedLetterTrials.filter(t => t.status === 'NEEDS_FIX').length;
+  const letterInsufficientTrials = completedLetterTrials.filter(t => t.status === 'INSUFFICIENT_DATA').length;
+  const letterValidTrials = completedLetterTrials.filter(t => t.status !== 'INSUFFICIENT_DATA' && t.status !== 'NO_HAND').length;
+
+  const letterMatchFrames = completedLetterTrials.reduce((sum, t) => sum + (t.matchFrames || 0), 0);
+  const letterActiveFrames = completedLetterTrials.reduce((sum, t) => sum + (t.activeFrames || 0), 0);
+
+  const letterAccuracyPct = isSelectedDynamic
+    ? (completedLetterTrials.length > 0
+        ? ((letterPassedTrials / completedLetterTrials.length) * 100).toFixed(1)
+        : '0.0')
+    : (letterActiveFrames > 0
+        ? ((letterMatchFrames / letterActiveFrames) * 100).toFixed(1)
+        : '0.0');
+
+  return (
+    <div style={{
+      background: 'linear-gradient(145deg, #090e17, #0f172a)',
+      border: '1px solid rgba(56, 189, 248, 0.35)',
+      borderRadius: '12px',
+      padding: '16px',
+      display: 'grid',
+      gap: '14px',
+      color: '#e2e8f0',
+      boxShadow: '0 12px 36px rgba(0,0,0,0.4)',
+      width: '100%',
+      boxSizing: 'border-box'
+    }}>
+      {/* Header */}
+      <header style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        paddingBottom: '12px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            background: 'rgba(56, 189, 248, 0.15)',
+            border: '1px solid rgba(56, 189, 248, 0.4)',
+            padding: '8px',
+            borderRadius: '8px'
+          }}>
+            <FlaskConical size={20} color="#38bdf8" />
+          </div>
+          <div>
+            <h2 style={{ fontSize: '16px', fontWeight: 'bold', margin: 0, color: '#f8fafc' }}>
+              Controlled Pilot — Kiểm thử 29 Chữ Cái VSL
+            </h2>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '4px', fontSize: '11px', color: '#94a3b8' }}>
+              <span>Tiêu chuẩn: <strong>10 lượt × 5.0 giây / chữ</strong></span>
+              <span>•</span>
+              <span>Session: <code style={{ color: '#38bdf8' }}>{sessionId}</code></span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            type="button"
+            onClick={() => setShowScoreboard(true)}
+            className="btn btn-secondary"
+            style={{ fontSize: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <BarChart3 size={14} />
+            Bảng Chẩn đoán 29 Chữ
+          </button>
+          <button
+            type="button"
+            onClick={onToggleActive}
+            className="btn btn-secondary"
+            style={{ fontSize: '12px', padding: '6px 12px' }}
+          >
+            Đóng HUD
+          </button>
+        </div>
+      </header>
+
+      {/* Mode & Target Selector */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'auto 1fr',
+        gap: '16px',
+        alignItems: 'center',
+        background: 'rgba(15, 23, 42, 0.6)',
+        padding: '10px 14px',
+        borderRadius: '8px',
+        border: '1px solid rgba(148, 163, 184, 0.15)'
+      }}>
+        {/* Chọn chế độ */}
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            type="button"
+            disabled={trialState === 'RECORDING' || trialState === 'COUNTDOWN'}
+            onClick={() => setTestMode('single_letter')}
+            style={{
+              padding: '6px 12px',
+              fontSize: '12px',
+              borderRadius: '6px',
+              border: testMode === 'single_letter' ? '1px solid #38bdf8' : '1px solid rgba(148, 163, 184, 0.2)',
+              background: testMode === 'single_letter' ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
+              color: testMode === 'single_letter' ? '#38bdf8' : '#94a3b8',
+              fontWeight: testMode === 'single_letter' ? 'bold' : 'normal',
+              cursor: 'pointer'
+            }}
+          >
+            Kiểm thử 1 chữ cái
+          </button>
+          <button
+            type="button"
+            disabled={trialState === 'RECORDING' || trialState === 'COUNTDOWN'}
+            onClick={() => setTestMode('all_29_letters')}
+            style={{
+              padding: '6px 12px',
+              fontSize: '12px',
+              borderRadius: '6px',
+              border: testMode === 'all_29_letters' ? '1px solid #38bdf8' : '1px solid rgba(148, 163, 184, 0.2)',
+              background: testMode === 'all_29_letters' ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
+              color: testMode === 'all_29_letters' ? '#38bdf8' : '#94a3b8',
+              fontWeight: testMode === 'all_29_letters' ? 'bold' : 'normal',
+              cursor: 'pointer'
+            }}
+          >
+            Chạy toàn bộ 29 chữ
+          </button>
+
+          {/* Chọn số lượt thử: 5 lượt (Thăm dò) hoặc 10 lượt (Tiêu chuẩn) */}
+          <div style={{ display: 'flex', gap: '4px', marginLeft: '12px', borderLeft: '1px solid rgba(148, 163, 184, 0.2)', paddingLeft: '12px' }}>
+            <button
+              type="button"
+              disabled={trialState === 'RECORDING' || trialState === 'COUNTDOWN'}
+              onClick={() => {
+                setTotalReps(5);
+                totalRepsRef.current = 5;
+              }}
+              style={{
+                padding: '4px 8px',
+                fontSize: '11px',
+                borderRadius: '4px',
+                border: totalReps === 5 ? '1px solid #38bdf8' : '1px solid rgba(148, 163, 184, 0.2)',
+                background: totalReps === 5 ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
+                color: totalReps === 5 ? '#38bdf8' : '#94a3b8',
+                fontWeight: totalReps === 5 ? 'bold' : 'normal',
+                cursor: 'pointer'
+              }}
+              title="Thiết lập 5 lượt thử thăm dò"
+            >
+              5 lượt (Thăm dò)
+            </button>
+            <button
+              type="button"
+              disabled={trialState === 'RECORDING' || trialState === 'COUNTDOWN'}
+              onClick={() => {
+                setTotalReps(10);
+                totalRepsRef.current = 10;
+              }}
+              style={{
+                padding: '4px 8px',
+                fontSize: '11px',
+                borderRadius: '4px',
+                border: totalReps === 10 ? '1px solid #38bdf8' : '1px solid rgba(148, 163, 184, 0.2)',
+                background: totalReps === 10 ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
+                color: totalReps === 10 ? '#38bdf8' : '#94a3b8',
+                fontWeight: totalReps === 10 ? 'bold' : 'normal',
+                cursor: 'pointer'
+              }}
+              title="Thiết lập 10 lượt thử tiêu chuẩn"
+            >
+              10 lượt (Tiêu chuẩn)
+            </button>
+          </div>
+        </div>
+
+        {/* Thông tin tiến độ tổng thể */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '16px', fontSize: '12px' }}>
+          <span>Chữ đang kiểm thử: <strong style={{ fontSize: '16px', color: '#38bdf8' }}>{selectedLetter}</strong>{isSelectedDynamic ? ' (Ký hiệu động)' : ''}</span>
+          <span>Lượt: <strong style={{ color: '#f8fafc' }}>{currentRep} / {totalReps}</strong> (Đã xong: {completedLetterTrials.length})</span>
+          {isSelectedDynamic && (
+            <span>Kết quả: <strong style={{ color: '#4ade80' }}>{letterPassedTrials} PASS</strong> / <strong style={{ color: '#f87171' }}>{letterFailedTrials} FAIL</strong>{letterInsufficientTrials > 0 ? ` / ${letterInsufficientTrials} thiếu data` : ''}</span>
+          )}
+          <span>{isSelectedDynamic ? 'Tỷ lệ PASS động' : 'Độ chính xác frame'} chữ {selectedLetter}: <strong style={{ color: Number(letterAccuracyPct) >= 70 ? '#4ade80' : '#f87171' }}>{letterAccuracyPct}%</strong></span>
+        </div>
+      </div>
+
+      {/* Grid 29 Chữ Cái Tiếng Việt */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '6px',
+        padding: '6px 0',
+        maxHeight: '110px',
+        overflowY: 'auto'
+      }}>
+        {VSL_ALPHABET_29.map(letter => {
+          const trials = resultsByLetter[letter] || [];
+          const count = trials.length;
+          const isSelected = letter === selectedLetter;
+          const isBlocked = SIGN_CONVENTIONS[letter]?.status === 'BLOCKED_SOURCE';
+          const passedCount = trials.filter(t => t.status === 'PASS').length;
+          const hasPassed = count >= totalReps && passedCount >= Math.ceil(totalReps * 0.7);
+          const needsFix = count > 0 && !hasPassed;
+
+          let bg = 'rgba(30, 41, 59, 0.5)';
+          let borderColor = 'rgba(148, 163, 184, 0.2)';
+          let textColor = '#cbd5e1';
+
+          if (isSelected) {
+            bg = 'rgba(56, 189, 248, 0.25)';
+            borderColor = '#38bdf8';
+            textColor = '#38bdf8';
+          } else if (isBlocked) {
+            bg = 'rgba(245, 158, 11, 0.12)';
+            borderColor = 'rgba(245, 158, 11, 0.45)';
+            textColor = '#fbbf24';
+          } else if (hasPassed) {
+            bg = 'rgba(34, 197, 94, 0.15)';
+            borderColor = 'rgba(34, 197, 94, 0.4)';
+            textColor = '#4ade80';
+          } else if (needsFix) {
+            bg = 'rgba(239, 68, 68, 0.15)';
+            borderColor = 'rgba(239, 68, 68, 0.4)';
+            textColor = '#f87171';
+          }
+
+          return (
+            <button
+              key={letter}
+              type="button"
+              disabled={trialState === 'RECORDING' || trialState === 'COUNTDOWN'}
+              onClick={() => {
+                selectedLetterRef.current = letter;
+                setSelectedLetter(letter);
+                const nextRep = (resultsByLetter[letter]?.length || 0) + 1;
+                currentRepRef.current = nextRep;
+                setCurrentRep(nextRep);
+                transitionTrialState('IDLE');
+              }}
+              style={{
+                width: '42px',
+                height: '38px',
+                borderRadius: '6px',
+                border: `1px solid ${borderColor}`,
+                background: bg,
+                color: textColor,
+                fontWeight: isSelected ? 'bold' : 'normal',
+                fontSize: '14px',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative'
+              }}
+              title={isBlocked ? `Chữ ${letter} (BLOCKED_SOURCE — Thiếu video Toàn quốc/Miền Nam)` : `Chữ ${letter} (${count}/${totalReps} lượt)`}
+            >
+              <span>{letter}</span>
+              {count > 0 && (
+                <span style={{ fontSize: '9px', opacity: 0.8 }}>{count}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* --- QUICK TOOLBAR: SOI KHỚP NGÓN ÚT 17-20 --- */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+          Đang chọn: <strong style={{ color: '#38bdf8', fontSize: '14px' }}>Chữ {selectedLetter}</strong>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowPinkyDiagnostics(prev => !prev)}
+          className="btn btn-secondary"
+          style={{
+            fontSize: '11px',
+            padding: '4px 10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: showPinkyDiagnostics ? 'rgba(244, 114, 182, 0.15)' : 'rgba(255,255,255,0.05)',
+            borderColor: showPinkyDiagnostics ? '#f472b6' : 'rgba(255,255,255,0.15)',
+            color: showPinkyDiagnostics ? '#f472b6' : '#cbd5e1',
+            cursor: 'pointer'
+          }}
+        >
+          <Activity size={13} color={showPinkyDiagnostics ? '#f472b6' : '#94a3b8'} />
+          {showPinkyDiagnostics ? 'Ẩn Soi Khớp Ngón Út (17-20)' : 'Soi Khớp Ngón Út (17-20)'}
+        </button>
+      </div>
+
+      {/* --- REALTIME PINKY DIAGNOSTICS CARD --- */}
+      {showPinkyDiagnostics && (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(30, 20, 35, 0.95), rgba(20, 15, 30, 0.9))',
+          border: '1px solid rgba(244, 114, 182, 0.45)',
+          borderRadius: '10px',
+          padding: '12px',
+          display: 'grid',
+          gap: '10px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f472b6', fontWeight: 'bold', fontSize: '13px' }}>
+              <Activity size={16} />
+              CHẨN ĐOÁN THỜI GIAN THỰC KHỚP NGÓN ÚT (17 — 20)
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                padding: '2px 8px',
+                borderRadius: '4px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                background: latestPinkyMetrics.status === 'STRAIGHT' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                color: latestPinkyMetrics.status === 'STRAIGHT' ? '#4ade80' : '#f87171',
+                border: `1px solid ${latestPinkyMetrics.status === 'STRAIGHT' ? '#22c55e' : '#ef4444'}`
+              }}>
+                {latestPinkyMetrics.status === 'STRAIGHT' ? 'DUỖI (STRAIGHT)' : (latestPinkyMetrics.status === 'CURLED' ? 'GẬP (CURLED)' : 'CHƯA CÓ TAY')}
+              </span>
+            </div>
+          </div>
+
+          {/* Metric Grid: PIP Angle, DIP Angle, Pinky Curl, d_PW */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '8px' }}>
+            <div style={{ background: 'rgba(15,23,42,0.8)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: '10px', color: '#94a3b8' }}>Góc PIP (17-18-19)</div>
+              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#38bdf8' }}>{latestPinkyMetrics.pipAngle}°</div>
+              <div style={{ fontSize: '9px', color: '#64748b' }}>Thẳng: ≥140°</div>
+            </div>
+            <div style={{ background: 'rgba(15,23,42,0.8)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: '10px', color: '#94a3b8' }}>Góc DIP (18-19-20)</div>
+              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#a78bfa' }}>{latestPinkyMetrics.dipAngle}°</div>
+              <div style={{ fontSize: '9px', color: '#64748b' }}>Thẳng: ≥140°</div>
+            </div>
+            <div style={{ background: 'rgba(15,23,42,0.8)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: '10px', color: '#94a3b8' }}>pinky_curl</div>
+              <div style={{ fontSize: '18px', fontWeight: 'bold', color: latestPinkyMetrics.curl <= 0.20 ? '#4ade80' : '#f87171' }}>
+                {latestPinkyMetrics.curl.toFixed(3)}
+              </div>
+              <div style={{ fontSize: '9px', color: '#64748b' }}>Thẳng: ≤0.20</div>
+            </div>
+            <div style={{ background: 'rgba(15,23,42,0.8)', padding: '6px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: '10px', color: '#94a3b8' }}>d_PW (Út - Cổ tay)</div>
+              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#facc15' }}>{latestPinkyMetrics.d_pw.toFixed(2)}</div>
+              <div style={{ fontSize: '9px', color: '#64748b' }}>Gập: ≤0.85</div>
+            </div>
+          </div>
+
+          {/* Raw Landmark Coordinates 17, 18, 19, 20 */}
+          <div style={{ fontSize: '10px', color: '#cbd5e1', background: 'rgba(0,0,0,0.4)', padding: '8px 10px', borderRadius: '6px', fontFamily: 'monospace', display: 'grid', gap: '3px' }}>
+            <div>17 (PINKY_MCP): x={latestPinkyMetrics.lm17[0]} y={latestPinkyMetrics.lm17[1]} z={latestPinkyMetrics.lm17[2]}</div>
+            <div>18 (PINKY_PIP): x={latestPinkyMetrics.lm18[0]} y={latestPinkyMetrics.lm18[1]} z={latestPinkyMetrics.lm18[2]}</div>
+            <div>19 (PINKY_DIP): x={latestPinkyMetrics.lm19[0]} y={latestPinkyMetrics.lm19[1]} z={latestPinkyMetrics.lm19[2]}</div>
+            <div>20 (PINKY_TIP): x={latestPinkyMetrics.lm20[0]} y={latestPinkyMetrics.lm20[1]} z={latestPinkyMetrics.lm20[2]}</div>
+          </div>
+
+          {/* Live Validation Checklist (Raw Landmarks · Bù trễ = 0 · Hands 640x480 Complexity 1) */}
+          <div style={{ fontSize: '10px', color: '#e2e8f0', background: 'rgba(15, 23, 42, 0.75)', padding: '8px 10px', borderRadius: '6px', border: '1px dashed rgba(244, 114, 182, 0.35)', display: 'grid', gap: '4px' }}>
+            <div style={{ color: '#f472b6', fontWeight: 600 }}>
+              Chế độ chẩn đoán: Raw Landmarks (Bù trễ = 0) · Hands 640×480 · modelComplexity=1
+            </div>
+            <div style={{ color: '#cbd5e1' }}>
+              Bài thử webcam ngắn (5 tư thế kiểm tra khớp 17–20):
+              1) Ngón út duỗi · 2) Ngón út gập · 3) Bàn tay nắm · 4) Bàn tay nghiêng · 5) Tư thế O và U.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- SIGN CONVENTION GUIDE CARD (TOÀN QUỐC -> MIỀN NAM) --- */}
+      {SIGN_CONVENTIONS[selectedLetter] && (
+        <div style={{
+          background: SIGN_CONVENTIONS[selectedLetter].status === 'BLOCKED_SOURCE'
+            ? 'linear-gradient(135deg, rgba(30, 27, 20, 0.95), rgba(45, 26, 14, 0.9))'
+            : 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 30, 50, 0.9))',
+          border: `1px solid ${SIGN_CONVENTIONS[selectedLetter].status === 'BLOCKED_SOURCE' ? 'rgba(245, 158, 11, 0.5)' : 'rgba(56, 189, 248, 0.35)'}`,
+          borderRadius: '10px',
+          padding: '14px',
+          display: 'grid',
+          gap: '12px'
+        }}>
+          {/* Header with Title, Badges, and Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{
+                fontSize: '18px',
+                fontWeight: 'bold',
+                color: SIGN_CONVENTIONS[selectedLetter].status === 'BLOCKED_SOURCE' ? '#fbbf24' : '#38bdf8',
+                background: 'rgba(255,255,255,0.06)',
+                padding: '2px 10px',
+                borderRadius: '6px',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}>
+                Chữ {selectedLetter}
+              </span>
+              <span style={{
+                fontSize: '11px',
+                fontWeight: 'bold',
+                padding: '3px 8px',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                background: SIGN_CONVENTIONS[selectedLetter].status === 'VERIFIED_NATIONAL'
+                  ? 'rgba(34, 197, 94, 0.2)'
+                  : (SIGN_CONVENTIONS[selectedLetter].status === 'VERIFIED_SOUTHERN'
+                      ? 'rgba(6, 182, 212, 0.2)'
+                      : 'rgba(239, 68, 68, 0.2)'),
+                color: SIGN_CONVENTIONS[selectedLetter].status === 'VERIFIED_NATIONAL'
+                  ? '#4ade80'
+                  : (SIGN_CONVENTIONS[selectedLetter].status === 'VERIFIED_SOUTHERN'
+                      ? '#22d3ee'
+                      : '#f87171'),
+                border: `1px solid ${SIGN_CONVENTIONS[selectedLetter].status === 'VERIFIED_NATIONAL'
+                  ? 'rgba(34, 197, 94, 0.4)'
+                  : (SIGN_CONVENTIONS[selectedLetter].status === 'VERIFIED_SOUTHERN'
+                      ? 'rgba(6, 182, 212, 0.4)'
+                      : 'rgba(239, 68, 68, 0.4)')}`
+              }}>
+                {SIGN_CONVENTIONS[selectedLetter].status === 'BLOCKED_SOURCE' ? <ShieldAlert size={12} /> : <CheckCircle2 size={12} />}
+                Nguồn: {SIGN_CONVENTIONS[selectedLetter].statusLabel}
+              </span>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                Chữ nền: <strong style={{ color: '#f8fafc' }}>{SIGN_CONVENTIONS[selectedLetter].baseLetter}</strong>
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowConventionGuide(prev => !prev)}
+              className="btn btn-secondary"
+              style={{ fontSize: '11px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '5px' }}
+            >
+              {showConventionGuide ? <EyeOff size={13} /> : <Eye size={13} />}
+              {showConventionGuide ? 'Ẩn Hướng Dẫn' : 'Xem Hướng Dẫn Chi Tiết'}
+            </button>
+          </div>
+
+          {/* Guide Details (Expanded) */}
+          {showConventionGuide && (
+            <div style={{ display: 'grid', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px' }}>
+              {/* If BLOCKED_SOURCE: prominent caution box */}
+              {SIGN_CONVENTIONS[selectedLetter].status === 'BLOCKED_SOURCE' ? (
+                <div style={{
+                  background: 'rgba(245, 158, 11, 0.1)',
+                  border: '1px solid rgba(245, 158, 11, 0.4)',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  display: 'grid',
+                  gap: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fbbf24', fontWeight: 'bold', fontSize: '13px' }}>
+                    <AlertTriangle size={16} />
+                    QUY ƯỚC CHƯA ĐƯỢC XÁC MINH — KHÓA KIỂM THỬ ĐẠT CHUẨN
+                  </div>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#fef3c7', lineHeight: '1.5' }}>
+                    {SIGN_CONVENTIONS[selectedLetter].blockedReason}
+                  </p>
+                  <div style={{ fontSize: '11px', color: '#fde68a', background: 'rgba(0,0,0,0.25)', padding: '8px', borderRadius: '6px' }}>
+                    <strong>Mô tả lý thuyết trong QIPEDC:</strong> {SIGN_CONVENTIONS[selectedLetter].description}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#fca5a5', fontWeight: '600' }}>
+                    ⚠️ Lưu ý: Mọi lượt thử nghiệm webcam đối với chữ {selectedLetter} sẽ được ghi nhận với trạng thái <code>BLOCKED_SOURCE</code>, tuyệt đối không cấp chứng nhận PASS giả định.
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'auto 1fr',
+                  gap: '14px',
+                  alignItems: 'start'
+                }}>
+                  {/* Left: Video Player */}
+                  <div style={{
+                    background: 'rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px',
+                    padding: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '6px',
+                    width: '180px'
+                  }}>
+                    <div style={{ fontSize: '10px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Video size={12} color="#38bdf8" />
+                      Video chuẩn ({SIGN_CONVENTIONS[selectedLetter].videoId})
+                    </div>
+                    <video
+                      key={SIGN_CONVENTIONS[selectedLetter].videoUrl}
+                      src={SIGN_CONVENTIONS[selectedLetter].videoUrl}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      controls
+                      style={{
+                        width: '164px',
+                        height: '110px',
+                        objectFit: 'cover',
+                        borderRadius: '6px',
+                        background: '#000'
+                      }}
+                    />
+                    <span style={{ fontSize: '9px', color: '#64748b', textAlign: 'center' }}>
+                      Nguồn: {SIGN_CONVENTIONS[selectedLetter].provenancePolicy}
+                    </span>
+                  </div>
+
+                  {/* Right: 5 Steps */}
+                  <div style={{ display: 'grid', gap: '8px' }}>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>
+                      {SIGN_CONVENTIONS[selectedLetter].description}
+                    </div>
+
+                    <div style={{ display: 'grid', gap: '6px', fontSize: '11px' }}>
+                      <div style={{ background: 'rgba(15,23,42,0.6)', padding: '6px 10px', borderRadius: '6px', borderLeft: '3px solid #38bdf8' }}>
+                        <strong style={{ color: '#38bdf8' }}>1. Tư thế bắt đầu (Chữ nền {SIGN_CONVENTIONS[selectedLetter].baseLetter}):</strong>{' '}
+                        <span style={{ color: '#cbd5e1' }}>{SIGN_CONVENTIONS[selectedLetter].steps.startingPose}</span>
+                      </div>
+
+                      <div style={{ background: 'rgba(15,23,42,0.6)', padding: '6px 10px', borderRadius: '6px', borderLeft: '3px solid #64748b' }}>
+                        <strong style={{ color: '#94a3b8' }}>2. Ngón tay giữ nguyên:</strong>{' '}
+                        <span style={{ color: '#cbd5e1' }}>{SIGN_CONVENTIONS[selectedLetter].steps.fingersHeld}</span>
+                      </div>
+
+                      <div style={{ background: 'rgba(15,23,42,0.6)', padding: '6px 10px', borderRadius: '6px', borderLeft: '3px solid #22c55e' }}>
+                        <strong style={{ color: '#4ade80' }}>3. Động tác chuyển động:</strong>{' '}
+                        <span style={{ color: '#cbd5e1' }}>{SIGN_CONVENTIONS[selectedLetter].steps.movement}</span>
+                      </div>
+
+                      <div style={{ background: 'rgba(15,23,42,0.6)', padding: '6px 10px', borderRadius: '6px', borderLeft: '3px solid #f59e0b' }}>
+                        <strong style={{ color: '#fbbf24' }}>4. Tư thế kết thúc:</strong>{' '}
+                        <span style={{ color: '#cbd5e1' }}>{SIGN_CONVENTIONS[selectedLetter].steps.endingPose}</span>
+                      </div>
+
+                      <div style={{ background: 'rgba(15,23,42,0.6)', padding: '6px 10px', borderRadius: '6px', borderLeft: '3px solid #f87171' }}>
+                        <strong style={{ color: '#f87171' }}>5. Lưu ý chống nhầm lẫn:</strong>{' '}
+                        <span style={{ color: '#cbd5e1' }}>{SIGN_CONVENTIONS[selectedLetter].steps.antiConfusion}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Main Testing Stage */}
+      <div style={{
+        background: '#070b12',
+        borderRadius: '10px',
+        padding: '16px',
+        border: '1px solid rgba(148, 163, 184, 0.15)',
+        display: 'grid',
+        gap: '12px'
+      }}>
+        {/* Countdown Overlay */}
+        {trialState === 'COUNTDOWN' && (
+          <div style={{
+            textAlign: 'center',
+            padding: '24px 0',
+            background: 'rgba(56, 189, 248, 0.08)',
+            borderRadius: '8px',
+            border: '1px dashed #38bdf8'
+          }}>
+            <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>Chuẩn bị tạo tư thế cho chữ cái</p>
+            <h1 style={{ fontSize: '48px', margin: '4px 0', color: '#38bdf8' }}>{selectedLetter}</h1>
+            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#fbbf24' }}>
+              Bắt đầu ghi sau: {countdownRemaining}s
+            </div>
+          </div>
+        )}
+
+        {/* Recording Active Display */}
+        {trialState === 'RECORDING' && (
+          <div style={{ display: 'grid', gap: '10px' }}>
+            {/* Thanh tiến độ 5.0s */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', marginBottom: '4px' }}>
+                <span style={{ color: '#ef4444', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', animation: 'pulse 1s infinite' }} />
+                  ĐANG THU THẬP DỮ LIỆU WEBCAM (LƯỢT {currentRep} / {totalReps})
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 'bold' }}>
+                    {recordingElapsedSec.toFixed(1)}s / {trialDurationSec.toFixed(1)}s
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleStopSession}
+                    className="btn btn-secondary"
+                    style={{ fontSize: '11px', padding: '2px 8px', background: 'rgba(239,68,68,0.2)', border: '1px solid #ef4444', color: '#f87171', cursor: 'pointer' }}
+                    title="Dừng phiên kiểm thử hiện tại"
+                  >
+                    <Square size={11} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                    Dừng
+                  </button>
+                </div>
+              </div>
+              <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%',
+                  width: `${(recordingElapsedSec / trialDurationSec) * 100}%`,
+                  background: 'linear-gradient(90deg, #38bdf8, #22c55e)',
+                  transition: 'width 0.05s linear'
+                }} />
+              </div>
+            </div>
+
+            {/* Thông số nhận diện thời gian thực đầy đủ 9 trường Telemetry */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(115px, 1fr))',
+              gap: '8px',
+              marginTop: '4px'
+            }}>
+              {/* 1. Mục tiêu */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>Mục tiêu (Target)</div>
+                <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#38bdf8' }}>{selectedLetter}</div>
+              </div>
+
+              {/* 2. AI Dự đoán */}
+              <div style={{
+                background: currentFrameStats.isMatch ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                border: `1px solid ${currentFrameStats.isMatch ? '#22c55e' : '#ef4444'}`
+              }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>AI Dự đoán (Final)</div>
+                <div style={{ fontSize: '22px', fontWeight: 'bold', color: currentFrameStats.isMatch ? '#4ade80' : '#f87171' }}>
+                  {currentFrameStats.lastSign}
+                </div>
+              </div>
+
+              {/* 3. Chữ nền đang nhận diện */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>Chữ nền (Base)</div>
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#facc15' }}>
+                  {currentFrameStats.baseSign || '—'}
+                </div>
+              </div>
+
+              {/* 4. Trạng thái FSM */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>FSM State</div>
+                <div style={{
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  marginTop: '4px',
+                  color: currentFrameStats.fsmState === 'DIACRITIC_CONFIRMED' || currentFrameStats.fsmState === 'CONFIRMED'
+                    ? '#4ade80'
+                    : (currentFrameStats.fsmState === 'BASE_STABLE' || currentFrameStats.fsmState === 'DIACRITIC_CANDIDATE' ? '#38bdf8' : '#cbd5e1')
+                }}>
+                  {currentFrameStats.fsmState || 'IDLE'}
+                </div>
+              </div>
+
+              {/* 5. Độ tin cậy */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>Độ tin cậy</div>
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#cbd5e1' }}>
+                  {(currentFrameStats.lastConfidence * 100).toFixed(0)}%
+                </div>
+              </div>
+
+              {/* 6. Camera FPS */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>Camera FPS</div>
+                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#a78bfa' }}>
+                  {currentFrameStats.cameraFps || 0}
+                </div>
+              </div>
+
+              {/* 7. Backend FPS */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>Backend FPS</div>
+                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#38bdf8' }}>
+                  {currentFrameStats.backendFps || 0}
+                </div>
+              </div>
+
+              {/* 8. Tracking status */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>Tracking</div>
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  marginTop: '4px',
+                  color: currentFrameStats.trackingStatus === 'VALID' ? '#4ade80' : '#f87171'
+                }}>
+                  {currentFrameStats.trackingStatus || '—'}
+                </div>
+              </div>
+
+              {/* 9. Trạng thái lưu log */}
+              <div style={{ background: 'rgba(15,23,42,0.8)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>Trạng thái log</div>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', marginTop: '4px', color: '#38bdf8' }}>
+                  {currentFrameStats.logStatus || 'IDLE'}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Post-Trial Review */}
+        {trialState === 'TRIAL_REVIEW' && lastTrialSummary && (
+          <div style={{
+            background: lastTrialSummary.status === 'BLOCKED_SOURCE'
+              ? 'rgba(245, 158, 11, 0.12)'
+              : (lastTrialSummary.isPassed ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)'),
+            border: `1px solid ${lastTrialSummary.status === 'BLOCKED_SOURCE'
+              ? 'rgba(245, 158, 11, 0.5)'
+              : (lastTrialSummary.isPassed ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)')}`,
+            borderRadius: '8px',
+            padding: '14px',
+            display: 'grid',
+            gap: '12px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {lastTrialSummary.status === 'BLOCKED_SOURCE' ? (
+                  <AlertTriangle size={24} color="#fbbf24" />
+                ) : lastTrialSummary.isPassed ? (
+                  <CheckCircle2 size={24} color="#4ade80" />
+                ) : (
+                  <XCircle size={24} color="#f87171" />
+                )}
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '15px', color: lastTrialSummary.status === 'BLOCKED_SOURCE' ? '#fbbf24' : (lastTrialSummary.isPassed ? '#4ade80' : '#f87171') }}>
+                    {lastTrialSummary.status === 'BLOCKED_SOURCE'
+                      ? `LƯỢT ${lastTrialSummary.rep} — BLOCKED_SOURCE (Quy ước chưa xác minh, thiếu video đối chứng)`
+                      : lastTrialSummary.isPassed
+                      ? (lastTrialSummary.isDynamic
+                          ? `LƯỢT ${lastTrialSummary.rep} ĐẠT — Đã xác nhận ký hiệu động ${selectedLetter}`
+                          : `LƯỢT ${lastTrialSummary.rep} ĐẠT — Khớp ${lastTrialSummary.matchPct}% chữ ${selectedLetter}`)
+                      : (lastTrialSummary.isDynamic
+                          ? (lastTrialSummary.status === 'NO_HAND'
+                              ? `LƯỢT ${lastTrialSummary.rep} — KHÔNG PHÁT HIỆN TAY`
+                              : (lastTrialSummary.status === 'INSUFFICIENT_DATA'
+                                  ? `LƯỢT ${lastTrialSummary.rep} — DỮ LIỆU KHÔNG ĐỦ (<5 frames)`
+                                  : `LƯỢT ${lastTrialSummary.rep} CẦN FIX — Chưa hoàn thành dấu ${selectedLetter}`))
+                          : `LƯỢT ${lastTrialSummary.rep} CẦN FIX — Chỉ khớp ${lastTrialSummary.matchPct}% chữ ${selectedLetter}`)}
+                  </h3>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                    {lastTrialSummary.status === 'BLOCKED_SOURCE' ? (
+                      <span style={{ color: '#fde68a' }}>
+                        Chữ {selectedLetter} chưa có video Toàn quốc hoặc Miền Nam hợp lệ. Đã loại bỏ video Miền Bắc B; không cấp kết quả PASS giả.
+                      </span>
+                    ) : lastTrialSummary.isDynamic ? (
+                      <span>
+                        Bằng chứng: Nền <strong>{lastTrialSummary.hasBaseEvidence ? 'ĐẠT' : 'THIẾU'}</strong> | Dấu <strong>{lastTrialSummary.hasDiacriticConfirmation ? 'ĐÃ XÁC NHẬN' : 'CHƯA XÁC NHẬN'}</strong>
+                        {lastTrialSummary.root_cause && lastTrialSummary.root_cause !== 'NONE' && (
+                          <span style={{ marginLeft: '8px', color: '#f87171' }}>
+                            [Nguyên nhân: <strong>{lastTrialSummary.root_cause}</strong>]
+                          </span>
+                        )}
+                      </span>
+                    ) : (
+                      lastTrialSummary.topConfusion
+                        ? `⚠️ Thường bị nhận diện nhầm sang chữ: "${lastTrialSummary.topConfusion}" (${lastTrialSummary.confusions[lastTrialSummary.topConfusion]} frames)`
+                        : 'Không có nhầm lẫn đáng kể.'
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'right', fontSize: '11px', color: '#cbd5e1' }}>
+                <div>Thu thập: <strong>{lastTrialSummary.totalFrames} frames / 5.0s</strong></div>
+                <div>Độ tin cậy TB: <strong>{(lastTrialSummary.avgConfidence * 100).toFixed(0)}%</strong></div>
+              </div>
+            </div>
+
+            {/* Nút hành động sau lượt */}
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={handleRetryTrial}
+                className="btn btn-secondary"
+                style={{ fontSize: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                <RotateCcw size={13} />
+                Thử lại lượt này
+              </button>
+              <button
+                type="button"
+                onClick={handleSkipTrial}
+                className="btn btn-secondary"
+                style={{ fontSize: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                <SkipForward size={13} />
+                Bỏ qua
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNextTrial(lastTrialSummary)}
+                className="btn btn-primary"
+                style={{ fontSize: '12px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                <Check size={14} />
+                Chấp nhận & Tiếp tục
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Session Complete Banner */}
+        {trialState === 'SESSION_COMPLETE' && (
+          <div style={{
+            background: 'rgba(56, 189, 248, 0.15)',
+            border: '1px solid #38bdf8',
+            borderRadius: '8px',
+            padding: '16px',
+            textAlign: 'center'
+          }}>
+            <Sparkles size={28} color="#38bdf8" style={{ margin: '0 auto 8px' }} />
+            <h3 style={{ margin: 0, fontSize: '16px', color: '#f8fafc' }}>
+              Hoàn thành phiên kiểm thử Controlled Pilot!
+            </h3>
+            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 12px' }}>
+              Đã thu thập dữ liệu webcam cho các chữ cái được chỉ định. Vui lòng lưu file JSON vào backend/data/diagnostics.
+            </p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setShowScoreboard(true)}
+                className="btn btn-primary"
+                style={{ fontSize: '12px', padding: '6px 14px' }}
+              >
+                Xem chi tiết các chữ cần fix
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveDiagnostics}
+                className="btn btn-secondary"
+                style={{
+                  fontSize: '12px',
+                  padding: '6px 14px',
+                  background: saveStatus?.type === 'success' ? '#15803d' : '#1e3a8a',
+                  borderColor: saveStatus?.type === 'success' ? '#22c55e' : '#3b82f6',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                {saveStatus?.type === 'loading' ? (
+                  <span>Đang lưu...</span>
+                ) : saveStatus?.type === 'success' ? (
+                  <>
+                    <CheckCircle2 size={14} color="#4ade80" />
+                    Đã lưu thành công!
+                  </>
+                ) : (
+                  <>
+                    <Save size={13} />
+                    Lưu vào backend/data/diagnostics
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadJSON}
+                className="btn btn-secondary"
+                style={{ fontSize: '12px', padding: '6px 14px', background: '#0f766e', borderColor: '#14b8a6', color: '#ccfbf1', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Download size={13} />
+                Tải file JSON về máy
+              </button>
+            </div>
+
+            {saveStatus && (
+              <div style={{
+                marginTop: '12px',
+                padding: '8px 14px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                background: saveStatus.type === 'success' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                border: `1px solid ${saveStatus.type === 'success' ? '#22c55e' : '#ef4444'}`,
+                color: saveStatus.type === 'success' ? '#4ade80' : '#f87171',
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}>
+                <span>{saveStatus.message}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Controls Bar (Khi Idle) */}
+        {trialState === 'IDLE' && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={handleStartTrial}
+                className="btn btn-primary"
+                style={{
+                  fontSize: '13px',
+                  padding: '8px 18px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'linear-gradient(135deg, #0284c7, #2563eb)',
+                  boxShadow: '0 4px 12px rgba(37,99,235,0.3)'
+                }}
+              >
+                <Play size={16} fill="#fff" />
+                Bắt đầu Lượt thử {currentRep} / {totalReps} (Chữ {selectedLetter})
+              </button>
+
+              <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: '#94a3b8' }}>
+                <input
+                  type="checkbox"
+                  checked={autoAdvance}
+                  onChange={e => setAutoAdvance(e.target.checked)}
+                />
+                Tự động chuyển lượt sau khi ghi
+              </label>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={handleResetSession}
+                className="btn btn-secondary"
+                style={{ fontSize: '12px', padding: '6px 10px', color: '#94a3b8' }}
+                title="Tạo phiên mới và xóa dữ liệu tạm hiện tại"
+              >
+                <RotateCcw size={13} style={{ marginRight: 4 }} />
+                Reset Phiên
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Thông báo trạng thái lưu file */}
+      {saveStatus && (
+        <div style={{
+          padding: '8px 12px',
+          borderRadius: '6px',
+          fontSize: '12px',
+          background: saveStatus.type === 'success' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+          border: `1px solid ${saveStatus.type === 'success' ? '#22c55e' : '#ef4444'}`,
+          color: saveStatus.type === 'success' ? '#4ade80' : '#f87171',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <span>{saveStatus.message}</span>
+          <button
+            type="button"
+            onClick={() => setSaveStatus(null)}
+            style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Footer Actions: Lưu JSON & Xem Scoreboard */}
+      <footer style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '10px',
+        paddingTop: '6px',
+        borderTop: '1px solid rgba(255,255,255,0.06)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '11px', color: '#94a3b8' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={saveFrameLogs}
+              onChange={e => setSaveFrameLogs(e.target.checked)}
+            />
+            Kèm file frame chi tiết (.jsonl) khi lưu
+          </label>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            type="button"
+            onClick={handleDownloadJSON}
+            className="btn btn-secondary"
+            style={{ fontSize: '11px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
+            <Download size={13} />
+            Tải file JSON về máy
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveDiagnostics}
+            className="btn btn-secondary"
+            style={{
+              fontSize: '11px',
+              padding: '6px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: saveStatus?.type === 'success' ? '#15803d' : '#1e3a8a',
+              borderColor: saveStatus?.type === 'success' ? '#22c55e' : '#3b82f6',
+              color: '#fff'
+            }}
+          >
+            {saveStatus?.type === 'loading' ? (
+              <span>Đang lưu...</span>
+            ) : saveStatus?.type === 'success' ? (
+              <>
+                <Check size={13} />
+                Đã lưu thành công!
+              </>
+            ) : (
+              <>
+                <Save size={13} />
+                Lưu vào backend\data\diagnostics
+              </>
+            )}
+          </button>
+        </div>
+      </footer>
+
+      {/* --- SCOREBOARD / BÁO CÁO CHẨN ĐOÁN 29 CHỮ MODAL --- */}
+      {showScoreboard && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '16px'
+        }}>
+          <div style={{
+            background: '#090e17',
+            border: '1px solid rgba(56, 189, 248, 0.4)',
+            borderRadius: '12px',
+            width: '100%',
+            maxWidth: '850px',
+            maxHeight: '85vh',
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
+            color: '#f8fafc'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '16px 20px',
+              borderBottom: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <BarChart3 size={18} color="#38bdf8" />
+                  Báo cáo Đánh giá Chẩn đoán 29 Chữ cái VSL
+                </h3>
+                <span style={{ fontSize: '11px', color: '#94a3b8' }}>Session: {sessionId}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowScoreboard(false)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: '20px', overflowY: 'auto', display: 'grid', gap: '16px' }}>
+              {/* Thẻ tóm tắt tổng quan */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                gap: '10px'
+              }}>
+                <div style={{ background: 'rgba(15,23,42,0.8)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>Chữ đã kiểm thử</span>
+                  <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#38bdf8' }}>
+                    {currentReport.summary.evaluated_letters_count} / 29
+                  </div>
+                </div>
+
+                <div style={{ background: 'rgba(34,197,94,0.12)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(34,197,94,0.3)' }}>
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>Chữ ĐẠT</span>
+                  <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#4ade80' }}>
+                    {currentReport.summary.letters_passed.length}
+                  </div>
+                </div>
+
+                <div style={{ background: 'rgba(239,68,68,0.12)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.3)' }}>
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>Chữ CẦN FIX</span>
+                  <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#f87171' }}>
+                    {currentReport.summary.letters_needing_fix.length}
+                  </div>
+                </div>
+
+                <div style={{ background: 'rgba(245,158,11,0.12)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(245,158,11,0.3)' }}>
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>BLOCKED_SOURCE</span>
+                  <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#fbbf24' }}>
+                    {currentReport.summary.letters_blocked_source?.length || 0}
+                  </div>
+                </div>
+
+                <div style={{ background: 'rgba(15,23,42,0.8)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>Độ chính xác TB</span>
+                  <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#facc15' }}>
+                    {currentReport.summary.overall_accuracy_pct}%
+                  </div>
+                </div>
+              </div>
+
+              {/* Danh sách chữ BLOCKED_SOURCE */}
+              {currentReport.summary.letters_blocked_source && currentReport.summary.letters_blocked_source.length > 0 && (
+                <div style={{
+                  background: 'rgba(245, 158, 11, 0.08)',
+                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  borderRadius: '8px',
+                  padding: '12px'
+                }}>
+                  <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#fbbf24', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ShieldAlert size={15} />
+                    CHỮ KHÓA NGUỒN BLOCKED_SOURCE ({currentReport.summary.letters_blocked_source.length} chữ: {currentReport.summary.letters_blocked_source.join(', ')}):
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.5' }}>
+                    Các chữ này chưa có video nguồn Toàn quốc hoặc Miền Nam (hậu tố N) trên đĩa cache. Video Miền Bắc B bị loại bỏ hoàn toàn theo quy tắc TOÀN QUỐC → MIỀN NAM. Quy ước chưa được xác minh định lượng nên hệ thống không cấp kết quả PASS giả định.
+                  </div>
+                </div>
+              )}
+
+              {/* Danh sách chữ cần FIX */}
+              {currentReport.summary.letters_needing_fix.length > 0 && (
+                <div style={{
+                  background: 'rgba(239, 68, 68, 0.08)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  borderRadius: '8px',
+                  padding: '12px'
+                }}>
+                  <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#f87171', marginBottom: '8px' }}>
+                    ⚠️ CÁC CHỮ CẦN SỬA LOGIC NHẬN DIỆN ({currentReport.summary.letters_needing_fix.length} chữ):
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {currentReport.summary.letters_needing_fix.map(letter => {
+                      const letterData = currentReport.letters[letter];
+                      const confList = Object.entries(letterData.topConfusions || {})
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 2)
+                        .map(([c, n]) => `${c}(${n})`)
+                        .join(', ');
+
+                      return (
+                        <div
+                          key={letter}
+                          style={{
+                            background: 'rgba(15, 23, 42, 0.8)',
+                            border: '1px solid rgba(239, 68, 68, 0.4)',
+                            borderRadius: '6px',
+                            padding: '6px 10px',
+                            fontSize: '12px'
+                          }}
+                        >
+                          <strong style={{ color: '#f87171', fontSize: '14px' }}>{letter}</strong>
+                          <span style={{ color: '#94a3b8', marginLeft: '6px' }}>({letterData.accuracyPct}%)</span>
+                          {confList && (
+                            <span style={{ color: '#fca5a5', display: 'block', fontSize: '10px' }}>
+                              Nhầm sang: {confList}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Bảng chi tiết 29 chữ cái */}
+              <div>
+                <h4 style={{ margin: '0 0 8px', fontSize: '13px', color: '#cbd5e1' }}>Chi tiết từng chữ cái (A — Y):</h4>
+                <div style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                    <thead>
+                      <tr style={{ background: 'rgba(255,255,255,0.04)', color: '#94a3b8', textAlign: 'left' }}>
+                        <th style={{ padding: '8px 12px' }}>Chữ</th>
+                        <th style={{ padding: '8px 12px' }}>Lượt đạt</th>
+                        <th style={{ padding: '8px 12px' }}>Độ khớp %</th>
+                        <th style={{ padding: '8px 12px' }}>Trạng thái</th>
+                        <th style={{ padding: '8px 12px' }}>Nhầm lẫn nhiều nhất</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {VSL_ALPHABET_29.map(letter => {
+                        const lData = currentReport.letters[letter];
+                        if (!lData || lData.status === 'UNTESTED') {
+                          return (
+                            <tr key={letter} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: 0.5 }}>
+                              <td style={{ padding: '8px 12px', fontWeight: 'bold' }}>{letter}</td>
+                              <td style={{ padding: '8px 12px' }}>0 / 10</td>
+                              <td style={{ padding: '8px 12px' }}>—</td>
+                              <td style={{ padding: '8px 12px' }}>
+                                <span style={{ padding: '2px 6px', borderRadius: '4px', background: 'rgba(148,163,184,0.1)', color: '#94a3b8', fontSize: '10px' }}>
+                                  Chưa test
+                                </span>
+                              </td>
+                              <td style={{ padding: '8px 12px' }}>—</td>
+                            </tr>
+                          );
+                        }
+
+                        const confs = Object.entries(lData.topConfusions || {})
+                          .sort((a, b) => b[1] - a[1])
+                          .slice(0, 3)
+                          .map(([c, n]) => `${c} (${n})`)
+                          .join(', ');
+
+                        return (
+                          <tr key={letter} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                            <td style={{ padding: '8px 12px', fontWeight: 'bold', fontSize: '13px', color: '#38bdf8' }}>{letter}</td>
+                            <td style={{ padding: '8px 12px' }}>{lData.passedTrials} / {lData.totalTrials}</td>
+                            <td style={{ padding: '8px 12px', fontWeight: 'bold', color: lData.accuracyPct >= 70 ? '#4ade80' : '#f87171' }}>
+                              {lData.accuracyPct}%
+                            </td>
+                            <td style={{ padding: '8px 12px' }}>
+                              <span style={{
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                fontSize: '10px',
+                                fontWeight: 'bold',
+                                background: lData.status === 'PASS'
+                                  ? 'rgba(34,197,94,0.2)'
+                                  : (lData.status === 'BLOCKED_SOURCE' ? 'rgba(245,158,11,0.2)' : 'rgba(239,68,68,0.2)'),
+                                color: lData.status === 'PASS'
+                                  ? '#4ade80'
+                                  : (lData.status === 'BLOCKED_SOURCE' ? '#fbbf24' : '#f87171')
+                              }}>
+                                {lData.status}
+                              </span>
+                            </td>
+                            <td style={{ padding: '8px 12px', color: lData.status === 'BLOCKED_SOURCE' ? '#fde68a' : '#fca5a5' }}>
+                              {lData.status === 'BLOCKED_SOURCE' ? 'Thiếu video nguồn N' : (confs || 'Không có')}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{
+              padding: '14px 20px',
+              borderTop: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+              background: 'rgba(0,0,0,0.2)'
+            }}>
+              {saveStatus && (
+                <div style={{
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  background: saveStatus.type === 'success' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                  border: `1px solid ${saveStatus.type === 'success' ? '#22c55e' : '#ef4444'}`,
+                  color: saveStatus.type === 'success' ? '#4ade80' : '#f87171',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <span>{saveStatus.message}</span>
+                  <button
+                    type="button"
+                    onClick={() => setSaveStatus(null)}
+                    style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowScoreboard(false)}
+                  className="btn btn-secondary"
+                  style={{ fontSize: '12px', padding: '6px 14px' }}
+                >
+                  Đóng
+                </button>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={handleDownloadJSON}
+                    className="btn btn-secondary"
+                    style={{ fontSize: '12px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Download size={14} />
+                    Tải file JSON về máy
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveDiagnostics}
+                    className="btn btn-primary"
+                    style={{
+                      fontSize: '12px',
+                      padding: '6px 16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: saveStatus?.type === 'success' ? '#15803d' : '#2563eb',
+                      borderColor: saveStatus?.type === 'success' ? '#22c55e' : '#3b82f6'
+                    }}
+                  >
+                    {saveStatus?.type === 'loading' ? (
+                      <span>Đang lưu...</span>
+                    ) : saveStatus?.type === 'success' ? (
+                      <>
+                        <Check size={14} />
+                        Đã lưu thành công!
+                      </>
+                    ) : (
+                      <>
+                        <Save size={14} />
+                        Lưu vào backend\data\diagnostics
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,1614 @@
+{
+  "extracted_at": "2026-11-18T15:36:56Z",
+  "total_videos": 39,
+  "valid_count": 36,
+  "results": [
+    {
+      "item_id": 1,
+      "type": "WORD",
+      "class_index": 7,
+      "word": "nghĩ",
+      "filename": "signer_01_007_q-nghi_trial_01.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_007_q-nghi_trial_01.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 3.3,
+      "trim_meta": {
+        "video_duration_sec": 5.0,
+        "active_start_sec": 0.8667,
+        "active_end_sec": 3.1333,
+        "active_duration_sec": 2.2667,
+        "active_ratio": 0.4533,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 35,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.8857,
+        "left_hand_participating": false,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 2,
+      "type": "WORD",
+      "class_index": 7,
+      "word": "nghĩ",
+      "filename": "signer_01_007_q-nghi_trial_02.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_007_q-nghi_trial_02.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 3.164,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.2667,
+        "active_end_sec": 4.9333,
+        "active_duration_sec": 4.6667,
+        "active_ratio": 0.9459,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 71,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.9718,
+        "left_hand_participating": false,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 2,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 3,
+      "type": "WORD",
+      "class_index": 7,
+      "word": "nghĩ",
+      "filename": "signer_01_007_q-nghi_trial_03.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_007_q-nghi_trial_03.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 3.177,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.3333,
+        "active_end_sec": 1.0,
+        "active_duration_sec": 0.6667,
+        "active_ratio": 0.1351,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 11,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.6364,
+        "left_hand_participating": false,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 4,
+      "type": "WORD",
+      "class_index": 3,
+      "word": "muốn",
+      "filename": "signer_01_003_q-muon_trial_01.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_003_q-muon_trial_01.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 3.16,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.0,
+        "active_end_sec": 2.9333,
+        "active_duration_sec": 2.9333,
+        "active_ratio": 0.5946,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 45,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.9556,
+        "left_hand_participating": false,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 2,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.0667,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 5,
+      "type": "WORD",
+      "class_index": 3,
+      "word": "muốn",
+      "filename": "signer_01_003_q-muon_trial_02.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_003_q-muon_trial_02.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 3.373,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.5333,
+        "active_end_sec": 4.9333,
+        "active_duration_sec": 4.4,
+        "active_ratio": 0.8919,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 67,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.9701,
+        "left_hand_participating": false,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 2,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 6,
+      "type": "WORD",
+      "class_index": 3,
+      "word": "muốn",
+      "filename": "signer_01_003_q-muon_trial_03.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_003_q-muon_trial_03.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 3.253,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.6,
+        "active_end_sec": 3.6667,
+        "active_duration_sec": 3.0667,
+        "active_ratio": 0.6216,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 47,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.9149,
+        "left_hand_participating": false,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 2,
+        "interpolated_frames_total": 2,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 7,
+      "type": "WORD",
+      "class_index": 1,
+      "word": "sao",
+      "filename": "signer_01_001_q-sao_trial_01.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_001_q-sao_trial_01.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 3.107,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.2667,
+        "active_end_sec": 4.0667,
+        "active_duration_sec": 3.8,
+        "active_ratio": 0.7703,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 58,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.931,
+        "right_hand_coverage": 0.931,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 8,
+      "type": "WORD",
+      "class_index": 1,
+      "word": "sao",
+      "filename": "signer_01_001_q-sao_trial_02.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_001_q-sao_trial_02.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 3.203,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.4667,
+        "active_end_sec": 4.0,
+        "active_duration_sec": 3.5333,
+        "active_ratio": 0.7162,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 54,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.9074,
+        "right_hand_coverage": 0.9259,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 9,
+      "type": "WORD",
+      "class_index": 1,
+      "word": "sao",
+      "filename": "signer_01_001_q-sao_trial_03.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_001_q-sao_trial_03.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 3.389,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.6,
+        "active_end_sec": 4.9333,
+        "active_duration_sec": 4.3333,
+        "active_ratio": 0.8784,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 66,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.9545,
+        "right_hand_coverage": 0.9697,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 2,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 2,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 2,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 10,
+      "type": "WORD",
+      "class_index": 16,
+      "word": "nghe",
+      "filename": "signer_01_016_q-nghe_trial_01.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_016_q-nghe_trial_01.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 5.009,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.2667,
+        "active_end_sec": 4.9333,
+        "active_duration_sec": 4.6667,
+        "active_ratio": 0.9459,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 71,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.9718,
+        "left_hand_participating": false,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 2,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 11,
+      "type": "WORD",
+      "class_index": 16,
+      "word": "nghe",
+      "filename": "signer_01_016_q-nghe_trial_02.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_016_q-nghe_trial_02.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.1,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 1.0667,
+        "active_end_sec": 3.2667,
+        "active_duration_sec": 2.2,
+        "active_ratio": 0.4459,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 34,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.8824,
+        "left_hand_participating": false,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 12,
+      "type": "WORD",
+      "class_index": 16,
+      "word": "nghe",
+      "filename": "signer_01_016_q-nghe_trial_03.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_016_q-nghe_trial_03.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.098,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 1.0667,
+        "active_end_sec": 3.7333,
+        "active_duration_sec": 2.6667,
+        "active_ratio": 0.5405,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 41,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.9024,
+        "left_hand_participating": false,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 13,
+      "type": "WORD",
+      "class_index": 31,
+      "word": "khác",
+      "filename": "signer_01_031_q-khac_trial_01.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_031_q-khac_trial_01.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.768,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.6667,
+        "active_end_sec": 2.8667,
+        "active_duration_sec": 2.2,
+        "active_ratio": 0.4459,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 34,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.8529,
+        "right_hand_coverage": 0.8529,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 14,
+      "type": "WORD",
+      "class_index": 31,
+      "word": "khác",
+      "filename": "signer_01_031_q-khac_trial_02.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_031_q-khac_trial_02.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 5.081,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 1.0,
+        "active_end_sec": 3.4667,
+        "active_duration_sec": 2.4667,
+        "active_ratio": 0.5,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 38,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.8947,
+        "right_hand_coverage": 0.8421,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 2,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 2,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 15,
+      "type": "WORD",
+      "class_index": 31,
+      "word": "khác",
+      "filename": "signer_01_031_q-khac_trial_03.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_031_q-khac_trial_03.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 5.395,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.4667,
+        "active_end_sec": 2.9333,
+        "active_duration_sec": 2.4667,
+        "active_ratio": 0.5,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 38,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.8421,
+        "right_hand_coverage": 0.8947,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 1,
+        "interpolated_right_hand_frames": 1,
+        "interpolated_frames_total": 2,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 16,
+      "type": "WORD",
+      "class_index": 45,
+      "word": "nói chuyện",
+      "filename": "signer_01_045_q-noi-chuyen_trial_01.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_045_q-noi-chuyen_trial_01.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 5.432,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.6,
+        "active_end_sec": 4.9333,
+        "active_duration_sec": 4.3333,
+        "active_ratio": 0.8784,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 66,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.9545,
+        "right_hand_coverage": 0.9545,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 3,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 17,
+      "type": "WORD",
+      "class_index": 45,
+      "word": "nói chuyện",
+      "filename": "signer_01_045_q-noi-chuyen_trial_02.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_045_q-noi-chuyen_trial_02.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 6.09,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.6667,
+        "active_end_sec": 4.8,
+        "active_duration_sec": 4.1333,
+        "active_ratio": 0.8378,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 63,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.9206,
+        "right_hand_coverage": 0.9365,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 1,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 1,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 18,
+      "type": "WORD",
+      "class_index": 45,
+      "word": "nói chuyện",
+      "filename": "signer_01_045_q-noi-chuyen_trial_03.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_045_q-noi-chuyen_trial_03.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.77,
+      "trim_meta": {
+        "video_duration_sec": 5.0,
+        "active_start_sec": 0.6667,
+        "active_end_sec": 4.4,
+        "active_duration_sec": 3.7333,
+        "active_ratio": 0.7467,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 57,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.9123,
+        "right_hand_coverage": 0.9298,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 3,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 3,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 19,
+      "type": "WORD",
+      "class_index": 264,
+      "word": "không đẹp",
+      "filename": "signer_01_264_q-khong-dep_trial_01.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_264_q-khong-dep_trial_01.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.11,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.4,
+        "active_end_sec": 3.0667,
+        "active_duration_sec": 2.6667,
+        "active_ratio": 0.5405,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 41,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.9024,
+        "left_hand_participating": false,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 20,
+      "type": "WORD",
+      "class_index": 264,
+      "word": "không đẹp",
+      "filename": "signer_01_264_q-khong-dep_trial_02.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_264_q-khong-dep_trial_02.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 3.902,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.4667,
+        "active_end_sec": 2.9333,
+        "active_duration_sec": 2.4667,
+        "active_ratio": 0.5,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 38,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.8947,
+        "left_hand_participating": false,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 21,
+      "type": "WORD",
+      "class_index": 264,
+      "word": "không đẹp",
+      "filename": "signer_01_264_q-khong-dep_trial_03.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_264_q-khong-dep_trial_03.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.353,
+      "trim_meta": {
+        "video_duration_sec": 5.0,
+        "active_start_sec": 0.5333,
+        "active_end_sec": 5.0,
+        "active_duration_sec": 4.4667,
+        "active_ratio": 0.8933,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 68,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.9412,
+        "left_hand_participating": false,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 22,
+      "type": "WORD",
+      "class_index": 602,
+      "word": "lạc quan",
+      "filename": "signer_01_602_q-lac-quan_trial_01.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_602_q-lac-quan_trial_01.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.041,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.5333,
+        "active_end_sec": 3.8,
+        "active_duration_sec": 3.2667,
+        "active_ratio": 0.6622,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 50,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.86,
+        "right_hand_coverage": 0.9,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 3,
+        "interpolated_right_hand_frames": 3,
+        "interpolated_frames_total": 6,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 23,
+      "type": "WORD",
+      "class_index": 602,
+      "word": "lạc quan",
+      "filename": "signer_01_602_q-lac-quan_trial_02.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_602_q-lac-quan_trial_02.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.125,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.6,
+        "active_end_sec": 3.7333,
+        "active_duration_sec": 3.1333,
+        "active_ratio": 0.6351,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 48,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.9167,
+        "right_hand_coverage": 0.8333,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 1,
+        "interpolated_right_hand_frames": 1,
+        "interpolated_frames_total": 2,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 24,
+      "type": "WORD",
+      "class_index": 602,
+      "word": "lạc quan",
+      "filename": "signer_01_602_q-lac-quan_trial_03.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_602_q-lac-quan_trial_03.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.119,
+      "trim_meta": {
+        "video_duration_sec": 5.0,
+        "active_start_sec": 1.0,
+        "active_end_sec": 5.0,
+        "active_duration_sec": 4.0,
+        "active_ratio": 0.8,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 61,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.9672,
+        "right_hand_coverage": 0.8525,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 2,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 25,
+      "type": "WORD",
+      "class_index": 35,
+      "word": "nhìn",
+      "filename": "signer_01_035_q-nhin_trial_01.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_035_q-nhin_trial_01.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.219,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 1.4667,
+        "active_end_sec": 3.8667,
+        "active_duration_sec": 2.4,
+        "active_ratio": 0.4865,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 37,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.8919,
+        "left_hand_participating": false,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 26,
+      "type": "WORD",
+      "class_index": 35,
+      "word": "nhìn",
+      "filename": "signer_01_035_q-nhin_trial_02.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_035_q-nhin_trial_02.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.545,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.7333,
+        "active_end_sec": 3.2,
+        "active_duration_sec": 2.4667,
+        "active_ratio": 0.5,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 38,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.8947,
+        "left_hand_participating": false,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 27,
+      "type": "WORD",
+      "class_index": 35,
+      "word": "nhìn",
+      "filename": "signer_01_035_q-nhin_trial_03.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_035_q-nhin_trial_03.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.709,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 1.5333,
+        "active_end_sec": 3.6667,
+        "active_duration_sec": 2.1333,
+        "active_ratio": 0.4324,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 33,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.8788,
+        "left_hand_participating": false,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 28,
+      "type": "WORD",
+      "class_index": 106,
+      "word": "lúc nào",
+      "filename": "signer_01_106_q-luc-nao_trial_01.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_106_q-luc-nao_trial_01.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.801,
+      "trim_meta": {
+        "video_duration_sec": 5.0,
+        "active_start_sec": 0.4,
+        "active_end_sec": 3.1333,
+        "active_duration_sec": 2.7333,
+        "active_ratio": 0.5467,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 42,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.8333,
+        "right_hand_coverage": 0.9048,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 29,
+      "type": "WORD",
+      "class_index": 106,
+      "word": "lúc nào",
+      "filename": "signer_01_106_q-luc-nao_trial_02.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_106_q-luc-nao_trial_02.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.05,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.4,
+        "active_end_sec": 3.4667,
+        "active_duration_sec": 3.0667,
+        "active_ratio": 0.6216,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 47,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.8085,
+        "right_hand_coverage": 0.9149,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 1,
+        "interpolated_frames_total": 1,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 30,
+      "type": "WORD",
+      "class_index": 106,
+      "word": "lúc nào",
+      "filename": "signer_01_106_q-luc-nao_trial_03.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_106_q-luc-nao_trial_03.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.183,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.6,
+        "active_end_sec": 3.0,
+        "active_duration_sec": 2.4,
+        "active_ratio": 0.4865,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 37,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.8649,
+        "right_hand_coverage": 0.8919,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 31,
+      "type": "WORD",
+      "class_index": 135,
+      "word": "sách",
+      "filename": "signer_01_135_q-sach_trial_01.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_135_q-sach_trial_01.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.122,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.8667,
+        "active_end_sec": 3.4,
+        "active_duration_sec": 2.5333,
+        "active_ratio": 0.5135,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 39,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.8718,
+        "right_hand_coverage": 0.7692,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 9,
+        "interpolated_right_hand_frames": 3,
+        "interpolated_frames_total": 12,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [
+          "HIGH_INTERPOLATION_RATIO"
+        ],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 32,
+      "type": "WORD",
+      "class_index": 135,
+      "word": "sách",
+      "filename": "signer_01_135_q-sach_trial_02.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_135_q-sach_trial_02.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.374,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.9333,
+        "active_end_sec": 3.0,
+        "active_duration_sec": 2.0667,
+        "active_ratio": 0.4189,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 32,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.875,
+        "right_hand_coverage": 0.8438,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 4,
+        "interpolated_right_hand_frames": 1,
+        "interpolated_frames_total": 5,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 33,
+      "type": "WORD",
+      "class_index": 135,
+      "word": "sách",
+      "filename": "signer_01_135_q-sach_trial_03.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_135_q-sach_trial_03.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.059,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.6667,
+        "active_end_sec": 3.0,
+        "active_duration_sec": 2.3333,
+        "active_ratio": 0.473,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 36,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.8333,
+        "right_hand_coverage": 0.8889,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 4,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 4,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 34,
+      "type": "WORD",
+      "class_index": 499,
+      "word": "buổi sáng",
+      "filename": "signer_01_499_q-buoi-sang_trial_01.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_499_q-buoi-sang_trial_01.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.035,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.6667,
+        "active_end_sec": 2.8667,
+        "active_duration_sec": 2.2,
+        "active_ratio": 0.4459,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 34,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.7941,
+        "right_hand_coverage": 0.8529,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 1,
+        "interpolated_right_hand_frames": 2,
+        "interpolated_frames_total": 3,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 35,
+      "type": "WORD",
+      "class_index": 499,
+      "word": "buổi sáng",
+      "filename": "signer_01_499_q-buoi-sang_trial_02.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_499_q-buoi-sang_trial_02.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.058,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.5333,
+        "active_end_sec": 3.1333,
+        "active_duration_sec": 2.6,
+        "active_ratio": 0.527,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 40,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.775,
+        "right_hand_coverage": 0.9,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 3,
+        "interpolated_frames_total": 3,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 36,
+      "type": "WORD",
+      "class_index": 499,
+      "word": "buổi sáng",
+      "filename": "signer_01_499_q-buoi-sang_trial_03.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_499_q-buoi-sang_trial_03.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": true,
+      "extraction_time_sec": 4.173,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.7333,
+        "active_end_sec": 3.4,
+        "active_duration_sec": 2.6667,
+        "active_ratio": 0.5405,
+        "trimming_method": "motion_elevation_bridged",
+        "trim_fallback": false
+      },
+      "missing_meta": {
+        "active_raw_frames": 41,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.878,
+        "right_hand_coverage": 0.9024,
+        "left_hand_participating": true,
+        "right_hand_participating": true,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 4,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 1,
+        "interpolated_frames_total": 1,
+        "max_both_hands_gap_sec": 0.1333,
+        "quality_flags": [],
+        "fail_reason": null
+      }
+    },
+    {
+      "item_id": 37,
+      "type": "CONTROL",
+      "class_index": -1,
+      "word": "ĐỐI CHỨNG: REST_POSE_3_SEC (ngồi/đứng thẳng, hai tay thả lỏng)",
+      "filename": "signer_01_ctrl_01_trial_01.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_ctrl_01_trial_01.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": false,
+      "extraction_time_sec": 3.377,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.0,
+        "active_end_sec": 4.933333333333334,
+        "active_duration_sec": 4.9333,
+        "active_ratio": 1.0,
+        "trimming_method": "fallback_no_hand_detected",
+        "trim_fallback": true
+      },
+      "missing_meta": {
+        "active_raw_frames": 75,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.0,
+        "left_hand_participating": false,
+        "right_hand_participating": false,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 75,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 4.9333,
+        "quality_flags": [
+          "NO_VALID_HAND_GESTURE"
+        ],
+        "fail_reason": "insufficient_participating_hand_frames"
+      }
+    },
+    {
+      "item_id": 38,
+      "type": "CONTROL",
+      "class_index": -1,
+      "word": "ĐỐI CHỨNG: OUT_OF_VOCABULARY_1 ('uống nước' hoặc cử chỉ gãi đầu)",
+      "filename": "signer_01_ctrl_02_trial_01.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_ctrl_02_trial_01.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": false,
+      "extraction_time_sec": 3.948,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.0,
+        "active_end_sec": 4.933333333333334,
+        "active_duration_sec": 4.9333,
+        "active_ratio": 1.0,
+        "trimming_method": "fallback_no_hand_detected",
+        "trim_fallback": true
+      },
+      "missing_meta": {
+        "active_raw_frames": 75,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.0,
+        "left_hand_participating": false,
+        "right_hand_participating": false,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 75,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 4.9333,
+        "quality_flags": [
+          "NO_VALID_HAND_GESTURE"
+        ],
+        "fail_reason": "insufficient_participating_hand_frames"
+      }
+    },
+    {
+      "item_id": 39,
+      "type": "CONTROL",
+      "class_index": -1,
+      "word": "ĐỐI CHỨNG: OUT_OF_VOCABULARY_2 ('điện thoại')",
+      "filename": "signer_01_ctrl_03_trial_01.mp4",
+      "npy_file": "backend\\evaluations\\words_716_holdout\\skeletons\\signer_01_ctrl_03_trial_01.npy",
+      "shape": [
+        3,
+        30,
+        75
+      ],
+      "valid": false,
+      "extraction_time_sec": 3.643,
+      "trim_meta": {
+        "video_duration_sec": 4.9333,
+        "active_start_sec": 0.0,
+        "active_end_sec": 4.933333333333334,
+        "active_duration_sec": 4.9333,
+        "active_ratio": 1.0,
+        "trimming_method": "fallback_no_hand_detected",
+        "trim_fallback": true
+      },
+      "missing_meta": {
+        "active_raw_frames": 75,
+        "pose_coverage": 1.0,
+        "left_hand_coverage": 0.0,
+        "right_hand_coverage": 0.0,
+        "left_hand_participating": false,
+        "right_hand_participating": false,
+        "missing_pose_frames": 0,
+        "missing_both_hands_frames": 75,
+        "interpolated_pose_frames": 0,
+        "interpolated_left_hand_frames": 0,
+        "interpolated_right_hand_frames": 0,
+        "interpolated_frames_total": 0,
+        "max_both_hands_gap_sec": 4.9333,
+        "quality_flags": [
+          "NO_VALID_HAND_GESTURE"
+        ],
+        "fail_reason": "insufficient_participating_hand_frames"
+      }
+    }
+  ]
+}

@@ -47,3 +47,7 @@ backend/data/personal_calibration/
 /vsl-chan-doan*.webm
 backend/runs/
 .venv-sstcn/
+
+# Local word extraction datasets and caches
+/backend/data/words_716/
+
