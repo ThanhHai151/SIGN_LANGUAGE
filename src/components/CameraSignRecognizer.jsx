@@ -24,12 +24,6 @@ import PilotTestingHUD from './PilotTestingHUD';
 import { Workspace, WorkspaceDialog } from './Workspace';
 import { getEpochSecondsNow, createMonotonicTimestampGenerator } from './pilotProtocol.js';
 import { HandTrackerStabilizer } from '../utils/handTrackerStabilizer';
-import { isValidWordRecognitionData, extractRejectReason, sanitizeWordTopK } from '../utils/wordScopeGuard';
-import {
-  extractValidFaceLandmarks,
-  drawFaceContours,
-  filterBodyPoseConnections,
-} from '../utils/faceContoursRenderer';
 
 // Bảng ánh xạ phát âm TTS chuẩn cho từng chữ số (chỉ đọc tên số, không có tiền tố "số")
 const DIGIT_TTS_MAP = {
@@ -366,44 +360,21 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
         );
         if (resp && resp.success && resp.data) {
           const data = resp.data;
-          const validWord = isValidWordRecognitionData(data);
-          diagnostic.addPrediction(
-            tsList.at(-1),
-            data,
-            tsList,
-            'sstcn',
-            validWord && data.confirmed ? data.new_token : null
-          );
-          if (!validWord) {
-            setCurrentResult({
-              sign: 'NEUTRAL',
-              label: data.label || 'Từ nằm ngoài phạm vi nhận diện cho phép',
-              confidence: 0,
-              type: data.category || 'dynamic_sign',
-              description: '',
-              category: data.category || 'Trạng thái',
-              video_url: '',
-              region: data.region || null,
-              scopeRejected: Boolean(data.scope_rejected),
-              rejectReason: extractRejectReason(data),
-            });
-            setTopKPredictions([]);
-          } else {
-            setCurrentResult({
-              sign: data.sign,
-              label: data.label,
-              confidence: data.confidence,
-              type: data.category || 'dynamic_sign',
-              description: data.description,
-              category: data.category,
-              video_url: data.video_url,
-              region: data.region,
-            });
-            if (data.top_k) setTopKPredictions(sanitizeWordTopK(data.top_k));
-            if (data.confirmed && data.new_token && data.sign !== 'NEUTRAL') {
-              setSentence((prev) => (prev ? `${prev} ${data.new_token}` : data.new_token));
-              if (ttsEnabled) speakVietnamese(data.new_token);
-            }
+          diagnostic.addPrediction(tsList.at(-1), data, tsList, 'sstcn', data.confirmed ? data.new_token : null);
+          setCurrentResult({
+            sign: data.sign,
+            label: data.label,
+            confidence: data.confidence,
+            type: data.category || 'dynamic_sign',
+            description: data.description,
+            category: data.category,
+            video_url: data.video_url,
+            region: data.region,
+          });
+          if (data.top_k) setTopKPredictions(data.top_k);
+          if (data.confirmed && data.new_token && data.sign !== 'NEUTRAL') {
+            setSentence((prev) => (prev ? `${prev} ${data.new_token}` : data.new_token));
+            if (ttsEnabled) speakVietnamese(data.new_token);
           }
         }
       }
@@ -826,7 +797,6 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
   // Dừng Camera
   const stopCamera = () => {
     diagnostic.stop();
-    diagnostic.stopFaceMetrics();
     practiceTrackingReadyRef.current = false;
     setPracticeTrackingReady(false);
     recordTimersRef.current.forEach(clearTimeout);
@@ -1121,7 +1091,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
   };
 
   // Render toàn bộ khung xương trong suốt
-  const renderSkeletonsOverlay = (ctx, leftHandRaw, rightHandRaw, upperPose, canvas, bridgeFlags = null, faceLandmarks = null) => {
+  const renderSkeletonsOverlay = (ctx, leftHandRaw, rightHandRaw, upperPose, canvas, bridgeFlags = null) => {
     const w = canvas.width;
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
@@ -1133,20 +1103,10 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
 
     // 1. Thân trên (Pose - nếu dùng Holistic)
     if (upperPose && window.drawConnectors && window.POSE_CONNECTIONS) {
-      const poseConnections = faceLandmarks
-        ? filterBodyPoseConnections(window.POSE_CONNECTIONS)
-        : window.POSE_CONNECTIONS;
-      if (poseConnections.length > 0) {
-        window.drawConnectors(ctx, upperPose.slice(0, 25), poseConnections, {
-          color: 'rgba(129, 140, 248, 0.45)',
-          lineWidth: 2
-        });
-      }
-    }
-
-    // 1b. Đường nét khuôn mặt chi tiết (Face Contours - chỉ ở chế độ Holistic 'words' khi có dữ liệu hợp lệ)
-    if (faceLandmarks) {
-      drawFaceContours(ctx, faceLandmarks, w, h, window);
+      window.drawConnectors(ctx, upperPose.slice(0, 25), window.POSE_CONNECTIONS, {
+        color: 'rgba(129, 140, 248, 0.45)',
+        lineWidth: 2
+      });
     }
 
     // 2. Tay trái (Emerald Neon)
@@ -1245,13 +1205,8 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
       leftHandLandmarks: stabilized.modelLeft,
       rightHandLandmarks: stabilized.modelRight,
     };
-    const faceLandmarks = conversionModeRef.current === 'words'
-      ? extractValidFaceLandmarks(results?.faceLandmarks)
-      : null;
-    const holisticProcessMs = lastFrameSendTimeRef.current > 0
-      ? Math.max(0, nowPerf - lastFrameSendTimeRef.current)
-      : null;
 
+    diagnostic.trackFrame(stabilized.modelLeft, stabilized.modelRight, modelResults.poseLandmarks || []);
     if (practiceEntry) {
       const left = modelResults.poseLandmarks?.[11];
       const right = modelResults.poseLandmarks?.[12];
@@ -1267,33 +1222,13 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
     const ctx = canvas.getContext('2d');
 
     // Vẽ trực tiếp landmarks đã lọc Zero-Lag (không rung giật khi dừng tay, bám sát khi vung)
-    const renderStart = performance.now();
     renderSkeletonsOverlay(
       ctx,
       stabilized.drawLeft,
       stabilized.drawRight,
       modelResults.poseLandmarks,
       canvas,
-      { leftBridged: stabilized.leftBridged, rightBridged: stabilized.rightBridged },
-      faceLandmarks
-    );
-    const renderMs = performance.now() - renderStart;
-
-    diagnostic.trackFrame(
-      stabilized.modelLeft,
-      stabilized.modelRight,
-      modelResults.poseLandmarks || [],
-      diagnostic.isTracking() ? {
-        faceLandmarks,
-        renderMs,
-        holisticProcessMs,
-        videoWidth: videoRef.current?.videoWidth || null,
-        videoHeight: videoRef.current?.videoHeight || null,
-        processingWidth: holisticCanvasRef.current?.width || null,
-        processingHeight: holisticCanvasRef.current?.height || null,
-        canvasWidth: canvas.width || null,
-        canvasHeight: canvas.height || null,
-      } : null
+      { leftBridged: stabilized.leftBridged, rightBridged: stabilized.rightBridged }
     );
 
     // POSE WRIST GUARD: Phát hiện cổ tay còn giơ cao trong không gian tương tác (ngăn Flush non khi bị occlusion giữa cử chỉ)
@@ -1613,39 +1548,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
               }
               if (resp && resp.success && resp.data) {
                 const data = resp.data;
-                const validWord = requestMode !== 'words' || isValidWordRecognitionData(data);
-                const wordScopeRejected = requestMode === 'words' && (
-                  data.scope_rejected ||
-                  data.word_scope_valid === false ||
-                  (data.sign && data.sign !== 'NEUTRAL' && !validWord)
-                );
-                if (wordScopeRejected) {
-                  if (liveWords) {
-                    liveState.candidate = null;
-                    liveState.votes = 0;
-                    liveState.templateCandidate = null;
-                    liveState.templateVotes = 0;
-                  }
-                  diagnostic.addPrediction(now, data, recentTimestamps, 'sstcn', null);
-                  setLatestPilotResult(data);
-                  setCurrentResult({
-                    sign: 'NEUTRAL',
-                    label: data.label || 'Từ nằm ngoài phạm vi nhận diện cho phép',
-                    confidence: 0,
-                    type: data.category || 'dynamic_sign',
-                    description: '',
-                    category: data.category || 'Trạng thái',
-                    video_url: '',
-                    region: data.region || null,
-                    source: data.source,
-                    matchMethod: data.match_method,
-                    scopeRejected: true,
-                    rejectReason: extractRejectReason(data),
-                  });
-                  setTopKPredictions([]);
-                  return;
-                }
-                let token = validWord && data.confirmed && data.sign !== 'NEUTRAL' ? data.new_token : null;
+                let token = data.confirmed && data.sign !== 'NEUTRAL' ? data.new_token : null;
                 let replaced = null;
                 if (liveWords) {
                   if (liveWordsRef.current !== liveState || wordCaptureModeRef.current !== 'continuous' ||
@@ -1662,7 +1565,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
                     diagnostic.addPrediction(now, data, recentTimestamps, 'sstcn');
                     return;
                   }
-                  if (data.source === 'qipedc_template' && validWord && data.match_method === 'trajectory') {
+                  if (data.source === 'qipedc_template' && data.match_method === 'trajectory') {
                     liveState.templateVotes = liveState.templateCandidate === data.entry_id ? liveState.templateVotes + 1 : 1;
                     liveState.templateCandidate = data.entry_id;
                     const strongSingleShot = (typeof data.confidence === 'number' && data.confidence >= 0.72) || finalFlushRequest;
@@ -1678,11 +1581,11 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
                     liveState.templateCandidate = null;
                     liveState.templateVotes = 0;
                   }
-                  if (data.source === 'qipedc_template' && validWord) {
+                  if (data.source === 'qipedc_template') {
                     token = data.sign;
                     replaced = liveState.token;
                     liveState.template = true;
-                  } else if (data.sign === 'NEUTRAL' || !data.sign || !validWord) {
+                  } else if (data.sign === 'NEUTRAL' || !data.sign) {
                     liveState.candidate = null;
                     liveState.votes = 0;
                   } else {
@@ -1696,26 +1599,26 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
                       (finalFlushRequest && conf >= flushThreshold);
                     if (!liveState.token && readyWord) token = data.sign;
                   }
-                  if (token && validWord) liveState.token = token;
+                  if (token) liveState.token = token;
                 }
-                diagnostic.addPrediction(now, data, recentTimestamps, 'sstcn', validWord && token && token !== replaced ? token : null);
+                diagnostic.addPrediction(now, data, recentTimestamps, 'sstcn', token && token !== replaced ? token : null);
                 setLatestPilotResult(data);
                 setCurrentResult({
-                  sign: validWord ? data.sign : 'NEUTRAL',
+                  sign: data.sign,
                   label: data.label,
-                  confidence: validWord ? data.confidence : 0,
+                  confidence: data.confidence,
                   type: data.category || 'dynamic_sign',
                   description: data.description,
                   category: data.category,
-                  video_url: validWord ? data.video_url : '',
+                  video_url: data.video_url,
                   region: data.region,
                   source: data.source,
                   matchMethod: data.match_method,
                 });
 
-                if (data.top_k) setTopKPredictions(validWord ? sanitizeWordTopK(data.top_k) : []);
+                if (data.top_k) setTopKPredictions(data.top_k);
 
-                if (validWord && token && token !== replaced) {
+                if (token && token !== replaced) {
                   setSentence((previous) => {
                     if (previous && replaced && (previous === replaced || previous.endsWith(` ${replaced}`))) {
                       return `${previous.slice(0, -replaced.length)}${token}`;
@@ -2139,7 +2042,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
               <label className="control-field">
                 Chủ đề
                 <select value={selectedTopic} onChange={(event) => setSelectedTopic(event.target.value)}>
-                  <option value="">Tất cả ({sstcnTopicsInfo?.word_classes_count ?? 27} từ)</option>
+                  <option value="">Tất cả ({sstcnTopicsInfo?.word_classes_count || 63} từ)</option>
                   {(sstcnTopicsInfo?.topics || []).map((topic) => (
                     <option key={topic.id} value={topic.id}>{topic.label} ({topic.count})</option>
                   ))}
@@ -2163,7 +2066,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
           )}
           <label className="control-checkbox" title="Xử lý hình đến 640 px với MediaPipe Holistic Full">
             <input type="checkbox" checked={detailedTracking}
-              disabled={cameraLoading || recordPhase !== 'idle' || diagnostic.status !== 'idle' || diagnostic.faceStatus === 'running'}
+              disabled={cameraLoading || recordPhase !== 'idle' || diagnostic.status !== 'idle'}
               onChange={(event) => changeDetailedTracking(event.target.checked)} />
             Bám tay chi tiết
           </label>

@@ -30,8 +30,8 @@ const seconds = (ms) => `${(ms / 1000).toFixed(2).replace('.', ',')} s`;
 const percent = (value) => `${Math.round(value * 100)}%`;
 const wordKey = (value) => (value || '').normalize('NFC').toLowerCase().replace(/[!?.,]+$/u, '').trim();
 
-function exportReport({ settings, durationMs, frames, events, faceSummary = null }) {
-  const data = JSON.stringify({ settings, durationMs, frames, events, faceSummary }, null, 2);
+function exportReport({ settings, durationMs, frames, events }) {
+  const data = JSON.stringify({ settings, durationMs, frames, events }, null, 2);
   const reportUrl = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
   const link = document.createElement('a');
   link.href = reportUrl;
@@ -40,28 +40,11 @@ function exportReport({ settings, durationMs, frames, events, faceSummary = null
   setTimeout(() => URL.revokeObjectURL(reportUrl), 1000);
 }
 
-function exportFaceReport(report) {
-  const payload = {
-    type: 'vsl_face_tracking_metrics_only',
-    settings: report.settings,
-    durationMs: report.durationMs,
-    summary: report.summary,
-    frames: report.frames,
-  };
-  const reportUrl = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
-  const link = document.createElement('a');
-  link.href = reportUrl;
-  link.download = 'vsl-face-diagnostics.json';
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(reportUrl), 1000);
-}
-
 export default function CameraDiagnostic({ capture, cameraActive, stream, mode, captureMode, timed, topic, expectedSign }) {
   const [expected, setExpected] = useState(expectedSign || '');
   const playerRef = useRef(null);
-  const { status, review, error, faceStatus = 'idle', faceReport = null } = capture;
+  const { status, review, error } = capture;
   const busy = status !== 'idle';
-  const faceBusy = faceStatus === 'running';
   const seek = (ms) => {
     const player = playerRef.current;
     if (!player) return;
@@ -91,14 +74,13 @@ export default function CameraDiagnostic({ capture, cameraActive, stream, mode, 
   const alternative = expectedKey && events.reduce((best, event) =>
     event.source === 'sstcn' && event.label && wordKey(event.label) !== expectedKey &&
       (best === null || event.confidence > best.confidence) ? event : best, null);
-  const faceSummary = faceReport?.summary || null;
 
   return (
     <section className="glass-panel camera-diagnostic" aria-labelledby="camera-diagnostic-title">
       <div className="camera-diagnostic-actions">
         <h3 id="camera-diagnostic-title">Chẩn đoán video 5 giây</h3>
         <button type="button" className="btn btn-primary"
-          disabled={status !== 'recording' && (!cameraActive || timed || busy || faceBusy)}
+          disabled={status !== 'recording' && (!cameraActive || timed || busy)}
           onClick={() => status === 'recording' ? capture.stop() : capture.start(stream(), { mode, captureMode, topic, expected: expected.trim() })}>
           {status === 'recording' ? 'Dừng ghi' : status === 'starting' ? 'Đang bật bộ ghi…' : status === 'finishing' ? 'Đang chuẩn bị clip…' : 'Ghi chẩn đoán 5 giây'}
         </button>
@@ -106,7 +88,7 @@ export default function CameraDiagnostic({ capture, cameraActive, stream, mode, 
       <label className="camera-diagnostic-field">
         Ký hiệu bạn định làm (tùy chọn)
         <input className="input" value={expected} onChange={(event) => setExpected(event.target.value)}
-          disabled={busy || faceBusy} placeholder="Ví dụ: mấy giờ?" maxLength={80} />
+          disabled={busy} placeholder="Ví dụ: mấy giờ?" maxLength={80} />
       </label>
       <p className="camera-diagnostic-note" role="status">
         {error || (status === 'recording'
@@ -128,11 +110,6 @@ export default function CameraDiagnostic({ capture, cameraActive, stream, mode, 
               {poseFrames.length > 0 && ` · Thấy hai vai ${percent(poseFrames.filter((frame) => frame.shoulders).length / poseFrames.length)}`}
             </p>
           ) : <p>Camera ghi được video, bộ theo dõi chưa trả về khung hình trong lượt này.</p>}
-          {review.faceSummary && review.faceSummary.totalFrames > 0 && (
-            <p className="camera-diagnostic-note">
-              Khuôn mặt (Holistic): phát hiện {percent(review.faceSummary.faceDetectionRate || 0)} ({review.faceSummary.faceDetectedFrames}/{review.faceSummary.totalFrames}) · TB {review.faceSummary.faceLandmarkCountAvg ?? 0} điểm · Render TB {review.faceSummary.avgRenderMs ?? '—'} ms · Video {review.faceSummary.videoResolution || '—'} / Xử lý {review.faceSummary.processingResolution || '—'}
-            </p>
-          )}
           <p>Phụ đề ghi trong lượt này: {captions.join(' · ') || 'Chưa có từ nào được ghi.'}</p>
           {modeMismatch && <p>Chế độ Từ → Tự do có thể chẩn đoán từng pha của mẫu “mấy giờ?”.</p>}
           {bestPhase && <p><strong>Đối chiếu “mấy giờ?”</strong> · {REASONS[bestPhase.status]}</p>}
@@ -173,73 +150,6 @@ export default function CameraDiagnostic({ capture, cameraActive, stream, mode, 
               </table>
             </div>
           ) : <p>Chưa có kết quả nhận diện trong clip. Kiểm tra xem tay có nằm trong khung lúc ghi.</p>}
-        </div>
-      )}
-
-      <hr style={{ borderColor: 'var(--border-subtle)', opacity: 0.4, margin: '4px 0' }} />
-
-      <div className="camera-diagnostic-actions">
-        <h3>Chẩn đoán khuôn mặt (chỉ số — không lưu video)</h3>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          disabled={!faceBusy && (!cameraActive || timed || busy)}
-          onClick={() => (
-            faceBusy
-              ? capture.stopFaceMetrics()
-              : capture.startFaceMetrics({ mode, captureMode })
-          )}
-        >
-          {faceBusy ? 'Dừng đo' : 'Đo chỉ số khuôn mặt (10 giây)'}
-        </button>
-      </div>
-      <p className="camera-diagnostic-note" role="status">
-        {faceBusy
-          ? 'Đang đo chỉ số khuôn mặt cục bộ (không lưu ảnh hoặc video)...'
-          : mode !== 'words'
-            ? 'Lưu ý: Face Contours chỉ chạy ở chế độ Từ (Holistic); các chế độ khác dùng Hands (0 điểm mặt). Chỉ số tính cục bộ, không lưu ảnh/video.'
-            : 'Chỉ ghi nhận chỉ số số học trong trình duyệt, không lưu ảnh hoặc video khuôn mặt.'}
-      </p>
-      {faceSummary && (
-        <div className="camera-diagnostic-review">
-          {faceSummary.totalFrames > 0 ? (
-            <>
-              <p className="camera-diagnostic-note">
-                Phát hiện khuôn mặt: {faceSummary.faceDetectedFrames}/{faceSummary.totalFrames} frame ({percent(faceSummary.faceDetectionRate || 0)})
-                {' · '}Mất khuôn mặt: {faceSummary.faceMissingFrames} frame (tối đa {faceSummary.maxConsecutiveMissingFrames} liên tiếp)
-              </p>
-              <p className="camera-diagnostic-note">
-                Số landmark (faceLandmarkCount): {faceSummary.faceLandmarkCountAvg !== null
-                  ? `${faceSummary.faceLandmarkCountMin}–${faceSummary.faceLandmarkCountMax} (TB ${faceSummary.faceLandmarkCountAvg})`
-                  : '0'}
-                {' · '}FPS xử lý: {faceSummary.processingFps ?? '—'}
-                {' · '}Xử lý Holistic TB: {faceSummary.avgProcessMs ?? '—'} ms (P95: {faceSummary.p95ProcessMs ?? '—'} ms)
-                {' · '}Render TB: {faceSummary.avgRenderMs ?? '—'} ms (P95: {faceSummary.p95RenderMs ?? '—'} ms)
-              </p>
-              <p className="camera-diagnostic-note">
-                Video: {faceSummary.videoResolution || '—'}
-                {' · '}Canvas xử lý Holistic: {faceSummary.processingResolution || '—'}
-                {' · '}Canvas hiển thị: {faceSummary.canvasResolution || '—'}
-              </p>
-              <p className="camera-diagnostic-note">
-                {faceSummary.stabilitySufficientData
-                  ? `Ổn định anchor (${faceSummary.consecutiveDetectedPairs} cặp liên tiếp): dịch chuyển TB ${faceSummary.meanFrameToFrameDisplacementPx !== null ? `${faceSummary.meanFrameToFrameDisplacementPx} px` : faceSummary.meanFrameToFrameDisplacementNorm}/frame · độ lệch chuẩn ${faceSummary.anchorStdDevPx !== null ? `${faceSummary.anchorStdDevPx} px` : faceSummary.anchorStdDevNorm}`
-                  : (faceSummary.stabilityNote || 'Chưa đủ dữ liệu ổn định.')}
-              </p>
-            </>
-          ) : (
-            <p className="camera-diagnostic-note">
-              Chưa nhận được frame Holistic nào trong lượt đo (kiểm tra camera đang bật ở chế độ Từ / Holistic).
-            </p>
-          )}
-          <div className="camera-diagnostic-actions">
-            <button type="button" className="btn btn-secondary" onClick={() => exportFaceReport(faceReport)}>
-              Tải báo cáo Face JSON
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={capture.clearFaceMetrics}>
-              Xóa kết quả
-            </button>
-          </div>
         </div>
       )}
     </section>

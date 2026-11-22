@@ -1,23 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  createFaceFrameSample,
-  stripInternalAnchors,
-  summarizeFaceDiagnostics,
-} from '../utils/faceDiagnostics';
 
 const RECORD_MS = 5000;
-const FACE_METRICS_MS = 10000;
 
 const inFrame = (point) => point && point.x >= 0 && point.x <= 1 && point.y >= 0 && point.y <= 1;
 
 export function useCameraDiagnostic() {
   const sessionRef = useRef(null);
-  const faceSessionRef = useRef(null);
   const [status, setStatus] = useState('idle');
   const [review, setReview] = useState(null);
   const [error, setError] = useState('');
-  const [faceStatus, setFaceStatus] = useState('idle');
-  const [faceReport, setFaceReport] = useState(null);
 
   const discard = () => {
     const session = sessionRef.current;
@@ -28,56 +19,7 @@ export function useCameraDiagnostic() {
     if (session.url) URL.revokeObjectURL(session.url);
   };
 
-  const discardFace = () => {
-    const faceSession = faceSessionRef.current;
-    faceSessionRef.current = null;
-    if (!faceSession) return;
-    clearTimeout(faceSession.timer);
-    faceSession.active = false;
-  };
-
-  useEffect(() => () => {
-    discard();
-    discardFace();
-  }, []);
-
-  const stopFaceMetrics = () => {
-    const faceSession = faceSessionRef.current;
-    if (!faceSession || !faceSession.active) return;
-    clearTimeout(faceSession.timer);
-    faceSession.active = false;
-    const end = performance.now();
-    const durationMs = Math.max(0, Math.round(end - faceSession.start));
-    faceSessionRef.current = null;
-    setFaceStatus('idle');
-    setFaceReport({
-      settings: faceSession.settings || {},
-      durationMs,
-      summary: summarizeFaceDiagnostics(faceSession.samples, { durationMs }),
-      frames: stripInternalAnchors(faceSession.samples),
-    });
-  };
-
-  const startFaceMetrics = (settings = {}, durationMs = FACE_METRICS_MS) => {
-    if (faceSessionRef.current?.active) return;
-    const boundedMs = Number.isFinite(durationMs) && durationMs > 0 ? Math.round(durationMs) : FACE_METRICS_MS;
-    const faceSession = {
-      active: true,
-      settings,
-      start: performance.now(),
-      samples: [],
-      timer: setTimeout(stopFaceMetrics, boundedMs),
-    };
-    faceSessionRef.current = faceSession;
-    setFaceReport(null);
-    setFaceStatus('running');
-  };
-
-  const clearFaceMetrics = () => {
-    discardFace();
-    setFaceReport(null);
-    setFaceStatus('idle');
-  };
+  useEffect(() => discard, []);
 
   const stop = () => {
     const session = sessionRef.current;
@@ -110,16 +52,7 @@ export function useCameraDiagnostic() {
     setStatus('starting');
     setReview(null);
     setError('');
-    const session = {
-      recorder,
-      settings,
-      start: null,
-      end: null,
-      frames: [],
-      faceSamples: [],
-      events: [],
-      chunks: [],
-    };
+    const session = { recorder, settings, start: null, end: null, frames: [], events: [], chunks: [] };
     sessionRef.current = session;
     recorder.onstart = () => {
       if (sessionRef.current !== session || session.end !== null) return;
@@ -142,19 +75,8 @@ export function useCameraDiagnostic() {
       const blob = new Blob(session.chunks, { type: recorder.mimeType || session.chunks[0].type });
       session.chunks = [];
       session.url = URL.createObjectURL(blob);
-      const durationMs = Math.round(session.end - session.start);
-      const faceSummary = session.faceSamples.length
-        ? summarizeFaceDiagnostics(session.faceSamples, { durationMs })
-        : null;
-      setReview({
-        url: session.url,
-        extension: blob.type.includes('mp4') ? 'mp4' : 'webm',
-        settings,
-        durationMs,
-        frames: session.frames.slice(),
-        events: session.events.slice(),
-        faceSummary,
-      });
+      setReview({ url: session.url, extension: blob.type.includes('mp4') ? 'mp4' : 'webm',
+        settings, durationMs: Math.round(session.end - session.start), frames: session.frames.slice(), events: session.events.slice() });
     };
     recorder.onerror = () => {
       if (sessionRef.current !== session) return;
@@ -176,42 +98,13 @@ export function useCameraDiagnostic() {
     return session && session.start !== null && time >= session.start && (session.end === null || time <= session.end);
   };
 
-  const isTracking = () => Boolean(includesTime(performance.now()) || faceSessionRef.current?.active);
-
-  const trackFrame = (left, right, pose = null, faceTelemetry = null) => {
+  const trackFrame = (left, right, pose = null) => {
     const now = performance.now();
-    const videoActive = includesTime(now);
-    const faceActive = Boolean(faceSessionRef.current?.active);
-    if (!videoActive && !faceActive) return;
-
-    if (videoActive) {
-      const session = sessionRef.current;
-      const shoulders = pose === null ? null : [pose[11], pose[12]].every((point) =>
-        inFrame(point) && (point.visibility ?? 1) >= 0.5);
-      const videoSample = faceTelemetry
-        ? createFaceFrameSample({ ms: now - session.start, ...faceTelemetry })
-        : null;
-      session.frames.push({
-        ms: Math.round(now - session.start),
-        shoulders,
-        left: Boolean(inFrame(left?.[0])),
-        right: Boolean(inFrame(right?.[0])),
-        ...(videoSample ? {
-          faceDetected: videoSample.faceDetected,
-          faceLandmarkCount: videoSample.faceLandmarkCount,
-          renderMs: videoSample.renderMs,
-          holisticProcessMs: videoSample.holisticProcessMs,
-        } : {}),
-      });
-      if (videoSample) session.faceSamples.push(videoSample);
-    }
-
-    if (faceActive && faceTelemetry) {
-      const faceSession = faceSessionRef.current;
-      faceSession.samples.push(
-        createFaceFrameSample({ ms: now - faceSession.start, ...faceTelemetry })
-      );
-    }
+    if (!includesTime(now)) return;
+    const session = sessionRef.current;
+    const shoulders = pose === null ? null : [pose[11], pose[12]].every((point) =>
+      inFrame(point) && (point.visibility ?? 1) >= 0.5);
+    session.frames.push({ ms: Math.round(now - session.start), shoulders, left: Boolean(inFrame(left?.[0])), right: Boolean(inFrame(right?.[0])) });
   };
 
   const addPrediction = (time, data, times, source, caption, failure) => {
@@ -241,21 +134,5 @@ export function useCameraDiagnostic() {
     setStatus('idle');
   };
 
-  return {
-    status,
-    review,
-    error,
-    start,
-    stop,
-    clear,
-    trackFrame,
-    addPrediction,
-    includesTime,
-    isTracking,
-    faceStatus,
-    faceReport,
-    startFaceMetrics,
-    stopFaceMetrics,
-    clearFaceMetrics,
-  };
+  return { status, review, error, start, stop, clear, trackFrame, addPrediction, includesTime };
 }

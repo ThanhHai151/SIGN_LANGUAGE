@@ -47,23 +47,3 @@ backend/data/personal_calibration/
 /vsl-chan-doan*.webm
 backend/runs/
 .venv-sstcn/
-
-# =====================================================
-# QIPEDC / VSL Local Experimental Data
-# =====================================================
-
-# Local extracted skeletons, downloaded videos and datasets
-/backend/data/words_716/
-/backend/data/words_765/
-
-# Experimental PyTorch checkpoints
-/backend/models/words_716_checkpoints/
-
-# Local evaluation artifacts
-/backend/evaluations/
-
-# Local training sub-datasets (not the .py scripts)
-/backend/training/words_716/
-
-# Temporary audit scripts
-/scratch/
