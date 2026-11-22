@@ -98,7 +98,20 @@ class SSTCN_Attention(nn.Module):
         out = self.fc(x)               # [B, num_classes]
         return out
 
-def _inspect_checkpoint_metadata(path, ckpt):
+def _build_legacy_102_topics():
+    """Tạo topic_map mặc định theo category cho checkpoint 102 lớp gốc."""
+    from backend.models.vsl_102_dictionary import SIGN_METADATA_102
+    topics = {}
+    for item in SIGN_METADATA_102:
+        idx = int(item["index"])
+        if idx < 39:
+            continue
+        cat = item.get("category") or "Từ vựng chung"
+        topics.setdefault(cat, []).append(idx)
+    return topics
+
+
+def _inspect_checkpoint_metadata(path, ckpt, num_classes=102, preprocessing_version=1, topics=None):
     """Trích xuất định danh và phân loại checkpoint thực tế."""
     try:
         h = hashlib.sha256()
@@ -123,6 +136,8 @@ def _inspect_checkpoint_metadata(path, ckpt):
         ckpt_type = "reconstructed_best"
     elif sha256_hash == "301dc6bcf0d282acf029ad9c8c921766de6da51d5167f7becafbba630ae319ec" or (schema_version == 1 and epoch == 11 and "reconstructed" in filename):
         ckpt_type = "reconstructed_last"
+    elif schema_version is not None and int(schema_version) >= 2:
+        ckpt_type = "unified_v2"
     else:
         ckpt_type = "unknown"
 
@@ -131,49 +146,135 @@ def _inspect_checkpoint_metadata(path, ckpt):
         "checkpoint_filename": filename,
         "checkpoint_sha256": sha256_hash,
         "checkpoint_epoch": epoch,
+        "schema_version": schema_version,
+        "num_classes": int(num_classes),
+        "preprocessing_version": int(preprocessing_version),
+        "topics": sorted(list((topics or {}).keys())),
         "weights_path": os.path.abspath(path),
     }
+
+
+def _attach_runtime_metadata(model, num_classes, class_names=None, entry_ids=None, topic_map=None, word_class_indices=None, preprocessing_version=1):
+    from backend.models.vsl_102_dictionary import SIGN_DICT_102
+    if class_names is None:
+        class_names = [SIGN_DICT_102.get(i, f"class_{i}") for i in range(num_classes)]
+    model.num_classes = int(num_classes)
+    model.class_names = list(class_names)
+    model.entry_ids = list(entry_ids) if entry_ids is not None else [None] * int(num_classes)
+    if topic_map is None and int(num_classes) == 102 and class_names[:3] == ["A", "Ă", "Â"]:
+        topic_map = _build_legacy_102_topics()
+    model.topic_map = dict(topic_map or {})
+    if word_class_indices is not None:
+        model.word_class_indices = [int(i) for i in word_class_indices if 0 <= int(i) < int(num_classes)]
+    elif int(num_classes) == 102 and class_names[:3] == ["A", "Ă", "Â"]:
+        model.word_class_indices = list(range(39, 102))
+    else:
+        model.word_class_indices = list(range(int(num_classes)))
+    model.preprocessing_version = int(preprocessing_version)
+
+
 def load_sstcn_model(weights_path=None, device='cpu', allow_untrained=False):
     """
     Tải và khởi tạo mô hình SSTCN_Attention với trọng số pretrained.
+    Hỗ trợ động cả checkpoint 102 lớp cũ (schema_version=1 / historical) và
+    checkpoint mở rộng đa nguồn (schema_version>=2, num_classes động, preprocessing v1/v2).
     """
-    model = SSTCN_Attention(num_classes=102).to(device)
-    model.eval()
+    from backend.vision.skeleton_norm import get_preprocessing_version
 
     requested = weights_path or os.environ.get("VSL_SSTCN_WEIGHTS")
     default_candidates = [requested] if requested else [
         os.path.join(os.path.dirname(__file__), "weights", "sign_sstcn_attention_model.pth")
     ]
 
+    model = None
     loaded = False
     for path in default_candidates:
         if path and os.path.exists(path):
             try:
                 ckpt = torch.load(path, map_location='cpu', weights_only=True)
+                state_dict = ckpt["model_state_dict"] if isinstance(ckpt, dict) and "model_state_dict" in ckpt else ckpt
+
+                inferred_classes = None
+                if isinstance(ckpt, dict) and isinstance(ckpt.get("model_config"), dict):
+                    inferred_classes = ckpt["model_config"].get("num_classes")
+                if inferred_classes is None and isinstance(state_dict, dict) and "fc.weight" in state_dict:
+                    inferred_classes = int(state_dict["fc.weight"].shape[0])
+                num_classes = int(inferred_classes or 102)
+                dropout = 0.3
+                if isinstance(ckpt, dict) and isinstance(ckpt.get("model_config"), dict):
+                    dropout = float(ckpt["model_config"].get("dropout", 0.3))
+
+                schema_version = ckpt.get("schema_version") if isinstance(ckpt, dict) else None
+                prep_cfg = ckpt.get("preprocessing") if isinstance(ckpt, dict) else None
+                prep_ver = get_preprocessing_version(prep_cfg)
+                if prep_ver not in (1, 2):
+                    raise ValueError(f"Unsupported checkpoint preprocessing version: {prep_ver}")
+
+                class_names = None
+                entry_ids = None
+                topic_map = None
+                word_class_indices = None
+
                 if isinstance(ckpt, dict) and "class_names" in ckpt:
-                    from backend.training.sstcn_data import CLASS_NAMES, PREPROCESSING
-                    if ckpt["class_names"] != CLASS_NAMES or ckpt.get("preprocessing") != PREPROCESSING:
-                        raise ValueError("Checkpoint class mapping/preprocessing does not match the recognizer")
-                if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
-                    model.load_state_dict(ckpt["model_state_dict"])
-                else:
-                    model.load_state_dict(ckpt)
-                print(f"[SSTCN] Tải thành công trọng số pretrained từ: {path}")
+                    class_names = list(ckpt["class_names"])
+                    if len(class_names) != num_classes:
+                        raise ValueError(
+                            f"Checkpoint class_names length ({len(class_names)}) != num_classes ({num_classes})"
+                        )
+                    # Bảo toàn kiểm tra nghiêm ngặt cho checkpoint schema_version == 1 (102 lớp cũ)
+                    if schema_version == 1 and num_classes == 102 and prep_ver == 1:
+                        from backend.training.sstcn_data import CLASS_NAMES, PREPROCESSING
+                        if class_names != CLASS_NAMES or prep_cfg != PREPROCESSING:
+                            raise ValueError("Checkpoint class mapping/preprocessing does not match the recognizer")
+                    entry_ids = ckpt.get("entry_ids")
+                    topic_map = ckpt.get("topic_map")
+                    word_class_indices = ckpt.get("word_class_indices")
+
+                candidate_model = SSTCN_Attention(num_classes=num_classes, dropout=dropout).to(device)
+                candidate_model.load_state_dict(state_dict)
+                candidate_model.eval()
+                _attach_runtime_metadata(
+                    candidate_model,
+                    num_classes=num_classes,
+                    class_names=class_names,
+                    entry_ids=entry_ids,
+                    topic_map=topic_map,
+                    word_class_indices=word_class_indices,
+                    preprocessing_version=prep_ver,
+                )
+                candidate_model.has_weights = True
+                candidate_model.weights_path = os.path.abspath(path)
+                candidate_model.checkpoint_metadata = _inspect_checkpoint_metadata(
+                    path,
+                    ckpt,
+                    num_classes=num_classes,
+                    preprocessing_version=prep_ver,
+                    topics=candidate_model.topic_map,
+                )
+                model = candidate_model
                 loaded = True
-                model.has_weights = True
-                model.weights_path = os.path.abspath(path)
-                model.checkpoint_metadata = _inspect_checkpoint_metadata(path, ckpt)
+                print(
+                    f"[SSTCN] Tải thành công trọng số pretrained từ: {path} "
+                    f"(classes={num_classes}, prep=v{prep_ver})"
+                )
                 break
             except Exception as e:
                 print(f"[SSTCN] Cảnh báo lỗi tải trọng số từ {path}: {e}")
 
     if not loaded:
+        model = SSTCN_Attention(num_classes=102).to(device)
+        model.eval()
+        _attach_runtime_metadata(model, num_classes=102, preprocessing_version=1)
         model.has_weights = False
         model.checkpoint_metadata = {
             "checkpoint_type": "unknown",
             "checkpoint_filename": "none",
             "checkpoint_sha256": "unknown",
             "checkpoint_epoch": None,
+            "schema_version": None,
+            "num_classes": 102,
+            "preprocessing_version": 1,
+            "topics": [],
             "weights_path": "",
         }
         if not allow_untrained:

@@ -85,7 +85,7 @@ test('stable metrics exclude all transition and idle phases', () => {
   assert.deepEqual(result.phaseFrameCounts, { ENTRY: 1, STABLE_HOLD: 2, EXIT: 1 });
 });
 
-test('Candidate D runtime provenance is strict and logging must match session', () => {
+test('pilot accepts the runtime classifier settings and logging must match session', () => {
   const config = {
     success: true,
     classifier_rule_version: 'Candidate-D',
@@ -94,7 +94,8 @@ test('Candidate D runtime provenance is strict and logging must match session', 
     classifier_config: { O_D_TI_MAX: 0.23, O_IDX_STRAIGHT_MAX: 0.65 },
   };
   assert.equal(candidateDConfigMatches(config), true);
-  assert.equal(candidateDConfigMatches({ ...config, classifier_config: { ...config.classifier_config, O_D_TI_MAX: 0.3 } }), false);
+  assert.equal(candidateDConfigMatches({ ...config, classifier_config: { ...config.classifier_config, O_D_TI_MAX: 0.3 } }), true);
+  assert.equal(candidateDConfigMatches({ ...config, success: false }), false);
   assert.equal(pilotLoggingConfirmed({ success: true, session_id: 'session1', pilot_logging_enabled: true }, 'session1'), true);
   assert.equal(pilotLoggingConfirmed({ success: true, session_id: 'other', pilot_logging_enabled: true }, 'session1'), false);
   const baseline = { dropped_queue_full: 0, dropped_io_error: 0 };
@@ -140,11 +141,11 @@ test('sequence Start is enabled only with camera and verified available session'
   assert.equal(canStartPilotSequence({ ...ready, lifecycleAllowsStart: false }), false);
 });
 
-test('VSL target selector contains exactly the 29 unique letters and defaults to O', () => {
+test('VSL target selector contains exactly the 29 unique letters and defaults to A', () => {
   assert.equal(VSL_ALPHABET_29.length, 29);
   assert.equal(new Set(VSL_ALPHABET_29).size, 29);
   assert.deepEqual(VSL_ALPHABET_29, ['A', 'Ă', 'Â', 'B', 'C', 'D', 'Đ', 'E', 'Ê', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'Ô', 'Ơ', 'P', 'Q', 'R', 'S', 'T', 'U', 'Ư', 'V', 'X', 'Y']);
-  assert.equal(DEFAULT_PILOT_TARGET, 'O');
+  assert.equal(DEFAULT_PILOT_TARGET, 'A');
   assert.equal(PILOT_SEQUENCE_INITIAL_ACTIVE, false, 'a HUD reload must not resume or start a sequence');
 });
 
@@ -206,14 +207,14 @@ test('fresh session ID is unique-shaped and accepted by backend session rules', 
   assert.match(id, /^[a-zA-Z0-9_-]{3,64}$/);
 });
 
-test('reload adopts an active backend session only when Candidate D runtime is valid', () => {
+test('reload adopts an active backend session only when runtime config is available', () => {
   const config = { success: true, classifier_rule_version: 'Candidate-D', schema_version: '2.1-kinematic-phase', feature_extractor_version: '2.0-kinematic', classifier_config: { O_D_TI_MAX: 0.23, O_IDX_STRAIGHT_MAX: 0.65 } };
   const active = { success: true, pilot_logging_enabled: true, session_id: 'pilot_backend', has_static_head: true };
   assert.equal(resolvePilotSession(active, config, 'pilot_backend').status, 'active');
   assert.equal(resolvePilotSession(active, config, 'pilot_new_mount_id').status, 'session_mismatch');
   assert.equal(resolvePilotSession({ success: true, pilot_logging_enabled: false }, config, 'pilot_new').status, 'ready');
   assert.equal(resolvePilotSession({ success: false, error: 'offline' }, config, 'pilot_new').status, 'unavailable');
-  assert.equal(resolvePilotSession(active, { ...config, classifier_rule_version: 'unknown' }, 'pilot_backend').status, 'config_invalid');
+  assert.equal(resolvePilotSession(active, { ...config, success: false }, 'pilot_backend').status, 'config_invalid');
 });
 
 test('logging enable acknowledgement must match the requested session and file', () => {

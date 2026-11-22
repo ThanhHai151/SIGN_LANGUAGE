@@ -665,36 +665,187 @@ class VSLRecognizer:
             "weights_path": meta.get("weights_path", ""),
         }
 
-    def predict_sequence(self, sequence_data, threshold=None, mode=None, debug_meta=None):
+    def get_sstcn_topics_info(self):
+        """Trả về danh sách chủ đề và lớp từ của checkpoint SSTCN đang nạp."""
+        model = self.sstcn_model
+        num_classes = int(getattr(model, "num_classes", 102))
+        class_names = list(getattr(model, "class_names", [SIGN_DICT_102.get(i, f"class_{i}") for i in range(num_classes)]))
+        entry_ids = list(getattr(model, "entry_ids", [None] * num_classes))
+        topic_map = dict(getattr(model, "topic_map", {}) or {})
+        word_indices = list(getattr(model, "word_class_indices", list(range(39, num_classes))))
+        prep_ver = int(getattr(model, "preprocessing_version", 1))
+
+        topics_list = []
+        for topic_name, indices in sorted(topic_map.items()):
+            valid_idx = [int(i) for i in indices if 0 <= int(i) < num_classes]
+            topics_list.append({
+                "id": topic_name,
+                "label": topic_name,
+                "count": len(valid_idx),
+                "indices": valid_idx,
+                "words": [class_names[i] for i in valid_idx],
+            })
+        return {
+            "num_classes": num_classes,
+            "word_classes_count": len(word_indices),
+            "preprocessing_version": prep_ver,
+            "topics": topics_list,
+            "words": [
+                {
+                    "index": i,
+                    "term": class_names[i],
+                    "entry_id": entry_ids[i] if i < len(entry_ids) else None,
+                }
+                for i in word_indices
+            ],
+        }
+
+    def _resolve_sstcn_sign_info(self, pred_idx: int) -> Dict[str, Any]:
+        """Ánh xạ chỉ số đầu ra SSTCN (động) sang thông tin hiển thị & mục từ vsl_lexicon."""
+        from backend.models.lexicon import load_lexicon, norm_key
+
+        model = self.sstcn_model
+        num_classes = int(getattr(model, "num_classes", 102))
+        class_names = getattr(model, "class_names", None)
+        entry_ids = getattr(model, "entry_ids", None)
+
+        is_legacy_102 = (
+            num_classes == 102
+            and (class_names is None or class_names[:3] == ["A", "Ă", "Â"])
+        )
+
+        term = class_names[pred_idx] if class_names and 0 <= pred_idx < len(class_names) else SIGN_DICT_102.get(pred_idx, f"class_{pred_idx}")
+        if is_legacy_102:
+            sign_info = dict(get_sign_info(pred_idx))
+            entry = get_entry_by_sstcn(pred_idx)
+        else:
+            sign_info = {
+                "index": pred_idx,
+                "term": term,
+                "label": term,
+                "description": "",
+                "category": "Từ vựng VSL",
+                "video_url": "",
+                "image_url": "",
+            }
+            lex = load_lexicon()
+            entry = None
+            eid = entry_ids[pred_idx] if entry_ids and 0 <= pred_idx < len(entry_ids) else None
+            if eid:
+                entry = lex["by_id"].get(eid)
+            if entry is None:
+                entry = lex["by_key"].get(norm_key(term))
+
+        if entry:
+            sign_info["entry_id"] = entry["id"]
+            sign_info["variants"] = entry.get("variants", [])
+            sign_info["image_url"] = entry.get("image_url") or entry.get("thumb_url") or ""
+            if not sign_info.get("description"):
+                sign_info["description"] = entry.get("definition") or entry.get("how_to") or ""
+            if entry.get("category") and not is_legacy_102:
+                sign_info["category"] = entry.get("category")
+            if "qipedc.moet.gov.vn" in (entry.get("video_url") or ""):
+                sign_info["video_url"] = entry["video_url"]
+            elif not sign_info.get("video_url") and entry.get("video_url"):
+                sign_info["video_url"] = entry["video_url"]
+            sign_info["region"] = entry.get("region")
+        else:
+            sign_info.setdefault("image_url", "")
+
+        return sign_info
+
+    def predict_sequence(
+        self,
+        sequence_data,
+        threshold=None,
+        mode=None,
+        debug_meta=None,
+        topic_id=None,
+        timestamps=None,
+        confirm=True,
+        allow_short_sequences=None,
+    ):
         """
-        Nhận diện chuỗi chuyển động 30 frames qua SSTCN_Attention.
-        sequence_data: List hoặc np.ndarray kích thước (30, 75, 3) hoặc flattened
+        Nhận diện chuỗi chuyển động qua SSTCN_Attention (tự động hỗ trợ 102 lớp cũ
+        và checkpoint mở rộng động v2 với body-centric normalization & lọc theo topic_id).
+        sequence_data: List hoặc np.ndarray kích thước (T, 75, 3) hoặc (T, 225)
         75 joints = 33 Pose + 21 Left Hand + 21 Right Hand
         """
+        from backend.vision.skeleton_norm import (
+            normalize_sequence_tjc_v2,
+            reflect_legacy_left_hand,
+            resample_sequence_by_timestamps,
+            resample_sequence_linear,
+            trim_trailing_hand_drop,
+        )
+
         if threshold is None:
             threshold = self.confidence_threshold
 
+        if allow_short_sequences is None:
+            allow_short_sequences = os.environ.get("VSL_ALLOW_SHORT_SEQUENCES", "1").lower() in ("1", "true", "yes")
+        min_allowed_len = 12 if allow_short_sequences else 30
+
+        num_classes = int(getattr(self.sstcn_model, "num_classes", 102))
+        class_names = getattr(self.sstcn_model, "class_names", None)
+        word_indices = getattr(self.sstcn_model, "word_class_indices", list(range(39, num_classes)))
+        topic_map = getattr(self.sstcn_model, "topic_map", {}) or {}
+        prep_ver = int(getattr(self.sstcn_model, "preprocessing_version", 1))
+
         try:
             arr = np.array(sequence_data, dtype=np.float32)
-            
-            # Xử lý các định dạng input linh hoạt
-            if arr.shape == (30, 75, 3):
+
+            # Xử lý các định dạng input linh hoạt (cố định 30 frame hoặc T frame động từ Record/Adaptive Window)
+            if arr.ndim == 3 and arr.shape[1:] == (75, 3):
                 pass
-            elif arr.shape == (30, 225):
-                arr = arr.reshape(30, 75, 3)
+            elif arr.ndim == 2 and arr.shape[1] == 225:
+                arr = arr.reshape(-1, 75, 3)
             elif arr.size == 30 * 75 * 3:
                 arr = arr.reshape(30, 75, 3)
-            elif len(arr) == 30 and isinstance(sequence_data[0], (list, np.ndarray)):
-                arr = arr.reshape(30, 75, 3)
+            elif len(arr) >= 4 and arr.size == len(arr) * 75 * 3:
+                arr = arr.reshape(len(arr), 75, 3)
             else:
                 return {
                     "success": False,
-                    "error": f"Kích thước chuỗi không hợp lệ: {arr.shape}. Yêu cầu: (30, 75, 3)"
+                    "error": f"Kích thước chuỗi không hợp lệ: {arr.shape}. Yêu cầu: (T, 75, 3) với T >= 4"
+                }
+
+            if len(arr) < min_allowed_len:
+                return {
+                    "success": True,
+                    "sign": "NEUTRAL",
+                    "label": "Đang chờ động tác từ vựng…",
+                    "index": num_classes,
+                    "confidence": 0.0,
+                    "category": "Trạng thái",
+                    "description": f"Chuỗi cử chỉ ({len(arr)} frame) chưa đạt độ dài tối thiểu {min_allowed_len} frame",
+                    "video_url": "",
+                    "image_url": "",
+                    "entry_id": None,
+                    "variants": [],
+                    "confirmed": False,
+                    "new_token": None,
+                    "replaced_token": None,
+                    "tts_speak": None,
+                    "sentence": " ".join(self.sentence_tokens),
+                    "top_k": [],
+                    "inference_time_ms": 0.0,
                 }
 
             # Làm sạch NaN/Inf nếu có từ dữ liệu biên
             if not np.all(np.isfinite(arr)):
                 arr = np.nan_to_num(arr, nan=0.0, posinf=0.0, neginf=0.0)
+
+            # Lọc bỏ các frame buông/hạ tay (Hand-drop Trimming) trước khi nội suy
+            # Giúp giữ nguyên vẹn hình thái cử chỉ có nghĩa và nâng cao độ tin cậy của SSTCN
+            if allow_short_sequences and len(arr) >= 14:
+                arr, timestamps = trim_trailing_hand_drop(arr, timestamps=timestamps, min_len=min_allowed_len)
+
+            # Adaptive temporal resampling theo timestamp thực tế (nếu có) hoặc nội suy đều về 30 frame
+            if timestamps is not None and len(timestamps) == len(arr) and len(arr) >= 4:
+                arr = resample_sequence_by_timestamps(arr, timestamps, target_len=30)
+            elif len(arr) != 30:
+                arr = resample_sequence_linear(arr, target_len=30)
 
             # A01.1: Chốt chặn cho mode 'words' — Không đưa Pose giả (hands_fallback_pose)
             # hoặc chuỗi mất toàn bộ Pose/2 bàn tay vào mô hình SSTCN_Attention
@@ -726,7 +877,7 @@ class VSLRecognizer:
                         "landmarks_source": lm_stats["landmarks_source"],
                         "sign": "NEUTRAL",
                         "label": label_msg,
-                        "index": 102,
+                        "index": num_classes,
                         "confidence": 0.0,
                         "category": "Kiểm soát Landmark",
                         "description": desc_msg,
@@ -743,24 +894,42 @@ class VSLRecognizer:
                         "inference_time_ms": 0.0
                     }
 
+            # Áp dụng chuẩn hóa body-centric v2 nếu checkpoint yêu cầu (đồng nhất 100% với training)
+            model_arr = normalize_sequence_tjc_v2(arr) if prep_ver >= 2 else arr
+            if mode == "words" and prep_ver == 1 and num_classes == 102 and (
+                class_names is None or class_names[:3] == ["A", "Ă", "Â"]
+            ):
+                model_arr = reflect_legacy_left_hand(model_arr)
+
             # Chuyển đổi sang định dạng đầu vào của SSTCN: (Batch=1, Channels=3, Time=30, Joints=75)
-            # arr: (30, 75, 3) -> transpose(2, 0, 1) -> (3, 30, 75)
-            tensor_seq = arr.transpose(2, 0, 1)
+            tensor_seq = model_arr.transpose(2, 0, 1)
             tensor_seq = tensor_seq[np.newaxis, ...]  # (1, 3, 30, 75)
             tensor_input = torch.tensor(tensor_seq, dtype=torch.float32).to(self.device)
 
             t_infer_start = time.time()
             with torch.no_grad():
                 logits = self.sstcn_model(tensor_input)
-                if mode == "words":
-                    masked_logits = logits.clone()
-                    masked_logits[:, :39] = -float('inf')
-                    if masked_logits.shape[1] > 102:
-                        masked_logits[:, 102:] = -float('inf')
+                allowed_indices = None
+
+                if topic_id and topic_id in topic_map:
+                    topic_indices = [int(i) for i in topic_map[topic_id] if 0 <= int(i) < logits.shape[1]]
+                    if mode == "words" and word_indices:
+                        word_set = set(word_indices)
+                        filtered = [i for i in topic_indices if i in word_set]
+                        allowed_indices = filtered if filtered else topic_indices
+                    else:
+                        allowed_indices = topic_indices
+                elif mode == "words" and word_indices and len(word_indices) < logits.shape[1]:
+                    allowed_indices = [int(i) for i in word_indices if 0 <= int(i) < logits.shape[1]]
+
+                if allowed_indices:
+                    masked_logits = torch.full_like(logits, -float('inf'))
+                    idx_tensor = torch.tensor(allowed_indices, dtype=torch.long, device=logits.device)
+                    masked_logits[:, idx_tensor] = logits[:, idx_tensor]
                     probs = torch.softmax(masked_logits, dim=1).squeeze(0)
                 else:
                     probs = torch.softmax(logits, dim=1).squeeze(0)
-                
+
                 # Lấy Top 1 và Top 5
                 top_k_probs, top_k_indices = torch.topk(probs, k=min(5, len(probs)))
                 top_k_probs = top_k_probs.cpu().numpy()
@@ -778,33 +947,21 @@ class VSLRecognizer:
             current_time = time.time()
 
             # Kiểm tra ngưỡng tin cậy
-            if max_prob >= threshold and pred_idx < 102:
-                sign_info = dict(get_sign_info(pred_idx))
-                # Nối với bộ từ vựng thống nhất (cùng mục từ mà chiều Văn bản → Ký hiệu dùng)
-                entry = get_entry_by_sstcn(pred_idx)
-                if entry:
-                    sign_info["entry_id"] = entry["id"]
-                    sign_info["variants"] = entry.get("variants", [])
-                    sign_info["image_url"] = entry.get("image_url") or entry.get("thumb_url") or ""
-                    # Video tham chiếu theo chuẩn của ứng dụng: ký hiệu miền Nam / dùng chung (QIPEDC)
-                    if "qipedc.moet.gov.vn" in (entry.get("video_url") or ""):
-                        sign_info["video_url"] = entry["video_url"]
-                    sign_info["region"] = entry.get("region")
-                else:
-                    sign_info["image_url"] = ""
+            if max_prob >= threshold and pred_idx < num_classes:
+                sign_info = self._resolve_sstcn_sign_info(pred_idx)
                 pred_term = sign_info["term"]
 
                 # Kiểm tra debounce cooldown
-                if pred_term != self.last_confirmed_sign or (current_time - self.last_confirmed_time > self.cooldown_sec):
+                if confirm and (pred_term != self.last_confirmed_sign or current_time - self.last_confirmed_time > self.cooldown_sec):
                     self.last_confirmed_sign = pred_term
                     self.last_confirmed_time = current_time
                     confirmed = True
                     self.sentence_tokens.append(pred_term)
                     new_token_added = pred_term
             else:
-                pred_idx = 102
+                pred_idx = num_classes
                 sign_info = {
-                    "index": 102,
+                    "index": num_classes,
                     "term": "NEUTRAL",
                     "label": "Đang theo dõi cử chỉ...",
                     "description": "Chờ cử chỉ rõ ràng hoặc độ tin cậy chưa đạt ngưỡng",
@@ -816,7 +973,11 @@ class VSLRecognizer:
             top_k_list = [
                 {
                     "index": int(idx),
-                    "term": SIGN_DICT_102.get(int(idx), "UNKNOWN"),
+                    "term": (
+                        class_names[int(idx)]
+                        if class_names and 0 <= int(idx) < len(class_names)
+                        else SIGN_DICT_102.get(int(idx), "UNKNOWN")
+                    ),
                     "confidence": round(float(p), 3)
                 }
                 for p, idx in zip(top_k_probs, top_k_indices)
@@ -848,6 +1009,8 @@ class VSLRecognizer:
                 "entry_id": sign_info.get("entry_id"),
                 "variants": sign_info.get("variants", []),
                 "region": sign_info.get("region"),
+                "topic_id": topic_id,
+                "preprocessing_version": prep_ver,
                 "confirmed": confirmed,
                 "new_token": new_token_added,
                 "replaced_token": replaced_token_label,

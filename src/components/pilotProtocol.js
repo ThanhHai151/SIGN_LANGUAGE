@@ -1,6 +1,6 @@
 import { SIGN_CONVENTIONS } from './signConventions.js';
 
-export const PILOT_DURATION_SEC = 5;
+export const PILOT_DURATION_SEC = 6;
 export const PILOT_REPETITIONS = 10;
 export const DEFAULT_PILOT_TARGET = 'A';
 export const PILOT_SEQUENCE_INITIAL_ACTIVE = false;
@@ -305,11 +305,11 @@ export function isHandDetectedInFrame(frame) {
 }
 
 /**
- * Đánh giá chi tiết các frame thu được trong 1 lượt thử (5.0s)
+ * Đánh giá chi tiết các frame thu được trong một lượt thử.
  * - 22 chữ cái tĩnh: Đánh giá theo tỷ lệ khớp khung hình matchPct >= 60.0% (giữ nguyên tuyệt đối)
  * - 7 chữ cái động có dấu (Ă, Â, Ê, Đ, Ơ, Ư, Ô): Đánh giá dựa trên bằng chứng chữ nền + xác nhận dấu FSM
  */
-export function evaluateTrialFrames(frames, expectedSign, durationSec = 5.0) {
+export function evaluateTrialFrames(frames, expectedSign, durationSec = PILOT_DURATION_SEC) {
   const isDynamic = Boolean(DYNAMIC_DIACRITICS[expectedSign]);
   const expectedBase = isDynamic ? DYNAMIC_DIACRITICS[expectedSign].base : null;
 

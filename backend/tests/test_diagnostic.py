@@ -242,7 +242,7 @@ class TestDiagnosticAudit(unittest.TestCase):
         self.assertEqual(len(summary["mismatches"]), 0)
 
     def test_session_replay_sequential_smoothing_and_cooldown(self):
-        """10. Session replay tuan tu kiem tra chinh xac smoothing window (>=5) va cooldown debounce (>1.2s)."""
+        """Giữ nguyên một cử chỉ chỉ xác nhận một lần. Hạ tay rồi lặp lại sẽ xác nhận lại."""
         lm = _make_sample_hand()
         records = []
 
@@ -267,7 +267,7 @@ class TestDiagnosticAudit(unittest.TestCase):
             "raw_landmarks": lm
         })
 
-        # Frame 8 o thoi diem t = 1002.5 (> 1.2s cooldown tinh tu lan confirm dau tien)
+        # Vẫn giữ cử chỉ sau khi hết cooldown.
         records.append({
             "timestamp": 1002.5,
             "session_id": "sess_smooth",
@@ -277,16 +277,16 @@ class TestDiagnosticAudit(unittest.TestCase):
             "raw_landmarks": lm
         })
 
+        records.append({"timestamp": 1002.6, "session_id": "sess_smooth", "frame_idx": 9, "raw_landmarks": []})
+        for i in range(5):
+            records.append({"timestamp": 1003.0 + i * 0.1, "session_id": "sess_smooth",
+                            "frame_idx": i + 10, "raw_landmarks": lm})
+
         sess_summary = replay_session_sequential(records, session_id="sess_smooth")
         sess_data = sess_summary["sessions"]["sess_smooth"]
 
-        # Kiem tra confirmed tokens:
-        # Lan 1 tai frame 5 (khi prediction_history tich luy du 5 frames)
-        # Lan 2 tai frame 8 (vi cach frame confirm truoc do > 1.2s)
         confirmed_tokens = sess_data["confirmed_tokens"]
-        self.assertGreaterEqual(len(confirmed_tokens), 2)
-        self.assertEqual(confirmed_tokens[0]["frame_idx"], 5)
-        self.assertEqual(confirmed_tokens[1]["frame_idx"], 8)
+        self.assertEqual([tok["frame_idx"] for tok in confirmed_tokens], [5, 14])
 
     def test_diagnostic_safe_when_finger_states_is_none(self):
         """11. Regression test: Khi finger_states la None, _log_diagnostic khong phat sinh AttributeError va ghi log an toan."""

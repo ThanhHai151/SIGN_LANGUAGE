@@ -1,0 +1,94 @@
+[
+  {
+    "entry_id": "q-may-gio",
+    "source": "https://qipedc.moet.gov.vn/videos/W02196.mp4",
+    "file": "v3_W02196.npy",
+    "sha256": "ebf67c09255fbb5c265e915e642eb98c78c15c33d8b8174a89fcb39685fe94d6"
+  },
+  {
+    "entry_id": "q-an-du",
+    "source": "https://qipedc.moet.gov.vn/videos/D0440.mp4",
+    "file": "v3_D0440.npy",
+    "sha256": "29621966b7f70cc7c783371eae143dcfec1b1bdec71e2e5432de007583dabdf5"
+  },
+  {
+    "entry_id": "q-an-vua",
+    "source": "https://qipedc.moet.gov.vn/videos/D0441.mp4",
+    "file": "v3_D0441.npy",
+    "sha256": "aaae89f2184d382726fa247d53ee13b8d29cc4d80cc9c66a2a9627cd6058ad9e"
+  },
+  {
+    "entry_id": "q-an-it",
+    "source": "https://qipedc.moet.gov.vn/videos/D0442.mp4",
+    "file": "v3_D0442.npy",
+    "sha256": "34ad16ff4d7edd8e7cb1c9423b6e1e6e8608c42398ee47dfc9ba1c935cbe603f"
+  },
+  {
+    "entry_id": "q-com-2",
+    "source": "https://qipedc.moet.gov.vn/videos/W00884.mp4",
+    "file": "v3_W00884.npy",
+    "sha256": "8f9f7e2e610b16ad142e9183b76c0f0902f7509215f7e93bb6038f6b37d87dbd"
+  },
+  {
+    "entry_id": "q-nem",
+    "source": "https://qipedc.moet.gov.vn/videos/W02321.mp4",
+    "file": "v3_W02321.npy",
+    "sha256": "7ce45f114a2a5bdc950ed39a4492502b98643c77836cb96cdfc932003c6b737a"
+  },
+  {
+    "entry_id": "q-lau-mieng",
+    "source": "https://qipedc.moet.gov.vn/videos/D0228.mp4",
+    "file": "v3_D0228.npy",
+    "sha256": "69a8024034ef2a94e243a5b152284c09c1c83111ad73d3309946ea8e0325da11"
+  },
+  {
+    "entry_id": "q-thom",
+    "source": "https://qipedc.moet.gov.vn/videos/W03314N.mp4",
+    "file": "v3_W03314N.npy",
+    "sha256": "7c0040d72128edad33da09f98aea3ca60dd0c027d14b35f91de22353fb516a20"
+  },
+  {
+    "entry_id": "q-nan-ni",
+    "source": "https://qipedc.moet.gov.vn/videos/D0261.mp4",
+    "file": "v3_D0261.npy",
+    "sha256": "51f6a9198cdfb39c41e4459bc7a424327001095ec0095bee4baeb3fb77552d2d"
+  },
+  {
+    "entry_id": "q-nan-ni",
+    "source": "https://qipedc.moet.gov.vn/videos/D0261.mp4",
+    "file": "v3_D0261_close.npy",
+    "sha256": "68dfe1bed5310a579a1aff8390780d3ce0e1307c397db939366b60fee876eb3f",
+    "crop_xyxy": [0.22, 0.09, 0.78, 0.79],
+    "frame_stride": 1
+  },
+  {
+    "entry_id": "q-cau-nguyen",
+    "source": "https://qipedc.moet.gov.vn/videos/W00450.mp4",
+    "file": "v3_W00450.npy",
+    "sha256": "42c9bc4c872650a7c5014fca49aa2e5b4ce05354a506bb0cdfa20e8b11d23f8d"
+  },
+  {
+    "entry_id": "q-vai-lay",
+    "source": "https://qipedc.moet.gov.vn/videos/W03770.mp4",
+    "file": "v3_W03770.npy",
+    "sha256": "7f3016f1bdf6831b94277895cbb9a850e1fde5a5e74537488854c40f5fafd1ff"
+  },
+  {
+    "entry_id": "q-xin-loi",
+    "source": "https://qipedc.moet.gov.vn/videos/W03990.mp4",
+    "file": "v3_W03990.npy",
+    "sha256": "d1680b15e5b740a80e5128ba5ad8a389f15b717aea5898b1fbf884d44af0b4ff"
+  },
+  {
+    "entry_id": "q-ky-nang",
+    "source": "https://qipedc.moet.gov.vn/videos/D0097.mp4",
+    "file": "v3_D0097.npy",
+    "sha256": "10164e9d808f4ebce808bf6cca2ea2ac75756b65b734c601a83a6b1b9bd78188"
+  },
+  {
+    "entry_id": "q-kha-nang",
+    "source": "https://qipedc.moet.gov.vn/videos/D0096.mp4",
+    "file": "v3_D0096.npy",
+    "sha256": "9edc5b83d7d7579ca3e67e29c0d1f1816c0ecacb3d1ab2bd871ef9c2a208b8cd"
+  }
+]

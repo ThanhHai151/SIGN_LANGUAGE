@@ -41,7 +41,7 @@ export default function PilotTestingHUD({
   const [selectedLetter, setSelectedLetter] = useState('A');
   const [currentRep, setCurrentRep] = useState(1);
   const [totalReps, setTotalReps] = useState(5); // 5 lượt thăm dò hoặc 10 lượt tiêu chuẩn
-  const trialDurationSec = PILOT_DURATION_SEC; // 5.0s
+  const trialDurationSec = PILOT_DURATION_SEC;
 
   // --- Trial States ---
   // 'IDLE' | 'COUNTDOWN' | 'RECORDING' | 'TRIAL_REVIEW' | 'SESSION_COMPLETE'

@@ -1,0 +1,115 @@
+name: Retry missing QIPEDC camera references
+on:
+  push:
+    branches: [qipedc-index-build-20261120]
+    paths: [.github/workflows/qipedc-index-retry.yml]
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+  OPENCV_FFMPEG_CAPTURE_OPTIONS: threads;1
+
+jobs:
+  retry:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/training/requirements-preprocessing.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: qipedc-live-index-full
+          run-id: 44687681079
+          github-token: ${{ github.token }}
+          path: backend/data/qipedc_reference
+      - name: Extract missed references at full frame rate
+        run: |
+          python - 2> "$RUNNER_TEMP/mediapipe.log" <<'PY'
+          from concurrent.futures import ProcessPoolExecutor
+          from hashlib import sha256
+          from pathlib import Path
+          from sysconfig import get_path
+          from urllib.request import urlopen
+
+          import cv2
+          import numpy as np
+
+          from backend.models import video_cache
+          from backend.models.lexicon import motion_clip
+          from backend.training.build_qipedc_live_index import DEFAULT_OUTPUT, pack_index, select_entries
+          from backend.training.ingest_videos import extract_video_to_75_joints
+          from backend.vision.qipedc_live import _variants, indexed_entry_ids
+
+          def extract(item):
+              entry, video, word = item
+              source = video_cache.ensure_cached("videos", video, timeout=12)
+              if source is None:
+                  print(f"Missing source video: {entry} {video}", flush=True)
+                  return
+              source = Path(source)
+              cap = cv2.VideoCapture(str(source))
+              width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+              height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+              cap.release()
+              active = motion_clip(video)
+              for window, webcam in ((active, True), (None, True), (active, False), (None, False)):
+                  try:
+                      frames = extract_video_to_75_joints(
+                          source, target_len=None, frame_stride=1, active_window=window, webcam_profile=webcam,
+                      )
+                      if not webcam:
+                          frames[..., 1] *= height / width
+                      if _variants(frames, 1, reference=True) is None:
+                          continue
+                  except (RuntimeError, ValueError):
+                      continue
+                  output = Path(f"v3_{video}.npy")
+                  np.save(output, frames, allow_pickle=False)
+                  print(f"Recovered: {entry} {video} {word}", flush=True)
+                  return entry, output
+              print(f"Insufficient hand landmarks: {entry} {video} {word}", flush=True)
+
+          with urlopen("https://storage.googleapis.com/mediapipe-assets/pose_landmark_lite.tflite", timeout=30) as response:
+              model = response.read()
+          assert sha256(model).hexdigest() == "1150dc68a713b80660b90ef46ce4e85c1c781bb88b6e3512cc64e6a685ba5588"
+          (Path(get_path("purelib")) / "mediapipe/modules/pose_landmark/pose_landmark_lite.tflite").write_bytes(model)
+
+          existing = set(indexed_entry_ids())
+          missing = [item for item in select_entries("all") if item[0] not in existing]
+          with ProcessPoolExecutor(max_workers=3) as pool:
+              recovered = [result for result in pool.map(extract, missing) if result is not None]
+
+          supplemental = Path("supplemental.npz")
+          pack_index(recovered, supplemental)
+          merged = {}
+          with np.load(DEFAULT_OUTPUT, allow_pickle=False) as prior, np.load(supplemental, allow_pickle=False) as added:
+              for prefix in ("uni", "bi"):
+                  n_prior = len(prior[f"{prefix}_ids"])
+                  for field in ("ids", "features", "observed", "penalties", "var_to_entry", "coarse"):
+                      key = f"{prefix}_{field}"
+                      values = added[key] + n_prior if field == "var_to_entry" else added[key]
+                      merged[key] = np.concatenate((prior[key], values))
+          np.savez_compressed(DEFAULT_OUTPUT, **merged)
+          updated = set(indexed_entry_ids())
+          assert updated == existing | {entry for entry, _ in recovered}
+          print(f"Total coverage: {len(updated)} of {len(existing) + len(missing)}", flush=True)
+          PY
+      - name: Show extraction diagnostics
+        if: failure()
+        run: tail -40 "$RUNNER_TEMP/mediapipe.log"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qipedc-live-index-retried
+          path: backend/data/qipedc_reference/live_index.npz
+          if-no-files-found: error
+          retention-days: 2

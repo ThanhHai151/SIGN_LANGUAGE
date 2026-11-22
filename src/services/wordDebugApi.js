@@ -3,7 +3,7 @@
  * Hoàn toàn tách khỏi luồng nhận diện: không import/đổi gì trong api.js.
  */
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+import { API_BASE_URL } from './apiBase';
 
 /** Word Debug chỉ bật khi mở web với ?wordDebug=1 hoặc build với VITE_WORD_DEBUG=true. */
 export function isWordDebugEnabled() {

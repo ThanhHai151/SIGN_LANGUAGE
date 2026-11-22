@@ -1,0 +1,25 @@
+name: Keep Render Alive
+
+on:
+  schedule:
+    # Ping every 10 minutes to stay below Render Free's 15-minute idle spin-down
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: keep-render-alive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Ping Render /healthz
+        run: |
+          URL="${{ vars.RENDER_HEALTH_URL || 'https://vsl-connect-ai.onrender.com/healthz' }}"
+          STATUS=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 45 --retry 2 --retry-delay 5 "$URL")
+          echo "GET $URL -> HTTP $STATUS"
+          if [ "$STATUS" -lt 200 ] || [ "$STATUS" -ge 400 ]; then
+            exit 1
+          fi

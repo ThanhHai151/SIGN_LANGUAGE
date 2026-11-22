@@ -1,0 +1,118 @@
+name: Build full QIPEDC camera index
+on:
+  push:
+    branches: [qipedc-index-build-20261120]
+    paths: [.github/workflows/qipedc-index-build.yml]
+
+permissions:
+  contents: read
+
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+  OPENCV_FFMPEG_CAPTURE_OPTIONS: threads;1
+
+jobs:
+  extract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/training/requirements-preprocessing.txt && python -m pip install requests
+      - name: Install the webcam landmark model
+        run: |
+          python - <<'PY'
+          from hashlib import sha256
+          from pathlib import Path
+          from sysconfig import get_path
+          from urllib.request import urlopen
+
+          with urlopen("https://storage.googleapis.com/mediapipe-assets/pose_landmark_lite.tflite", timeout=30) as response:
+              model = response.read()
+          assert sha256(model).hexdigest() == "1150dc68a713b80660b90ef46ce4e85c1c781bb88b6e3512cc64e6a685ba5588"
+          target = Path(get_path("purelib")) / "mediapipe/modules/pose_landmark/pose_landmark_lite.tflite"
+          target.write_bytes(model)
+          PY
+      - name: Extract landmark sequences
+        env:
+          VSL_INDEX_SHARD: ${{ matrix.shard }}
+          GLOG_minloglevel: '2'
+        run: |
+          python - 2> "$RUNNER_TEMP/mediapipe.log" <<'PY'
+          import os
+          from pathlib import Path
+          import sys
+
+          from backend.training import build_qipedc_live_index as build
+
+          shard = int(os.environ["VSL_INDEX_SHARD"])
+          entries = build.select_entries("all")[shard::16]
+          build.select_entries = lambda scope: entries
+          sys.argv = ["build_qipedc_live_index", "--scope", "all", "--download-workers", "2",
+                      "--extract-workers", "3", "--output", str(Path(os.environ["RUNNER_TEMP"]) / "shard.npz")]
+          build.main()
+          missing = [video for _, video, _ in entries if build._existing_npy(video) is None]
+          print(f"Unavailable landmarks ({len(missing)}/{len(entries)}): {', '.join(missing)}", flush=True)
+          assert len(missing) < len(entries) // 4, "Too many missing video landmarks"
+          PY
+      - name: Show extraction diagnostics
+        if: failure()
+        run: tail -70 "$RUNNER_TEMP/mediapipe.log"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qipedc-landmarks-${{ matrix.shard }}
+          path: backend/data/media_cache/practice/*.npy
+          if-no-files-found: error
+          retention-days: 2
+
+  package:
+    needs: extract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install numpy==1.26.4 requests
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: qipedc-landmarks-*
+          path: backend/data/media_cache/practice
+          merge-multiple: true
+      - name: Pack and validate the live index
+        run: |
+          python - <<'PY'
+          from backend.training.build_qipedc_live_index import DEFAULT_OUTPUT, _existing_npy, pack_index, select_entries
+          from backend.vision.qipedc_live import indexed_entry_ids
+
+          entries = select_entries("all")
+          items = [(entry_id, path) for entry_id, video_id, _ in entries if (path := _existing_npy(video_id))]
+          print("Packed one-handed, two-handed, skipped:", pack_index(items, DEFAULT_OUTPUT))
+          expected = {entry_id for entry_id, _, _ in entries}
+          actual = set(indexed_entry_ids())
+          assert actual <= expected
+          print(f"Coverage: {len(actual)}/{len(expected)}")
+          for entry_id, video_id, word in entries:
+              if entry_id not in actual:
+                  print(f"Missing: {entry_id} {video_id} {word}")
+          assert len(actual) / len(expected) >= 0.95
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qipedc-live-index-full
+          path: backend/data/qipedc_reference/live_index.npz
+          if-no-files-found: error
+          retention-days: 2
