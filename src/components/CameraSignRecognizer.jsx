@@ -307,9 +307,10 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
           } else if (result.reason === 'missing_both_hands') {
             setPracticeFeedback('Mẫu này dùng hai tay. Giữ cả hai bàn tay và cổ tay trong khung hình rồi thử lại.');
           } else {
+            const scorePct = result.similarity != null ? `${Math.round(result.similarity * 100)}%` : null;
             setPracticeFeedback(result.matched
-              ? `Khớp mẫu: ${result.word}`
-              : `Chưa khớp mẫu “${result.word}”. Xem lại video và làm trọn động tác sau khi hết đếm ngược.`);
+              ? `Khớp mẫu: ${result.word} (Độ tương đồng: ${scorePct})`
+              : `Chưa khớp mẫu “${result.word}”${scorePct ? ` (Đạt ${scorePct} / cần ≥ 72%)` : ''}. Xem lại video và làm trọn động tác sau khi hết đếm ngược.`);
           }
         } catch (error) {
           setPracticeFeedback(error.message);
@@ -566,9 +567,9 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
       });
       tracker.setOptions({
         maxNumHands: 2,
-        modelComplexity: 1, // Full model: ưu tiên độ chính xác khớp ngón út ở 640x480
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.4
+        modelComplexity: 0, // Lite mode = 60 FPS (mượt mà như bản cũ)
+        minDetectionConfidence: 0.35, // Hạ ngưỡng để giữ bám tay khi lật ngửa/nghiêng cạnh
+        minTrackingConfidence: 0.30
       });
       tracker.onResults(onHandsResultsFast);
       tracker._engineType = 'hands';
@@ -581,9 +582,9 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
       });
       tracker.setOptions({
         modelComplexity: detailedTrackingRef.current ? 1 : 0,
-        smoothLandmarks: false, // Tắt smoothing mặc định (One-Euro Filter tự thích ứng theo vận tốc, không trễ)
-        minDetectionConfidence: 0.35, // Giữ ngưỡng phát hiện thấp cho bàn tay xoay ngang/úp/ngửa
-        minTrackingConfidence: 0.25   // Giữ bám tay tốt hơn khi vung nhanh hoặc chắp hai tay
+        smoothLandmarks: false,
+        minDetectionConfidence: 0.25, // Hạ ngưỡng phát hiện nhạy hơn cho tư thế bàn tay ngửa/úp/cạnh
+        minTrackingConfidence: 0.20   // Giữ bám tay tốt hơn khi xoay ngửa hoặc che khuất
       });
       tracker.onResults(onHolisticResultsFast);
       tracker._engineType = 'holistic';
@@ -704,11 +705,11 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
           }
         }
 
-        // Khởi tạo Canvas xử lý: 640x480 cho Hands (modelComplexity=1) & 480x360 cho Holistic
+        // Khởi tạo Canvas Downsampler: 320x240 cho Hands (60 FPS) & 480x360 cho Holistic (30 FPS)
         if (!processCanvasRef.current) {
           const pCanvas = document.createElement('canvas');
-          pCanvas.width = 640;
-          pCanvas.height = 480;
+          pCanvas.width = 320;
+          pCanvas.height = 240;
           processCanvasRef.current = pCanvas;
         }
         if (!holisticCanvasRef.current) {
@@ -751,22 +752,10 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
               const currentEngine = activeTracker._engineType || trackerEngineRef.current;
               let imageToSend;
               if (currentEngine === 'holistic') {
-                const video = videoRef.current;
-                const detailed = detailedTrackingRef.current;
-                const preserveAspect = detailed || practiceEntry || (activeMode === 'words' && wordCaptureModeRef.current === 'continuous');
-                const scale = preserveAspect && video.videoWidth && video.videoHeight
-                  ? Math.min(1, (detailed ? 640 : 480) / Math.max(video.videoWidth, video.videoHeight))
-                  : null;
-                const width = scale === null ? 480 : Math.round(video.videoWidth * scale);
-                const height = scale === null ? 360 : Math.round(video.videoHeight * scale);
-                if (hCanvas.width !== width || hCanvas.height !== height) {
-                  hCanvas.width = width;
-                  hCanvas.height = height;
-                }
-                hCtx.drawImage(video, 0, 0, hCanvas.width, hCanvas.height);
+                hCtx.drawImage(videoRef.current, 0, 0, 480, 360);
                 imageToSend = hCanvas;
               } else {
-                pCtx.drawImage(videoRef.current, 0, 0, 640, 480);
+                pCtx.drawImage(videoRef.current, 0, 0, 320, 240);
                 imageToSend = pCanvas;
               }
               lastFrameSendTimeRef.current = performance.now();
@@ -1192,61 +1181,43 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
     );
   };
 
-  // Xử lý luồng kết quả từ MediaPipe Holistic
+  // Xử lý luồng kết quả từ MediaPipe Holistic (Khôi phục bám tay siêu nhạy nguyên bản MediaPipe như bản cũ)
   const onHolisticResultsFast = (results) => {
-    const nowPerf = performance.now();
-    const stabilized = stabilizerRef.current.process(
-      results.poseLandmarks,
-      results.leftHandLandmarks,
-      results.rightHandLandmarks,
-      nowPerf
-    );
-    const modelResults = {
-      poseLandmarks: stabilized.pose || results.poseLandmarks,
-      leftHandLandmarks: stabilized.modelLeft,
-      rightHandLandmarks: stabilized.modelRight,
-    };
+    measureFPS();
 
-    diagnostic.trackFrame(stabilized.modelLeft, stabilized.modelRight, modelResults.poseLandmarks || []);
+    diagnostic.trackFrame(results.leftHandLandmarks, results.rightHandLandmarks, results.poseLandmarks || []);
     if (practiceEntry) {
-      const left = modelResults.poseLandmarks?.[11];
-      const right = modelResults.poseLandmarks?.[12];
+      const left = results.poseLandmarks?.[11];
+      const right = results.poseLandmarks?.[12];
       if (!practiceTrackingReadyRef.current && left && right && (left.visibility ?? 1) >= 0.5 && (right.visibility ?? 1) >= 0.5) {
         practiceTrackingReadyRef.current = true;
         setPracticeTrackingReady(true);
       }
-      if (recordPhaseRef.current === 'recording') {
-        recordFramesRef.current.push(extract75KeypointsFromHolistic(modelResults));
-        recordTimestampsRef.current.push(nowPerf);
-      }
     }
     const extractTs = getEpochSecondsNow();
-    measureFPS();
 
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
+    // Vẽ trực tiếp landmarks với hàm bù độ trễ chuyển động extrapolateLandmarks (không qua One-Euro níu trễ, không xóa tay)
     renderSkeletonsOverlay(
       ctx,
-      stabilized.drawLeft,
-      stabilized.drawRight,
-      modelResults.poseLandmarks,
-      canvas,
-      { leftBridged: stabilized.leftBridged, rightBridged: stabilized.rightBridged }
+      results.leftHandLandmarks,
+      results.rightHandLandmarks,
+      results.poseLandmarks,
+      canvas
     );
 
     handleMotionAndSequence(
-      () => extract75KeypointsFromHolistic(modelResults),
-      Boolean(stabilized.modelLeft || stabilized.modelRight),
-      stabilized.drawRight?.[0] || stabilized.drawLeft?.[0],
-      stabilized.modelLeft,
-      stabilized.modelRight,
+      () => extract75KeypointsFromHolistic(results),
+      Boolean(results.leftHandLandmarks || results.rightHandLandmarks),
+      results.rightHandLandmarks?.[0] || results.leftHandLandmarks?.[0],
+      results.leftHandLandmarks,
+      results.rightHandLandmarks,
       {
         landmarkExtractTs: extractTs,
         handednessScore: null,
-        maxWristSpeed: stabilized.maxWristSpeed,
-        handsClasped: stabilized.handsClasped,
         modelComplexity: detailedTrackingRef.current ? 1 : 0,
         processingResolution: holisticCanvasRef.current
           ? `${holisticCanvasRef.current.width}x${holisticCanvasRef.current.height}` : null

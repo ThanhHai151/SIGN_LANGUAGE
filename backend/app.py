@@ -6,7 +6,6 @@ Hỗ trợ:
 3. API Từ điển VSL Đa phương tiện & Kiểm tra Sức khỏe Hệ thống
 """
 
-from asyncio import timeouts
 import os
 import sys
 import time
