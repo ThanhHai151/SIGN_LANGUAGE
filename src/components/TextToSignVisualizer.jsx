@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Play, Pause, RotateCcw, SkipBack, SkipForward, Mic, MicOff, Send, Box, Type, Layers, List } from 'lucide-react';
 import RobotSigner3D, { SPELL_LETTER_MS } from './RobotSigner3D';
 import MixamoAvatarSigner from './MixamoAvatarSigner';
-import { resolveVietnameseSign } from '../utils/MixamoPoseAdapter';
+import { createMixamoPlayback, resolveVietnameseSign } from '../utils/MixamoPoseAdapter';
 import AvatarSequenceCaption from './AvatarSequenceCaption';
 import SignDescription from './SignDescription';
 import { Workspace, WorkspaceDialog } from './Workspace';
@@ -34,7 +34,7 @@ const AVATAR_FINGER_DESCRIPTIONS = {
   M: [null, 'Gập ở gốc, giữ ba đầu ngón sát nhau và hướng xuống', 'Co vào lòng bàn tay, tách khỏi nhóm ba ngón hướng xuống'],
   N: [null, 'Gập ở gốc, giữ hai đầu ngón sát nhau và hướng xuống', 'Co vào lòng bàn tay, tách khỏi hai ngón hướng xuống'],
   O: ['Bốn ngón khum về phía ngón cái, tạo khoảng tròn nhỏ giữa các đầu ngón'],
-  P: ['Gập cổ tay, lòng bàn tay hướng xuống', 'Gập gần các ngón đang co', 'Duỗi ngang sang bên','Duỗi hướng xuống dưới','Gập vào lòng bàn tay','Gập vào lòng bàn tay'],
+  P: ['Gập cổ tay, lòng bàn tay hướng xuống', 'Gập gần các ngón đang co', 'Duỗi ngang sang bên', 'Duỗi hướng xuống dưới', 'Gập vào lòng bàn tay', 'Gập vào lòng bàn tay'],
   Q: ['Gập cổ tay, lòng bàn tay hướng xuống', 'Cong về phía ngón trỏ', 'Cong xuống, hướng về ngón cái', 'Gập vào lòng bàn tay'],
   R: ['Duỗi và bắt chéo nhau', 'Ngón áp út và út co vào lòng bàn tay, ngón cái áp gần hai ngón co'],
   S: ['Duỗi ngang ra bên cạnh nắm tay', 'Gập các đốt về lòng bàn tay để tạo nắm tay'],
@@ -47,7 +47,7 @@ const AVATAR_FINGER_DESCRIPTIONS = {
 
 export default function TextToSignVisualizer({ requestText }) {
   const [inputText, setInputText] = useState('Xin chào bạn');
-  const [sequence, setSequence] = useState([]);
+  const [sourceSequence, setSequence] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.25); // mặc định nhanh hơn một chút cho câu liền mạch
@@ -56,11 +56,18 @@ export default function TextToSignVisualizer({ requestText }) {
   const [translationId, setTranslationId] = useState(0); // mỗi lần dịch câu mới
   const [viewModel, setViewModel] = useState('robot'); // mặc định hiển thị robot
   const [directSelectedLetter, setDirectSelectedLetter] = useState('');
+  const sequence = useMemo(() => viewModel === 'avatar'
+    ? createMixamoPlayback(sourceSequence) : sourceSequence, [sourceSequence, viewModel]);
+
+  useEffect(() => {
+    setCurrentIndex(0);
+    setIsPlaying(false);
+    setDirectSelectedLetter('');
+  }, [viewModel]);
   const [controlsTarget, setControlsTarget] = useState(null);
   const alphabetDialogRef = useRef(null);
   const detailsDialogRef = useRef(null);
   const phrasesDialogRef = useRef(null);
-  const tunerHostRef = useRef(null);
 
   const timerRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -92,10 +99,12 @@ export default function TextToSignVisualizer({ requestText }) {
     const text = textToTranslate || inputText;
     if (!text || !text.trim()) return;
 
+    const version = ++seqVersionRef.current;
     setLoading(true);
     setDirectSelectedLetter('');
     try {
       const resp = await convertTextToVSL(text);
+      if (version !== seqVersionRef.current) return;
       if (resp && resp.success && resp.sequence) {
         setSequence(resp.sequence);
         setTranslationId((n) => n + 1);
@@ -105,11 +114,11 @@ export default function TextToSignVisualizer({ requestText }) {
     } catch (err) {
       console.error('Error translating text to VSL:', err);
     } finally {
-      setLoading(false);
+      if (version === seqVersionRef.current) setLoading(false);
     }
   };
 
-  // Bảng chữ cái tải sẵn MỘT LẦN (kèm chuyển động robot) → bấm chữ nào robot diễn ngay, không chờ mạng
+  // Robot preloads its video letter clips; Mixamo uses its configured poses.
   const lettersRef = useRef(null);
   useEffect(() => {
     let cancelled = false;
@@ -117,43 +126,60 @@ export default function TextToSignVisualizer({ requestText }) {
       .then((data) => {
         if (cancelled || !data?.letters) return;
         lettersRef.current = data.letters;
-        Object.values(data.letters).forEach((it) => { if (it.motion_id) fetchMotion(it.motion_id); });
+        Object.values(data.letters).forEach(item => {
+          if (item.motion_id) fetchMotion(item.motion_id);
+        });
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => { cancelled = true; };
   }, []);
 
-  // Chọn trực tiếp 1 chữ cái: robot diễn hình chữ cái học từ video bảng chữ cái QIPEDC
   const handleSelectDirectLetter = async (char) => {
-    const key = char.toLowerCase();
-    setDirectSelectedLetter(char);
-    setInputText(`Chữ ${char}`);
+    const version = ++seqVersionRef.current;
+    const normalized = char.normalize('NFC');
+    const key = normalized.toLowerCase();
+    const toneSymbol = {
+      'sắc': 'TONE_SAC', 'huyền': 'TONE_HUYEN', 'hỏi': 'TONE_HOI',
+      'ngã': 'TONE_NGA', 'nặng': 'TONE_NANG'
+    }[key];
+    const symbol = toneSymbol || normalized.toUpperCase();
+    const label = toneSymbol ? `Dấu ${normalized}` : `Chữ ${normalized}`;
+    setLoading(false);
+    setDirectSelectedLetter(symbol);
+    setInputText(label);
     setIsPlaying(false);
+    setCurrentIndex(0);
+
+    if (viewModel === 'avatar') {
+      setSequence([{
+        avatar_symbol: symbol, token: symbol, gloss: symbol,
+        label, type: 'fingerspelling', duration_ms: 2200,
+        description: `Bảng chữ cái ngón tay VSL: ${label}`,
+        avatar_pose: {}
+      }]);
+      return;
+    }
+
+    setSequence([]);
     let item = lettersRef.current?.[key];
     if (!item) {
       try {
-        item = await fetchLetter(char);
+        item = await fetchLetter(normalized);
       } catch { /* mất kết nối backend */ }
     }
+    if (version !== seqVersionRef.current) return;
     if (item) {
       setSequence([item]);
-      setCurrentIndex(0);
       return;
     }
-    // Backend chưa có bảng chữ cái học từ video → tư thế vẽ tay của chữ không dấu (Ă, Â → A; Đ → D)
-    const base = char.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'D').toUpperCase();
+    const base = normalized.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'D').toUpperCase();
     setSequence([{
-      token: char,
-      gloss: base,
-      label: `Chữ ${char}`,
-      type: 'fingerspelling',
-      duration_ms: 2200,
-      pose_key: base,
-      word: key,
-      description: `Bảng chữ cái ngón tay VSL: Chữ ${char} (tư thế tham khảo — hãy khởi động lại backend để dùng bảng chữ cái học từ video)`,
+      avatar_symbol: symbol, token: normalized, gloss: base,
+      label, type: 'fingerspelling', duration_ms: 2200,
+      pose_key: toneSymbol ? null : base, word: key,
+      description: `${label} (tư thế tham khảo khi chưa tải được chuyển động Robot)`,
       avatar_pose: {}
     }]);
-    setCurrentIndex(0);
   };
 
   // Quản lý phát tự động
@@ -201,6 +227,7 @@ export default function TextToSignVisualizer({ requestText }) {
   const seqVersionRef = useRef(0);
   const [learning, setLearning] = useState({}); // video_id → tiến độ 0..1 | 'done' | 'failed'
   useEffect(() => {
+    if (viewModel !== 'robot') return;
     const version = ++seqVersionRef.current;
     const todo = [...new Set(sequence.filter((s) => s.video_id && !s.motion_id).map((s) => s.video_id))];
     if (!todo.length) return;
@@ -225,7 +252,8 @@ export default function TextToSignVisualizer({ requestText }) {
       setCurrentIndex(firstLearned);
       setIsPlaying(true);
     });
-  }, [translationId]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => { seqVersionRef.current += 1; };
+  }, [translationId, viewModel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Nhận yêu cầu diễn một từ từ tab Từ điển
   useEffect(() => {
@@ -273,9 +301,10 @@ export default function TextToSignVisualizer({ requestText }) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const currentStep = sequence[currentIndex] || null;
-  const stepLabel = (step) => viewModel === 'avatar' && step?.avatar_symbol && !step.avatar_symbol.startsWith('TONE_')
-    ? `Chữ ${step.avatar_symbol}` : step?.label;
-  const currentGloss = (viewModel === 'avatar' && currentStep?.avatar_symbol) || currentStep?.gloss || currentStep?.token || 'A';
+  const currentRenderer = viewModel;
+  const stepLabel = (step) => step?.avatar_symbol && !step.avatar_symbol.startsWith('TONE_')
+    && viewModel === 'avatar' ? `Chữ ${step.avatar_symbol}` : step?.label;
+  const currentGloss = (currentRenderer === 'avatar' && currentStep?.avatar_symbol) || currentStep?.gloss || currentStep?.token || 'A';
   const activeLetter = directSelectedLetter || (isPlaying && /^[a-z]$/i.test(currentGloss.trim()) ? currentGloss.trim() : '');
   const learningProgress = currentStep?.video_id ? learning[currentStep.video_id] : null;
   const commonProps = {
@@ -495,8 +524,8 @@ export default function TextToSignVisualizer({ requestText }) {
 
   const fingerSymbol = currentGloss.trim().normalize('NFC').toUpperCase().replace(/^ALPHA_/, '');
   const baseSymbol = VIETNAMESE_MARKED_LETTERS[fingerSymbol]?.base ?? fingerSymbol;
-  const avatarDescriptions = viewModel === 'avatar' ? AVATAR_FINGER_DESCRIPTIONS[baseSymbol] : undefined;
-  const fingerRows = viewModel === 'avatar' && fingerSymbol === 'P'
+  const avatarDescriptions = currentRenderer === 'avatar' ? AVATAR_FINGER_DESCRIPTIONS[baseSymbol] : undefined;
+  const fingerRows = currentRenderer === 'avatar' && fingerSymbol === 'P'
     ? [
       { name: 'Cổ tay', color: 'var(--primary)' },
       { name: 'Ngón cái', color: 'var(--accent-warning)' },
@@ -505,7 +534,7 @@ export default function TextToSignVisualizer({ requestText }) {
       { name: 'Ngón áp út', color: 'var(--accent-warning)' },
       { name: 'Ngón út', color: 'var(--accent-warning)' }
     ]
-    : viewModel === 'avatar' && fingerSymbol === 'Q'
+    : currentRenderer === 'avatar' && fingerSymbol === 'Q'
       ? [
         { name: 'Cổ tay', color: 'var(--primary)' },
         { name: 'Ngón cái', color: 'var(--primary)' },
@@ -618,7 +647,7 @@ export default function TextToSignVisualizer({ requestText }) {
           </header>
           <div className="sign-viewport" aria-label="Mô phỏng 3D">
             {viewModel === 'robot' ? <RobotSigner3D {...commonProps} />
-              : <MixamoAvatarSigner {...commonProps} tunerHostRef={tunerHostRef} />}
+              : <MixamoAvatarSigner {...commonProps} />}
           </div>
           {viewModel === 'avatar' && <AvatarSequenceCaption sequence={sequence} currentIndex={currentIndex} />}
           <div className="mobile-playback">{playback}</div>
@@ -708,12 +737,6 @@ export default function TextToSignVisualizer({ requestText }) {
               </div>
             ))}
           </dl>
-        )}
-        {viewModel === 'avatar' && (
-          <details className="avatar-tuner">
-            <summary>Tinh chỉnh bàn tay Avatar</summary>
-            <div ref={tunerHostRef} className="avatar-tuner-host" />
-          </details>
         )}
       </WorkspaceDialog>
     </Workspace>

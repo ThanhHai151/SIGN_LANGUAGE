@@ -2,7 +2,7 @@
  * Robot tự HỌC ký hiệu mới ngay trong trình duyệt
  * ================================================
  * Từ chưa có chuyển động robot → chạy MediaPipe Holistic trên video QIPEDC của từ đó (phát qua bộ đệm
- * backend để đọc được khung hình), lấy điểm khớp vai/khuỷu/cổ tay + 21 khớp mỗi bàn tay (8 khung/giây),
+ * backend để đọc được khung hình), lấy điểm khớp vai/khuỷu/cổ tay + 21 khớp mỗi bàn tay,
  * gửi lên backend (/api/motion/learn) để chuyển sang góc khớp robot và lưu lại cho các lần sau.
  */
 import { mediaUrl } from './api';
@@ -11,7 +11,8 @@ import { API_BASE_URL } from './apiBase';
 const MP_VER = '0.10.14';
 const MODEL = 'https://storage.googleapis.com/mediapipe-models/holistic_landmarker/holistic_landmarker/float16/latest/holistic_landmarker.task';
 const HAND_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task';
-const FPS = 8;
+const TARGET_FPS = 16;
+const MAX_FRAMES = 600; // Cùng giới hạn với API học chuyển động.
 
 let holisticPromise = null;
 let handDetector = null; // bộ dò bàn tay độc lập: bù các khung Holistic mất dấu bàn tay
@@ -64,11 +65,16 @@ async function extract(videoId, onProgress) {
   const v = await loadVideo(mediaUrl(`https://qipedc.moet.gov.vn/videos/${videoId}.mp4`));
   const frames = [];
   const dur = v.duration;
-  const n = Math.max(1, Math.ceil(dur * FPS));
+  const n = Math.min(MAX_FRAMES, Math.max(4, Math.ceil(dur * TARGET_FPS)));
+  const fps = n === Math.ceil(dur * TARGET_FPS) ? TARGET_FPS : n / dur;
+  const startTimestamp = ts + 1000;
   for (let k = 0; k < n; k++) {
-    const t = k / FPS;
-    await new Promise((res) => { v.onseeked = res; v.currentTime = Math.min(t, dur - 0.01); });
-    ts += 40;
+    const t = k / fps;
+    const seekTime = Math.max(0, Math.min(t, dur - 0.01));
+    if (v.currentTime !== seekTime) {
+      await new Promise((res) => { v.onseeked = res; v.currentTime = seekTime; });
+    }
+    ts = startTimestamp + Math.round(t * 1000);
     const out = holistic.detectForVideo(v, ts);
     const fr = {
       p: pack(out.poseWorldLandmarks?.[0], [0, 11, 12, 13, 14, 15, 16, 23, 24]),
@@ -98,7 +104,7 @@ async function extract(videoId, onProgress) {
   }
   v.removeAttribute('src');
   v.load();
-  return { id: videoId, fps: FPS, dur: Math.round(dur * 1000) / 1000, frames };
+  return { id: videoId, fps, dur: Math.round(dur * 1000) / 1000, frames };
 }
 
 // Hàng đợi: học lần lượt từng từ (MediaPipe dùng chung 1 mô hình)

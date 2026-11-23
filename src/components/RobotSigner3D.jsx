@@ -9,15 +9,14 @@ import { Eye, ZoomIn, RotateCcw, Crosshair } from 'lucide-react';
 /**
  * RobotSigner3D — Robot diễn hoạt Ngôn ngữ Ký hiệu VSL
  *
- * Thay thế Avatar3D (nhân vật da người) bằng một robot dễ quan sát hơn:
  * - Mỗi ngón tay một màu riêng (Cái / Trỏ / Giữa / Áp út / Út) → nhìn rõ ngón nào duỗi, ngón nào gập.
  * - Mặt lòng bàn tay màu xanh phát sáng, mu bàn tay màu trắng → biết ngay bàn tay đang hướng về đâu.
  * - Khớp ngón màu tối tương phản, bàn tay phóng to hơn.
  * - Màn hình LED trên ngực hiển thị từ đang diễn, mắt LED đổi màu khi đang diễn hoạt.
  * - Lớp phụ đề: câu đầy đủ với từ hiện tại được tô sáng, kèm chú thích màu ngón tay.
  *
- * Hệ khung xương (vị trí pivot + trục xoay khớp) giữ NGUYÊN như Avatar3D cũ để
- * dùng lại toàn bộ dữ liệu tư thế trong utils/handPoses.js.
+ * Hệ khung xương (vị trí pivot + trục xoay khớp) tương thích với dữ liệu tư thế
+ * trong utils/handPoses.js.
  */
 
 export const FINGER_COLORS = {
@@ -136,7 +135,7 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
   const freezeRef = useRef(freezeAt);
   useEffect(() => { freezeRef.current = freezeAt; }, [freezeAt]);
 
-  // ---------- Bàn tay robot (giữ nguyên toạ độ khớp của Avatar3D) ----------
+  // ---------- Bàn tay robot ----------
   const createRobotHand = (mats, isLeft = false) => {
     const handGroup = new THREE.Group();
     const flip = isLeft ? -1 : 1;
@@ -372,6 +371,18 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
     mouth.rotation.z = Math.PI / 2;
     mouth.position.set(0, 0.145, 0.129);
     headGroup.add(mouth);
+    const openMouth = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 24, 16).scale(0.025, 0.011, 0.003),
+      mats.dark
+    );
+    openMouth.position.set(0, 0.145, 0.132);
+    openMouth.visible = false;
+    headGroup.add(openMouth);
+    const tongueMaterial = new THREE.MeshStandardMaterial({ color: 0xfa8199, emissive: 0x521020 });
+    const tongueGeometry = new THREE.SphereGeometry(1, 32, 20).scale(0.0165, 0.018, 0.0045);
+    const tongue = new THREE.Mesh(tongueGeometry, tongueMaterial);
+    tongue.visible = false;
+    headGroup.add(tongue);
 
     [-1, 1].forEach((s) => {
       const ear = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.03, 20), mats.dark);
@@ -393,7 +404,7 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
 
     torsoGroup.add(headGroup);
 
-    // Cánh tay (giữ nguyên vị trí vai/khuỷu/cổ tay của Avatar3D)
+    // Cánh tay
     const buildArm = (side) => {
       const isLeft = side === 'left';
       const shoulder = new THREE.Group();
@@ -603,6 +614,7 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
 
       // Hoạt ảnh mocap: lấy mẫu theo thời gian thực (lặp lại khi đang tạm dừng để xem kỹ)
       const mo = rig.motion;
+      let tongueAmount = 0;
       if (mo) {
         const frozen = typeof freezeRef.current === 'number';
         const durS = mo.data.duration_ms / 1000;
@@ -612,7 +624,7 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
         let el;
         // Đồng bộ với video mẫu: nếu video của đúng ký hiệu này đang phát → lấy thời điểm của video
         const vid = videoElRef?.current;
-        const vidSynced = vid && !vid.paused && vid.readyState >= 2 && mo.data.id && (vid.currentSrc || vid.src || '').includes('/' + mo.data.id + '.mp4');
+        const vidSynced = mo.data.sync_video !== false && vid && !vid.paused && vid.readyState >= 2 && mo.data.id && (vid.currentSrc || vid.src || '').includes('/' + mo.data.id + '.mp4');
         if (frozen) {
           el = freezeRef.current;
         } else if (vidSynced) {
@@ -621,14 +633,28 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
         } else {
           if (mo.start === undefined) mo.start = time;
           el = a0 + (time - mo.start) * speedRef.current;
-          if (el > a1 + 0.7 && !isPlayingRef.current) { mo.start = time; el = a0; }
+          if (el > a1 + 0.7 && !playing) {
+            mo.start = time;
+            el = a0;
+          }
         }
-        applyKeyframe(cur, sampleMotion(mo.data, Math.min(Math.max(el, a0), a1)));
+        const motionTime = Math.min(Math.max(el, a0), a1);
+        applyKeyframe(cur, sampleMotion(mo.data, motionTime));
+        if (Array.isArray(mo.data.tongue)) {
+          const [on, off] = mo.data.tongue;
+          const amount = Math.max(0, Math.min(1, (motionTime - on) / 0.15, (off - motionTime) / 0.15));
+          tongueAmount = amount * amount * (3 - 2 * amount);
+        }
         ST = frozen ? 0.01 : Math.max(0.02, 0.035 / Math.max(0.5, speedRef.current)); // bám sát chuyển động học từ video
       } else {
         // Thời gian chuyển tiếp: nhanh hơn khi tăng tốc độ phát, ngắn hơn với keyframe động
         ST = Math.max(0.05, (cur.smoothTime || 0.12) / Math.max(0.25, speedRef.current));
       }
+      tongue.visible = tongueAmount > 0.001;
+      mouth.visible = !tongue.visible;
+      openMouth.visible = tongue.visible;
+      tongue.scale.y = Math.max(0.001, tongueAmount);
+      tongue.position.set(0, 0.145 - 0.013 * tongueAmount, 0.136 + 0.010 * tongueAmount);
 
       lerpRot(rig.torsoGroup, cur.body.torso);
       lerpRot(rig.headGroup, cur.body.head);
@@ -706,6 +732,7 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
         if (o.geometry) o.geometry.dispose();
       });
       screenTex.dispose();
+      tongueMaterial.dispose();
       renderer.dispose();
     };
   }, []);
