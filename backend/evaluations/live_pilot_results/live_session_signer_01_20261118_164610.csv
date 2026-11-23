@@ -1,2 +1,0 @@
-﻿trial_index,timestamp,signer_id,mode,target_word,target_class_index,distance,model_a_pred,model_a_conf,model_a_correct,model_b_pred,model_b_conf,model_b_correct,model_c_pred,model_c_conf,model_c_correct,shoulder_width,scale_factor,inference_time_ms
-1,2026-11-18T09:45:55.501316+00:00,signer_01,free,FREE_PLAY,-1,standard,tự lập,0.1979,,nghĩ,0.11,,nghĩ,0.1102,,0.3904,0.4365,61.93
