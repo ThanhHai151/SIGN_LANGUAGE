@@ -48,22 +48,27 @@ class TestVSLSystem(unittest.TestCase):
         self.assertIn("Xin chào", labels)
         self.assertIn("Bạn", labels)
         spelled = [r["label"] for r in result if r.get("spelled_word") == "cảm ơn"]
-        self.assertEqual(spelled, ["Chữ C", "Chữ A", "Chữ M", "Dấu hỏi", "Chữ Ơ", "Chữ N"])
+        self.assertEqual(spelled, ["Chữ C", "Chữ A", "Chữ M", "Chữ Ơ", "Chữ N"])   # bỏ dấu thanh
         # "rất" là hư từ → bỏ qua, không đánh vần
         self.assertNotIn("rất", {r.get("spelled_word") for r in result})
 
     def test_fingerspelling_uses_learned_letters(self):
-        """Đánh vần dùng chuyển động học từ video bảng chữ cái QIPEDC, đủ chữ có dấu và dấu thanh"""
+        """Đánh vần dùng chuyển động học từ video bảng chữ cái QIPEDC, đủ chữ có dấu (Ê, Ư, Ơ), bỏ dấu thanh"""
         result = text_to_vsl_glosses("Nguyễn Thượng")   # tên riêng không có trong từ điển
         self.assertEqual([r["label"] for r in result],
-                         ["Chữ N", "Chữ G", "Chữ U", "Chữ Y", "Chữ Ê", "Chữ N", "Dấu ngã",
-                          "Chữ T", "Chữ H", "Chữ Ư", "Chữ Ơ", "Chữ N", "Chữ G", "Dấu nặng"])
+                         ["Chữ N", "Chữ G", "Chữ U", "Chữ Y", "Chữ Ê", "Chữ N",
+                          "Chữ T", "Chữ H", "Chữ Ư", "Chữ Ơ", "Chữ N", "Chữ G"])
         for r in result:
             self.assertEqual(r["type"], "fingerspelling")
             self.assertTrue(r["motion_id"], r["label"])
             self.assertLess(r["clip"][0], r["clip"][1])
         res = self.client.get("/api/letter/Ư").json()
         self.assertEqual(res["sequence"][0]["motion_id"], "D0515N")
+        # Không còn dấu thanh trong bảng chữ cái
+        self.assertEqual(self.client.get("/api/letter/sắc").status_code, 404)
+        letters = self.client.get("/api/letters").json()["letters"]
+        self.assertEqual(len(letters), 33)
+        self.assertFalse({"sắc", "huyền", "hỏi", "ngã", "nặng"} & set(letters))
 
     def test_nlp_fingerspelling_proper_name(self):
         """Kiểm tra NLP tự động chuyển tên riêng chưa có trong từ điển sang đánh vần chữ cái"""

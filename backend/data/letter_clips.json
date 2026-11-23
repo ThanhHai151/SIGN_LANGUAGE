@@ -262,45 +262,5 @@
    3.0
   ],
   "static": false
- },
- "sắc": {
-  "motion_id": "D0525N",
-  "clip": [
-   0.75,
-   1.75
-  ],
-  "static": false
- },
- "huyền": {
-  "motion_id": "D0524N",
-  "clip": [
-   1.375,
-   1.875
-  ],
-  "static": false
- },
- "hỏi": {
-  "motion_id": "D0526N",
-  "clip": [
-   1.0,
-   2.0
-  ],
-  "static": false
- },
- "ngã": {
-  "motion_id": "D0527N",
-  "clip": [
-   0.875,
-   2.75
-  ],
-  "static": false
- },
- "nặng": {
-  "motion_id": "D0528",
-  "clip": [
-   0.875,
-   2.25
-  ],
-  "static": false
  }
 }

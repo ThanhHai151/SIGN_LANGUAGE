@@ -1,0 +1,77 @@
+{
+  "schema_version": "3.2c-pilot-evaluation-v1",
+  "checkpoint_evaluated": "best.pth",
+  "checkpoint_epoch": 34,
+  "checkpoint_phase": "B",
+  "clean_train_samples": 40,
+  "clean_train_accuracy": 0.775,
+  "clean_train_correct": 31,
+  "unique_classes_predicted": 31,
+  "prediction_entropy_bits": 4.78,
+  "max_possible_entropy": 5.32,
+  "phase_a_initial_loss": 3.8859,
+  "phase_a_final_loss": 3.1841,
+  "phase_b_initial_loss": 3.2386,
+  "phase_b_final_loss": 2.8855,
+  "best_loss": 2.8493,
+  "confused_pairs_count": 9,
+  "confused_pairs": [
+    {
+      "true_class_index": 35,
+      "true_word": "nhìn",
+      "pred_class_index": 7,
+      "pred_word": "nghĩ"
+    },
+    {
+      "true_class_index": 106,
+      "true_word": "lúc nào",
+      "pred_class_index": 31,
+      "pred_word": "khác"
+    },
+    {
+      "true_class_index": 135,
+      "true_word": "sách",
+      "pred_class_index": 45,
+      "pred_word": "nói chuyện"
+    },
+    {
+      "true_class_index": 259,
+      "true_word": "tiếng nói",
+      "pred_class_index": 275,
+      "pred_word": "tai"
+    },
+    {
+      "true_class_index": 359,
+      "true_word": "trông nhà",
+      "pred_class_index": 45,
+      "pred_word": "nói chuyện"
+    },
+    {
+      "true_class_index": 499,
+      "true_word": "buổi sáng",
+      "pred_class_index": 602,
+      "pred_word": "lạc quan"
+    },
+    {
+      "true_class_index": 500,
+      "true_word": "buổi tối",
+      "pred_class_index": 602,
+      "pred_word": "lạc quan"
+    },
+    {
+      "true_class_index": 603,
+      "true_word": "liên lạc",
+      "pred_class_index": 31,
+      "pred_word": "khác"
+    },
+    {
+      "true_class_index": 690,
+      "true_word": "hoa mai",
+      "pred_class_index": 45,
+      "pred_word": "nói chuyện"
+    }
+  ],
+  "is_collapsed": false,
+  "all_predictions_within_active_pilot": true,
+  "inactive_classes_masked": true
+}

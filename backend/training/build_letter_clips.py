@@ -1,7 +1,7 @@
 """
-Đoạn "giữ tay" của từng chữ cái / dấu thanh trong video bảng chữ cái QIPEDC (backend/data/letter_clips.json)
+Đoạn "giữ tay" của từng chữ cái trong video bảng chữ cái QIPEDC (backend/data/letter_clips.json)
 =====================================================================================================
-Video chữ cái gồm: đưa tay lên → giữ hình chữ cái (hoặc làm động tác của chữ: Ă, Â, Ơ, Ư, J, Z, dấu thanh)
+Video chữ cái gồm: đưa tay lên → giữ hình chữ cái (hoặc làm động tác của chữ: Ă, Â, Ơ, Ư, J, Z)
 → hạ tay. Khi đánh vần một từ, robot chỉ cần đoạn GIỮA (hình chữ cái), không lặp lại đưa tay lên/hạ xuống
 cho từng chữ. Script này tìm đoạn đó từ điểm khớp gốc (backend/data/raw_motion):
 
@@ -24,18 +24,18 @@ from backend.training.retarget_motion import LAYOUT, to_robot, torso_frame  # no
 DATA = os.path.join(ROOT, "backend", "data")
 OUT = os.path.join(DATA, "letter_clips.json")
 
-# Chữ cái tiếng Việt + chữ ngoại lai + dấu thanh → mã video QIPEDC
+# Chữ cái tiếng Việt + chữ ngoại lai → mã video QIPEDC.
+# Không dùng video dấu thanh (sắc, huyền, hỏi, ngã, nặng): robot đánh vần chữ cái, bỏ dấu thanh.
 LETTER_VIDEOS = {
     "a": "D0489", "ă": "D0490N", "â": "D0491N", "b": "D0492", "c": "D0493", "d": "D0494", "đ": "D0495",
     "e": "D0496", "ê": "D0497N", "g": "D0498N", "h": "D0500N", "i": "D0501", "k": "D0502", "l": "D0503",
     "m": "D0504", "n": "D0505", "o": "D0506", "ô": "D0507N", "ơ": "D0508N", "p": "D0509N", "q": "D0510",
     "r": "D0511", "s": "D0512", "t": "D0513N", "u": "D0514", "ư": "D0515N", "v": "D0516", "x": "D0517N",
     "y": "D0518N", "f": "D0521", "j": "D0522", "w": "D0523", "z": "D0519",
-    "sắc": "D0525N", "huyền": "D0524N", "hỏi": "D0526N", "ngã": "D0527N", "nặng": "D0528",
 }
 STATIC_HOLD_S = 0.5
-# Chữ / dấu mà bản thân là một NÉT VẼ trong không trung (tay đi xuống, lượn...): giữ cả nét, không chỉ đỉnh
-STROKE = {"j", "z", "sắc", "huyền", "hỏi", "ngã", "nặng"}
+# Chữ mà bản thân là một NÉT VẼ trong không trung (tay đi xuống, lượn...): giữ cả nét, không chỉ đỉnh
+STROKE = {"j", "z"}
 IDX = {k: i for i, k in enumerate(LAYOUT)}
 FINGER_COLS = [IDX[k] for k in LAYOUT if k.startswith("right_") and any(f in k for f in ("thumb", "index", "middle", "ring", "pinky"))]
 

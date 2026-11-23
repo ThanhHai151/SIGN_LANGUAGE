@@ -1,0 +1,6725 @@
+{
+  "task": "TASK WORDS 3.2M — OFFLINE VOCABULARY SUBSET ABLATION",
+  "checkpoint": "D:\\SIGN_LANGUAGE\\backend\\models\\words_716_checkpoints\\experiments_703\\best.pth",
+  "summary_metrics": {
+    "FULL_703": {
+      "mode": "FULL_703",
+      "total_trials": 36,
+      "top1_correct": 7,
+      "top1_accuracy": 0.1944,
+      "top3_correct": 12,
+      "top3_accuracy": 0.3333,
+      "macro_f1_12_target_classes": 0.2048,
+      "macro_f1_all_active_predictions": 0.0847,
+      "mean_gt_rank": 50.22,
+      "median_gt_rank": 35.0,
+      "mean_top1_confidence": 0.0889
+    },
+    "PILOT_40": {
+      "mode": "PILOT_40",
+      "total_trials": 36,
+      "top1_correct": 11,
+      "top1_accuracy": 0.3056,
+      "top3_correct": 19,
+      "top3_accuracy": 0.5278,
+      "macro_f1_12_target_classes": 0.2093,
+      "macro_f1_all_active_predictions": 0.1675,
+      "mean_gt_rank": 4.03,
+      "median_gt_rank": 2.5,
+      "mean_top1_confidence": 0.4369
+    },
+    "HOLDOUT_12": {
+      "mode": "HOLDOUT_12",
+      "total_trials": 36,
+      "top1_correct": 15,
+      "top1_accuracy": 0.4167,
+      "top3_correct": 28,
+      "top3_accuracy": 0.7778,
+      "macro_f1_12_target_classes": 0.3111,
+      "macro_f1_all_active_predictions": 0.3111,
+      "mean_gt_rank": 2.33,
+      "median_gt_rank": 2.0,
+      "mean_top1_confidence": 0.5962
+    }
+  },
+  "transitions_top1": {
+    "wrong_703_to_correct_40_count": 4,
+    "wrong_703_to_correct_12_count": 8,
+    "wrong_40_to_correct_12_count": 4,
+    "still_wrong_in_40_count": 25,
+    "still_wrong_in_12_count": 21,
+    "still_wrong_in_all_three_count": 21,
+    "flipped_703_to_40_trials": [
+      {
+        "filename": "signer_01_031_q-khac_trial_03.mp4",
+        "target_class_index": 31,
+        "target_word": "khác",
+        "gt_rank_703": 2,
+        "gt_rank_40": 1,
+        "gt_rank_12": 1,
+        "pred_703": "#665 giá trị",
+        "pred_40": "#031 khác",
+        "pred_12": "#031 khác"
+      },
+      {
+        "filename": "signer_01_499_q-buoi-sang_trial_01.mp4",
+        "target_class_index": 499,
+        "target_word": "buổi sáng",
+        "gt_rank_703": 3,
+        "gt_rank_40": 1,
+        "gt_rank_12": 1,
+        "pred_703": "#164 ma",
+        "pred_40": "#499 buổi sáng",
+        "pred_12": "#499 buổi sáng"
+      },
+      {
+        "filename": "signer_01_499_q-buoi-sang_trial_02.mp4",
+        "target_class_index": 499,
+        "target_word": "buổi sáng",
+        "gt_rank_703": 2,
+        "gt_rank_40": 1,
+        "gt_rank_12": 1,
+        "pred_703": "#498 buổi đêm",
+        "pred_40": "#499 buổi sáng",
+        "pred_12": "#499 buổi sáng"
+      },
+      {
+        "filename": "signer_01_499_q-buoi-sang_trial_03.mp4",
+        "target_class_index": 499,
+        "target_word": "buổi sáng",
+        "gt_rank_703": 2,
+        "gt_rank_40": 1,
+        "gt_rank_12": 1,
+        "pred_703": "#498 buổi đêm",
+        "pred_40": "#499 buổi sáng",
+        "pred_12": "#499 buổi sáng"
+      }
+    ],
+    "flipped_703_to_12_trials": [
+      {
+        "filename": "signer_01_003_q-muon_trial_01.mp4",
+        "target_class_index": 3,
+        "target_word": "muốn",
+        "gt_rank_703": 26,
+        "gt_rank_40": 2,
+        "gt_rank_12": 1,
+        "pred_703": "#015 anh em",
+        "pred_40": "#552 bao nhiêu?",
+        "pred_12": "#003 muốn"
+      },
+      {
+        "filename": "signer_01_003_q-muon_trial_02.mp4",
+        "target_class_index": 3,
+        "target_word": "muốn",
+        "gt_rank_703": 15,
+        "gt_rank_40": 2,
+        "gt_rank_12": 1,
+        "pred_703": "#381 tuyệt vọng",
+        "pred_40": "#552 bao nhiêu?",
+        "pred_12": "#003 muốn"
+      },
+      {
+        "filename": "signer_01_003_q-muon_trial_03.mp4",
+        "target_class_index": 3,
+        "target_word": "muốn",
+        "gt_rank_703": 25,
+        "gt_rank_40": 2,
+        "gt_rank_12": 1,
+        "pred_703": "#088 tính",
+        "pred_40": "#552 bao nhiêu?",
+        "pred_12": "#003 muốn"
+      },
+      {
+        "filename": "signer_01_001_q-sao_trial_01.mp4",
+        "target_class_index": 1,
+        "target_word": "sao",
+        "gt_rank_703": 89,
+        "gt_rank_40": 6,
+        "gt_rank_12": 1,
+        "pred_703": "#573 hành tinh",
+        "pred_40": "#500 buổi tối",
+        "pred_12": "#001 sao"
+      },
+      {
+        "filename": "signer_01_031_q-khac_trial_03.mp4",
+        "target_class_index": 31,
+        "target_word": "khác",
+        "gt_rank_703": 2,
+        "gt_rank_40": 1,
+        "gt_rank_12": 1,
+        "pred_703": "#665 giá trị",
+        "pred_40": "#031 khác",
+        "pred_12": "#031 khác"
+      },
+      {
+        "filename": "signer_01_499_q-buoi-sang_trial_01.mp4",
+        "target_class_index": 499,
+        "target_word": "buổi sáng",
+        "gt_rank_703": 3,
+        "gt_rank_40": 1,
+        "gt_rank_12": 1,
+        "pred_703": "#164 ma",
+        "pred_40": "#499 buổi sáng",
+        "pred_12": "#499 buổi sáng"
+      },
+      {
+        "filename": "signer_01_499_q-buoi-sang_trial_02.mp4",
+        "target_class_index": 499,
+        "target_word": "buổi sáng",
+        "gt_rank_703": 2,
+        "gt_rank_40": 1,
+        "gt_rank_12": 1,
+        "pred_703": "#498 buổi đêm",
+        "pred_40": "#499 buổi sáng",
+        "pred_12": "#499 buổi sáng"
+      },
+      {
+        "filename": "signer_01_499_q-buoi-sang_trial_03.mp4",
+        "target_class_index": 499,
+        "target_word": "buổi sáng",
+        "gt_rank_703": 2,
+        "gt_rank_40": 1,
+        "gt_rank_12": 1,
+        "pred_703": "#498 buổi đêm",
+        "pred_40": "#499 buổi sáng",
+        "pred_12": "#499 buổi sáng"
+      }
+    ],
+    "still_wrong_in_12_trials": [
+      {
+        "filename": "signer_01_007_q-nghi_trial_03.mp4",
+        "target_class_index": 7,
+        "target_word": "nghĩ",
+        "gt_rank_703": 3,
+        "gt_rank_40": 2,
+        "gt_rank_12": 2,
+        "pred_703": "#016 nghe",
+        "pred_40": "#016 nghe",
+        "pred_12": "#016 nghe"
+      },
+      {
+        "filename": "signer_01_001_q-sao_trial_02.mp4",
+        "target_class_index": 1,
+        "target_word": "sao",
+        "gt_rank_703": 130,
+        "gt_rank_40": 10,
+        "gt_rank_12": 2,
+        "pred_703": "#486 đầu tàu",
+        "pred_40": "#500 buổi tối",
+        "pred_12": "#106 lúc nào"
+      },
+      {
+        "filename": "signer_01_001_q-sao_trial_03.mp4",
+        "target_class_index": 1,
+        "target_word": "sao",
+        "gt_rank_703": 130,
+        "gt_rank_40": 10,
+        "gt_rank_12": 2,
+        "pred_703": "#573 hành tinh",
+        "pred_40": "#500 buổi tối",
+        "pred_12": "#106 lúc nào"
+      },
+      {
+        "filename": "signer_01_045_q-noi-chuyen_trial_01.mp4",
+        "target_class_index": 45,
+        "target_word": "nói chuyện",
+        "gt_rank_703": 45,
+        "gt_rank_40": 4,
+        "gt_rank_12": 3,
+        "pred_703": "#711 gặp gỡ",
+        "pred_40": "#031 khác",
+        "pred_12": "#031 khác"
+      },
+      {
+        "filename": "signer_01_045_q-noi-chuyen_trial_02.mp4",
+        "target_class_index": 45,
+        "target_word": "nói chuyện",
+        "gt_rank_703": 51,
+        "gt_rank_40": 5,
+        "gt_rank_12": 3,
+        "pred_703": "#711 gặp gỡ",
+        "pred_40": "#031 khác",
+        "pred_12": "#031 khác"
+      },
+      {
+        "filename": "signer_01_045_q-noi-chuyen_trial_03.mp4",
+        "target_class_index": 45,
+        "target_word": "nói chuyện",
+        "gt_rank_703": 60,
+        "gt_rank_40": 6,
+        "gt_rank_12": 3,
+        "pred_703": "#711 gặp gỡ",
+        "pred_40": "#031 khác",
+        "pred_12": "#031 khác"
+      },
+      {
+        "filename": "signer_01_264_q-khong-dep_trial_01.mp4",
+        "target_class_index": 264,
+        "target_word": "không đẹp",
+        "gt_rank_703": 44,
+        "gt_rank_40": 3,
+        "gt_rank_12": 3,
+        "pred_703": "#570 điện thoại",
+        "pred_40": "#016 nghe",
+        "pred_12": "#016 nghe"
+      },
+      {
+        "filename": "signer_01_264_q-khong-dep_trial_02.mp4",
+        "target_class_index": 264,
+        "target_word": "không đẹp",
+        "gt_rank_703": 55,
+        "gt_rank_40": 4,
+        "gt_rank_12": 3,
+        "pred_703": "#618 giáo sĩ",
+        "pred_40": "#016 nghe",
+        "pred_12": "#016 nghe"
+      },
+      {
+        "filename": "signer_01_264_q-khong-dep_trial_03.mp4",
+        "target_class_index": 264,
+        "target_word": "không đẹp",
+        "gt_rank_703": 76,
+        "gt_rank_40": 4,
+        "gt_rank_12": 3,
+        "pred_703": "#237 tiếc",
+        "pred_40": "#016 nghe",
+        "pred_12": "#016 nghe"
+      },
+      {
+        "filename": "signer_01_602_q-lac-quan_trial_01.mp4",
+        "target_class_index": 602,
+        "target_word": "lạc quan",
+        "gt_rank_703": 12,
+        "gt_rank_40": 2,
+        "gt_rank_12": 2,
+        "pred_703": "#582 chiến thắng",
+        "pred_40": "#499 buổi sáng",
+        "pred_12": "#499 buổi sáng"
+      },
+      {
+        "filename": "signer_01_602_q-lac-quan_trial_02.mp4",
+        "target_class_index": 602,
+        "target_word": "lạc quan",
+        "gt_rank_703": 13,
+        "gt_rank_40": 2,
+        "gt_rank_12": 2,
+        "pred_703": "#686 vô tư",
+        "pred_40": "#499 buổi sáng",
+        "pred_12": "#499 buổi sáng"
+      },
+      {
+        "filename": "signer_01_602_q-lac-quan_trial_03.mp4",
+        "target_class_index": 602,
+        "target_word": "lạc quan",
+        "gt_rank_703": 11,
+        "gt_rank_40": 2,
+        "gt_rank_12": 2,
+        "pred_703": "#582 chiến thắng",
+        "pred_40": "#499 buổi sáng",
+        "pred_12": "#499 buổi sáng"
+      },
+      {
+        "filename": "signer_01_035_q-nhin_trial_01.mp4",
+        "target_class_index": 35,
+        "target_word": "nhìn",
+        "gt_rank_703": 48,
+        "gt_rank_40": 5,
+        "gt_rank_12": 4,
+        "pred_703": "#681 dấu hỏi",
+        "pred_40": "#692 tự lập",
+        "pred_12": "#016 nghe"
+      },
+      {
+        "filename": "signer_01_035_q-nhin_trial_02.mp4",
+        "target_class_index": 35,
+        "target_word": "nhìn",
+        "gt_rank_703": 44,
+        "gt_rank_40": 4,
+        "gt_rank_12": 3,
+        "pred_703": "#681 dấu hỏi",
+        "pred_40": "#692 tự lập",
+        "pred_12": "#007 nghĩ"
+      },
+      {
+        "filename": "signer_01_035_q-nhin_trial_03.mp4",
+        "target_class_index": 35,
+        "target_word": "nhìn",
+        "gt_rank_703": 71,
+        "gt_rank_40": 5,
+        "gt_rank_12": 4,
+        "pred_703": "#681 dấu hỏi",
+        "pred_40": "#016 nghe",
+        "pred_12": "#016 nghe"
+      },
+      {
+        "filename": "signer_01_106_q-luc-nao_trial_01.mp4",
+        "target_class_index": 106,
+        "target_word": "lúc nào",
+        "gt_rank_703": 76,
+        "gt_rank_40": 5,
+        "gt_rank_12": 4,
+        "pred_703": "#454 vui mừng",
+        "pred_40": "#499 buổi sáng",
+        "pred_12": "#499 buổi sáng"
+      },
+      {
+        "filename": "signer_01_106_q-luc-nao_trial_02.mp4",
+        "target_class_index": 106,
+        "target_word": "lúc nào",
+        "gt_rank_703": 82,
+        "gt_rank_40": 5,
+        "gt_rank_12": 4,
+        "pred_703": "#498 buổi đêm",
+        "pred_40": "#499 buổi sáng",
+        "pred_12": "#499 buổi sáng"
+      },
+      {
+        "filename": "signer_01_106_q-luc-nao_trial_03.mp4",
+        "target_class_index": 106,
+        "target_word": "lúc nào",
+        "gt_rank_703": 91,
+        "gt_rank_40": 5,
+        "gt_rank_12": 4,
+        "pred_703": "#164 ma",
+        "pred_40": "#499 buổi sáng",
+        "pred_12": "#499 buổi sáng"
+      },
+      {
+        "filename": "signer_01_135_q-sach_trial_01.mp4",
+        "target_class_index": 135,
+        "target_word": "sách",
+        "gt_rank_703": 218,
+        "gt_rank_40": 15,
+        "gt_rank_12": 6,
+        "pred_703": "#577 danh nhân",
+        "pred_40": "#500 buổi tối",
+        "pred_12": "#499 buổi sáng"
+      },
+      {
+        "filename": "signer_01_135_q-sach_trial_02.mp4",
+        "target_class_index": 135,
+        "target_word": "sách",
+        "gt_rank_703": 166,
+        "gt_rank_40": 12,
+        "gt_rank_12": 5,
+        "pred_703": "#577 danh nhân",
+        "pred_40": "#500 buổi tối",
+        "pred_12": "#499 buổi sáng"
+      },
+      {
+        "filename": "signer_01_135_q-sach_trial_03.mp4",
+        "target_class_index": 135,
+        "target_word": "sách",
+        "gt_rank_703": 211,
+        "gt_rank_40": 12,
+        "gt_rank_12": 5,
+        "pred_703": "#577 danh nhân",
+        "pred_40": "#500 buổi tối",
+        "pred_12": "#499 buổi sáng"
+      }
+    ]
+  },
+  "per_word_summary": [
+    {
+      "class_index": 7,
+      "word": "nghĩ",
+      "trials_count": 3,
+      "FULL_703": {
+        "top1": 2,
+        "top3": 3,
+        "gt_ranks": [
+          1,
+          1,
+          3
+        ],
+        "top1_preds": [
+          "#007 nghĩ",
+          "#007 nghĩ",
+          "#016 nghe"
+        ]
+      },
+      "PILOT_40": {
+        "top1": 2,
+        "top3": 3,
+        "gt_ranks": [
+          1,
+          1,
+          2
+        ],
+        "top1_preds": [
+          "#007 nghĩ",
+          "#007 nghĩ",
+          "#016 nghe"
+        ]
+      },
+      "HOLDOUT_12": {
+        "top1": 2,
+        "top3": 3,
+        "gt_ranks": [
+          1,
+          1,
+          2
+        ],
+        "top1_preds": [
+          "#007 nghĩ",
+          "#007 nghĩ",
+          "#016 nghe"
+        ]
+      }
+    },
+    {
+      "class_index": 3,
+      "word": "muốn",
+      "trials_count": 3,
+      "FULL_703": {
+        "top1": 0,
+        "top3": 0,
+        "gt_ranks": [
+          26,
+          15,
+          25
+        ],
+        "top1_preds": [
+          "#015 anh em",
+          "#381 tuyệt vọng",
+          "#088 tính"
+        ]
+      },
+      "PILOT_40": {
+        "top1": 0,
+        "top3": 3,
+        "gt_ranks": [
+          2,
+          2,
+          2
+        ],
+        "top1_preds": [
+          "#552 bao nhiêu?",
+          "#552 bao nhiêu?",
+          "#552 bao nhiêu?"
+        ]
+      },
+      "HOLDOUT_12": {
+        "top1": 3,
+        "top3": 3,
+        "gt_ranks": [
+          1,
+          1,
+          1
+        ],
+        "top1_preds": [
+          "#003 muốn",
+          "#003 muốn",
+          "#003 muốn"
+        ]
+      }
+    },
+    {
+      "class_index": 1,
+      "word": "sao",
+      "trials_count": 3,
+      "FULL_703": {
+        "top1": 0,
+        "top3": 0,
+        "gt_ranks": [
+          89,
+          130,
+          130
+        ],
+        "top1_preds": [
+          "#573 hành tinh",
+          "#486 đầu tàu",
+          "#573 hành tinh"
+        ]
+      },
+      "PILOT_40": {
+        "top1": 0,
+        "top3": 0,
+        "gt_ranks": [
+          6,
+          10,
+          10
+        ],
+        "top1_preds": [
+          "#500 buổi tối",
+          "#500 buổi tối",
+          "#500 buổi tối"
+        ]
+      },
+      "HOLDOUT_12": {
+        "top1": 1,
+        "top3": 3,
+        "gt_ranks": [
+          1,
+          2,
+          2
+        ],
+        "top1_preds": [
+          "#001 sao",
+          "#106 lúc nào",
+          "#106 lúc nào"
+        ]
+      }
+    },
+    {
+      "class_index": 16,
+      "word": "nghe",
+      "trials_count": 3,
+      "FULL_703": {
+        "top1": 3,
+        "top3": 3,
+        "gt_ranks": [
+          1,
+          1,
+          1
+        ],
+        "top1_preds": [
+          "#016 nghe",
+          "#016 nghe",
+          "#016 nghe"
+        ]
+      },
+      "PILOT_40": {
+        "top1": 3,
+        "top3": 3,
+        "gt_ranks": [
+          1,
+          1,
+          1
+        ],
+        "top1_preds": [
+          "#016 nghe",
+          "#016 nghe",
+          "#016 nghe"
+        ]
+      },
+      "HOLDOUT_12": {
+        "top1": 3,
+        "top3": 3,
+        "gt_ranks": [
+          1,
+          1,
+          1
+        ],
+        "top1_preds": [
+          "#016 nghe",
+          "#016 nghe",
+          "#016 nghe"
+        ]
+      }
+    },
+    {
+      "class_index": 31,
+      "word": "khác",
+      "trials_count": 3,
+      "FULL_703": {
+        "top1": 2,
+        "top3": 3,
+        "gt_ranks": [
+          1,
+          1,
+          2
+        ],
+        "top1_preds": [
+          "#031 khác",
+          "#031 khác",
+          "#665 giá trị"
+        ]
+      },
+      "PILOT_40": {
+        "top1": 3,
+        "top3": 3,
+        "gt_ranks": [
+          1,
+          1,
+          1
+        ],
+        "top1_preds": [
+          "#031 khác",
+          "#031 khác",
+          "#031 khác"
+        ]
+      },
+      "HOLDOUT_12": {
+        "top1": 3,
+        "top3": 3,
+        "gt_ranks": [
+          1,
+          1,
+          1
+        ],
+        "top1_preds": [
+          "#031 khác",
+          "#031 khác",
+          "#031 khác"
+        ]
+      }
+    },
+    {
+      "class_index": 45,
+      "word": "nói chuyện",
+      "trials_count": 3,
+      "FULL_703": {
+        "top1": 0,
+        "top3": 0,
+        "gt_ranks": [
+          45,
+          51,
+          60
+        ],
+        "top1_preds": [
+          "#711 gặp gỡ",
+          "#711 gặp gỡ",
+          "#711 gặp gỡ"
+        ]
+      },
+      "PILOT_40": {
+        "top1": 0,
+        "top3": 0,
+        "gt_ranks": [
+          4,
+          5,
+          6
+        ],
+        "top1_preds": [
+          "#031 khác",
+          "#031 khác",
+          "#031 khác"
+        ]
+      },
+      "HOLDOUT_12": {
+        "top1": 0,
+        "top3": 3,
+        "gt_ranks": [
+          3,
+          3,
+          3
+        ],
+        "top1_preds": [
+          "#031 khác",
+          "#031 khác",
+          "#031 khác"
+        ]
+      }
+    },
+    {
+      "class_index": 264,
+      "word": "không đẹp",
+      "trials_count": 3,
+      "FULL_703": {
+        "top1": 0,
+        "top3": 0,
+        "gt_ranks": [
+          44,
+          55,
+          76
+        ],
+        "top1_preds": [
+          "#570 điện thoại",
+          "#618 giáo sĩ",
+          "#237 tiếc"
+        ]
+      },
+      "PILOT_40": {
+        "top1": 0,
+        "top3": 1,
+        "gt_ranks": [
+          3,
+          4,
+          4
+        ],
+        "top1_preds": [
+          "#016 nghe",
+          "#016 nghe",
+          "#016 nghe"
+        ]
+      },
+      "HOLDOUT_12": {
+        "top1": 0,
+        "top3": 3,
+        "gt_ranks": [
+          3,
+          3,
+          3
+        ],
+        "top1_preds": [
+          "#016 nghe",
+          "#016 nghe",
+          "#016 nghe"
+        ]
+      }
+    },
+    {
+      "class_index": 602,
+      "word": "lạc quan",
+      "trials_count": 3,
+      "FULL_703": {
+        "top1": 0,
+        "top3": 0,
+        "gt_ranks": [
+          12,
+          13,
+          11
+        ],
+        "top1_preds": [
+          "#582 chiến thắng",
+          "#686 vô tư",
+          "#582 chiến thắng"
+        ]
+      },
+      "PILOT_40": {
+        "top1": 0,
+        "top3": 3,
+        "gt_ranks": [
+          2,
+          2,
+          2
+        ],
+        "top1_preds": [
+          "#499 buổi sáng",
+          "#499 buổi sáng",
+          "#499 buổi sáng"
+        ]
+      },
+      "HOLDOUT_12": {
+        "top1": 0,
+        "top3": 3,
+        "gt_ranks": [
+          2,
+          2,
+          2
+        ],
+        "top1_preds": [
+          "#499 buổi sáng",
+          "#499 buổi sáng",
+          "#499 buổi sáng"
+        ]
+      }
+    },
+    {
+      "class_index": 35,
+      "word": "nhìn",
+      "trials_count": 3,
+      "FULL_703": {
+        "top1": 0,
+        "top3": 0,
+        "gt_ranks": [
+          48,
+          44,
+          71
+        ],
+        "top1_preds": [
+          "#681 dấu hỏi",
+          "#681 dấu hỏi",
+          "#681 dấu hỏi"
+        ]
+      },
+      "PILOT_40": {
+        "top1": 0,
+        "top3": 0,
+        "gt_ranks": [
+          5,
+          4,
+          5
+        ],
+        "top1_preds": [
+          "#692 tự lập",
+          "#692 tự lập",
+          "#016 nghe"
+        ]
+      },
+      "HOLDOUT_12": {
+        "top1": 0,
+        "top3": 1,
+        "gt_ranks": [
+          4,
+          3,
+          4
+        ],
+        "top1_preds": [
+          "#016 nghe",
+          "#007 nghĩ",
+          "#016 nghe"
+        ]
+      }
+    },
+    {
+      "class_index": 106,
+      "word": "lúc nào",
+      "trials_count": 3,
+      "FULL_703": {
+        "top1": 0,
+        "top3": 0,
+        "gt_ranks": [
+          76,
+          82,
+          91
+        ],
+        "top1_preds": [
+          "#454 vui mừng",
+          "#498 buổi đêm",
+          "#164 ma"
+        ]
+      },
+      "PILOT_40": {
+        "top1": 0,
+        "top3": 0,
+        "gt_ranks": [
+          5,
+          5,
+          5
+        ],
+        "top1_preds": [
+          "#499 buổi sáng",
+          "#499 buổi sáng",
+          "#499 buổi sáng"
+        ]
+      },
+      "HOLDOUT_12": {
+        "top1": 0,
+        "top3": 0,
+        "gt_ranks": [
+          4,
+          4,
+          4
+        ],
+        "top1_preds": [
+          "#499 buổi sáng",
+          "#499 buổi sáng",
+          "#499 buổi sáng"
+        ]
+      }
+    },
+    {
+      "class_index": 135,
+      "word": "sách",
+      "trials_count": 3,
+      "FULL_703": {
+        "top1": 0,
+        "top3": 0,
+        "gt_ranks": [
+          218,
+          166,
+          211
+        ],
+        "top1_preds": [
+          "#577 danh nhân",
+          "#577 danh nhân",
+          "#577 danh nhân"
+        ]
+      },
+      "PILOT_40": {
+        "top1": 0,
+        "top3": 0,
+        "gt_ranks": [
+          15,
+          12,
+          12
+        ],
+        "top1_preds": [
+          "#500 buổi tối",
+          "#500 buổi tối",
+          "#500 buổi tối"
+        ]
+      },
+      "HOLDOUT_12": {
+        "top1": 0,
+        "top3": 0,
+        "gt_ranks": [
+          6,
+          5,
+          5
+        ],
+        "top1_preds": [
+          "#499 buổi sáng",
+          "#499 buổi sáng",
+          "#499 buổi sáng"
+        ]
+      }
+    },
+    {
+      "class_index": 499,
+      "word": "buổi sáng",
+      "trials_count": 3,
+      "FULL_703": {
+        "top1": 0,
+        "top3": 3,
+        "gt_ranks": [
+          3,
+          2,
+          2
+        ],
+        "top1_preds": [
+          "#164 ma",
+          "#498 buổi đêm",
+          "#498 buổi đêm"
+        ]
+      },
+      "PILOT_40": {
+        "top1": 3,
+        "top3": 3,
+        "gt_ranks": [
+          1,
+          1,
+          1
+        ],
+        "top1_preds": [
+          "#499 buổi sáng",
+          "#499 buổi sáng",
+          "#499 buổi sáng"
+        ]
+      },
+      "HOLDOUT_12": {
+        "top1": 3,
+        "top3": 3,
+        "gt_ranks": [
+          1,
+          1,
+          1
+        ],
+        "top1_preds": [
+          "#499 buổi sáng",
+          "#499 buổi sáng",
+          "#499 buổi sáng"
+        ]
+      }
+    }
+  ],
+  "negative_controls": [
+    {
+      "item_id": 37,
+      "filename": "signer_01_ctrl_01_trial_01.mp4",
+      "type": "CONTROL",
+      "target_class_index": -1,
+      "target_word": "ĐỐI CHỨNG: REST_POSE_3_SEC (ngồi/đứng thẳng, hai tay thả lỏng)",
+      "valid_extraction": false,
+      "shoulder_width": 0.3535,
+      "scale_factor": 0.4821,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 40,
+          "top1_word": "chào",
+          "top1_prob": 0.0713,
+          "top1_logit": -3.5889,
+          "margin": 0.0267,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 40,
+              "word": "chào",
+              "probability": 0.0713,
+              "logit": -3.5889
+            },
+            {
+              "rank": 2,
+              "class_index": 609,
+              "word": "tưởng tượng",
+              "probability": 0.0446,
+              "logit": -4.058
+            },
+            {
+              "rank": 3,
+              "class_index": 147,
+              "word": "đoán",
+              "probability": 0.0436,
+              "logit": -4.0797
+            }
+          ],
+          "top3_indices": [
+            40,
+            609,
+            147
+          ],
+          "top3_words": [
+            "chào",
+            "tưởng tượng",
+            "đoán"
+          ],
+          "is_correct_top1": null,
+          "is_correct_top3": null,
+          "gt_rank": null,
+          "gt_prob": null,
+          "gt_logit": null
+        },
+        "PILOT_40": {
+          "top1_class_index": 7,
+          "top1_word": "nghĩ",
+          "top1_prob": 0.2306,
+          "top1_logit": -5.0343,
+          "margin": 0.0346,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.2306,
+              "logit": -5.0343
+            },
+            {
+              "rank": 2,
+              "class_index": 375,
+              "word": "lớp",
+              "probability": 0.196,
+              "logit": -5.197
+            },
+            {
+              "rank": 3,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.1594,
+              "logit": -5.4033
+            }
+          ],
+          "top3_indices": [
+            7,
+            375,
+            16
+          ],
+          "top3_words": [
+            "nghĩ",
+            "lớp",
+            "nghe"
+          ],
+          "is_correct_top1": null,
+          "is_correct_top3": null,
+          "gt_rank": null,
+          "gt_prob": null,
+          "gt_logit": null
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 7,
+          "top1_word": "nghĩ",
+          "top1_prob": 0.4232,
+          "top1_logit": -5.0343,
+          "margin": 0.1306,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.4232,
+              "logit": -5.0343
+            },
+            {
+              "rank": 2,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.2926,
+              "logit": -5.4033
+            },
+            {
+              "rank": 3,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.1773,
+              "logit": -5.9042
+            }
+          ],
+          "top3_indices": [
+            7,
+            16,
+            602
+          ],
+          "top3_words": [
+            "nghĩ",
+            "nghe",
+            "lạc quan"
+          ],
+          "is_correct_top1": null,
+          "is_correct_top3": null,
+          "gt_rank": null,
+          "gt_prob": null,
+          "gt_logit": null
+        }
+      }
+    },
+    {
+      "item_id": 38,
+      "filename": "signer_01_ctrl_02_trial_01.mp4",
+      "type": "CONTROL",
+      "target_class_index": -1,
+      "target_word": "ĐỐI CHỨNG: OUT_OF_VOCABULARY_1 ('uống nước' hoặc cử chỉ gãi đầu)",
+      "valid_extraction": false,
+      "shoulder_width": 0.338,
+      "scale_factor": 0.5042,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 40,
+          "top1_word": "chào",
+          "top1_prob": 0.0716,
+          "top1_logit": -3.5803,
+          "margin": 0.027,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 40,
+              "word": "chào",
+              "probability": 0.0716,
+              "logit": -3.5803
+            },
+            {
+              "rank": 2,
+              "class_index": 609,
+              "word": "tưởng tượng",
+              "probability": 0.0446,
+              "logit": -4.0531
+            },
+            {
+              "rank": 3,
+              "class_index": 147,
+              "word": "đoán",
+              "probability": 0.0436,
+              "logit": -4.0759
+            }
+          ],
+          "top3_indices": [
+            40,
+            609,
+            147
+          ],
+          "top3_words": [
+            "chào",
+            "tưởng tượng",
+            "đoán"
+          ],
+          "is_correct_top1": null,
+          "is_correct_top3": null,
+          "gt_rank": null,
+          "gt_prob": null,
+          "gt_logit": null
+        },
+        "PILOT_40": {
+          "top1_class_index": 7,
+          "top1_word": "nghĩ",
+          "top1_prob": 0.2316,
+          "top1_logit": -5.0233,
+          "margin": 0.0352,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.2316,
+              "logit": -5.0233
+            },
+            {
+              "rank": 2,
+              "class_index": 375,
+              "word": "lớp",
+              "probability": 0.1964,
+              "logit": -5.1882
+            },
+            {
+              "rank": 3,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.1594,
+              "logit": -5.3967
+            }
+          ],
+          "top3_indices": [
+            7,
+            375,
+            16
+          ],
+          "top3_words": [
+            "nghĩ",
+            "lớp",
+            "nghe"
+          ],
+          "is_correct_top1": null,
+          "is_correct_top3": null,
+          "gt_rank": null,
+          "gt_prob": null,
+          "gt_logit": null
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 7,
+          "top1_word": "nghĩ",
+          "top1_prob": 0.4245,
+          "top1_logit": -5.0233,
+          "margin": 0.1323,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.4245,
+              "logit": -5.0233
+            },
+            {
+              "rank": 2,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.2922,
+              "logit": -5.3967
+            },
+            {
+              "rank": 3,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.1766,
+              "logit": -5.9001
+            }
+          ],
+          "top3_indices": [
+            7,
+            16,
+            602
+          ],
+          "top3_words": [
+            "nghĩ",
+            "nghe",
+            "lạc quan"
+          ],
+          "is_correct_top1": null,
+          "is_correct_top3": null,
+          "gt_rank": null,
+          "gt_prob": null,
+          "gt_logit": null
+        }
+      }
+    },
+    {
+      "item_id": 39,
+      "filename": "signer_01_ctrl_03_trial_01.mp4",
+      "type": "CONTROL",
+      "target_class_index": -1,
+      "target_word": "ĐỐI CHỨNG: OUT_OF_VOCABULARY_2 ('điện thoại')",
+      "valid_extraction": false,
+      "shoulder_width": 0.3378,
+      "scale_factor": 0.5044,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 40,
+          "top1_word": "chào",
+          "top1_prob": 0.0715,
+          "top1_logit": -3.5893,
+          "margin": 0.0268,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 40,
+              "word": "chào",
+              "probability": 0.0715,
+              "logit": -3.5893
+            },
+            {
+              "rank": 2,
+              "class_index": 609,
+              "word": "tưởng tượng",
+              "probability": 0.0447,
+              "logit": -4.0587
+            },
+            {
+              "rank": 3,
+              "class_index": 147,
+              "word": "đoán",
+              "probability": 0.0436,
+              "logit": -4.0833
+            }
+          ],
+          "top3_indices": [
+            40,
+            609,
+            147
+          ],
+          "top3_words": [
+            "chào",
+            "tưởng tượng",
+            "đoán"
+          ],
+          "is_correct_top1": null,
+          "is_correct_top3": null,
+          "gt_rank": null,
+          "gt_prob": null,
+          "gt_logit": null
+        },
+        "PILOT_40": {
+          "top1_class_index": 7,
+          "top1_word": "nghĩ",
+          "top1_prob": 0.2311,
+          "top1_logit": -5.0335,
+          "margin": 0.035,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.2311,
+              "logit": -5.0335
+            },
+            {
+              "rank": 2,
+              "class_index": 375,
+              "word": "lớp",
+              "probability": 0.1961,
+              "logit": -5.1977
+            },
+            {
+              "rank": 3,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.1593,
+              "logit": -5.4058
+            }
+          ],
+          "top3_indices": [
+            7,
+            375,
+            16
+          ],
+          "top3_words": [
+            "nghĩ",
+            "lớp",
+            "nghe"
+          ],
+          "is_correct_top1": null,
+          "is_correct_top3": null,
+          "gt_rank": null,
+          "gt_prob": null,
+          "gt_logit": null
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 7,
+          "top1_word": "nghĩ",
+          "top1_prob": 0.4239,
+          "top1_logit": -5.0335,
+          "margin": 0.1318,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.4239,
+              "logit": -5.0335
+            },
+            {
+              "rank": 2,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.2921,
+              "logit": -5.4058
+            },
+            {
+              "rank": 3,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.1772,
+              "logit": -5.9059
+            }
+          ],
+          "top3_indices": [
+            7,
+            16,
+            602
+          ],
+          "top3_words": [
+            "nghĩ",
+            "nghe",
+            "lạc quan"
+          ],
+          "is_correct_top1": null,
+          "is_correct_top3": null,
+          "gt_rank": null,
+          "gt_prob": null,
+          "gt_logit": null
+        }
+      }
+    }
+  ],
+  "trial_records": [
+    {
+      "item_id": 1,
+      "filename": "signer_01_007_q-nghi_trial_01.mp4",
+      "type": "WORD",
+      "target_class_index": 7,
+      "target_word": "nghĩ",
+      "valid_extraction": true,
+      "shoulder_width": 0.3845,
+      "scale_factor": 0.4431,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 7,
+          "top1_word": "nghĩ",
+          "top1_prob": 0.1526,
+          "top1_logit": -5.5685,
+          "margin": 0.0263,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.1526,
+              "logit": -5.5685
+            },
+            {
+              "rank": 2,
+              "class_index": 681,
+              "word": "dấu hỏi",
+              "probability": 0.1263,
+              "logit": -5.7575
+            },
+            {
+              "rank": 3,
+              "class_index": 692,
+              "word": "tự lập",
+              "probability": 0.0628,
+              "logit": -6.4569
+            }
+          ],
+          "top3_indices": [
+            7,
+            681,
+            692
+          ],
+          "top3_words": [
+            "nghĩ",
+            "dấu hỏi",
+            "tự lập"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.1526,
+          "gt_logit": -5.5685
+        },
+        "PILOT_40": {
+          "top1_class_index": 7,
+          "top1_word": "nghĩ",
+          "top1_prob": 0.5117,
+          "top1_logit": -5.5685,
+          "margin": 0.3012,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.5117,
+              "logit": -5.5685
+            },
+            {
+              "rank": 2,
+              "class_index": 692,
+              "word": "tự lập",
+              "probability": 0.2105,
+              "logit": -6.4569
+            },
+            {
+              "rank": 3,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.1969,
+              "logit": -6.5237
+            }
+          ],
+          "top3_indices": [
+            7,
+            692,
+            16
+          ],
+          "top3_words": [
+            "nghĩ",
+            "tự lập",
+            "nghe"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.5117,
+          "gt_logit": -5.5685
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 7,
+          "top1_word": "nghĩ",
+          "top1_prob": 0.6961,
+          "top1_logit": -5.5685,
+          "margin": 0.4283,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.6961,
+              "logit": -5.5685
+            },
+            {
+              "rank": 2,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.2678,
+              "logit": -6.5237
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.017,
+              "logit": -9.283
+            }
+          ],
+          "top3_indices": [
+            7,
+            16,
+            31
+          ],
+          "top3_words": [
+            "nghĩ",
+            "nghe",
+            "khác"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.6961,
+          "gt_logit": -5.5685
+        }
+      }
+    },
+    {
+      "item_id": 2,
+      "filename": "signer_01_007_q-nghi_trial_02.mp4",
+      "type": "WORD",
+      "target_class_index": 7,
+      "target_word": "nghĩ",
+      "valid_extraction": true,
+      "shoulder_width": 0.346,
+      "scale_factor": 0.4925,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 7,
+          "top1_word": "nghĩ",
+          "top1_prob": 0.1908,
+          "top1_logit": -5.9256,
+          "margin": 0.0459,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.1908,
+              "logit": -5.9256
+            },
+            {
+              "rank": 2,
+              "class_index": 681,
+              "word": "dấu hỏi",
+              "probability": 0.1449,
+              "logit": -6.2008
+            },
+            {
+              "rank": 3,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.1149,
+              "logit": -6.4329
+            }
+          ],
+          "top3_indices": [
+            7,
+            681,
+            16
+          ],
+          "top3_words": [
+            "nghĩ",
+            "dấu hỏi",
+            "nghe"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.1908,
+          "gt_logit": -5.9256
+        },
+        "PILOT_40": {
+          "top1_class_index": 7,
+          "top1_word": "nghĩ",
+          "top1_prob": 0.4633,
+          "top1_logit": -5.9256,
+          "margin": 0.1843,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.4633,
+              "logit": -5.9256
+            },
+            {
+              "rank": 2,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.279,
+              "logit": -6.4329
+            },
+            {
+              "rank": 3,
+              "class_index": 692,
+              "word": "tự lập",
+              "probability": 0.2197,
+              "logit": -6.6717
+            }
+          ],
+          "top3_indices": [
+            7,
+            16,
+            692
+          ],
+          "top3_words": [
+            "nghĩ",
+            "nghe",
+            "tự lập"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.4633,
+          "gt_logit": -5.9256
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 7,
+          "top1_word": "nghĩ",
+          "top1_prob": 0.6116,
+          "top1_logit": -5.9256,
+          "margin": 0.2433,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.6116,
+              "logit": -5.9256
+            },
+            {
+              "rank": 2,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.3683,
+              "logit": -6.4329
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.0159,
+              "logit": -9.5744
+            }
+          ],
+          "top3_indices": [
+            7,
+            16,
+            31
+          ],
+          "top3_words": [
+            "nghĩ",
+            "nghe",
+            "khác"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.6116,
+          "gt_logit": -5.9256
+        }
+      }
+    },
+    {
+      "item_id": 3,
+      "filename": "signer_01_007_q-nghi_trial_03.mp4",
+      "type": "WORD",
+      "target_class_index": 7,
+      "target_word": "nghĩ",
+      "valid_extraction": true,
+      "shoulder_width": 0.3649,
+      "scale_factor": 0.4669,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.0942,
+          "top1_logit": -5.6744,
+          "margin": 0.0247,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.0942,
+              "logit": -5.6744
+            },
+            {
+              "rank": 2,
+              "class_index": 681,
+              "word": "dấu hỏi",
+              "probability": 0.0695,
+              "logit": -5.9786
+            },
+            {
+              "rank": 3,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.0558,
+              "logit": -6.199
+            }
+          ],
+          "top3_indices": [
+            16,
+            681,
+            7
+          ],
+          "top3_words": [
+            "nghe",
+            "dấu hỏi",
+            "nghĩ"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 3,
+          "gt_prob": 0.0558,
+          "gt_logit": -6.199
+        },
+        "PILOT_40": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.4243,
+          "top1_logit": -5.6744,
+          "margin": 0.1732,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.4243,
+              "logit": -5.6744
+            },
+            {
+              "rank": 2,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.2511,
+              "logit": -6.199
+            },
+            {
+              "rank": 3,
+              "class_index": 692,
+              "word": "tự lập",
+              "probability": 0.2156,
+              "logit": -6.3517
+            }
+          ],
+          "top3_indices": [
+            16,
+            7,
+            692
+          ],
+          "top3_words": [
+            "nghe",
+            "nghĩ",
+            "tự lập"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.2511,
+          "gt_logit": -6.199
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.5854,
+          "top1_logit": -5.6744,
+          "margin": 0.239,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.5854,
+              "logit": -5.6744
+            },
+            {
+              "rank": 2,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.3464,
+              "logit": -6.199
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.044,
+              "logit": -8.2623
+            }
+          ],
+          "top3_indices": [
+            16,
+            7,
+            31
+          ],
+          "top3_words": [
+            "nghe",
+            "nghĩ",
+            "khác"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.3464,
+          "gt_logit": -6.199
+        }
+      }
+    },
+    {
+      "item_id": 4,
+      "filename": "signer_01_003_q-muon_trial_01.mp4",
+      "type": "WORD",
+      "target_class_index": 3,
+      "target_word": "muốn",
+      "valid_extraction": true,
+      "shoulder_width": 0.3729,
+      "scale_factor": 0.457,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 15,
+          "top1_word": "anh em",
+          "top1_prob": 0.0596,
+          "top1_logit": -3.8237,
+          "margin": 0.0045,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 15,
+              "word": "anh em",
+              "probability": 0.0596,
+              "logit": -3.8237
+            },
+            {
+              "rank": 2,
+              "class_index": 204,
+              "word": "đồng tiền",
+              "probability": 0.0551,
+              "logit": -3.9026
+            },
+            {
+              "rank": 3,
+              "class_index": 23,
+              "word": "bố",
+              "probability": 0.0367,
+              "logit": -4.3096
+            }
+          ],
+          "top3_indices": [
+            15,
+            204,
+            23
+          ],
+          "top3_words": [
+            "anh em",
+            "đồng tiền",
+            "bố"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 26,
+          "gt_prob": 0.0083,
+          "gt_logit": -5.796
+        },
+        "PILOT_40": {
+          "top1_class_index": 552,
+          "top1_word": "bao nhiêu?",
+          "top1_prob": 0.2958,
+          "top1_logit": -5.6985,
+          "margin": 0.0275,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 552,
+              "word": "bao nhiêu?",
+              "probability": 0.2958,
+              "logit": -5.6985
+            },
+            {
+              "rank": 2,
+              "class_index": 3,
+              "word": "muốn",
+              "probability": 0.2683,
+              "logit": -5.796
+            },
+            {
+              "rank": 3,
+              "class_index": 140,
+              "word": "áo",
+              "probability": 0.0421,
+              "logit": -7.648
+            }
+          ],
+          "top3_indices": [
+            552,
+            3,
+            140
+          ],
+          "top3_words": [
+            "bao nhiêu?",
+            "muốn",
+            "áo"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.2683,
+          "gt_logit": -5.796
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 3,
+          "top1_word": "muốn",
+          "top1_prob": 0.659,
+          "top1_logit": -5.796,
+          "margin": 0.5758,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 3,
+              "word": "muốn",
+              "probability": 0.659,
+              "logit": -5.796
+            },
+            {
+              "rank": 2,
+              "class_index": 35,
+              "word": "nhìn",
+              "probability": 0.0832,
+              "logit": -7.8656
+            },
+            {
+              "rank": 3,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.0614,
+              "logit": -8.1697
+            }
+          ],
+          "top3_indices": [
+            3,
+            35,
+            16
+          ],
+          "top3_words": [
+            "muốn",
+            "nhìn",
+            "nghe"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.659,
+          "gt_logit": -5.796
+        }
+      }
+    },
+    {
+      "item_id": 5,
+      "filename": "signer_01_003_q-muon_trial_02.mp4",
+      "type": "WORD",
+      "target_class_index": 3,
+      "target_word": "muốn",
+      "valid_extraction": true,
+      "shoulder_width": 0.3377,
+      "scale_factor": 0.5046,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 381,
+          "top1_word": "tuyệt vọng",
+          "top1_prob": 0.0368,
+          "top1_logit": -5.1001,
+          "margin": 0.0065,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 381,
+              "word": "tuyệt vọng",
+              "probability": 0.0368,
+              "logit": -5.1001
+            },
+            {
+              "rank": 2,
+              "class_index": 204,
+              "word": "đồng tiền",
+              "probability": 0.0303,
+              "logit": -5.2942
+            },
+            {
+              "rank": 3,
+              "class_index": 88,
+              "word": "tính",
+              "probability": 0.029,
+              "logit": -5.3394
+            }
+          ],
+          "top3_indices": [
+            381,
+            204,
+            88
+          ],
+          "top3_words": [
+            "tuyệt vọng",
+            "đồng tiền",
+            "tính"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 15,
+          "gt_prob": 0.0134,
+          "gt_logit": -6.1077
+        },
+        "PILOT_40": {
+          "top1_class_index": 552,
+          "top1_word": "bao nhiêu?",
+          "top1_prob": 0.4219,
+          "top1_logit": -5.6357,
+          "margin": 0.1588,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 552,
+              "word": "bao nhiêu?",
+              "probability": 0.4219,
+              "logit": -5.6357
+            },
+            {
+              "rank": 2,
+              "class_index": 3,
+              "word": "muốn",
+              "probability": 0.2632,
+              "logit": -6.1077
+            },
+            {
+              "rank": 3,
+              "class_index": 285,
+              "word": "lo sợ",
+              "probability": 0.0256,
+              "logit": -8.436
+            }
+          ],
+          "top3_indices": [
+            552,
+            3,
+            285
+          ],
+          "top3_words": [
+            "bao nhiêu?",
+            "muốn",
+            "lo sợ"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.2632,
+          "gt_logit": -6.1077
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 3,
+          "top1_word": "muốn",
+          "top1_prob": 0.7146,
+          "top1_logit": -6.1077,
+          "margin": 0.6596,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 3,
+              "word": "muốn",
+              "probability": 0.7146,
+              "logit": -6.1077
+            },
+            {
+              "rank": 2,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.0549,
+              "logit": -8.6731
+            },
+            {
+              "rank": 3,
+              "class_index": 35,
+              "word": "nhìn",
+              "probability": 0.0502,
+              "logit": -8.7626
+            }
+          ],
+          "top3_indices": [
+            3,
+            16,
+            35
+          ],
+          "top3_words": [
+            "muốn",
+            "nghe",
+            "nhìn"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.7146,
+          "gt_logit": -6.1077
+        }
+      }
+    },
+    {
+      "item_id": 6,
+      "filename": "signer_01_003_q-muon_trial_03.mp4",
+      "type": "WORD",
+      "target_class_index": 3,
+      "target_word": "muốn",
+      "valid_extraction": true,
+      "shoulder_width": 0.3143,
+      "scale_factor": 0.5421,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 88,
+          "top1_word": "tính",
+          "top1_prob": 0.0267,
+          "top1_logit": -5.8592,
+          "margin": 0.0012,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 88,
+              "word": "tính",
+              "probability": 0.0267,
+              "logit": -5.8592
+            },
+            {
+              "rank": 2,
+              "class_index": 204,
+              "word": "đồng tiền",
+              "probability": 0.0255,
+              "logit": -5.9052
+            },
+            {
+              "rank": 3,
+              "class_index": 161,
+              "word": "em gái",
+              "probability": 0.0244,
+              "logit": -5.9513
+            }
+          ],
+          "top3_indices": [
+            88,
+            204,
+            161
+          ],
+          "top3_words": [
+            "tính",
+            "đồng tiền",
+            "em gái"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 25,
+          "gt_prob": 0.0097,
+          "gt_logit": -6.8683
+        },
+        "PILOT_40": {
+          "top1_class_index": 552,
+          "top1_word": "bao nhiêu?",
+          "top1_prob": 0.3211,
+          "top1_logit": -6.5462,
+          "margin": 0.0884,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 552,
+              "word": "bao nhiêu?",
+              "probability": 0.3211,
+              "logit": -6.5462
+            },
+            {
+              "rank": 2,
+              "class_index": 3,
+              "word": "muốn",
+              "probability": 0.2327,
+              "logit": -6.8683
+            },
+            {
+              "rank": 3,
+              "class_index": 185,
+              "word": "hoa",
+              "probability": 0.0526,
+              "logit": -8.3554
+            }
+          ],
+          "top3_indices": [
+            552,
+            3,
+            185
+          ],
+          "top3_words": [
+            "bao nhiêu?",
+            "muốn",
+            "hoa"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.2327,
+          "gt_logit": -6.8683
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 3,
+          "top1_word": "muốn",
+          "top1_prob": 0.5738,
+          "top1_logit": -6.8683,
+          "margin": 0.4759,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 3,
+              "word": "muốn",
+              "probability": 0.5738,
+              "logit": -6.8683
+            },
+            {
+              "rank": 2,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.0979,
+              "logit": -8.6367
+            },
+            {
+              "rank": 3,
+              "class_index": 35,
+              "word": "nhìn",
+              "probability": 0.0978,
+              "logit": -8.6379
+            }
+          ],
+          "top3_indices": [
+            3,
+            16,
+            35
+          ],
+          "top3_words": [
+            "muốn",
+            "nghe",
+            "nhìn"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.5738,
+          "gt_logit": -6.8683
+        }
+      }
+    },
+    {
+      "item_id": 7,
+      "filename": "signer_01_001_q-sao_trial_01.mp4",
+      "type": "WORD",
+      "target_class_index": 1,
+      "target_word": "sao",
+      "valid_extraction": true,
+      "shoulder_width": 0.3472,
+      "scale_factor": 0.4908,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 573,
+          "top1_word": "hành tinh",
+          "top1_prob": 0.0375,
+          "top1_logit": -8.0317,
+          "margin": 0.0045,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 573,
+              "word": "hành tinh",
+              "probability": 0.0375,
+              "logit": -8.0317
+            },
+            {
+              "rank": 2,
+              "class_index": 486,
+              "word": "đầu tàu",
+              "probability": 0.033,
+              "logit": -8.1584
+            },
+            {
+              "rank": 3,
+              "class_index": 210,
+              "word": "gửi",
+              "probability": 0.0206,
+              "logit": -8.6301
+            }
+          ],
+          "top3_indices": [
+            573,
+            486,
+            210
+          ],
+          "top3_words": [
+            "hành tinh",
+            "đầu tàu",
+            "gửi"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 89,
+          "gt_prob": 0.0033,
+          "gt_logit": -10.4554
+        },
+        "PILOT_40": {
+          "top1_class_index": 500,
+          "top1_word": "buổi tối",
+          "top1_prob": 0.1914,
+          "top1_logit": -9.0099,
+          "margin": 0.0333,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 500,
+              "word": "buổi tối",
+              "probability": 0.1914,
+              "logit": -9.0099
+            },
+            {
+              "rank": 2,
+              "class_index": 225,
+              "word": "giống nhau",
+              "probability": 0.158,
+              "logit": -9.2013
+            },
+            {
+              "rank": 3,
+              "class_index": 134,
+              "word": "lên xe",
+              "probability": 0.1262,
+              "logit": -9.4264
+            }
+          ],
+          "top3_indices": [
+            500,
+            225,
+            134
+          ],
+          "top3_words": [
+            "buổi tối",
+            "giống nhau",
+            "lên xe"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 6,
+          "gt_prob": 0.0451,
+          "gt_logit": -10.4554
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 1,
+          "top1_word": "sao",
+          "top1_prob": 0.3132,
+          "top1_logit": -10.4554,
+          "margin": 0.0041,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 1,
+              "word": "sao",
+              "probability": 0.3132,
+              "logit": -10.4554
+            },
+            {
+              "rank": 2,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.3091,
+              "logit": -10.4687
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1326,
+              "logit": -11.3152
+            }
+          ],
+          "top3_indices": [
+            1,
+            106,
+            31
+          ],
+          "top3_words": [
+            "sao",
+            "lúc nào",
+            "khác"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.3132,
+          "gt_logit": -10.4554
+        }
+      }
+    },
+    {
+      "item_id": 8,
+      "filename": "signer_01_001_q-sao_trial_02.mp4",
+      "type": "WORD",
+      "target_class_index": 1,
+      "target_word": "sao",
+      "valid_extraction": true,
+      "shoulder_width": 0.3351,
+      "scale_factor": 0.5086,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 486,
+          "top1_word": "đầu tàu",
+          "top1_prob": 0.046,
+          "top1_logit": -7.3026,
+          "margin": 0.016,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 486,
+              "word": "đầu tàu",
+              "probability": 0.046,
+              "logit": -7.3026
+            },
+            {
+              "rank": 2,
+              "class_index": 559,
+              "word": "chạy bàn",
+              "probability": 0.03,
+              "logit": -7.7305
+            },
+            {
+              "rank": 3,
+              "class_index": 210,
+              "word": "gửi",
+              "probability": 0.0248,
+              "logit": -7.9225
+            }
+          ],
+          "top3_indices": [
+            486,
+            559,
+            210
+          ],
+          "top3_words": [
+            "đầu tàu",
+            "chạy bàn",
+            "gửi"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 130,
+          "gt_prob": 0.002,
+          "gt_logit": -10.4522
+        },
+        "PILOT_40": {
+          "top1_class_index": 500,
+          "top1_word": "buổi tối",
+          "top1_prob": 0.1533,
+          "top1_logit": -8.8574,
+          "margin": 0.0269,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 500,
+              "word": "buổi tối",
+              "probability": 0.1533,
+              "logit": -8.8574
+            },
+            {
+              "rank": 2,
+              "class_index": 134,
+              "word": "lên xe",
+              "probability": 0.1264,
+              "logit": -9.0503
+            },
+            {
+              "rank": 3,
+              "class_index": 698,
+              "word": "giúp đỡ",
+              "probability": 0.1125,
+              "logit": -9.1664
+            }
+          ],
+          "top3_indices": [
+            500,
+            134,
+            698
+          ],
+          "top3_words": [
+            "buổi tối",
+            "lên xe",
+            "giúp đỡ"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 10,
+          "gt_prob": 0.0311,
+          "gt_logit": -10.4522
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 106,
+          "top1_word": "lúc nào",
+          "top1_prob": 0.3734,
+          "top1_logit": -9.8142,
+          "margin": 0.1761,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.3734,
+              "logit": -9.8142
+            },
+            {
+              "rank": 2,
+              "class_index": 1,
+              "word": "sao",
+              "probability": 0.1973,
+              "logit": -10.4522
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1832,
+              "logit": -10.5265
+            }
+          ],
+          "top3_indices": [
+            106,
+            1,
+            31
+          ],
+          "top3_words": [
+            "lúc nào",
+            "sao",
+            "khác"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.1973,
+          "gt_logit": -10.4522
+        }
+      }
+    },
+    {
+      "item_id": 9,
+      "filename": "signer_01_001_q-sao_trial_03.mp4",
+      "type": "WORD",
+      "target_class_index": 1,
+      "target_word": "sao",
+      "valid_extraction": true,
+      "shoulder_width": 0.3392,
+      "scale_factor": 0.5023,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 573,
+          "top1_word": "hành tinh",
+          "top1_prob": 0.0383,
+          "top1_logit": -7.4742,
+          "margin": 0.0004,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 573,
+              "word": "hành tinh",
+              "probability": 0.0383,
+              "logit": -7.4742
+            },
+            {
+              "rank": 2,
+              "class_index": 486,
+              "word": "đầu tàu",
+              "probability": 0.038,
+              "logit": -7.484
+            },
+            {
+              "rank": 3,
+              "class_index": 217,
+              "word": "đầy",
+              "probability": 0.0232,
+              "logit": -7.9776
+            }
+          ],
+          "top3_indices": [
+            573,
+            486,
+            217
+          ],
+          "top3_words": [
+            "hành tinh",
+            "đầu tàu",
+            "đầy"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 130,
+          "gt_prob": 0.0019,
+          "gt_logit": -10.4535
+        },
+        "PILOT_40": {
+          "top1_class_index": 500,
+          "top1_word": "buổi tối",
+          "top1_prob": 0.1732,
+          "top1_logit": -8.6979,
+          "margin": 0.0132,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 500,
+              "word": "buổi tối",
+              "probability": 0.1732,
+              "logit": -8.6979
+            },
+            {
+              "rank": 2,
+              "class_index": 134,
+              "word": "lên xe",
+              "probability": 0.1599,
+              "logit": -8.7774
+            },
+            {
+              "rank": 3,
+              "class_index": 698,
+              "word": "giúp đỡ",
+              "probability": 0.1214,
+              "logit": -9.0532
+            }
+          ],
+          "top3_indices": [
+            500,
+            134,
+            698
+          ],
+          "top3_words": [
+            "buổi tối",
+            "lên xe",
+            "giúp đỡ"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 10,
+          "gt_prob": 0.0299,
+          "gt_logit": -10.4535
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 106,
+          "top1_word": "lúc nào",
+          "top1_prob": 0.3411,
+          "top1_logit": -10.1172,
+          "margin": 0.0974,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.3411,
+              "logit": -10.1172
+            },
+            {
+              "rank": 2,
+              "class_index": 1,
+              "word": "sao",
+              "probability": 0.2437,
+              "logit": -10.4535
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1438,
+              "logit": -10.9808
+            }
+          ],
+          "top3_indices": [
+            106,
+            1,
+            31
+          ],
+          "top3_words": [
+            "lúc nào",
+            "sao",
+            "khác"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.2437,
+          "gt_logit": -10.4535
+        }
+      }
+    },
+    {
+      "item_id": 10,
+      "filename": "signer_01_016_q-nghe_trial_01.mp4",
+      "type": "WORD",
+      "target_class_index": 16,
+      "target_word": "nghe",
+      "valid_extraction": true,
+      "shoulder_width": 0.3627,
+      "scale_factor": 0.4698,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.1648,
+          "top1_logit": -5.2726,
+          "margin": 0.1127,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.1648,
+              "logit": -5.2726
+            },
+            {
+              "rank": 2,
+              "class_index": 681,
+              "word": "dấu hỏi",
+              "probability": 0.0522,
+              "logit": -6.4228
+            },
+            {
+              "rank": 3,
+              "class_index": 618,
+              "word": "giáo sĩ",
+              "probability": 0.0517,
+              "logit": -6.4322
+            }
+          ],
+          "top3_indices": [
+            16,
+            681,
+            618
+          ],
+          "top3_words": [
+            "nghe",
+            "dấu hỏi",
+            "giáo sĩ"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.1648,
+          "gt_logit": -5.2726
+        },
+        "PILOT_40": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.6018,
+          "top1_logit": -5.2726,
+          "margin": 0.4736,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.6018,
+              "logit": -5.2726
+            },
+            {
+              "rank": 2,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.1283,
+              "logit": -6.8184
+            },
+            {
+              "rank": 3,
+              "class_index": 692,
+              "word": "tự lập",
+              "probability": 0.1172,
+              "logit": -6.909
+            }
+          ],
+          "top3_indices": [
+            16,
+            7,
+            692
+          ],
+          "top3_words": [
+            "nghe",
+            "nghĩ",
+            "tự lập"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.6018,
+          "gt_logit": -5.2726
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.7653,
+          "top1_logit": -5.2726,
+          "margin": 0.6021,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.7653,
+              "logit": -5.2726
+            },
+            {
+              "rank": 2,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.1631,
+              "logit": -6.8184
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.0613,
+              "logit": -7.7974
+            }
+          ],
+          "top3_indices": [
+            16,
+            7,
+            31
+          ],
+          "top3_words": [
+            "nghe",
+            "nghĩ",
+            "khác"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.7653,
+          "gt_logit": -5.2726
+        }
+      }
+    },
+    {
+      "item_id": 11,
+      "filename": "signer_01_016_q-nghe_trial_02.mp4",
+      "type": "WORD",
+      "target_class_index": 16,
+      "target_word": "nghe",
+      "valid_extraction": true,
+      "shoulder_width": 0.3572,
+      "scale_factor": 0.477,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.1145,
+          "top1_logit": -5.338,
+          "margin": 0.0633,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.1145,
+              "logit": -5.338
+            },
+            {
+              "rank": 2,
+              "class_index": 618,
+              "word": "giáo sĩ",
+              "probability": 0.0512,
+              "logit": -6.1422
+            },
+            {
+              "rank": 3,
+              "class_index": 0,
+              "word": "đi",
+              "probability": 0.0426,
+              "logit": -6.3256
+            }
+          ],
+          "top3_indices": [
+            16,
+            618,
+            0
+          ],
+          "top3_words": [
+            "nghe",
+            "giáo sĩ",
+            "đi"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.1145,
+          "gt_logit": -5.338
+        },
+        "PILOT_40": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.5633,
+          "top1_logit": -5.338,
+          "margin": 0.4344,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.5633,
+              "logit": -5.338
+            },
+            {
+              "rank": 2,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.1289,
+              "logit": -6.8128
+            },
+            {
+              "rank": 3,
+              "class_index": 692,
+              "word": "tự lập",
+              "probability": 0.118,
+              "logit": -6.9014
+            }
+          ],
+          "top3_indices": [
+            16,
+            7,
+            692
+          ],
+          "top3_words": [
+            "nghe",
+            "nghĩ",
+            "tự lập"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.5633,
+          "gt_logit": -5.338
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.737,
+          "top1_logit": -5.338,
+          "margin": 0.5683,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.737,
+              "logit": -5.338
+            },
+            {
+              "rank": 2,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.1686,
+              "logit": -6.8128
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.07,
+              "logit": -7.6916
+            }
+          ],
+          "top3_indices": [
+            16,
+            7,
+            31
+          ],
+          "top3_words": [
+            "nghe",
+            "nghĩ",
+            "khác"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.737,
+          "gt_logit": -5.338
+        }
+      }
+    },
+    {
+      "item_id": 12,
+      "filename": "signer_01_016_q-nghe_trial_03.mp4",
+      "type": "WORD",
+      "target_class_index": 16,
+      "target_word": "nghe",
+      "valid_extraction": true,
+      "shoulder_width": 0.3618,
+      "scale_factor": 0.4709,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.1101,
+          "top1_logit": -5.714,
+          "margin": 0.0473,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.1101,
+              "logit": -5.714
+            },
+            {
+              "rank": 2,
+              "class_index": 0,
+              "word": "đi",
+              "probability": 0.0628,
+              "logit": -6.2748
+            },
+            {
+              "rank": 3,
+              "class_index": 618,
+              "word": "giáo sĩ",
+              "probability": 0.0504,
+              "logit": -6.4949
+            }
+          ],
+          "top3_indices": [
+            16,
+            0,
+            618
+          ],
+          "top3_words": [
+            "nghe",
+            "đi",
+            "giáo sĩ"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.1101,
+          "gt_logit": -5.714
+        },
+        "PILOT_40": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.5656,
+          "top1_logit": -5.714,
+          "margin": 0.4019,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.5656,
+              "logit": -5.714
+            },
+            {
+              "rank": 2,
+              "class_index": 8,
+              "word": "ai",
+              "probability": 0.1637,
+              "logit": -6.9538
+            },
+            {
+              "rank": 3,
+              "class_index": 692,
+              "word": "tự lập",
+              "probability": 0.0828,
+              "logit": -7.6361
+            }
+          ],
+          "top3_indices": [
+            16,
+            8,
+            692
+          ],
+          "top3_words": [
+            "nghe",
+            "ai",
+            "tự lập"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.5656,
+          "gt_logit": -5.714
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.7712,
+          "top1_logit": -5.714,
+          "margin": 0.6662,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.7712,
+              "logit": -5.714
+            },
+            {
+              "rank": 2,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1049,
+              "logit": -7.7088
+            },
+            {
+              "rank": 3,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.1015,
+              "logit": -7.7418
+            }
+          ],
+          "top3_indices": [
+            16,
+            31,
+            7
+          ],
+          "top3_words": [
+            "nghe",
+            "khác",
+            "nghĩ"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.7712,
+          "gt_logit": -5.714
+        }
+      }
+    },
+    {
+      "item_id": 13,
+      "filename": "signer_01_031_q-khac_trial_01.mp4",
+      "type": "WORD",
+      "target_class_index": 31,
+      "target_word": "khác",
+      "valid_extraction": true,
+      "shoulder_width": 0.335,
+      "scale_factor": 0.5087,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 31,
+          "top1_word": "khác",
+          "top1_prob": 0.1564,
+          "top1_logit": -8.8828,
+          "margin": 0.0381,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1564,
+              "logit": -8.8828
+            },
+            {
+              "rank": 2,
+              "class_index": 665,
+              "word": "giá trị",
+              "probability": 0.1183,
+              "logit": -9.1618
+            },
+            {
+              "rank": 3,
+              "class_index": 711,
+              "word": "gặp gỡ",
+              "probability": 0.1171,
+              "logit": -9.1722
+            }
+          ],
+          "top3_indices": [
+            31,
+            665,
+            711
+          ],
+          "top3_words": [
+            "khác",
+            "giá trị",
+            "gặp gỡ"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.1564,
+          "gt_logit": -8.8828
+        },
+        "PILOT_40": {
+          "top1_class_index": 31,
+          "top1_word": "khác",
+          "top1_prob": 0.7799,
+          "top1_logit": -8.8828,
+          "margin": 0.7197,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.7799,
+              "logit": -8.8828
+            },
+            {
+              "rank": 2,
+              "class_index": 112,
+              "word": "hai là",
+              "probability": 0.0602,
+              "logit": -11.4439
+            },
+            {
+              "rank": 3,
+              "class_index": 558,
+              "word": "bàn tay",
+              "probability": 0.0389,
+              "logit": -11.8809
+            }
+          ],
+          "top3_indices": [
+            31,
+            112,
+            558
+          ],
+          "top3_words": [
+            "khác",
+            "hai là",
+            "bàn tay"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.7799,
+          "gt_logit": -8.8828
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 31,
+          "top1_word": "khác",
+          "top1_prob": 0.9396,
+          "top1_logit": -8.8828,
+          "margin": 0.9007,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.9396,
+              "logit": -8.8828
+            },
+            {
+              "rank": 2,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.0389,
+              "logit": -12.0678
+            },
+            {
+              "rank": 3,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.0056,
+              "logit": -14.0119
+            }
+          ],
+          "top3_indices": [
+            31,
+            106,
+            602
+          ],
+          "top3_words": [
+            "khác",
+            "lúc nào",
+            "lạc quan"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.9396,
+          "gt_logit": -8.8828
+        }
+      }
+    },
+    {
+      "item_id": 14,
+      "filename": "signer_01_031_q-khac_trial_02.mp4",
+      "type": "WORD",
+      "target_class_index": 31,
+      "target_word": "khác",
+      "valid_extraction": true,
+      "shoulder_width": 0.3337,
+      "scale_factor": 0.5106,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 31,
+          "top1_word": "khác",
+          "top1_prob": 0.1312,
+          "top1_logit": -9.3566,
+          "margin": 0.0306,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1312,
+              "logit": -9.3566
+            },
+            {
+              "rank": 2,
+              "class_index": 711,
+              "word": "gặp gỡ",
+              "probability": 0.1006,
+              "logit": -9.6223
+            },
+            {
+              "rank": 3,
+              "class_index": 548,
+              "word": "luật chơi",
+              "probability": 0.0609,
+              "logit": -10.1251
+            }
+          ],
+          "top3_indices": [
+            31,
+            711,
+            548
+          ],
+          "top3_words": [
+            "khác",
+            "gặp gỡ",
+            "luật chơi"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.1312,
+          "gt_logit": -9.3566
+        },
+        "PILOT_40": {
+          "top1_class_index": 31,
+          "top1_word": "khác",
+          "top1_prob": 0.7414,
+          "top1_logit": -9.3566,
+          "margin": 0.6931,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.7414,
+              "logit": -9.3566
+            },
+            {
+              "rank": 2,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.0482,
+              "logit": -12.0888
+            },
+            {
+              "rank": 3,
+              "class_index": 112,
+              "word": "hai là",
+              "probability": 0.0422,
+              "logit": -12.2224
+            }
+          ],
+          "top3_indices": [
+            31,
+            106,
+            112
+          ],
+          "top3_words": [
+            "khác",
+            "lúc nào",
+            "hai là"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.7414,
+          "gt_logit": -9.3566
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 31,
+          "top1_word": "khác",
+          "top1_prob": 0.882,
+          "top1_logit": -9.3566,
+          "margin": 0.8246,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.882,
+              "logit": -9.3566
+            },
+            {
+              "rank": 2,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.0574,
+              "logit": -12.0888
+            },
+            {
+              "rank": 3,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.0259,
+              "logit": -12.8843
+            }
+          ],
+          "top3_indices": [
+            31,
+            106,
+            499
+          ],
+          "top3_words": [
+            "khác",
+            "lúc nào",
+            "buổi sáng"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.882,
+          "gt_logit": -9.3566
+        }
+      }
+    },
+    {
+      "item_id": 15,
+      "filename": "signer_01_031_q-khac_trial_03.mp4",
+      "type": "WORD",
+      "target_class_index": 31,
+      "target_word": "khác",
+      "valid_extraction": true,
+      "shoulder_width": 0.3418,
+      "scale_factor": 0.4985,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 665,
+          "top1_word": "giá trị",
+          "top1_prob": 0.1872,
+          "top1_logit": -9.9498,
+          "margin": 0.0367,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 665,
+              "word": "giá trị",
+              "probability": 0.1872,
+              "logit": -9.9498
+            },
+            {
+              "rank": 2,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1504,
+              "logit": -10.1683
+            },
+            {
+              "rank": 3,
+              "class_index": 711,
+              "word": "gặp gỡ",
+              "probability": 0.1382,
+              "logit": -10.2533
+            }
+          ],
+          "top3_indices": [
+            665,
+            31,
+            711
+          ],
+          "top3_words": [
+            "giá trị",
+            "khác",
+            "gặp gỡ"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.1504,
+          "gt_logit": -10.1683
+        },
+        "PILOT_40": {
+          "top1_class_index": 31,
+          "top1_word": "khác",
+          "top1_prob": 0.7795,
+          "top1_logit": -10.1683,
+          "margin": 0.7042,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.7795,
+              "logit": -10.1683
+            },
+            {
+              "rank": 2,
+              "class_index": 558,
+              "word": "bàn tay",
+              "probability": 0.0753,
+              "logit": -12.505
+            },
+            {
+              "rank": 3,
+              "class_index": 112,
+              "word": "hai là",
+              "probability": 0.0564,
+              "logit": -12.7942
+            }
+          ],
+          "top3_indices": [
+            31,
+            558,
+            112
+          ],
+          "top3_words": [
+            "khác",
+            "bàn tay",
+            "hai là"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.7795,
+          "gt_logit": -10.1683
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 31,
+          "top1_word": "khác",
+          "top1_prob": 0.9572,
+          "top1_logit": -10.1683,
+          "margin": 0.9266,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.9572,
+              "logit": -10.1683
+            },
+            {
+              "rank": 2,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.0306,
+              "logit": -13.6102
+            },
+            {
+              "rank": 3,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.0041,
+              "logit": -15.6239
+            }
+          ],
+          "top3_indices": [
+            31,
+            106,
+            602
+          ],
+          "top3_words": [
+            "khác",
+            "lúc nào",
+            "lạc quan"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.9572,
+          "gt_logit": -10.1683
+        }
+      }
+    },
+    {
+      "item_id": 16,
+      "filename": "signer_01_045_q-noi-chuyen_trial_01.mp4",
+      "type": "WORD",
+      "target_class_index": 45,
+      "target_word": "nói chuyện",
+      "valid_extraction": true,
+      "shoulder_width": 0.3335,
+      "scale_factor": 0.511,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 711,
+          "top1_word": "gặp gỡ",
+          "top1_prob": 0.1548,
+          "top1_logit": -7.879,
+          "margin": 0.0779,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 711,
+              "word": "gặp gỡ",
+              "probability": 0.1548,
+              "logit": -7.879
+            },
+            {
+              "rank": 2,
+              "class_index": 383,
+              "word": "cạnh",
+              "probability": 0.0769,
+              "logit": -8.5784
+            },
+            {
+              "rank": 3,
+              "class_index": 571,
+              "word": "đối thoại",
+              "probability": 0.0618,
+              "logit": -8.7978
+            }
+          ],
+          "top3_indices": [
+            711,
+            383,
+            571
+          ],
+          "top3_words": [
+            "gặp gỡ",
+            "cạnh",
+            "đối thoại"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 45,
+          "gt_prob": 0.0039,
+          "gt_logit": -11.5691
+        },
+        "PILOT_40": {
+          "top1_class_index": 31,
+          "top1_word": "khác",
+          "top1_prob": 0.499,
+          "top1_logit": -9.4671,
+          "margin": 0.4228,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.499,
+              "logit": -9.4671
+            },
+            {
+              "rank": 2,
+              "class_index": 500,
+              "word": "buổi tối",
+              "probability": 0.0763,
+              "logit": -11.3455
+            },
+            {
+              "rank": 3,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.0635,
+              "logit": -11.5291
+            }
+          ],
+          "top3_indices": [
+            31,
+            500,
+            106
+          ],
+          "top3_words": [
+            "khác",
+            "buổi tối",
+            "lúc nào"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 4,
+          "gt_prob": 0.061,
+          "gt_logit": -11.5691
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 31,
+          "top1_word": "khác",
+          "top1_prob": 0.7068,
+          "top1_logit": -9.4671,
+          "margin": 0.6169,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.7068,
+              "logit": -9.4671
+            },
+            {
+              "rank": 2,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.0899,
+              "logit": -11.5291
+            },
+            {
+              "rank": 3,
+              "class_index": 45,
+              "word": "nói chuyện",
+              "probability": 0.0864,
+              "logit": -11.5691
+            }
+          ],
+          "top3_indices": [
+            31,
+            106,
+            45
+          ],
+          "top3_words": [
+            "khác",
+            "lúc nào",
+            "nói chuyện"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 3,
+          "gt_prob": 0.0864,
+          "gt_logit": -11.5691
+        }
+      }
+    },
+    {
+      "item_id": 17,
+      "filename": "signer_01_045_q-noi-chuyen_trial_02.mp4",
+      "type": "WORD",
+      "target_class_index": 45,
+      "target_word": "nói chuyện",
+      "valid_extraction": true,
+      "shoulder_width": 0.3315,
+      "scale_factor": 0.5141,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 711,
+          "top1_word": "gặp gỡ",
+          "top1_prob": 0.1446,
+          "top1_logit": -7.9666,
+          "margin": 0.0751,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 711,
+              "word": "gặp gỡ",
+              "probability": 0.1446,
+              "logit": -7.9666
+            },
+            {
+              "rank": 2,
+              "class_index": 383,
+              "word": "cạnh",
+              "probability": 0.0695,
+              "logit": -8.6995
+            },
+            {
+              "rank": 3,
+              "class_index": 571,
+              "word": "đối thoại",
+              "probability": 0.0572,
+              "logit": -8.8941
+            }
+          ],
+          "top3_indices": [
+            711,
+            383,
+            571
+          ],
+          "top3_words": [
+            "gặp gỡ",
+            "cạnh",
+            "đối thoại"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 51,
+          "gt_prob": 0.0037,
+          "gt_logit": -11.6199
+        },
+        "PILOT_40": {
+          "top1_class_index": 31,
+          "top1_word": "khác",
+          "top1_prob": 0.4995,
+          "top1_logit": -9.4475,
+          "margin": 0.4341,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.4995,
+              "logit": -9.4475
+            },
+            {
+              "rank": 2,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.0653,
+              "logit": -11.4814
+            },
+            {
+              "rank": 3,
+              "class_index": 500,
+              "word": "buổi tối",
+              "probability": 0.0638,
+              "logit": -11.5055
+            }
+          ],
+          "top3_indices": [
+            31,
+            106,
+            500
+          ],
+          "top3_words": [
+            "khác",
+            "lúc nào",
+            "buổi tối"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 5,
+          "gt_prob": 0.0569,
+          "gt_logit": -11.6199
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 31,
+          "top1_word": "khác",
+          "top1_prob": 0.7137,
+          "top1_logit": -9.4475,
+          "margin": 0.6203,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.7137,
+              "logit": -9.4475
+            },
+            {
+              "rank": 2,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.0934,
+              "logit": -11.4814
+            },
+            {
+              "rank": 3,
+              "class_index": 45,
+              "word": "nói chuyện",
+              "probability": 0.0813,
+              "logit": -11.6199
+            }
+          ],
+          "top3_indices": [
+            31,
+            106,
+            45
+          ],
+          "top3_words": [
+            "khác",
+            "lúc nào",
+            "nói chuyện"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 3,
+          "gt_prob": 0.0813,
+          "gt_logit": -11.6199
+        }
+      }
+    },
+    {
+      "item_id": 18,
+      "filename": "signer_01_045_q-noi-chuyen_trial_03.mp4",
+      "type": "WORD",
+      "target_class_index": 45,
+      "target_word": "nói chuyện",
+      "valid_extraction": true,
+      "shoulder_width": 0.3414,
+      "scale_factor": 0.4992,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 711,
+          "top1_word": "gặp gỡ",
+          "top1_prob": 0.1381,
+          "top1_logit": -7.5245,
+          "margin": 0.0333,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 711,
+              "word": "gặp gỡ",
+              "probability": 0.1381,
+              "logit": -7.5245
+            },
+            {
+              "rank": 2,
+              "class_index": 383,
+              "word": "cạnh",
+              "probability": 0.1048,
+              "logit": -7.8009
+            },
+            {
+              "rank": 3,
+              "class_index": 571,
+              "word": "đối thoại",
+              "probability": 0.0608,
+              "logit": -8.3457
+            }
+          ],
+          "top3_indices": [
+            711,
+            383,
+            571
+          ],
+          "top3_words": [
+            "gặp gỡ",
+            "cạnh",
+            "đối thoại"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 60,
+          "gt_prob": 0.0028,
+          "gt_logit": -11.4257
+        },
+        "PILOT_40": {
+          "top1_class_index": 31,
+          "top1_word": "khác",
+          "top1_prob": 0.4974,
+          "top1_logit": -8.9999,
+          "margin": 0.4232,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.4974,
+              "logit": -8.9999
+            },
+            {
+              "rank": 2,
+              "class_index": 225,
+              "word": "giống nhau",
+              "probability": 0.0742,
+              "logit": -10.9027
+            },
+            {
+              "rank": 3,
+              "class_index": 112,
+              "word": "hai là",
+              "probability": 0.0609,
+              "logit": -11.1005
+            }
+          ],
+          "top3_indices": [
+            31,
+            225,
+            112
+          ],
+          "top3_words": [
+            "khác",
+            "giống nhau",
+            "hai là"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 6,
+          "gt_prob": 0.044,
+          "gt_logit": -11.4257
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 31,
+          "top1_word": "khác",
+          "top1_prob": 0.7613,
+          "top1_logit": -8.9999,
+          "margin": 0.681,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.7613,
+              "logit": -8.9999
+            },
+            {
+              "rank": 2,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.0803,
+              "logit": -11.2488
+            },
+            {
+              "rank": 3,
+              "class_index": 45,
+              "word": "nói chuyện",
+              "probability": 0.0673,
+              "logit": -11.4257
+            }
+          ],
+          "top3_indices": [
+            31,
+            106,
+            45
+          ],
+          "top3_words": [
+            "khác",
+            "lúc nào",
+            "nói chuyện"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 3,
+          "gt_prob": 0.0673,
+          "gt_logit": -11.4257
+        }
+      }
+    },
+    {
+      "item_id": 19,
+      "filename": "signer_01_264_q-khong-dep_trial_01.mp4",
+      "type": "WORD",
+      "target_class_index": 264,
+      "target_word": "không đẹp",
+      "valid_extraction": true,
+      "shoulder_width": 0.3409,
+      "scale_factor": 0.4998,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 570,
+          "top1_word": "điện thoại",
+          "top1_prob": 0.1093,
+          "top1_logit": -6.936,
+          "margin": 0.051,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 570,
+              "word": "điện thoại",
+              "probability": 0.1093,
+              "logit": -6.936
+            },
+            {
+              "rank": 2,
+              "class_index": 0,
+              "word": "đi",
+              "probability": 0.0583,
+              "logit": -7.5641
+            },
+            {
+              "rank": 3,
+              "class_index": 618,
+              "word": "giáo sĩ",
+              "probability": 0.0579,
+              "logit": -7.5714
+            }
+          ],
+          "top3_indices": [
+            570,
+            0,
+            618
+          ],
+          "top3_words": [
+            "điện thoại",
+            "đi",
+            "giáo sĩ"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 44,
+          "gt_prob": 0.0043,
+          "gt_logit": -10.1724
+        },
+        "PILOT_40": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.6485,
+          "top1_logit": -7.8148,
+          "margin": 0.5422,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.6485,
+              "logit": -7.8148
+            },
+            {
+              "rank": 2,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1063,
+              "logit": -9.623
+            },
+            {
+              "rank": 3,
+              "class_index": 264,
+              "word": "không đẹp",
+              "probability": 0.0614,
+              "logit": -10.1724
+            }
+          ],
+          "top3_indices": [
+            16,
+            31,
+            264
+          ],
+          "top3_words": [
+            "nghe",
+            "khác",
+            "không đẹp"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 3,
+          "gt_prob": 0.0614,
+          "gt_logit": -10.1724
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.7392,
+          "top1_logit": -7.8148,
+          "margin": 0.618,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.7392,
+              "logit": -7.8148
+            },
+            {
+              "rank": 2,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1212,
+              "logit": -9.623
+            },
+            {
+              "rank": 3,
+              "class_index": 264,
+              "word": "không đẹp",
+              "probability": 0.07,
+              "logit": -10.1724
+            }
+          ],
+          "top3_indices": [
+            16,
+            31,
+            264
+          ],
+          "top3_words": [
+            "nghe",
+            "khác",
+            "không đẹp"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 3,
+          "gt_prob": 0.07,
+          "gt_logit": -10.1724
+        }
+      }
+    },
+    {
+      "item_id": 20,
+      "filename": "signer_01_264_q-khong-dep_trial_02.mp4",
+      "type": "WORD",
+      "target_class_index": 264,
+      "target_word": "không đẹp",
+      "valid_extraction": true,
+      "shoulder_width": 0.336,
+      "scale_factor": 0.5071,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 618,
+          "top1_word": "giáo sĩ",
+          "top1_prob": 0.0748,
+          "top1_logit": -7.501,
+          "margin": 0.0019,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 618,
+              "word": "giáo sĩ",
+              "probability": 0.0748,
+              "logit": -7.501
+            },
+            {
+              "rank": 2,
+              "class_index": 0,
+              "word": "đi",
+              "probability": 0.0729,
+              "logit": -7.5265
+            },
+            {
+              "rank": 3,
+              "class_index": 570,
+              "word": "điện thoại",
+              "probability": 0.0636,
+              "logit": -7.6627
+            }
+          ],
+          "top3_indices": [
+            618,
+            0,
+            570
+          ],
+          "top3_words": [
+            "giáo sĩ",
+            "đi",
+            "điện thoại"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 55,
+          "gt_prob": 0.003,
+          "gt_logit": -10.714
+        },
+        "PILOT_40": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.7242,
+          "top1_logit": -7.6721,
+          "margin": 0.6475,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.7242,
+              "logit": -7.6721
+            },
+            {
+              "rank": 2,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.0766,
+              "logit": -9.9179
+            },
+            {
+              "rank": 3,
+              "class_index": 692,
+              "word": "tự lập",
+              "probability": 0.0612,
+              "logit": -10.1426
+            }
+          ],
+          "top3_indices": [
+            16,
+            31,
+            692
+          ],
+          "top3_words": [
+            "nghe",
+            "khác",
+            "tự lập"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 4,
+          "gt_prob": 0.0346,
+          "gt_logit": -10.714
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.8237,
+          "top1_logit": -7.6721,
+          "margin": 0.7365,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.8237,
+              "logit": -7.6721
+            },
+            {
+              "rank": 2,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.0872,
+              "logit": -9.9179
+            },
+            {
+              "rank": 3,
+              "class_index": 264,
+              "word": "không đẹp",
+              "probability": 0.0393,
+              "logit": -10.714
+            }
+          ],
+          "top3_indices": [
+            16,
+            31,
+            264
+          ],
+          "top3_words": [
+            "nghe",
+            "khác",
+            "không đẹp"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 3,
+          "gt_prob": 0.0393,
+          "gt_logit": -10.714
+        }
+      }
+    },
+    {
+      "item_id": 21,
+      "filename": "signer_01_264_q-khong-dep_trial_03.mp4",
+      "type": "WORD",
+      "target_class_index": 264,
+      "target_word": "không đẹp",
+      "valid_extraction": true,
+      "shoulder_width": 0.3333,
+      "scale_factor": 0.5113,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 237,
+          "top1_word": "tiếc",
+          "top1_prob": 0.0715,
+          "top1_logit": -7.3895,
+          "margin": 0.0137,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 237,
+              "word": "tiếc",
+              "probability": 0.0715,
+              "logit": -7.3895
+            },
+            {
+              "rank": 2,
+              "class_index": 618,
+              "word": "giáo sĩ",
+              "probability": 0.0578,
+              "logit": -7.6025
+            },
+            {
+              "rank": 3,
+              "class_index": 697,
+              "word": "đầy đủ",
+              "probability": 0.0477,
+              "logit": -7.7942
+            }
+          ],
+          "top3_indices": [
+            237,
+            618,
+            697
+          ],
+          "top3_words": [
+            "tiếc",
+            "giáo sĩ",
+            "đầy đủ"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 76,
+          "gt_prob": 0.0028,
+          "gt_logit": -10.625
+        },
+        "PILOT_40": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.4951,
+          "top1_logit": -8.6255,
+          "margin": 0.3867,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.4951,
+              "logit": -8.6255
+            },
+            {
+              "rank": 2,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1084,
+              "logit": -10.1448
+            },
+            {
+              "rank": 3,
+              "class_index": 692,
+              "word": "tự lập",
+              "probability": 0.0694,
+              "logit": -10.5903
+            }
+          ],
+          "top3_indices": [
+            16,
+            31,
+            692
+          ],
+          "top3_words": [
+            "nghe",
+            "khác",
+            "tự lập"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 4,
+          "gt_prob": 0.067,
+          "gt_logit": -10.625
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.6171,
+          "top1_logit": -8.6255,
+          "margin": 0.482,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.6171,
+              "logit": -8.6255
+            },
+            {
+              "rank": 2,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1351,
+              "logit": -10.1448
+            },
+            {
+              "rank": 3,
+              "class_index": 264,
+              "word": "không đẹp",
+              "probability": 0.0836,
+              "logit": -10.625
+            }
+          ],
+          "top3_indices": [
+            16,
+            31,
+            264
+          ],
+          "top3_words": [
+            "nghe",
+            "khác",
+            "không đẹp"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 3,
+          "gt_prob": 0.0836,
+          "gt_logit": -10.625
+        }
+      }
+    },
+    {
+      "item_id": 22,
+      "filename": "signer_01_602_q-lac-quan_trial_01.mp4",
+      "type": "WORD",
+      "target_class_index": 602,
+      "target_word": "lạc quan",
+      "valid_extraction": true,
+      "shoulder_width": 0.269,
+      "scale_factor": 0.6334,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 582,
+          "top1_word": "chiến thắng",
+          "top1_prob": 0.1314,
+          "top1_logit": -10.7984,
+          "margin": 0.0392,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 582,
+              "word": "chiến thắng",
+              "probability": 0.1314,
+              "logit": -10.7984
+            },
+            {
+              "rank": 2,
+              "class_index": 686,
+              "word": "vô tư",
+              "probability": 0.0922,
+              "logit": -11.1531
+            },
+            {
+              "rank": 3,
+              "class_index": 229,
+              "word": "vui chơi",
+              "probability": 0.0614,
+              "logit": -11.5591
+            }
+          ],
+          "top3_indices": [
+            582,
+            686,
+            229
+          ],
+          "top3_words": [
+            "chiến thắng",
+            "vô tư",
+            "vui chơi"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 12,
+          "gt_prob": 0.023,
+          "gt_logit": -12.5416
+        },
+        "PILOT_40": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.5623,
+          "top1_logit": -11.7022,
+          "margin": 0.3194,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.5623,
+              "logit": -11.7022
+            },
+            {
+              "rank": 2,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.2429,
+              "logit": -12.5416
+            },
+            {
+              "rank": 3,
+              "class_index": 500,
+              "word": "buổi tối",
+              "probability": 0.0937,
+              "logit": -13.4937
+            }
+          ],
+          "top3_indices": [
+            499,
+            602,
+            500
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lạc quan",
+            "buổi tối"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.2429,
+          "gt_logit": -12.5416
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.6412,
+          "top1_logit": -11.7022,
+          "margin": 0.3642,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.6412,
+              "logit": -11.7022
+            },
+            {
+              "rank": 2,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.277,
+              "logit": -12.5416
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.0367,
+              "logit": -14.5615
+            }
+          ],
+          "top3_indices": [
+            499,
+            602,
+            31
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lạc quan",
+            "khác"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.277,
+          "gt_logit": -12.5416
+        }
+      }
+    },
+    {
+      "item_id": 23,
+      "filename": "signer_01_602_q-lac-quan_trial_02.mp4",
+      "type": "WORD",
+      "target_class_index": 602,
+      "target_word": "lạc quan",
+      "valid_extraction": true,
+      "shoulder_width": 0.2715,
+      "scale_factor": 0.6277,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 686,
+          "top1_word": "vô tư",
+          "top1_prob": 0.1054,
+          "top1_logit": -10.4904,
+          "margin": 0.0214,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 686,
+              "word": "vô tư",
+              "probability": 0.1054,
+              "logit": -10.4904
+            },
+            {
+              "rank": 2,
+              "class_index": 582,
+              "word": "chiến thắng",
+              "probability": 0.084,
+              "logit": -10.7177
+            },
+            {
+              "rank": 3,
+              "class_index": 229,
+              "word": "vui chơi",
+              "probability": 0.0664,
+              "logit": -10.9535
+            }
+          ],
+          "top3_indices": [
+            686,
+            582,
+            229
+          ],
+          "top3_words": [
+            "vô tư",
+            "chiến thắng",
+            "vui chơi"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 13,
+          "gt_prob": 0.0221,
+          "gt_logit": -12.0539
+        },
+        "PILOT_40": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.5085,
+          "top1_logit": -11.3455,
+          "margin": 0.2581,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.5085,
+              "logit": -11.3455
+            },
+            {
+              "rank": 2,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.2504,
+              "logit": -12.0539
+            },
+            {
+              "rank": 3,
+              "class_index": 500,
+              "word": "buổi tối",
+              "probability": 0.1004,
+              "logit": -12.9677
+            }
+          ],
+          "top3_indices": [
+            499,
+            602,
+            500
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lạc quan",
+            "buổi tối"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.2504,
+          "gt_logit": -12.0539
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.5833,
+          "top1_logit": -11.3455,
+          "margin": 0.2961,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.5833,
+              "logit": -11.3455
+            },
+            {
+              "rank": 2,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.2872,
+              "logit": -12.0539
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.0732,
+              "logit": -13.4216
+            }
+          ],
+          "top3_indices": [
+            499,
+            602,
+            31
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lạc quan",
+            "khác"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.2872,
+          "gt_logit": -12.0539
+        }
+      }
+    },
+    {
+      "item_id": 24,
+      "filename": "signer_01_602_q-lac-quan_trial_03.mp4",
+      "type": "WORD",
+      "target_class_index": 602,
+      "target_word": "lạc quan",
+      "valid_extraction": true,
+      "shoulder_width": 0.2823,
+      "scale_factor": 0.6035,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 582,
+          "top1_word": "chiến thắng",
+          "top1_prob": 0.1241,
+          "top1_logit": -10.4055,
+          "margin": 0.0034,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 582,
+              "word": "chiến thắng",
+              "probability": 0.1241,
+              "logit": -10.4055
+            },
+            {
+              "rank": 2,
+              "class_index": 686,
+              "word": "vô tư",
+              "probability": 0.1206,
+              "logit": -10.4336
+            },
+            {
+              "rank": 3,
+              "class_index": 229,
+              "word": "vui chơi",
+              "probability": 0.0665,
+              "logit": -11.0292
+            }
+          ],
+          "top3_indices": [
+            582,
+            686,
+            229
+          ],
+          "top3_words": [
+            "chiến thắng",
+            "vô tư",
+            "vui chơi"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 11,
+          "gt_prob": 0.0227,
+          "gt_logit": -12.1044
+        },
+        "PILOT_40": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.5004,
+          "top1_logit": -11.4848,
+          "margin": 0.2311,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.5004,
+              "logit": -11.4848
+            },
+            {
+              "rank": 2,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.2693,
+              "logit": -12.1044
+            },
+            {
+              "rank": 3,
+              "class_index": 500,
+              "word": "buổi tối",
+              "probability": 0.1085,
+              "logit": -13.0136
+            }
+          ],
+          "top3_indices": [
+            499,
+            602,
+            500
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lạc quan",
+            "buổi tối"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.2693,
+          "gt_logit": -12.1044
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.5761,
+          "top1_logit": -11.4848,
+          "margin": 0.2661,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.5761,
+              "logit": -11.4848
+            },
+            {
+              "rank": 2,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.31,
+              "logit": -12.1044
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.0686,
+              "logit": -13.613
+            }
+          ],
+          "top3_indices": [
+            499,
+            602,
+            31
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lạc quan",
+            "khác"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.31,
+          "gt_logit": -12.1044
+        }
+      }
+    },
+    {
+      "item_id": 25,
+      "filename": "signer_01_035_q-nhin_trial_01.mp4",
+      "type": "WORD",
+      "target_class_index": 35,
+      "target_word": "nhìn",
+      "valid_extraction": true,
+      "shoulder_width": 0.3208,
+      "scale_factor": 0.5311,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 681,
+          "top1_word": "dấu hỏi",
+          "top1_prob": 0.0768,
+          "top1_logit": -7.1352,
+          "margin": 0.0328,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 681,
+              "word": "dấu hỏi",
+              "probability": 0.0768,
+              "logit": -7.1352
+            },
+            {
+              "rank": 2,
+              "class_index": 149,
+              "word": "tự do",
+              "probability": 0.044,
+              "logit": -7.6923
+            },
+            {
+              "rank": 3,
+              "class_index": 528,
+              "word": "câu đơn",
+              "probability": 0.0272,
+              "logit": -8.1722
+            }
+          ],
+          "top3_indices": [
+            681,
+            149,
+            528
+          ],
+          "top3_words": [
+            "dấu hỏi",
+            "tự do",
+            "câu đơn"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 48,
+          "gt_prob": 0.0041,
+          "gt_logit": -10.0644
+        },
+        "PILOT_40": {
+          "top1_class_index": 692,
+          "top1_word": "tự lập",
+          "top1_prob": 0.2305,
+          "top1_logit": -8.6524,
+          "margin": 0.0433,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 692,
+              "word": "tự lập",
+              "probability": 0.2305,
+              "logit": -8.6524
+            },
+            {
+              "rank": 2,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.1872,
+              "logit": -8.8603
+            },
+            {
+              "rank": 3,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.1811,
+              "logit": -8.8939
+            }
+          ],
+          "top3_indices": [
+            692,
+            16,
+            7
+          ],
+          "top3_words": [
+            "tự lập",
+            "nghe",
+            "nghĩ"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 5,
+          "gt_prob": 0.0562,
+          "gt_logit": -10.0644
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.3498,
+          "top1_logit": -8.8603,
+          "margin": 0.0116,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.3498,
+              "logit": -8.8603
+            },
+            {
+              "rank": 2,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.3382,
+              "logit": -8.8939
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1277,
+              "logit": -9.8677
+            }
+          ],
+          "top3_indices": [
+            16,
+            7,
+            31
+          ],
+          "top3_words": [
+            "nghe",
+            "nghĩ",
+            "khác"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 4,
+          "gt_prob": 0.1049,
+          "gt_logit": -10.0644
+        }
+      }
+    },
+    {
+      "item_id": 26,
+      "filename": "signer_01_035_q-nhin_trial_02.mp4",
+      "type": "WORD",
+      "target_class_index": 35,
+      "target_word": "nhìn",
+      "valid_extraction": true,
+      "shoulder_width": 0.321,
+      "scale_factor": 0.5309,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 681,
+          "top1_word": "dấu hỏi",
+          "top1_prob": 0.061,
+          "top1_logit": -6.408,
+          "margin": 0.0307,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 681,
+              "word": "dấu hỏi",
+              "probability": 0.061,
+              "logit": -6.408
+            },
+            {
+              "rank": 2,
+              "class_index": 297,
+              "word": "thương yêu",
+              "probability": 0.0304,
+              "logit": -7.1056
+            },
+            {
+              "rank": 3,
+              "class_index": 149,
+              "word": "tự do",
+              "probability": 0.0255,
+              "logit": -7.2824
+            }
+          ],
+          "top3_indices": [
+            681,
+            297,
+            149
+          ],
+          "top3_words": [
+            "dấu hỏi",
+            "thương yêu",
+            "tự do"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 44,
+          "gt_prob": 0.005,
+          "gt_logit": -8.9038
+        },
+        "PILOT_40": {
+          "top1_class_index": 692,
+          "top1_word": "tự lập",
+          "top1_prob": 0.225,
+          "top1_logit": -7.8475,
+          "margin": 0.0027,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 692,
+              "word": "tự lập",
+              "probability": 0.225,
+              "logit": -7.8475
+            },
+            {
+              "rank": 2,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.2223,
+              "logit": -7.8595
+            },
+            {
+              "rank": 3,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.1389,
+              "logit": -8.3302
+            }
+          ],
+          "top3_indices": [
+            692,
+            7,
+            16
+          ],
+          "top3_words": [
+            "tự lập",
+            "nghĩ",
+            "nghe"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 4,
+          "gt_prob": 0.0783,
+          "gt_logit": -8.9038
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 7,
+          "top1_word": "nghĩ",
+          "top1_prob": 0.4282,
+          "top1_logit": -7.8595,
+          "margin": 0.1608,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.4282,
+              "logit": -7.8595
+            },
+            {
+              "rank": 2,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.2675,
+              "logit": -8.3302
+            },
+            {
+              "rank": 3,
+              "class_index": 35,
+              "word": "nhìn",
+              "probability": 0.1507,
+              "logit": -8.9038
+            }
+          ],
+          "top3_indices": [
+            7,
+            16,
+            35
+          ],
+          "top3_words": [
+            "nghĩ",
+            "nghe",
+            "nhìn"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 3,
+          "gt_prob": 0.1507,
+          "gt_logit": -8.9038
+        }
+      }
+    },
+    {
+      "item_id": 27,
+      "filename": "signer_01_035_q-nhin_trial_03.mp4",
+      "type": "WORD",
+      "target_class_index": 35,
+      "target_word": "nhìn",
+      "valid_extraction": true,
+      "shoulder_width": 0.3257,
+      "scale_factor": 0.5232,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 681,
+          "top1_word": "dấu hỏi",
+          "top1_prob": 0.0684,
+          "top1_logit": -7.0783,
+          "margin": 0.0295,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 681,
+              "word": "dấu hỏi",
+              "probability": 0.0684,
+              "logit": -7.0783
+            },
+            {
+              "rank": 2,
+              "class_index": 528,
+              "word": "câu đơn",
+              "probability": 0.039,
+              "logit": -7.6415
+            },
+            {
+              "rank": 3,
+              "class_index": 494,
+              "word": "cao quý",
+              "probability": 0.0287,
+              "logit": -7.9481
+            }
+          ],
+          "top3_indices": [
+            681,
+            528,
+            494
+          ],
+          "top3_words": [
+            "dấu hỏi",
+            "câu đơn",
+            "cao quý"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 71,
+          "gt_prob": 0.0029,
+          "gt_logit": -10.2523
+        },
+        "PILOT_40": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.2892,
+          "top1_logit": -8.1052,
+          "margin": 0.0271,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.2892,
+              "logit": -8.1052
+            },
+            {
+              "rank": 2,
+              "class_index": 692,
+              "word": "tự lập",
+              "probability": 0.2621,
+              "logit": -8.2035
+            },
+            {
+              "rank": 3,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.1294,
+              "logit": -8.909
+            }
+          ],
+          "top3_indices": [
+            16,
+            692,
+            7
+          ],
+          "top3_words": [
+            "nghe",
+            "tự lập",
+            "nghĩ"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 5,
+          "gt_prob": 0.0338,
+          "gt_logit": -10.2523
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 16,
+          "top1_word": "nghe",
+          "top1_prob": 0.5099,
+          "top1_logit": -8.1052,
+          "margin": 0.2817,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 16,
+              "word": "nghe",
+              "probability": 0.5099,
+              "logit": -8.1052
+            },
+            {
+              "rank": 2,
+              "class_index": 7,
+              "word": "nghĩ",
+              "probability": 0.2282,
+              "logit": -8.909
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1324,
+              "logit": -9.4536
+            }
+          ],
+          "top3_indices": [
+            16,
+            7,
+            31
+          ],
+          "top3_words": [
+            "nghe",
+            "nghĩ",
+            "khác"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 4,
+          "gt_prob": 0.0596,
+          "gt_logit": -10.2523
+        }
+      }
+    },
+    {
+      "item_id": 28,
+      "filename": "signer_01_106_q-luc-nao_trial_01.mp4",
+      "type": "WORD",
+      "target_class_index": 106,
+      "target_word": "lúc nào",
+      "valid_extraction": true,
+      "shoulder_width": 0.312,
+      "scale_factor": 0.5462,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 454,
+          "top1_word": "vui mừng",
+          "top1_prob": 0.0491,
+          "top1_logit": -10.2857,
+          "margin": 0.0039,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 454,
+              "word": "vui mừng",
+              "probability": 0.0491,
+              "logit": -10.2857
+            },
+            {
+              "rank": 2,
+              "class_index": 164,
+              "word": "ma",
+              "probability": 0.0452,
+              "logit": -10.3678
+            },
+            {
+              "rank": 3,
+              "class_index": 498,
+              "word": "buổi đêm",
+              "probability": 0.0395,
+              "logit": -10.5025
+            }
+          ],
+          "top3_indices": [
+            454,
+            164,
+            498
+          ],
+          "top3_words": [
+            "vui mừng",
+            "ma",
+            "buổi đêm"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 76,
+          "gt_prob": 0.0029,
+          "gt_logit": -13.1097
+        },
+        "PILOT_40": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.4077,
+          "top1_logit": -11.0108,
+          "margin": 0.1769,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.4077,
+              "logit": -11.0108
+            },
+            {
+              "rank": 2,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.2308,
+              "logit": -11.5798
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1068,
+              "logit": -12.3505
+            }
+          ],
+          "top3_indices": [
+            499,
+            602,
+            31
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lạc quan",
+            "khác"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 5,
+          "gt_prob": 0.05,
+          "gt_logit": -13.1097
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.4918,
+          "top1_logit": -11.0108,
+          "margin": 0.2134,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.4918,
+              "logit": -11.0108
+            },
+            {
+              "rank": 2,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.2784,
+              "logit": -11.5798
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1288,
+              "logit": -12.3505
+            }
+          ],
+          "top3_indices": [
+            499,
+            602,
+            31
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lạc quan",
+            "khác"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 4,
+          "gt_prob": 0.0603,
+          "gt_logit": -13.1097
+        }
+      }
+    },
+    {
+      "item_id": 29,
+      "filename": "signer_01_106_q-luc-nao_trial_02.mp4",
+      "type": "WORD",
+      "target_class_index": 106,
+      "target_word": "lúc nào",
+      "valid_extraction": true,
+      "shoulder_width": 0.3086,
+      "scale_factor": 0.5522,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 498,
+          "top1_word": "buổi đêm",
+          "top1_prob": 0.0486,
+          "top1_logit": -10.2401,
+          "margin": 0.0026,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 498,
+              "word": "buổi đêm",
+              "probability": 0.0486,
+              "logit": -10.2401
+            },
+            {
+              "rank": 2,
+              "class_index": 454,
+              "word": "vui mừng",
+              "probability": 0.046,
+              "logit": -10.2944
+            },
+            {
+              "rank": 3,
+              "class_index": 164,
+              "word": "ma",
+              "probability": 0.0449,
+              "logit": -10.3194
+            }
+          ],
+          "top3_indices": [
+            498,
+            454,
+            164
+          ],
+          "top3_words": [
+            "buổi đêm",
+            "vui mừng",
+            "ma"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 82,
+          "gt_prob": 0.0027,
+          "gt_logit": -13.1338
+        },
+        "PILOT_40": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.4697,
+          "top1_logit": -10.8648,
+          "margin": 0.2628,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.4697,
+              "logit": -10.8648
+            },
+            {
+              "rank": 2,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.2069,
+              "logit": -11.6845
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.0966,
+              "logit": -12.4459
+            }
+          ],
+          "top3_indices": [
+            499,
+            602,
+            31
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lạc quan",
+            "khác"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 5,
+          "gt_prob": 0.0486,
+          "gt_logit": -13.1338
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.5477,
+          "top1_logit": -10.8648,
+          "margin": 0.3064,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.5477,
+              "logit": -10.8648
+            },
+            {
+              "rank": 2,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.2413,
+              "logit": -11.6845
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.1127,
+              "logit": -12.4459
+            }
+          ],
+          "top3_indices": [
+            499,
+            602,
+            31
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lạc quan",
+            "khác"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 4,
+          "gt_prob": 0.0566,
+          "gt_logit": -13.1338
+        }
+      }
+    },
+    {
+      "item_id": 30,
+      "filename": "signer_01_106_q-luc-nao_trial_03.mp4",
+      "type": "WORD",
+      "target_class_index": 106,
+      "target_word": "lúc nào",
+      "valid_extraction": true,
+      "shoulder_width": 0.295,
+      "scale_factor": 0.5777,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 164,
+          "top1_word": "ma",
+          "top1_prob": 0.0676,
+          "top1_logit": -9.9461,
+          "margin": 0.0139,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 164,
+              "word": "ma",
+              "probability": 0.0676,
+              "logit": -9.9461
+            },
+            {
+              "rank": 2,
+              "class_index": 454,
+              "word": "vui mừng",
+              "probability": 0.0538,
+              "logit": -10.1756
+            },
+            {
+              "rank": 3,
+              "class_index": 498,
+              "word": "buổi đêm",
+              "probability": 0.05,
+              "logit": -10.2481
+            }
+          ],
+          "top3_indices": [
+            164,
+            454,
+            498
+          ],
+          "top3_words": [
+            "ma",
+            "vui mừng",
+            "buổi đêm"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 91,
+          "gt_prob": 0.0017,
+          "gt_logit": -13.6543
+        },
+        "PILOT_40": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.421,
+          "top1_logit": -10.8054,
+          "margin": 0.0254,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.421,
+              "logit": -10.8054
+            },
+            {
+              "rank": 2,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.3957,
+              "logit": -10.8675
+            },
+            {
+              "rank": 3,
+              "class_index": 500,
+              "word": "buổi tối",
+              "probability": 0.0542,
+              "logit": -12.8547
+            }
+          ],
+          "top3_indices": [
+            499,
+            602,
+            500
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lạc quan",
+            "buổi tối"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 5,
+          "gt_prob": 0.0244,
+          "gt_logit": -13.6543
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.4639,
+          "top1_logit": -10.8054,
+          "margin": 0.0279,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.4639,
+              "logit": -10.8054
+            },
+            {
+              "rank": 2,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.436,
+              "logit": -10.8675
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.0557,
+              "logit": -12.9251
+            }
+          ],
+          "top3_indices": [
+            499,
+            602,
+            31
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lạc quan",
+            "khác"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 4,
+          "gt_prob": 0.0269,
+          "gt_logit": -13.6543
+        }
+      }
+    },
+    {
+      "item_id": 31,
+      "filename": "signer_01_135_q-sach_trial_01.mp4",
+      "type": "WORD",
+      "target_class_index": 135,
+      "target_word": "sách",
+      "valid_extraction": true,
+      "shoulder_width": 0.3222,
+      "scale_factor": 0.5289,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 577,
+          "top1_word": "danh nhân",
+          "top1_prob": 0.0529,
+          "top1_logit": -8.639,
+          "margin": 0.0147,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 577,
+              "word": "danh nhân",
+              "probability": 0.0529,
+              "logit": -8.639
+            },
+            {
+              "rank": 2,
+              "class_index": 573,
+              "word": "hành tinh",
+              "probability": 0.0382,
+              "logit": -8.965
+            },
+            {
+              "rank": 3,
+              "class_index": 582,
+              "word": "chiến thắng",
+              "probability": 0.0226,
+              "logit": -9.4891
+            }
+          ],
+          "top3_indices": [
+            577,
+            573,
+            582
+          ],
+          "top3_words": [
+            "danh nhân",
+            "hành tinh",
+            "chiến thắng"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 218,
+          "gt_prob": 0.001,
+          "gt_logit": -12.5704
+        },
+        "PILOT_40": {
+          "top1_class_index": 500,
+          "top1_word": "buổi tối",
+          "top1_prob": 0.2709,
+          "top1_logit": -9.5594,
+          "margin": 0.1679,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 500,
+              "word": "buổi tối",
+              "probability": 0.2709,
+              "logit": -9.5594
+            },
+            {
+              "rank": 2,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.103,
+              "logit": -10.5264
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.095,
+              "logit": -10.6068
+            }
+          ],
+          "top3_indices": [
+            500,
+            499,
+            31
+          ],
+          "top3_words": [
+            "buổi tối",
+            "buổi sáng",
+            "khác"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 15,
+          "gt_prob": 0.0133,
+          "gt_logit": -12.5704
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.2733,
+          "top1_logit": -10.5264,
+          "margin": 0.0211,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.2733,
+              "logit": -10.5264
+            },
+            {
+              "rank": 2,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.2522,
+              "logit": -10.6068
+            },
+            {
+              "rank": 3,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.1826,
+              "logit": -10.9295
+            }
+          ],
+          "top3_indices": [
+            499,
+            31,
+            106
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "khác",
+            "lúc nào"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 6,
+          "gt_prob": 0.0354,
+          "gt_logit": -12.5704
+        }
+      }
+    },
+    {
+      "item_id": 32,
+      "filename": "signer_01_135_q-sach_trial_02.mp4",
+      "type": "WORD",
+      "target_class_index": 135,
+      "target_word": "sách",
+      "valid_extraction": true,
+      "shoulder_width": 0.2668,
+      "scale_factor": 0.6386,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 577,
+          "top1_word": "danh nhân",
+          "top1_prob": 0.0278,
+          "top1_logit": -10.6062,
+          "margin": 0.0009,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 577,
+              "word": "danh nhân",
+              "probability": 0.0278,
+              "logit": -10.6062
+            },
+            {
+              "rank": 2,
+              "class_index": 582,
+              "word": "chiến thắng",
+              "probability": 0.0269,
+              "logit": -10.638
+            },
+            {
+              "rank": 3,
+              "class_index": 480,
+              "word": "chặt",
+              "probability": 0.0241,
+              "logit": -10.7492
+            }
+          ],
+          "top3_indices": [
+            577,
+            582,
+            480
+          ],
+          "top3_words": [
+            "danh nhân",
+            "chiến thắng",
+            "chặt"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 166,
+          "gt_prob": 0.0013,
+          "gt_logit": -13.6748
+        },
+        "PILOT_40": {
+          "top1_class_index": 500,
+          "top1_word": "buổi tối",
+          "top1_prob": 0.2035,
+          "top1_logit": -11.1115,
+          "margin": 0.0114,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 500,
+              "word": "buổi tối",
+              "probability": 0.2035,
+              "logit": -11.1115
+            },
+            {
+              "rank": 2,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.1921,
+              "logit": -11.169
+            },
+            {
+              "rank": 3,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.174,
+              "logit": -11.2683
+            }
+          ],
+          "top3_indices": [
+            500,
+            499,
+            31
+          ],
+          "top3_words": [
+            "buổi tối",
+            "buổi sáng",
+            "khác"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 12,
+          "gt_prob": 0.0157,
+          "gt_logit": -13.6748
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.3518,
+          "top1_logit": -11.169,
+          "margin": 0.0332,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.3518,
+              "logit": -11.169
+            },
+            {
+              "rank": 2,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.3186,
+              "logit": -11.2683
+            },
+            {
+              "rank": 3,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.1694,
+              "logit": -11.8998
+            }
+          ],
+          "top3_indices": [
+            499,
+            31,
+            106
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "khác",
+            "lúc nào"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 5,
+          "gt_prob": 0.0287,
+          "gt_logit": -13.6748
+        }
+      }
+    },
+    {
+      "item_id": 33,
+      "filename": "signer_01_135_q-sach_trial_03.mp4",
+      "type": "WORD",
+      "target_class_index": 135,
+      "target_word": "sách",
+      "valid_extraction": true,
+      "shoulder_width": 0.2957,
+      "scale_factor": 0.5763,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 577,
+          "top1_word": "danh nhân",
+          "top1_prob": 0.0368,
+          "top1_logit": -8.0828,
+          "margin": 0.0105,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 577,
+              "word": "danh nhân",
+              "probability": 0.0368,
+              "logit": -8.0828
+            },
+            {
+              "rank": 2,
+              "class_index": 573,
+              "word": "hành tinh",
+              "probability": 0.0263,
+              "logit": -8.4179
+            },
+            {
+              "rank": 3,
+              "class_index": 286,
+              "word": "thông báo",
+              "probability": 0.0235,
+              "logit": -8.5307
+            }
+          ],
+          "top3_indices": [
+            577,
+            573,
+            286
+          ],
+          "top3_words": [
+            "danh nhân",
+            "hành tinh",
+            "thông báo"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 211,
+          "gt_prob": 0.0011,
+          "gt_logit": -11.6075
+        },
+        "PILOT_40": {
+          "top1_class_index": 500,
+          "top1_word": "buổi tối",
+          "top1_prob": 0.2547,
+          "top1_logit": -8.9729,
+          "margin": 0.1477,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 500,
+              "word": "buổi tối",
+              "probability": 0.2547,
+              "logit": -8.9729
+            },
+            {
+              "rank": 2,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.107,
+              "logit": -9.8404
+            },
+            {
+              "rank": 3,
+              "class_index": 134,
+              "word": "lên xe",
+              "probability": 0.0946,
+              "logit": -9.9628
+            }
+          ],
+          "top3_indices": [
+            500,
+            499,
+            134
+          ],
+          "top3_words": [
+            "buổi tối",
+            "buổi sáng",
+            "lên xe"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 12,
+          "gt_prob": 0.0183,
+          "gt_logit": -11.6075
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.3627,
+          "top1_logit": -9.8404,
+          "margin": 0.1513,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.3627,
+              "logit": -9.8404
+            },
+            {
+              "rank": 2,
+              "class_index": 31,
+              "word": "khác",
+              "probability": 0.2113,
+              "logit": -10.3804
+            },
+            {
+              "rank": 3,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.2068,
+              "logit": -10.4024
+            }
+          ],
+          "top3_indices": [
+            499,
+            31,
+            106
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "khác",
+            "lúc nào"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": false,
+          "gt_rank": 5,
+          "gt_prob": 0.062,
+          "gt_logit": -11.6075
+        }
+      }
+    },
+    {
+      "item_id": 34,
+      "filename": "signer_01_499_q-buoi-sang_trial_01.mp4",
+      "type": "WORD",
+      "target_class_index": 499,
+      "target_word": "buổi sáng",
+      "valid_extraction": true,
+      "shoulder_width": 0.3045,
+      "scale_factor": 0.5597,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 164,
+          "top1_word": "ma",
+          "top1_prob": 0.0412,
+          "top1_logit": -9.6083,
+          "margin": 0.0035,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 164,
+              "word": "ma",
+              "probability": 0.0412,
+              "logit": -9.6083
+            },
+            {
+              "rank": 2,
+              "class_index": 498,
+              "word": "buổi đêm",
+              "probability": 0.0377,
+              "logit": -9.6967
+            },
+            {
+              "rank": 3,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.0288,
+              "logit": -9.9659
+            }
+          ],
+          "top3_indices": [
+            164,
+            498,
+            499
+          ],
+          "top3_words": [
+            "ma",
+            "buổi đêm",
+            "buổi sáng"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 3,
+          "gt_prob": 0.0288,
+          "gt_logit": -9.9659
+        },
+        "PILOT_40": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.3561,
+          "top1_logit": -9.9659,
+          "margin": 0.1897,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.3561,
+              "logit": -9.9659
+            },
+            {
+              "rank": 2,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.1664,
+              "logit": -10.7269
+            },
+            {
+              "rank": 3,
+              "class_index": 500,
+              "word": "buổi tối",
+              "probability": 0.1005,
+              "logit": -11.2308
+            }
+          ],
+          "top3_indices": [
+            499,
+            602,
+            500
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lạc quan",
+            "buổi tối"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.3561,
+          "gt_logit": -9.9659
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.5093,
+          "top1_logit": -9.9659,
+          "margin": 0.2714,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.5093,
+              "logit": -9.9659
+            },
+            {
+              "rank": 2,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.238,
+              "logit": -10.7269
+            },
+            {
+              "rank": 3,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.1006,
+              "logit": -11.5874
+            }
+          ],
+          "top3_indices": [
+            499,
+            602,
+            106
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lạc quan",
+            "lúc nào"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.5093,
+          "gt_logit": -9.9659
+        }
+      }
+    },
+    {
+      "item_id": 35,
+      "filename": "signer_01_499_q-buoi-sang_trial_02.mp4",
+      "type": "WORD",
+      "target_class_index": 499,
+      "target_word": "buổi sáng",
+      "valid_extraction": true,
+      "shoulder_width": 0.3104,
+      "scale_factor": 0.5489,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 498,
+          "top1_word": "buổi đêm",
+          "top1_prob": 0.0359,
+          "top1_logit": -9.8445,
+          "margin": 0.0061,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 498,
+              "word": "buổi đêm",
+              "probability": 0.0359,
+              "logit": -9.8445
+            },
+            {
+              "rank": 2,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.0298,
+              "logit": -10.031
+            },
+            {
+              "rank": 3,
+              "class_index": 164,
+              "word": "ma",
+              "probability": 0.0287,
+              "logit": -10.0698
+            }
+          ],
+          "top3_indices": [
+            498,
+            499,
+            164
+          ],
+          "top3_words": [
+            "buổi đêm",
+            "buổi sáng",
+            "ma"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.0298,
+          "gt_logit": -10.031
+        },
+        "PILOT_40": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.3412,
+          "top1_logit": -10.031,
+          "margin": 0.2059,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.3412,
+              "logit": -10.031
+            },
+            {
+              "rank": 2,
+              "class_index": 500,
+              "word": "buổi tối",
+              "probability": 0.1353,
+              "logit": -10.9561
+            },
+            {
+              "rank": 3,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.0859,
+              "logit": -11.4106
+            }
+          ],
+          "top3_indices": [
+            499,
+            500,
+            106
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "buổi tối",
+            "lúc nào"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.3412,
+          "gt_logit": -10.031
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.5524,
+          "top1_logit": -10.031,
+          "margin": 0.4134,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.5524,
+              "logit": -10.031
+            },
+            {
+              "rank": 2,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.139,
+              "logit": -11.4106
+            },
+            {
+              "rank": 3,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.1371,
+              "logit": -11.4244
+            }
+          ],
+          "top3_indices": [
+            499,
+            106,
+            602
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lúc nào",
+            "lạc quan"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.5524,
+          "gt_logit": -10.031
+        }
+      }
+    },
+    {
+      "item_id": 36,
+      "filename": "signer_01_499_q-buoi-sang_trial_03.mp4",
+      "type": "WORD",
+      "target_class_index": 499,
+      "target_word": "buổi sáng",
+      "valid_extraction": true,
+      "shoulder_width": 0.3115,
+      "scale_factor": 0.547,
+      "modes": {
+        "FULL_703": {
+          "top1_class_index": 498,
+          "top1_word": "buổi đêm",
+          "top1_prob": 0.0323,
+          "top1_logit": -10.8739,
+          "margin": 0.003,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 498,
+              "word": "buổi đêm",
+              "probability": 0.0323,
+              "logit": -10.8739
+            },
+            {
+              "rank": 2,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.0293,
+              "logit": -10.9726
+            },
+            {
+              "rank": 3,
+              "class_index": 164,
+              "word": "ma",
+              "probability": 0.0292,
+              "logit": -10.976
+            }
+          ],
+          "top3_indices": [
+            498,
+            499,
+            164
+          ],
+          "top3_words": [
+            "buổi đêm",
+            "buổi sáng",
+            "ma"
+          ],
+          "is_correct_top1": false,
+          "is_correct_top3": true,
+          "gt_rank": 2,
+          "gt_prob": 0.0293,
+          "gt_logit": -10.9726
+        },
+        "PILOT_40": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.3363,
+          "top1_logit": -10.9726,
+          "margin": 0.1505,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.3363,
+              "logit": -10.9726
+            },
+            {
+              "rank": 2,
+              "class_index": 500,
+              "word": "buổi tối",
+              "probability": 0.1858,
+              "logit": -11.5661
+            },
+            {
+              "rank": 3,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.1439,
+              "logit": -11.8216
+            }
+          ],
+          "top3_indices": [
+            499,
+            500,
+            602
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "buổi tối",
+            "lạc quan"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.3363,
+          "gt_logit": -10.9726
+        },
+        "HOLDOUT_12": {
+          "top1_class_index": 499,
+          "top1_word": "buổi sáng",
+          "top1_prob": 0.5387,
+          "top1_logit": -10.9726,
+          "margin": 0.3082,
+          "top3": [
+            {
+              "rank": 1,
+              "class_index": 499,
+              "word": "buổi sáng",
+              "probability": 0.5387,
+              "logit": -10.9726
+            },
+            {
+              "rank": 2,
+              "class_index": 602,
+              "word": "lạc quan",
+              "probability": 0.2305,
+              "logit": -11.8216
+            },
+            {
+              "rank": 3,
+              "class_index": 106,
+              "word": "lúc nào",
+              "probability": 0.1063,
+              "logit": -12.5957
+            }
+          ],
+          "top3_indices": [
+            499,
+            602,
+            106
+          ],
+          "top3_words": [
+            "buổi sáng",
+            "lạc quan",
+            "lúc nào"
+          ],
+          "is_correct_top1": true,
+          "is_correct_top3": true,
+          "gt_rank": 1,
+          "gt_prob": 0.5387,
+          "gt_logit": -10.9726
+        }
+      }
+    }
+  ]
+}

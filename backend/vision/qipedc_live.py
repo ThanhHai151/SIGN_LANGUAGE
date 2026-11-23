@@ -17,12 +17,13 @@ from backend.vision.qipedc_practice import (
     reference_path,
 )
 from backend.vision.skeleton_norm import normalize_sequence_tjc_v2
+from backend.vision.word_scope import verify_reference_video_id
 
 
 DEFAULT_WORDS = (
     "q-an-du", "q-an-vua", "q-an-it", "q-com-2", "q-nem", "q-lau-mieng", "q-thom",
     "q-nan-ni", "q-cau-nguyen", "q-vai-lay",
-    "q-xin-loi", "q-ky-nang", "q-kha-nang",
+    "q-xin-loi", "q-ky-nang", "q-kha-nang", "q-khong-co",
 )
 BUILTIN_WORDS = (TIME_SIGN_ENTRY, *DEFAULT_WORDS)
 MAX_EXTRA_WORDS = 12
@@ -197,6 +198,9 @@ def _reference_variants(path):
 
 
 def prepare_live_reference(video_id):
+    info = verify_reference_video_id(video_id)
+    if not info["eligible"]:
+        raise ValueError(f"Video không thuộc vùng miền cho phép ({info['reason']})")
     prepare_reference(video_id)
     return video_id == TIME_SIGN_VIDEO or _reference_variants(reference_path(video_id)) is not None
 
@@ -234,7 +238,17 @@ def _variant_distances(recording, reference):
 
 def _score_templates(recording, references):
     hands = recording[0].shape[2]
-    usable = [(entry, ref) for entry, ref in references.items() if ref[0].shape[2] == hands]
+    usable = []
+    for entry, ref in references.items():
+        if ref[0].shape[2] == hands:
+            usable.append((entry, ref))
+        elif hands == 1 and ref[0].shape[2] == 2 and entry in ("q-khong-co",):
+            # Cử chỉ đối xứng hai tay có biến thể thực tế một tay
+            # Trích xuất tay phải (index 1) và tay trái (index 0) tạo thành template 1 tay
+            ref_r = (ref[0][:, :, 1:2, :], ref[1][:, :, 1:2], ref[2])
+            ref_l = (ref[0][:, :, :1, :], ref[1][:, :, :1], ref[2])
+            usable.append((entry, ref_r))
+            usable.append((entry, ref_l))
     scores = {}
     for offset in range(0, len(usable), DTW_REFERENCE_BATCH_SIZE):
         batch = usable[offset:offset + DTW_REFERENCE_BATCH_SIZE]
@@ -242,7 +256,9 @@ def _score_templates(recording, references):
         combined = tuple(np.concatenate(parts, axis=0) for parts in zip(*templates))
         first_variant = np.cumsum([0, *(len(ref[0]) for ref in templates[:-1])])
         distances = np.minimum.reduceat(_variant_distances(recording, combined), first_variant, axis=1)
-        scores.update(zip(ids, distances.T))
+        for entry_id, dist in zip(ids, distances.T):
+            if entry_id not in scores or dist.min() < scores[entry_id].min():
+                scores[entry_id] = dist
     return scores
 
 
@@ -347,31 +363,54 @@ def _stage1_candidates(recording, bucket, top_k=STAGE1_TOP_K, *, coarse_key="coa
     n_entries = len(bucket["ids"])
     if n_entries == 0:
         return []
-    sample_f, sample_o, sample_cut = recording
-    sample_coarse = _coarse_pool(sample_f, sample_o)  # [V_s, 6, H, 14]
-    tmpl_coarse = bucket[coarse_key]                    # [N_v, 6, H, 14]
-    tmpl_squared = bucket[coarse_key + "_squared"]
-    tmpl_pen = bucket["penalties"]                    # [N_v]
-    best_var = np.full(len(tmpl_coarse), np.inf, dtype=np.float32)
-    for sv, cut in zip(sample_coarse, sample_cut):
-        dot = np.einsum("vthd,thd->vth", tmpl_coarse, sv)
-        squared = tmpl_squared + (sv * sv).sum(axis=-1) - 2 * dot
-        diff = np.sqrt(np.maximum(squared, 0)).mean(axis=(1, 2)) + tmpl_pen + float(cut)
-        np.minimum(best_var, diff, out=best_var)
-    entry_best = np.full(n_entries, np.inf, dtype=np.float32)
-    np.minimum.at(entry_best, bucket["var_to_entry"], best_var)
     if allowed_ids is not None:
         allowed_idx = [i for i, eid in enumerate(bucket["ids"]) if eid in allowed_ids]
         if not allowed_idx:
             return []
         if len(allowed_idx) <= top_k:
             return allowed_idx
-        sub = entry_best[allowed_idx]
-        chosen = np.argpartition(sub, top_k)[:top_k]
+    else:
+        allowed_idx = None
+        if n_entries <= top_k:
+            return list(range(n_entries))
+
+    sample_f, sample_o, sample_cut = recording
+    sample_coarse = _coarse_pool(sample_f, sample_o)  # [V_s, 6, H, 14]
+    if allowed_idx is not None:
+        slices = bucket["slices"]
+        var_idx_chunks = []
+        sub_v2e_chunks = []
+        for local_pos, entry_i in enumerate(allowed_idx):
+            start, end = slices[entry_i]
+            var_idx_chunks.append(np.arange(start, end, dtype=np.int32))
+            sub_v2e_chunks.append(np.full(end - start, local_pos, dtype=np.int32))
+        var_indices = np.concatenate(var_idx_chunks)
+        if not len(var_indices):
+            return []
+        sub_v2e = np.concatenate(sub_v2e_chunks)
+        tmpl_coarse = bucket[coarse_key][var_indices]
+        tmpl_squared = bucket[coarse_key + "_squared"][var_indices]
+        tmpl_pen = bucket["penalties"][var_indices]
+        num_pool = len(allowed_idx)
+    else:
+        sub_v2e = bucket["var_to_entry"]
+        tmpl_coarse = bucket[coarse_key]                    # [N_v, 6, H, 14]
+        tmpl_squared = bucket[coarse_key + "_squared"]
+        tmpl_pen = bucket["penalties"]                    # [N_v]
+        num_pool = n_entries
+
+    best_var = np.full(len(tmpl_coarse), np.inf, dtype=np.float32)
+    for sv, cut in zip(sample_coarse, sample_cut):
+        dot = np.einsum("vthd,thd->vth", tmpl_coarse, sv)
+        squared = tmpl_squared + (sv * sv).sum(axis=-1) - 2 * dot
+        diff = np.sqrt(np.maximum(squared, 0)).mean(axis=(1, 2)) + tmpl_pen + float(cut)
+        np.minimum(best_var, diff, out=best_var)
+    entry_best = np.full(num_pool, np.inf, dtype=np.float32)
+    np.minimum.at(entry_best, sub_v2e, best_var)
+    chosen = np.argpartition(entry_best, top_k)[:top_k]
+    if allowed_idx is not None:
         return [allowed_idx[int(k)] for k in chosen]
-    if n_entries <= top_k:
-        return list(range(n_entries))
-    return np.argpartition(entry_best, top_k)[:top_k].tolist()
+    return chosen.tolist()
 
 
 def _indexed_references(recording, bucket, *, coarse_key="coarse", allowed_ids=None):
@@ -405,10 +444,12 @@ def _bilateral_shape_match(frames, aspect_ratio, recording, bucket, references, 
     candidates = dict(references)
     if bucket is not None:
         candidates.update(_indexed_references(sample, bucket, coarse_key="relative_coarse", allowed_ids=allowed_ids))
+    if allowed_ids is not None:
+        candidates = {key: ref for key, ref in candidates.items() if key in allowed_ids}
     scores = _score_templates(sample, {key: adapt(ref) for key, ref in candidates.items() if ref[0].shape[2] == 2})
 
     # A closer view of the public năn nỉ sample preserves fingertips during contact.
-    if allowed_ids is None or "q-nan-ni" in allowed_ids:
+    if (allowed_ids is None or "q-nan-ni" in allowed_ids) and verify_reference_video_id("D0261_close")["eligible"]:
         alternate = reference_path("D0261_close")
         if not alternate.is_file() and (archive := index_path()) is not None:
             alternate = archive.with_name(alternate.name)
@@ -545,9 +586,11 @@ def _match_kha_nang_with_occlusion(frames, aspect_ratio):
 
 def match_live_words(frames, aspect_ratio, entries, *, allowed_ids=None):
     """Accept a reference only when the absolute match and lead over rivals are sufficient."""
+    allowed_set = frozenset(allowed_ids) if allowed_ids is not None else None
+    if allowed_set is not None and not allowed_set:
+        return None
     if (recording := _variants(frames, aspect_ratio)) is None:
         return None
-    allowed_set = frozenset(allowed_ids) if allowed_ids is not None else None
     hands = recording[0].shape[2]
     idx = _active_index()
     bucket = idx["buckets"][hands] if idx is not None else None
@@ -559,6 +602,8 @@ def match_live_words(frames, aspect_ratio, entries, *, allowed_ids=None):
         if entry_id in references:
             continue
         if idx is not None and entry_id in idx["id_set"]:
+            continue
+        if not verify_reference_video_id(video_id)["eligible"]:
             continue
         path = reference_path(video_id)
         if not path.is_file():

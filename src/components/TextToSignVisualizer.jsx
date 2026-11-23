@@ -34,7 +34,7 @@ const AVATAR_FINGER_DESCRIPTIONS = {
   M: [null, 'Gập ở gốc, giữ ba đầu ngón sát nhau và hướng xuống', 'Co vào lòng bàn tay, tách khỏi nhóm ba ngón hướng xuống'],
   N: [null, 'Gập ở gốc, giữ hai đầu ngón sát nhau và hướng xuống', 'Co vào lòng bàn tay, tách khỏi hai ngón hướng xuống'],
   O: ['Bốn ngón khum về phía ngón cái, tạo khoảng tròn nhỏ giữa các đầu ngón'],
-  P: ['Gập cổ tay, lòng bàn tay hướng xuống', 'Gập gần các ngón đang co', 'Duỗi ngang sang bên','Duỗi hướng xuống dưới','Gập vào lòng bàn tay','Gập vào lòng bàn tay'],
+  P: ['Gập cổ tay, lòng bàn tay hướng xuống', 'Gập gần các ngón đang co', 'Duỗi ngang sang bên', 'Duỗi hướng xuống dưới', 'Gập vào lòng bàn tay', 'Gập vào lòng bàn tay'],
   Q: ['Gập cổ tay, lòng bàn tay hướng xuống', 'Cong về phía ngón trỏ', 'Cong xuống, hướng về ngón cái', 'Gập vào lòng bàn tay'],
   R: ['Duỗi và bắt chéo nhau', 'Ngón áp út và út co vào lòng bàn tay, ngón cái áp gần hai ngón co'],
   S: ['Duỗi ngang ra bên cạnh nắm tay', 'Gập các đốt về lòng bàn tay để tạo nắm tay'],
@@ -54,7 +54,7 @@ export default function TextToSignVisualizer({ requestText }) {
   const [isListening, setIsListening] = useState(false);
   const [loading, setLoading] = useState(false);
   const [translationId, setTranslationId] = useState(0); // mỗi lần dịch câu mới
-  const [viewModel, setViewModel] = useState('avatar');
+  const [viewModel, setViewModel] = useState('robot'); // mặc định hiển thị robot
   const [directSelectedLetter, setDirectSelectedLetter] = useState('');
   const sequence = useMemo(() => viewModel === 'avatar'
     ? createMixamoPlayback(sourceSequence) : sourceSequence, [sourceSequence, viewModel]);
@@ -78,10 +78,6 @@ export default function TextToSignVisualizer({ requestText }) {
     'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'X', 'Y', 'F', 'J', 'W', 'Z',
   ];
   const LETTER_VARIANTS = { A: ['Ă', 'Â'], D: ['Đ'], E: ['Ê'], O: ['Ô', 'Ơ'], U: ['Ư'] };
-  const TONE_LIST = [
-    { key: 'sắc', mark: '´' }, { key: 'huyền', mark: '`' }, { key: 'hỏi', mark: '?' },
-    { key: 'ngã', mark: '~' }, { key: 'nặng', mark: '.' },
-  ];
 
   const PHRASE_SUGGESTIONS = [
     'Xin chào',
@@ -134,7 +130,7 @@ export default function TextToSignVisualizer({ requestText }) {
           if (item.motion_id) fetchMotion(item.motion_id);
         });
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => { cancelled = true; };
   }, []);
 
@@ -725,17 +721,6 @@ export default function TextToSignVisualizer({ requestText }) {
                 }}>{letter}</button>
             );
           })}
-        </div>
-        <div className="dialog-control-group">
-          <h3>Dấu thanh</h3>
-          <div className="dialog-button-list">
-            {TONE_LIST.map(({ key, mark }) => (
-              <button type="button" key={key} className="btn btn-secondary" onClick={() => {
-                handleSelectDirectLetter(key);
-                alphabetDialogRef.current?.close();
-              }}>{key} {mark}</button>
-            ))}
-          </div>
         </div>
       </WorkspaceDialog>
 

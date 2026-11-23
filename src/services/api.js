@@ -147,6 +147,9 @@ export async function sendSequenceForRecognition(sequence, threshold = 0.65, mod
       if (options.qipedc_entries?.length) payload.qipedc_entries = options.qipedc_entries;
     }
     if (options?.include_diagnostic) payload.include_diagnostic = true;
+    if (typeof options?.allow_short_sequences === 'boolean') {
+      payload.allow_short_sequences = options.allow_short_sequences;
+    }
     const res = await fetch(`${API_BASE_URL}/api/recognize_sequence`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
