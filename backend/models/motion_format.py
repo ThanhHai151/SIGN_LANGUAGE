@@ -23,9 +23,12 @@ def frames_to_keyframes(motion):
     idx = {k: i for i, k in enumerate(LAYOUT)}
     fps = float(motion["fps"])
     kfs = []
+    head_frames = motion.get("head_frames")
     for i, row in enumerate(motion["frames"]):
         g = lambda k: row[idx[k]]  # noqa: E731
         kf = {"t": round(i / fps, 3), "body": {"torso": [g("torso_x"), g("torso_y"), g("torso_z")], "head": [0.0, 0.0, 0.0]}}
+        if head_frames and i < len(head_frames):
+            kf["body"]["head"] = head_frames[i]
         for side in ("right", "left"):
             Side = side
             kf[Side + "Arm"] = [g(f"{side}_arm_x"), g(f"{side}_arm_y"), g(f"{side}_arm_z")]
@@ -39,6 +42,8 @@ def frames_to_keyframes(motion):
         "fps": fps,
         "duration_ms": int(round(len(kfs) / fps * 1000)),
         "video_duration_ms": int(round(float(motion.get("dur", 0)) * 1000)),
+        "sync_video": motion.get("sync_video", True),
+        "tongue": motion.get("tongue"),
         "hand_coverage": motion.get("hand_coverage"),
         "active": motion.get("active") or [0.0, len(kfs) / fps],
         "source": "QIPEDC video → MediaPipe Holistic → IK",

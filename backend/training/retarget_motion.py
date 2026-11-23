@@ -192,6 +192,67 @@ def finger_angles(Hl, side):
     return out
 
 
+# Tỉ lệ ba đốt và chiều quay từ RobotSigner3D.jsx.
+FINGER_LENGTHS = np.array([.038, .026, .021])
+THUMB_LENGTHS = np.array([.024, .022, .019])
+
+
+def finger_vectors(name, angles, side):
+    """Tính hướng từng đốt và dây cung chuẩn hóa trong hệ bàn tay robot."""
+    mirror = -1 if side == "left" else 1
+    if name == "thumb":
+        cx, cy, cz, mx, my, mz, ip = angles
+        root = THUMB_ROOT[side] @ Rot.from_euler("XYZ", [cx, mirror * cy, mirror * cz]).as_matrix()
+        middle = root @ Rot.from_euler("XYZ", [-mx, mirror * my, mirror * mz]).as_matrix()
+        end = middle @ Rot.from_euler("X", -ip).as_matrix()
+        lengths = THUMB_LENGTHS
+    else:
+        mcp, pip, dip, spread = angles
+        root = Rot.from_euler("XYZ", [-mcp, 0, mirror * spread]).as_matrix()
+        middle = root @ Rot.from_euler("X", -pip).as_matrix()
+        end = middle @ Rot.from_euler("X", -dip).as_matrix()
+        lengths = FINGER_LENGTHS
+    directions = np.stack([root @ DOWN, middle @ DOWN, end @ DOWN])
+    return directions, (lengths @ directions) / lengths.sum()
+
+
+def refine_fingers(landmarks, side, estimate):
+    """Fit có giới hạn, giữ nghiệm ban đầu khi các điểm đốt suy biến."""
+    for name, indices in {**FINGERS, "thumb": (1, 2, 3, 4)}.items():
+        segments = np.diff(landmarks[list(indices)], axis=0)
+        lengths = np.linalg.norm(segments, axis=1)
+        if not np.all(lengths > 1e-6):
+            continue
+        target_directions = segments / lengths[:, None]
+        target_chord = segments.sum(axis=0) / lengths.sum()
+        channels = estimate[name]
+        seed = np.array(list(channels.values()))
+        bounds = (
+            [(-np.pi, np.pi)] * 6 + [(-.3, 1.4)]
+            if name == "thumb" else [(-.25, 1.6), (0, 1.75), (0, 1.15), (-.35, .35)]
+        )
+
+        def cost(angles):
+            directions, chord = finger_vectors(name, angles, side)
+            errors = np.linalg.norm(directions - target_directions, axis=1)
+            # Huber: ảnh hưởng tăng tuyến tính khi một đốt bị nhiễu mạnh.
+            direction_cost = np.where(errors < .25, errors ** 2, .5 * errors - .0625)
+            return direction_cost.mean() + 2 * np.sum((chord - target_chord) ** 2) + .045 * np.sum((angles - seed) ** 2)
+
+        best, best_cost = seed.copy(), cost(seed)
+        for step in (.24, .12, .06, .03):
+            for axis, (low, high) in enumerate(bounds):
+                center = best.copy()
+                for sign in (-1, 1):
+                    candidate = center.copy()
+                    candidate[axis] = np.clip(center[axis] + sign * step, low, high)
+                    candidate_cost = cost(candidate)
+                    if candidate_cost < best_cost:
+                        best, best_cost = candidate, candidate_cost
+        estimate[name] = dict(zip(channels, map(float, best)))
+    return estimate
+
+
 # MediaPipe ước lượng độ sâu (trục trước–sau) kém hơn nhiều so với 2 trục trên mặt phẳng ảnh,
 # nhất là với bàn tay → giảm trọng số độ sâu khi tính HƯỚNG tay để robot nhìn từ phía trước giống video.
 KZ_ARM = 0.5
@@ -469,7 +530,7 @@ def _near_euler(e, prev):
     return best[1]
 
 
-def retarget(raw, smooth=True):
+def retarget(raw, smooth=True, *, fit_fingers=False):
     frames_in = raw["frames"]
     n = len(frames_in)
     scale = body_scale(raw)
@@ -503,7 +564,9 @@ def retarget(raw, smooth=True):
                 Rh = hand_frame_view(Hrel, side)               # hướng bàn tay (xem hand_frame_view)
                 Rh_shape = hand_frame(Hrel, side)              # hình dạng ngón: dùng 3D đầy đủ
                 g["Q"][i] = _quat(Rh)
-                g["F"][i] = finger_angles((Rh_shape.T @ Hrel.T).T, side)
+                local_hand = (Rh_shape.T @ Hrel.T).T
+                fingers = finger_angles(local_hand, side)
+                g["F"][i] = refine_fingers(local_hand, side, fingers) if fit_fingers else fingers
 
     M = np.full((n, len(LAYOUT)), np.nan)
     M[:, :3] = torso
@@ -614,7 +677,9 @@ def retarget(raw, smooth=True):
             wr.append((T.T @ (P[5] - c), T.T @ (P[6] - c)))
         else:
             wr.append(None)
-    base = [w for w in wr[:3] if w is not None]
+    # Giữ cùng khoảng thời gian đo tư thế nghỉ khi thay đổi tốc độ lấy mẫu.
+    rest_frames = max(1, round(fps * 3 / 8))
+    base = [w for w in wr[:rest_frames] if w is not None]
     act = []
     if base:
         bl = np.mean([w[0] for w in base], axis=0)
@@ -683,7 +748,17 @@ def fk_check(motion, raw):
 
 
 if __name__ == "__main__":
-    src = sys.argv[1]
-    raw = json.load(open(src, encoding="utf-8"))
-    m = retarget(raw)
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Chuyển điểm khớp MediaPipe sang góc robot.")
+    parser.add_argument("source", help="Tệp JSON điểm khớp của một video")
+    parser.add_argument("--fit-fingers", action="store_true", help="Thử tinh chỉnh góc ngón bằng động học thuận")
+    parser.add_argument("--output", help="Đường dẫn tệp chuyển động để xem thử")
+    args = parser.parse_args()
+    with open(args.source, encoding="utf-8") as stream:
+        raw = json.load(stream)
+    m = retarget(raw, fit_fingers=args.fit_fingers)
+    if args.output:
+        with open(args.output, "x", encoding="utf-8") as stream:
+            json.dump(m, stream, separators=(",", ":"))
     print(json.dumps({"id": m["id"], "frames": len(m["frames"]), "hand_coverage": m["hand_coverage"], "fk": fk_check(m, raw)}, ensure_ascii=False))

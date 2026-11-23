@@ -602,10 +602,6 @@ body {
   pointer-events: none;
 }
 
-.avatar-tuner { color: #b9c9dc; font-size: 13px; }
-.avatar-tuner summary { cursor: pointer; }
-.avatar-tuner-host { margin-top: 6px; }
-.avatar-tuner-host .lil-gui { width: 100%; }
 
 .sign-description {
   max-height: 40%;

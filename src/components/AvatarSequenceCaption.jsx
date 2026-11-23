@@ -1,5 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 
+function captionText(step) {
+  if (step?.avatar_symbol?.startsWith('TONE_')) return step.label;
+  return step?.avatar_symbol || (step?.type === 'fingerspelling'
+    ? (step.token || step.label)
+    : (step?.label || step?.token || ''));
+}
+
 /** Caption chuỗi ký hiệu chỉ dành cho khung Avatar Mixamo. */
 export default function AvatarSequenceCaption({ sequence = [], currentIndex = 0 }) {
   const activeRef = useRef(null);
@@ -19,9 +26,7 @@ export default function AvatarSequenceCaption({ sequence = [], currentIndex = 0 
 
   if (!sequence.length) return null;
 
-  const activeText = activeStep?.avatar_symbol || (activeStep?.type === 'fingerspelling'
-    ? (activeStep.token || activeStep.label)
-    : (activeStep?.label || activeStep?.token || ''));
+  const activeText = captionText(activeStep);
 
   return (
     <section
@@ -60,7 +65,7 @@ export default function AvatarSequenceCaption({ sequence = [], currentIndex = 0 
           const active = index === currentIndex;
           const done = index < currentIndex;
           const fingerspelling = step?.type === 'fingerspelling';
-          const text = step.avatar_symbol || (fingerspelling ? (step.token || step.label) : (step.label || step.token));
+          const text = captionText(step);
           return (
             <span
               key={`${step?.entry_id || step?.token || step?.gloss || 'step'}-${index}`}
