@@ -34,7 +34,7 @@ DTW_REFERENCE_BATCH_SIZE = 6
 MAX_DISTANCE = 0.35
 MIN_SEPARATION = 0.05
 MAX_BILATERAL_DISTANCE = 0.52
-MIN_BILATERAL_SEPARATION = 0.08
+MIN_BILATERAL_SEPARATION = 0.07
 MAX_HAND_SHAPE_DISTANCE = 0.35
 MIN_HAND_SHAPE_SEPARATION = 0.05
 HAND_MISMATCH_PENALTY = 0.10
@@ -116,7 +116,7 @@ def _variants(raw, aspect_ratio, *, reference=False):
             low, high = np.percentile(points, [5, 95] if not reference else [10, 90], axis=0)
             movement[side] = np.linalg.norm(high - low, axis=-1).mean()
 
-    active = (movement >= 0.09) & (movement >= 0.23 * max(movement.max(), 1e-6))
+    active = (movement >= 0.075) & (movement >= 0.23 * max(movement.max(), 1e-6))
     if not active.all() and (observed.sum(axis=0) >= 2).all():
         # Retain bilateral structure when two hands interact and one is mostly occluded (e.g. "năn nỉ").
         active[:] = True
@@ -463,7 +463,7 @@ def _bilateral_shape_match(frames, aspect_ratio, recording, bucket, references, 
     distance, entry_id = ranked[0]
     separation = MIN_HAND_SHAPE_SEPARATION
     if distance <= 0.30 and paired.mean() >= 0.80 and sample_duplicates <= 0.05:
-        separation = 0.020
+        separation = 0.035
     elif entry_id == "q-nan-ni" and lost_hand_during_interaction(frames, aspect_ratio):
         separation = 0.018
     if len(ranked) > 1 and ranked[1][0] - distance < separation:
