@@ -38,7 +38,7 @@ def _self_ping_loop(url: str, interval_sec: int):
 @app.on_event("startup")
 def start_production_background_tasks():
     global _self_ping_started
-    if "pytest" in sys.modules or "unittest" in sys.modules:
+    if "pytest" in sys.modules or os.environ.get("PYTEST_CURRENT_TEST"):
         return
     threading.Thread(target=_warm_qipedc_index, name="qipedc-index-warm", daemon=True).start()
 
