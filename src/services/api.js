@@ -144,6 +144,7 @@ export async function sendSequenceForRecognition(sequence, threshold = 0.65, mod
     if (options?.live_words) {
       payload.live_words = true;
       payload.aspect_ratio = options.aspect_ratio;
+      if (options.vocab_scope) payload.vocab_scope = options.vocab_scope;
       if (options.qipedc_entries?.length) payload.qipedc_entries = options.qipedc_entries;
     }
     if (options?.include_diagnostic) payload.include_diagnostic = true;

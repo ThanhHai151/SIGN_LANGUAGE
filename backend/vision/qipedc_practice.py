@@ -206,21 +206,38 @@ def _time_sign_with_occlusion(body, hands, times, side, taps):
             continue
         elapsed = times - times[tap]
         tip_rise = hand[tap, 8, 1] - hand[:, 8, 1]
-        opened = (hands[:, side] & (elapsed >= 0.18) & (elapsed <= 1.4) &
+        opened = (hands[:, side] & (elapsed >= 0.18) & (elapsed <= 1.60) &
                   (tip_rise > 0.28) & (extension >= 1.55) &
                   (extension - extension[tap] >= 0.4) & (spread >= 1.2))
-        for end in np.flatnonzero(opened[:-1] & opened[1:]) + 1:
+        pair_ends = np.flatnonzero(opened[:-1] & opened[1:]) + 1
+        candidate_ends = list(pair_ends)
+        # At low webcam FPS (~10-12 FPS, dt >= 0.075s), a crisp open-hand peak can span a single frame.
+        if not candidate_ends and len(times) >= 2 and float(np.median(np.diff(times))) >= 0.075:
+            strong_open = opened & (elapsed <= 1.45) & (extension >= 1.75) & (spread >= 1.40) & (tip_rise >= 0.35)
+            candidate_ends = np.flatnonzero(strong_open).tolist()
+        for end in candidate_ends:
             tracked = hands[tap:end + 1, side]
             if tracked.mean() >= 0.75 and np.diff(times[tap:end + 1][tracked]).max() <= 0.3:
                 return int(tap), int(end)
     return None
 
 
-def analyze_live_words(frames, aspect_ratio, enable_time_sign, timestamps=None):
+def analyze_live_words(frames, aspect_ratio, enable_time_sign, timestamps=None, trace=None):
     """Analyze a rolling window before the closed-set classifier guesses a word."""
+    raw_len = len(frames) if frames is not None else 0
     try:
         clip, first_frame = _visible_clip(frames)
-    except ValueError:
+    except ValueError as exc:
+        if trace is not None:
+            trace.update({
+                "raw_frames": raw_len,
+                "visible_frames": 0,
+                "first_visible_frame": None,
+                "motion_threshold": 0.16,
+                "motion_detected": False,
+                "status": "insufficient_landmarks",
+                "reason": str(exc),
+            })
         return {"motion_detected": False, "status": "insufficient_landmarks"}
     raw_hands = _tracked_hands(clip)
     clip = _fill_short_gaps(clip)
@@ -230,17 +247,51 @@ def analyze_live_words(frames, aspect_ratio, enable_time_sign, timestamps=None):
 
     # Check hand motion relative to the shoulders, using [5, 95] percentiles so isolated
     # single-frame jitter is ignored while fast round-trip signs still pass the motion gate.
+    # For small chest/face-level signs (e.g. "bực mình"), allow a lower threshold (0.08) when
+    # the wrist is clearly raised above waist level, while keeping 0.16 for lower resting hands.
     motion = False
+    side_extents = [0.0, 0.0]
+    effective_threshold = 0.16
     for side, start in enumerate((33, 54)):
         tracked = body[hands[:, side], start:start + 21, :2]
         if len(tracked) >= 4:
             extent = np.percentile(tracked, 95, axis=0) - np.percentile(tracked, 5, axis=0)
-            motion |= float(np.linalg.norm(extent, axis=1).mean()) >= 0.16
+            val = float(np.linalg.norm(extent, axis=1).mean())
+            side_extents[side] = round(val, 4)
+            wrist_y_med = float(np.median(tracked[:, 0, 1]))
+            thr = 0.08 if wrist_y_med <= 0.55 and len(tracked) >= 6 else 0.16
+            effective_threshold = min(effective_threshold, thr)
+            motion |= val >= thr
+    if trace is not None:
+        shoulders_ok = np.all(np.any(clip[:, [11, 12], :] != 0, axis=2), axis=1)
+        trace.update({
+            "raw_frames": raw_len,
+            "visible_frames": int(len(clip)),
+            "first_visible_frame": int(first_frame),
+            "shoulders_ratio": round(float(shoulders_ok.mean()), 3),
+            "raw_left_frames": int(raw_hands[:, 0].sum()),
+            "raw_right_frames": int(raw_hands[:, 1].sum()),
+            "raw_both_frames": int(raw_hands.all(axis=1).sum()),
+            "filled_left_frames": int(hands[:, 0].sum()),
+            "filled_right_frames": int(hands[:, 1].sum()),
+            "filled_both_frames": int(hands.all(axis=1).sum()),
+            "left_extent": side_extents[0],
+            "right_extent": side_extents[1],
+            "max_extent": round(max(side_extents), 4),
+            "motion_threshold": effective_threshold,
+            "motion_detected": bool(motion),
+        })
     if not motion:
+        if trace is not None:
+            trace["status"] = "no_motion"
         return {"motion_detected": False, "status": "no_motion"}
     if not enable_time_sign:
+        if trace is not None:
+            trace["status"] = "topic_excluded"
         return {"motion_detected": True, "status": "topic_excluded"}
     if not reference_path(TIME_SIGN_VIDEO).is_file():
+        if trace is not None:
+            trace["status"] = "reference_unavailable"
         return {"motion_detected": True, "status": "reference_unavailable"}
 
     times = np.arange(len(clip), dtype=np.float64) / 15

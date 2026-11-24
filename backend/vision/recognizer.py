@@ -992,10 +992,17 @@ class VSLRecognizer:
                     allowed_indices = [int(i) for i in topic_map[topic_id] if 0 <= int(i) < logits.shape[1]]
 
                 if allowed_indices:
-                    masked_logits = torch.full_like(logits, -float('inf'))
+                    # Tính softmax trên toàn bộ lớp từ (63 lớp) rồi mới lọc allowed_indices,
+                    # tránh việc ép các lớp ngoài phạm vi về -inf làm phồng nhiễu 47% lên 99%.
+                    word_denom = [int(i) for i in (word_indices or range(logits.shape[1])) if 0 <= int(i) < logits.shape[1]]
+                    if word_denom and set(allowed_indices).issubset(word_denom):
+                        denom_logits = torch.full_like(logits, -float('inf'))
+                        denom_tensor = torch.tensor(word_denom, dtype=torch.long, device=logits.device)
+                        denom_logits[:, denom_tensor] = logits[:, denom_tensor]
+                        probs = torch.softmax(denom_logits, dim=1).squeeze(0)
+                    else:
+                        probs = torch.softmax(logits, dim=1).squeeze(0)
                     idx_tensor = torch.tensor(allowed_indices, dtype=torch.long, device=logits.device)
-                    masked_logits[:, idx_tensor] = logits[:, idx_tensor]
-                    probs = torch.softmax(masked_logits, dim=1).squeeze(0)
                     sub_probs = probs[idx_tensor]
                     k = min(5, len(allowed_indices))
                     top_k_probs_t, top_k_local = torch.topk(sub_probs, k=k)

@@ -480,3 +480,133 @@ def test_kha_nang_recovers_when_vertical_edge_on_hand_is_occluded():
     # Negative check: 'kỹ năng' and 'xin lỗi' must NOT trigger the perpendicular occlusion matcher.
     for other in ("v3_D0097.npy", "v3_W03990.npy", "v3_D0261.npy", "v3_W02196.npy"):
         assert qipedc_live._match_kha_nang_with_occlusion(np.load(folder / other, allow_pickle=False), 1.0) is None
+
+
+def test_recognize_sequence_full_diagnostic_trace_explains_motion_ambiguity_and_match(tmp_path, monkeypatch):
+    folder = Path(__file__).resolve().parents[1] / "data" / "qipedc_reference"
+    ref_uni = np.load(folder / "v3_D0440.npy", allow_pickle=False)
+
+    with TestClient(app) as client:
+        path = "/api/recognize_sequence"
+
+        # 1. Matched QIPEDC word returns full motion_gate, qipedc top_candidates, timings, and explanation
+        matched = client.post(path, json={
+            "sequence": ref_uni.tolist(),
+            "mode": "words",
+            "live_words": True,
+            "include_diagnostic": True,
+        }).json()["data"]
+        assert matched["entry_id"] == "q-an-du"
+        diag = matched["diagnostic"]
+        assert diag["motion_gate"]["motion_detected"] is True
+        assert diag["qipedc"]["bucket_hands"] == 1
+        assert diag["qipedc"]["top_candidates"][0]["entry_id"] == "q-an-du"
+        assert diag["qipedc"]["top_candidates"][0]["word"]
+        assert diag["decision"]["explanation"]
+        assert diag["timings_ms"]["total_ms"] >= 0
+        assert len(diag["pipeline_steps"]) >= 2
+
+        # 2. Stray 2-frame second hand on live webcam is ignored (stays 1-hand and matches q-an-du)
+        poisoned = ref_uni.copy()
+        poisoned[0:2, 33:54] = poisoned[0:2, 54:75] + [-0.3, 0.25, 0.0]
+        clean_1h = client.post(path, json={
+            "sequence": poisoned.tolist(),
+            "mode": "words",
+            "live_words": True,
+            "include_diagnostic": True,
+        }).json()["data"]
+        assert clean_1h["entry_id"] == "q-an-du"
+        assert clean_1h["diagnostic"]["qipedc"]["bucket_hands"] == 1
+        assert clean_1h["diagnostic"]["qipedc"]["bilateral_forced_by_2frame_rule"] is False
+
+        # 2b. Sustained stationary second hand triggers forced bilateral flag cleanly
+        sustained_2h = ref_uni.copy()
+        sustained_2h[:, 33:54] = ref_uni[15:16, 54:75] + [-0.35, 0.0, 0.0]
+        forced_res = client.post(path, json={
+            "sequence": sustained_2h.tolist(),
+            "mode": "words",
+            "live_words": True,
+            "include_diagnostic": True,
+        }).json()["data"]
+        assert forced_res["sign"] == "NEUTRAL"
+        assert forced_res["top_k"] == []
+        assert forced_res["diagnostic"]["qipedc"]["bilateral_forced_by_2frame_rule"] is True
+        assert forced_res["diagnostic"]["qipedc"]["bucket_hands"] == 2
+
+        # 2c. Ambiguous match explains Top 1 vs Top 2 gap and exposes quick-pick suggestions
+        with monkeypatch.context() as patch:
+            patch.setattr(video_cache, "CACHE_DIR", tmp_path)
+            patch.setattr(qipedc_live, "index_path", lambda: None)
+            reference_path("D0440").parent.mkdir(parents=True, exist_ok=True)
+            np.save(reference_path("D0440"), ref_uni, allow_pickle=False)
+            np.save(reference_path("D0442"), ref_uni, allow_pickle=False)
+            ambig = client.post(path, json={
+                "sequence": ref_uni.tolist(),
+                "mode": "words",
+                "live_words": True,
+                "include_diagnostic": True,
+            }).json()["data"]
+            assert ambig["sign"] == "NEUTRAL"
+            assert ambig["top_k"] == []
+            assert ambig["diagnostic"]["status"] == "ambiguous_word"
+            assert ambig["diagnostic"]["qipedc"]["gap_top1_top2"] == 0.0
+            assert len(ambig["suggestions"]) == 2
+            assert "Top 1 và Top 2" in ambig["diagnostic"]["decision"]["explanation"]
+
+        # 3. Held static pose explains exact extent vs effective motion threshold (0.08 raised or 0.16 resting)
+        held = np.repeat(ref_uni[10:11], 24, axis=0)
+        no_motion = client.post(path, json={
+            "sequence": held.tolist(),
+            "mode": "words",
+            "live_words": True,
+            "include_diagnostic": True,
+        }).json()["data"]
+        assert no_motion["diagnostic"]["status"] == "no_motion"
+        eff_thr = no_motion["diagnostic"]["motion_gate"]["motion_threshold"]
+        assert eff_thr in (0.08, 0.16)
+        assert no_motion["diagnostic"]["motion_gate"]["max_extent"] < eff_thr
+        assert str(eff_thr) in no_motion["diagnostic"]["decision"]["explanation"]
+
+        # 4. When include_diagnostic is False, no diagnostic payload is attached
+        plain = client.post(path, json={
+            "sequence": ref_uni.tolist(),
+            "mode": "words",
+            "live_words": True,
+            "include_diagnostic": False,
+        }).json()["data"]
+        assert "diagnostic" not in plain
+
+
+def test_live_words_vocab_scope_and_time_sign_protected_from_hand_shape_override(tmp_path, monkeypatch):
+    folder = Path(__file__).resolve().parents[1] / "data" / "qipedc_reference"
+    ref_uni = np.load(folder / "v3_D0440.npy", allow_pickle=False)
+
+    with TestClient(app) as client:
+        path = "/api/recognize_sequence"
+
+        # vocab_scope="common" matches common/builtin words cleanly on Tier 1
+        common_res = client.post(path, json={
+            "sequence": ref_uni.tolist(),
+            "mode": "words",
+            "live_words": True,
+            "vocab_scope": "common",
+            "include_diagnostic": True,
+        }).json()["data"]
+        assert common_res["entry_id"] == "q-an-du"
+        assert common_res["diagnostic"]["qipedc"]["tier"] == "priority_common"
+
+        # A confirmed two-phase "mấy giờ?" match must NOT be overridden by a hand_shape match
+        with monkeypatch.context() as patch:
+            patch.setattr(qipedc_practice, "analyze_live_words", lambda *args, **kwargs: {
+                "motion_detected": True, "status": "matched", "similarity": 0.75, "match_method": "phases",
+            })
+            patch.setattr(qipedc_live, "match_live_words", lambda *args, **kwargs: {
+                "motion_detected": True, "status": "word_matched", "entry_id": "q-nan-ni",
+                "match_method": "hand_shape", "similarity": 0.72,
+            })
+            preserved = client.post(path, json={
+                "sequence": ref_uni.tolist(),
+                "mode": "words",
+                "live_words": True,
+            }).json()["data"]
+            assert preserved["entry_id"] == "q-may-gio"
