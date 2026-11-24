@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Camera, CameraOff, Volume2, Copy, Trash2, AlertCircle, Zap, Film,
-  Hand, User, Type, BookOpen, MessageSquare, ScanLine, FlaskConical, SlidersHorizontal
+  Hand, User, Type, BookOpen, ScanLine, FlaskConical, SlidersHorizontal
 } from 'lucide-react';
 import {
   sendSequenceForRecognition,
@@ -132,7 +132,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
   // TIÊU CHÍ A: Phạm vi nhận diện: 'hands' (Bàn tay - 60 FPS) | 'holistic' (Toàn thân - 75 Khớp)
   const [recognitionScope, setRecognitionScope] = useState(practiceEntry ? 'holistic' : 'hands');
 
-  // TIÊU CHÍ B: Chế độ chuyển đổi: 'letters_numbers' (Chữ cái & Số) | 'words' (Từ vựng) | 'sentence' (Ghép câu ngữ cảnh)
+  // TIÊU CHÍ B: Chế độ chuyển đổi: 'letters' (Chữ cái) | 'digits' (Chữ số) | 'words' (Từ vựng)
   const [conversionMode, setConversionMode] = useState(practiceEntry ? 'words' : 'letters');
 
   // Trạng thái kỹ thuật đồng bộ với backend & pipeline
@@ -1015,7 +1015,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
     updateHUDProgress(0, 0);
 
     // CHỈ áp dụng Holistic cho duy nhất chế độ 'words' (Từ vựng SSTCN 102)
-    // Các chế độ khác ('letters', 'digits', 'sentence') giữ nguyên tuyệt đối trên MediaPipe Hands
+    // Các chế độ khác ('letters', 'digits') giữ nguyên tuyệt đối trên MediaPipe Hands
     const targetScope = (newMode === 'words') ? 'holistic' : 'hands';
     switchTrackerEngine(targetScope);
 
@@ -1032,7 +1032,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
     if (!(newMode === 'words' && holisticUnavailableRef.current)) {
       setCurrentResult({
         sign: 'NEUTRAL',
-        label: newMode === 'letters' ? 'Chờ cử chỉ chữ cái...' : newMode === 'digits' ? 'Chờ cử chỉ chữ số...' : newMode === 'words' ? 'Chờ cử chỉ từ vựng...' : 'Chờ bắt đầu ghép câu...',
+        label: newMode === 'letters' ? 'Chờ cử chỉ chữ cái...' : newMode === 'digits' ? 'Chờ cử chỉ chữ số...' : 'Chờ cử chỉ từ vựng...',
         confidence: 0,
         type: '',
         description: '',
@@ -2103,7 +2103,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
                 confidence: data.confidence,
                 type: data.type || 'alphabet',
                 description: data.description,
-                category: requestMode === 'digits' ? 'Chữ số VSL' : (requestMode === 'letters' ? 'Bảng chữ cái VSL' : (requestMode === 'words' ? 'Từ vựng VSL (102 Từ)' : 'Ghép câu ngữ cảnh')),
+                category: requestMode === 'digits' ? 'Chữ số VSL' : (requestMode === 'letters' ? 'Bảng chữ cái VSL' : 'Từ vựng VSL (102 Từ)'),
                 video_url: ''
               });
 
@@ -2310,7 +2310,6 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
                 ['letters', 'Chữ cái', Type],
                 ['digits', 'Chữ số', Zap],
                 ['words', 'Từ vựng', BookOpen],
-                ['sentence', 'Ghép câu', MessageSquare],
               ].map(([mode, label, Icon]) => (
                 <button type="button" key={mode} aria-pressed={conversionMode === mode}
                   className={`btn ${conversionMode === mode ? 'btn-primary' : 'btn-secondary'}`}

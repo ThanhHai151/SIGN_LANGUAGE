@@ -27,12 +27,20 @@ DEFAULT_WORDS = (
     "q-xin-loi", "q-ky-nang", "q-kha-nang", "q-khong-co",
 )
 BUILTIN_WORDS = (TIME_SIGN_ENTRY, *DEFAULT_WORDS)
+_CHUNG_TOI_IDS = (
+    "q-chung-toi-dai-tu",
+    "q-chung-toi-2-nguoi-dai-tu",
+    "q-chung-toi-3-nguoi-dai-tu",
+    "q-chung-toi-4-nguoi-dai-tu",
+    "q-chung-toi-5-nguoi-dai-tu",
+)
 MAX_EXTRA_WORDS = 12
 FRAMES = 24
 COARSE_BINS = 6
 STAGE1_TOP_K = 18
 DTW_REFERENCE_BATCH_SIZE = 6
 MAX_DISTANCE = 0.35
+MAX_RARE_DISTANCE = 0.28
 MIN_SEPARATION = 0.05
 MAX_BILATERAL_DISTANCE = 0.52
 MAX_RARE_BILATERAL_DISTANCE = 0.44
@@ -117,10 +125,11 @@ def _variants(raw, aspect_ratio, *, reference=False, trace=None):
     wrist_y_med = np.full(2, np.inf)
     for side in (0, 1):
         points = hands[observed[:, side], side, :, :2]
+        if len(points) >= 1:
+            wrist_y_med[side] = float(np.median(points[:, 0, 1]))
         if len(points) >= 5:
             low, high = np.percentile(points, [5, 95] if not reference else [10, 90], axis=0)
             movement[side] = np.linalg.norm(high - low, axis=-1).mean()
-            wrist_y_med[side] = float(np.median(points[:, 0, 1]))
 
     # Allow smaller chest/face-level movements (>=0.065) on live webcam when wrist is clearly raised;
     # keep calibrated 0.075 baseline otherwise.
@@ -133,15 +142,20 @@ def _variants(raw, aspect_ratio, *, reference=False, trace=None):
     forced_bilateral = False
     if not active.all() and (obs_counts >= 2).all():
         if reference:
-            # Retain bilateral structure when studio reference has one occluded hand (e.g. "năn nỉ").
-            forced_bilateral = True
-            active[:] = True
+            # Retain bilateral structure when studio reference has one occluded raised hand (e.g. "năn nỉ"),
+            # without turning 1-hand signs whose idle hand hangs down at the waist into 2-hand templates.
+            if float(wrist_y_med.max()) <= 0.82:
+                forced_bilateral = True
+                active[:] = True
         else:
-            # On live webcam, avoid letting 2-5 stray frames of the idle hand poison a 1-hand sign.
-            # Only force bilateral when the weaker hand has sustained presence (>=24% and >=6 frames)
+            # On live webcam, avoid letting 2-5 stray frames or a waist-level resting hand poison a 1-hand sign.
+            # Only force bilateral when the weaker hand is raised (<= RAISED_WRIST_MAX_Y) with sustained presence
             # OR genuine close interaction/clasp (>=4 frames with wrists within 0.72 shoulder widths).
             min_obs = int(obs_counts.min())
-            sustained = min_obs >= max(6, int(0.24 * len(clip)))
+            sustained = (
+                min_obs >= max(6, int(0.24 * len(clip)))
+                and float(wrist_y_med.max()) <= RAISED_WRIST_MAX_Y
+            )
             paired_mask = observed.all(axis=1)
             close_clasp = False
             if min_obs >= 4 and paired_mask.sum() >= 3:
@@ -414,6 +428,69 @@ def _default_priority_ids():
     ) | frozenset(BUILTIN_WORDS)
 
 
+def _project_idle_waist_bilateral_to_uni(uni_bucket, bi_bucket):
+    """Rescue 1-hand studio signs in bi_bucket whose idle hand merely hung down at the hip/waist."""
+    existing = set(uni_bucket["ids"])
+    bi_feats = bi_bucket["features"]
+    bi_obs = bi_bucket["observed"]
+    bi_pens = bi_bucket["penalties"]
+    bi_coarse = bi_bucket["coarse"]
+    reflect_f16 = REFLECT_X.astype(bi_feats.dtype)
+
+    extra_ids = []
+    f_parts, o_parts, p_parts, c_parts, v2e_parts = [], [], [], [], []
+    next_entry_idx = len(uni_bucket["ids"])
+    next_var_offset = len(uni_bucket["features"])
+
+    target_ids = frozenset(_CHUNG_TOI_IDS) - existing
+    for ei, eid in enumerate(bi_bucket["ids"]):
+        if eid not in target_ids:
+            continue
+        st, en = bi_bucket["slices"][ei]
+        half = (en - st) // 2
+        if half < 1:
+            continue
+        f0 = bi_feats[st]
+        o0 = bi_obs[st]
+        obs_n = o0.sum(axis=0)
+        wy_med = [9.9, 9.9]
+        w_rng = [0.0, 0.0]
+        for s in (0, 1):
+            if obs_n[s] >= 4:
+                pts = f0[o0[:, s], s, :2].astype(np.float32)
+                wy_med[s] = float(np.median(pts[:, 1]))
+                w_rng[s] = float(np.linalg.norm(np.ptp(pts, axis=0)))
+        act = 0 if wy_med[0] < wy_med[1] else 1
+        idle = 1 - act
+        if not (obs_n[act] >= 12 and wy_med[act] <= 0.72):
+            continue
+        if not (obs_n[idle] < 4 or (wy_med[idle] >= 0.92 and w_rng[idle] <= 0.16)):
+            continue
+
+        f_sub = bi_feats[st:st + half, :, act:act + 1, :]
+        c_sub = bi_coarse[st:st + half, :, act:act + 1, :]
+        if act == 0:
+            f_sub = f_sub * reflect_f16
+            c_sub = c_sub * REFLECT_X
+        extra_ids.append(eid)
+        f_parts.append(f_sub)
+        o_parts.append(bi_obs[st:st + half, :, act:act + 1])
+        p_parts.append(bi_pens[st:st + half])
+        c_parts.append(c_sub)
+        v2e_parts.append(np.full(half, next_entry_idx, dtype=np.int32))
+        uni_bucket["slices"].append((next_var_offset, next_var_offset + half))
+        next_entry_idx += 1
+        next_var_offset += half
+
+    if extra_ids:
+        uni_bucket["ids"].extend(extra_ids)
+        uni_bucket["features"] = np.concatenate([uni_bucket["features"], *f_parts], axis=0)
+        uni_bucket["observed"] = np.concatenate([uni_bucket["observed"], *o_parts], axis=0)
+        uni_bucket["penalties"] = np.concatenate([uni_bucket["penalties"], *p_parts], axis=0)
+        uni_bucket["coarse"] = np.concatenate([uni_bucket["coarse"], *c_parts], axis=0)
+        uni_bucket["var_to_entry"] = np.concatenate([uni_bucket["var_to_entry"], *v2e_parts], axis=0)
+
+
 @lru_cache(maxsize=2)
 def _load_index_cached(path_str, mtime_ns):
     del mtime_ns
@@ -442,6 +519,9 @@ def _load_index_cached(path_str, mtime_ns):
             }
             if hands == 2:
                 bucket["relative_coarse"] = _relative_coarse_chunked(feats, obs)
+        _project_idle_waist_bilateral_to_uni(buckets[1], buckets[2])
+        for hands in (1, 2):
+            bucket = buckets[hands]
             for key in ("coarse", "relative_coarse"):
                 if key in bucket:
                     bucket[key + "_squared"] = np.einsum("vthd,vthd->vth", bucket[key], bucket[key])
@@ -770,6 +850,128 @@ def _match_kha_nang_with_occlusion(frames, aspect_ratio):
     return _match_result(best_score, "q-kha-nang", method="hand_shape")
 
 
+def _match_chung_toi_family(frames, aspect_ratio, allowed_set=None):
+    """Recognize 'chúng tôi' and 'chúng tôi (2/3/4/5 người)' across studio and close-up webcam framing.
+
+    In QIPEDC studio videos (D0130-D0134), the signer performs a chest-level horizontal circular sweep
+    with 1, 2, 3, 4, or 5 extended fingers while holding the arm outside the shoulder (which falls outside
+    a 4:3 webcam frame, so webcam users naturally circle in front of the chest). Requiring a closed/bidirectional
+    horizontal loop rejects one-way crawls (e.g. 'con sâu') and vertical taps (e.g. 'ăn đủ', 'bực mình').
+    """
+    if allowed_set is not None and not any(eid in allowed_set for eid in _CHUNG_TOI_IDS):
+        return None
+    try:
+        clip, _ = _visible_clip(frames)
+    except ValueError:
+        return None
+    clip = _fill_short_gaps(clip)
+    clip[..., 1] /= aspect_ratio
+    obs = _tracked_hands(clip)
+    body = normalize_sequence_tjc_v2(clip)
+    if len(body) < 10:
+        return None
+
+    mov = np.zeros(2)
+    ymed = np.full(2, 9.9)
+    for side in (0, 1):
+        pts = body[obs[:, side], 33 + 21 * side:33 + 21 * (side + 1), :2]
+        if len(pts) >= 5:
+            low, high = np.percentile(pts, [5, 95], axis=0)
+            mov[side] = float(np.linalg.norm(high - low, axis=-1).mean())
+            ymed[side] = float(np.median(pts[:, 0, 1]))
+    s = int(np.argmax(mov))
+    other = 1 - s
+    if mov[s] < 0.10:
+        return None
+    if obs[:, other].sum() >= 6 and ymed[other] <= 0.65 and mov[other] >= max(0.08, 0.28 * mov[s]):
+        return None
+    other_pw = 16 if s == 0 else 15
+    pw_ok = np.any(body[:, other_pw, :2] != 0, axis=1)
+    if float((pw_ok & (body[:, other_pw, 1] <= 0.65)).mean()) > 0.25:
+        return None
+
+    j0 = 33 + 21 * s
+    ok_idx = np.flatnonzero(obs[:, s] & (body[:, j0, 1] <= RAISED_WRIST_MAX_Y))
+    if len(ok_idx) < 10:
+        return None
+    h_all = body[ok_idx, j0:j0 + 21, :2].copy()
+    if s == 0:
+        h_all[..., 0] *= -1
+    trim = len(ok_idx) // 6 if len(ok_idx) >= 14 else 0
+    h = h_all[trim:len(h_all) - trim] if trim else h_all
+
+    wrist_y = float(np.median(h[:, 0, 1]))
+    tips_y = float(np.median(h[:, [8, 12, 16, 20], 1].mean(axis=1)))
+    if wrist_y < 0.01 or wrist_y > 0.62 or tips_y < 0.04:
+        return None
+
+    palm_c = h_all[:, 9]
+    idx_tip = h_all[:, 8]
+    dx_p = np.diff(palm_c[:, 0])
+    dx_i = np.diff(idx_tip[:, 0])
+    pos_p, neg_p = float(dx_p[dx_p > 0].sum()), float((-dx_p[dx_p < 0]).sum())
+    pos_i, neg_i = float(dx_i[dx_i > 0].sum()), float((-dx_i[dx_i < 0]).sum())
+    xp_p = float(np.ptp(palm_c[:, 0]))
+    xp_i = float(np.ptp(idx_tip[:, 0]))
+    path_h = float(np.linalg.norm(np.diff(h[:, 8], axis=0), axis=1).sum())
+    net_h = float(np.linalg.norm(h[-1, 8] - h[0, 8]))
+    if not (
+        xp_i >= 0.38
+        and xp_p >= 0.22
+        and min(pos_i, neg_i) >= 0.72
+        and min(pos_p, neg_p) >= 0.42
+        and path_h / max(net_h, 0.05) >= 1.8
+    ):
+        return None
+
+    w = h[:, 0]
+    psize = np.maximum(np.linalg.norm(h[:, 9] - w, axis=1), 1e-4)
+    d_vals = {}
+    st_vals = {}
+    mixed_transition = False
+    for fn, ti, pi, mi in (("I", 8, 6, 5), ("M", 12, 10, 9), ("R", 16, 14, 13), ("P", 20, 18, 17)):
+        dt = np.linalg.norm(h[:, ti] - w, axis=1) / psize
+        dp = np.linalg.norm(h[:, pi] - w, axis=1) / psize
+        diff_tp = dt - dp
+        if fn == "M":
+            p15, p75 = np.percentile(diff_tp, [15, 75])
+            mixed_transition = bool(p15 < -0.05 and p75 > 0.22)
+        seg = np.linalg.norm(h[:, ti] - h[:, pi], axis=1) + np.linalg.norm(h[:, pi] - h[:, mi], axis=1)
+        st = np.linalg.norm(h[:, ti] - h[:, mi], axis=1) / np.maximum(seg, 1e-4)
+        d_vals[fn] = float(np.median(diff_tp))
+        st_vals[fn] = float(np.median(st))
+    if mixed_transition:
+        return None
+
+    entry_id = None
+    mrp_curled = all(d_vals[k] <= -0.08 and st_vals[k] <= 0.72 for k in ("M", "R", "P"))
+    if mrp_curled and (st_vals["I"] >= 0.65 or d_vals["I"] >= max(d_vals["M"], d_vals["R"], d_vals["P"]) + 0.04):
+        entry_id = "q-chung-toi-dai-tu"
+    else:
+        max_d = max(d_vals.values())
+        if max_d < 0.25:
+            return None
+        t_p20 = float(np.median(np.linalg.norm(h[:, 4] - h[:, 20], axis=1) / psize))
+        t_i6 = float(np.median(np.linalg.norm(h[:, 4] - h[:, 6], axis=1) / psize))
+        lat = h[:, 5] - h[:, 17]
+        lat_unit = lat / np.maximum(np.linalg.norm(lat, axis=1, keepdims=True), 1e-4)
+        thumb_out = float(np.median(np.sum((h[:, 4] - h[:, 5]) * lat_unit, axis=1) / psize))
+
+        ext_4 = [fn for fn in ("I", "M", "R", "P") if d_vals[fn] >= 0.18 and st_vals[fn] >= 0.82]
+        if "P" in ext_4 and t_p20 <= 1.05 and d_vals["P"] <= 0.55 * max_d:
+            ext_4.remove("P")
+        if len(ext_4) == 2 and "I" in ext_4 and "M" in ext_4:
+            entry_id = "q-chung-toi-3-nguoi-dai-tu" if (thumb_out >= 0.28 and t_i6 >= 0.75) else "q-chung-toi-2-nguoi-dai-tu"
+        elif len(ext_4) == 3:
+            entry_id = "q-chung-toi-3-nguoi-dai-tu"
+        elif len(ext_4) == 4:
+            entry_id = "q-chung-toi-5-nguoi-dai-tu" if (thumb_out >= 0.22 and t_p20 >= 1.80) else "q-chung-toi-4-nguoi-dai-tu"
+
+    if entry_id is None or (allowed_set is not None and entry_id not in allowed_set):
+        return None
+    return _match_result(0.27, entry_id, method="hand_shape")
+
+
 def _effective_unilateral_separation(best_distance):
     """Scale separation for very tight 1-hand matches (e.g. dist 0.12-0.18 in crowded chest signs)."""
     if best_distance <= 0.18:
@@ -837,7 +1039,7 @@ def _evaluate_tier(
         max_distance = MAX_RARE_BILATERAL_DISTANCE if is_rare_tier else MAX_BILATERAL_DISTANCE
         min_separation = MIN_BILATERAL_SEPARATION
     else:
-        max_distance = MAX_DISTANCE
+        max_distance = MAX_RARE_DISTANCE if is_rare_tier else MAX_DISTANCE
         min_separation = _effective_unilateral_separation(ranked[0][0]) if ranked else MIN_SEPARATION
     in_range = bool(ranked and ranked[0][0] <= max_distance)
     gap = round(ranked[1][0] - ranked[0][0], 4) if len(ranked) > 1 else None
@@ -865,13 +1067,22 @@ def _evaluate_tier(
         if bilateral and (is_rare_tier or ranked[0][0] > 0.35):
             raw_obs = _tracked_hands(np.asarray(frames, dtype=np.float32)).sum(axis=0)
             weak_overlap = paired_n < 10 or int(raw_obs.min()) < 10
+        elif not bilateral and is_rare_tier and ranked[0][0] > 0.22:
+            raw_obs = _tracked_hands(np.asarray(frames, dtype=np.float32)).sum(axis=0)
+            weak_overlap = int(raw_obs.max()) < 12
         if weak_overlap:
-            tier_info["verdict"] = "bilateral_too_few_paired_frames"
+            tier_info["verdict"] = "bilateral_too_few_paired_frames" if bilateral else "unilateral_rare_too_short"
         else:
             tier_info["verdict"] = "trajectory_matched"
             if trace is not None:
                 trace.update(tier_info)
             return _match_result(*ranked[0]), tier_info
+    if not bilateral and not is_rare_tier:
+        if (chung_toi := _match_chung_toi_family(frames, aspect_ratio, allowed_set)) is not None:
+            tier_info["verdict"] = "chung_toi_family_matched"
+            if trace is not None:
+                trace.update(tier_info)
+            return chung_toi, tier_info
     if bilateral and not is_rare_tier and (allowed_set is None or "q-kha-nang" in allowed_set):
         if (kha_nang := _match_kha_nang_with_occlusion(frames, aspect_ratio)) is not None:
             tier_info["verdict"] = "kha_nang_occlusion_matched"

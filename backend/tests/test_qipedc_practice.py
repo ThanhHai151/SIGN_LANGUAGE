@@ -610,3 +610,87 @@ def test_live_words_vocab_scope_and_time_sign_protected_from_hand_shape_override
                 "live_words": True,
             }).json()["data"]
             assert preserved["entry_id"] == "q-may-gio"
+
+
+def test_chung_toi_family_recognized_for_1_to_5_fingers_and_not_confused_with_con_sau():
+    idx = qipedc_live._active_index()
+    uni_ids = set(idx["buckets"][1]["ids"])
+    for eid in (
+        "q-chung-toi-dai-tu",
+        "q-chung-toi-2-nguoi-dai-tu",
+        "q-chung-toi-3-nguoi-dai-tu",
+        "q-chung-toi-4-nguoi-dai-tu",
+        "q-chung-toi-5-nguoi-dai-tu",
+    ):
+        assert eid in uni_ids
+
+    def make_loop_clip(fingers_extended, *, spread_thumb=False, pinch_pinky=False):
+        t_len = 24
+        seq = np.zeros((t_len, 75, 3), dtype=np.float32)
+        seq[:, 9] = [0.48, 0.30, 0.0]
+        seq[:, 10] = [0.52, 0.30, 0.0]
+        seq[:, 11] = [0.64, 0.46, 0.0]
+        seq[:, 12] = [0.36, 0.46, 0.0]
+        angles = np.linspace(0, 2 * np.pi, t_len)
+        wx = 0.50 + 0.13 * np.cos(angles)
+        wy = 0.61 + 0.03 * np.sin(angles)
+        # Build right hand (joints 54..74) at chest height sweeping a closed horizontal loop
+        for t in range(t_len):
+            w = np.array([wx[t], wy[t], 0.0], dtype=np.float32)
+            seq[t, 54] = w
+            # MCPs (2, 5, 9, 13, 17): palm width from index(5) toward chest(+x) to pinky(17) outward(-x)
+            mcps = {
+                2: w + np.array([0.03, -0.02, 0.0]),
+                5: w + np.array([0.04, -0.05, 0.0]),
+                9: w + np.array([0.01, -0.06, 0.0]),
+                13: w + np.array([-0.02, -0.05, 0.0]),
+                17: w + np.array([-0.04, -0.04, 0.0]),
+            }
+            for k, v in mcps.items():
+                seq[t, 54 + k] = v
+            # Thumb (1..4)
+            if spread_thumb:
+                seq[t, 54 + 3] = mcps[2] + np.array([0.03, -0.02, 0.0])
+                seq[t, 54 + 4] = mcps[5] + np.array([0.06, -0.01, 0.0])
+            else:
+                seq[t, 54 + 3] = mcps[2] + np.array([-0.01, -0.02, 0.0])
+                seq[t, 54 + 4] = mcps[9] + np.array([-0.01, -0.01, 0.0])
+            for fn, mcp_i, pip_i, dip_i, tip_i in (
+                ("I", 5, 6, 7, 8),
+                ("M", 9, 10, 11, 12),
+                ("R", 13, 14, 15, 16),
+                ("P", 17, 18, 19, 20),
+            ):
+                base = mcps[mcp_i]
+                radial = base - w
+                if fn in fingers_extended:
+                    seq[t, 54 + pip_i] = base + radial * 0.55
+                    seq[t, 54 + dip_i] = base + radial * 0.95
+                    seq[t, 54 + tip_i] = base + radial * 1.35
+                else:
+                    # Curled tightly back toward palm/wrist
+                    seq[t, 54 + pip_i] = base + radial * 0.35
+                    seq[t, 54 + dip_i] = base + radial * 0.05
+                    seq[t, 54 + tip_i] = w + radial * 0.25
+            if pinch_pinky:
+                seq[t, 54 + 20] = seq[t, 54 + 4] + np.array([-0.005, 0.005, 0.0])
+        return seq
+
+    cases = [
+        (make_loop_clip({"I"}), "q-chung-toi-dai-tu"),
+        (make_loop_clip({"I", "M"}), "q-chung-toi-2-nguoi-dai-tu"),
+        (make_loop_clip({"I", "M", "R"}, pinch_pinky=True), "q-chung-toi-3-nguoi-dai-tu"),
+        (make_loop_clip({"I", "M", "R", "P"}, spread_thumb=False), "q-chung-toi-4-nguoi-dai-tu"),
+        (make_loop_clip({"I", "M", "R", "P"}, spread_thumb=True), "q-chung-toi-5-nguoi-dai-tu"),
+    ]
+    with TestClient(app) as client:
+        for clip, expected_id in cases:
+            resp = client.post("/api/recognize_sequence", json={
+                "sequence": clip.tolist(),
+                "mode": "words",
+                "live_words": True,
+                "aspect_ratio": 4 / 3,
+                "include_diagnostic": True,
+            }).json()["data"]
+            assert resp["entry_id"] == expected_id, f"Expected {expected_id}, got {resp}"
+            assert resp["sign"] != "con sâu"

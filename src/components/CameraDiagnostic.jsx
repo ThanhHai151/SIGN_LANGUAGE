@@ -3,7 +3,7 @@ import { DIAGNOSTIC_RECORD_MS } from './useCameraDiagnostic';
 import './CameraDiagnostic.css';
 
 const RECORD_SEC = Math.round(DIAGNOSTIC_RECORD_MS / 1000);
-const MODES = { words: 'Từ vựng', letters: 'Chữ cái', letters_numbers: 'Chữ cái và số', digits: 'Chữ số', sentence: 'Ghép câu' };
+const MODES = { words: 'Từ vựng', letters: 'Chữ cái', letters_numbers: 'Chữ cái và số', digits: 'Chữ số' };
 const SOURCES = {
   qipedc_template: 'Mẫu QIPEDC',
   qipedc_practice: 'Luyện QIPEDC',
