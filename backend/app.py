@@ -1447,8 +1447,30 @@ def recognize_sequence(req: SequenceRequest, request: Request):
                         "word_scope_valid": False,
                     }
                 else:
-                    result["word_scope_valid"] = True
-                    result["scope_rejected"] = False
+                    checked_entry_id = scope_check.get("entry_id") or result.get("entry_id")
+                    if live_words and not req.topic_id and not qipedc_live.corroborate_sstcn_entry(
+                        window, req.aspect_ratio, checked_entry_id
+                    ):
+                        result = {
+                            **result,
+                            "sign": "NEUTRAL",
+                            "label": "Đang chờ động tác từ vựng…",
+                            "confidence": 0.0,
+                            "confirmed": False,
+                            "new_token": None,
+                            "replaced_token": None,
+                            "tts_speak": None,
+                            "top_k": [],
+                            "entry_id": None,
+                            "video_url": "",
+                            "fallback_blocked": True,
+                            "blocked_reason": "sstcn_uncorroborated_by_qipedc",
+                            "word_scope_valid": True,
+                            "scope_rejected": False,
+                        }
+                    else:
+                        result["word_scope_valid"] = True
+                        result["scope_rejected"] = False
         if diag_enabled:
             timings_ms["total_ms"] = round((time.perf_counter() - t_req_start) * 1000, 1)
             pipeline_steps.append({

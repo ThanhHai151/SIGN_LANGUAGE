@@ -892,37 +892,13 @@ def _match_chung_toi_family(frames, aspect_ratio, allowed_set=None):
 
     j0 = 33 + 21 * s
     ok_idx = np.flatnonzero(obs[:, s] & (body[:, j0, 1] <= RAISED_WRIST_MAX_Y))
-    if len(ok_idx) < 10:
+    if len(ok_idx) < 8:
         return None
     h_all = body[ok_idx, j0:j0 + 21, :2].copy()
     if s == 0:
         h_all[..., 0] *= -1
     trim = len(ok_idx) // 6 if len(ok_idx) >= 14 else 0
     h = h_all[trim:len(h_all) - trim] if trim else h_all
-
-    wrist_y = float(np.median(h[:, 0, 1]))
-    tips_y = float(np.median(h[:, [8, 12, 16, 20], 1].mean(axis=1)))
-    if wrist_y < 0.01 or wrist_y > 0.62 or tips_y < 0.04:
-        return None
-
-    palm_c = h_all[:, 9]
-    idx_tip = h_all[:, 8]
-    dx_p = np.diff(palm_c[:, 0])
-    dx_i = np.diff(idx_tip[:, 0])
-    pos_p, neg_p = float(dx_p[dx_p > 0].sum()), float((-dx_p[dx_p < 0]).sum())
-    pos_i, neg_i = float(dx_i[dx_i > 0].sum()), float((-dx_i[dx_i < 0]).sum())
-    xp_p = float(np.ptp(palm_c[:, 0]))
-    xp_i = float(np.ptp(idx_tip[:, 0]))
-    path_h = float(np.linalg.norm(np.diff(h[:, 8], axis=0), axis=1).sum())
-    net_h = float(np.linalg.norm(h[-1, 8] - h[0, 8]))
-    if not (
-        xp_i >= 0.38
-        and xp_p >= 0.22
-        and min(pos_i, neg_i) >= 0.72
-        and min(pos_p, neg_p) >= 0.42
-        and path_h / max(net_h, 0.05) >= 1.8
-    ):
-        return None
 
     w = h[:, 0]
     psize = np.maximum(np.linalg.norm(h[:, 9] - w, axis=1), 1e-4)
@@ -943,9 +919,50 @@ def _match_chung_toi_family(frames, aspect_ratio, allowed_set=None):
     if mixed_transition:
         return None
 
-    entry_id = None
     mrp_curled = all(d_vals[k] <= -0.08 and st_vals[k] <= 0.72 for k in ("M", "R", "P"))
-    if mrp_curled and (st_vals["I"] >= 0.65 or d_vals["I"] >= max(d_vals["M"], d_vals["R"], d_vals["P"]) + 0.04):
+    is_one_finger = mrp_curled and (
+        st_vals["I"] >= 0.65 or d_vals["I"] >= max(d_vals["M"], d_vals["R"], d_vals["P"]) + 0.04
+    )
+
+    wrist_y = float(np.median(h[:, 0, 1]))
+    tips_y = float(np.median(h[:, [8, 12, 16, 20], 1].mean(axis=1)))
+    if is_one_finger:
+        if wrist_y < -0.04 or wrist_y > 0.65 or tips_y < -0.02:
+            return None
+    elif len(ok_idx) < 10 or wrist_y < 0.01 or wrist_y > 0.62 or tips_y < 0.04:
+        return None
+
+    palm_c = h_all[:, 9]
+    idx_tip = h_all[:, 8]
+    dx_p = np.diff(palm_c[:, 0])
+    dx_i = np.diff(idx_tip[:, 0])
+    pos_p, neg_p = float(dx_p[dx_p > 0].sum()), float((-dx_p[dx_p < 0]).sum())
+    pos_i, neg_i = float(dx_i[dx_i > 0].sum()), float((-dx_i[dx_i < 0]).sum())
+    xp_p = float(np.ptp(palm_c[:, 0]))
+    xp_i = float(np.ptp(idx_tip[:, 0]))
+    path_h = float(np.linalg.norm(np.diff(h[:, 8], axis=0), axis=1).sum())
+    net_h = float(np.linalg.norm(h[-1, 8] - h[0, 8]))
+    if is_one_finger:
+        has_loop = (
+            xp_i >= 0.24
+            and xp_p >= 0.14
+            and min(pos_i, neg_i) >= 0.36
+            and min(pos_p, neg_p) >= 0.20
+            and path_h / max(net_h, 0.05) >= 1.5
+        )
+    else:
+        has_loop = (
+            xp_i >= 0.38
+            and xp_p >= 0.22
+            and min(pos_i, neg_i) >= 0.72
+            and min(pos_p, neg_p) >= 0.42
+            and path_h / max(net_h, 0.05) >= 1.8
+        )
+    if not has_loop:
+        return None
+
+    entry_id = None
+    if is_one_finger:
         entry_id = "q-chung-toi-dai-tu"
     else:
         max_d = max(d_vals.values())
@@ -970,6 +987,171 @@ def _match_chung_toi_family(frames, aspect_ratio, allowed_set=None):
     if entry_id is None or (allowed_set is not None and entry_id not in allowed_set):
         return None
     return _match_result(0.27, entry_id, method="hand_shape")
+
+
+def _match_head_salute(frames, aspect_ratio, allowed_set=None, *, allow_rare=True):
+    """Distinguish forehead-outward salute ('chào' / 'xin chào') from above-head-into-forehead ('tuân lệnh')."""
+    allow_chao = allowed_set is None or "q-chao" in allowed_set
+    allow_tuan_lenh = allow_rare and (allowed_set is None or "q-tuan-lenh" in allowed_set)
+    if not (allow_chao or allow_tuan_lenh):
+        return None
+    try:
+        clip, _ = _visible_clip(frames)
+    except ValueError:
+        return None
+    clip = _fill_short_gaps(clip)
+    clip[..., 1] /= aspect_ratio
+    obs = _tracked_hands(clip)
+    body = normalize_sequence_tjc_v2(clip)
+    if len(body) < 8:
+        return None
+
+    mov = np.zeros(2)
+    ymed = np.full(2, 9.9)
+    for side in (0, 1):
+        pts = body[obs[:, side], 33 + 21 * side:33 + 21 * (side + 1), :2]
+        if len(pts) >= 4:
+            low, high = np.percentile(pts, [5, 95], axis=0)
+            mov[side] = float(np.linalg.norm(high - low, axis=-1).mean())
+            ymed[side] = float(np.median(pts[:, 0, 1]))
+    s = int(np.argmax(mov))
+    other = 1 - s
+    if mov[s] < 0.08:
+        return None
+    if obs[:, other].sum() >= 6 and ymed[other] <= 0.65 and mov[other] >= max(0.08, 0.28 * mov[s]):
+        return None
+    other_pw = 16 if s == 0 else 15
+    pw_ok = np.any(body[:, other_pw, :2] != 0, axis=1)
+    if float((pw_ok & (body[:, other_pw, 1] <= 0.65)).mean()) > 0.25:
+        return None
+
+    eye_idx = 2 if s == 0 else 5
+    eye_ok = np.any(body[:, eye_idx, :2] != 0, axis=1)
+    if eye_ok.mean() < 0.70:
+        return None
+
+    ok = np.flatnonzero(obs[:, s] & eye_ok)
+    if len(ok) < 7:
+        return None
+    h = body[ok, 33 + 21 * s:33 + 21 * (s + 1), :2].copy()
+    eye = body[ok, eye_idx, :2].copy()
+    if s == 0:
+        h[..., 0] *= -1
+        eye[:, 0] *= -1
+
+    fh = eye + np.array([-0.04, -0.10], dtype=np.float32)
+    tip = 0.5 * (h[:, 8] + h[:, 12])
+    wrist = h[:, 0]
+    if float(np.max(tip[:, 0])) > 0.22 or float(np.min(wrist[:, 1])) > 0.06:
+        return None
+
+    upper = tip[:, 1] <= (eye[:, 1] + 0.16)
+    if int(upper.sum()) < 5:
+        return None
+    h_u, tip_u, fh_u, eye_u = h[upper], tip[upper], fh[upper], eye[upper]
+    d_fh = np.linalg.norm(tip_u - fh_u, axis=1)
+    if float(d_fh.min()) > 0.24:
+        return None
+
+    # Flat adducted salute blade (I, M, R straight & extended, I-M held close together unlike open-5 shake)
+    w_u = h_u[:, 0]
+    psize = np.maximum(np.linalg.norm(h_u[:, 9] - w_u, axis=1), 1e-4)
+    im_gap = float(np.median(np.linalg.norm(h_u[:, 8] - h_u[:, 12], axis=1) / psize))
+    if im_gap > 0.46:
+        return None
+    for ti, pi, mi in ((8, 6, 5), (12, 10, 9), (16, 14, 13)):
+        dt = np.linalg.norm(h_u[:, ti] - w_u, axis=1) / psize
+        dp = np.linalg.norm(h_u[:, pi] - w_u, axis=1) / psize
+        seg = np.linalg.norm(h_u[:, ti] - h_u[:, pi], axis=1) + np.linalg.norm(h_u[:, pi] - h_u[:, mi], axis=1)
+        st = np.linalg.norm(h_u[:, ti] - h_u[:, mi], axis=1) / np.maximum(seg, 1e-4)
+        if float(np.median(dt - dp)) < 0.12 or float(np.median(st)) < 0.80:
+            return None
+
+    high = tip_u[:, 1] <= (eye_u[:, 1] + 0.06)
+    if int(high.sum()) < 4:
+        return None
+    d_hi, tip_hi, fh_hi, ps_hi = d_fh[high], tip_u[high], fh_u[high], psize[high]
+
+    contact_thr = min(0.24, float(d_hi.min()) + 0.06)
+    contacts = np.flatnonzero(d_hi <= contact_thr)
+    if not len(contacts):
+        return None
+    c_first, c_last = int(contacts[0]), int(contacts[-1])
+    c_dist = float(d_hi[contacts].min())
+    c_palm = float(np.median(ps_hi[contacts]))
+
+    after = d_hi[c_first + 1:]
+    after_ps = ps_hi[c_first + 1:]
+    away_frames = int((after >= c_dist + 0.11).sum())
+    zoom_frames = int((after_ps >= c_palm * 1.18).sum())
+    tail_d = float(np.median(d_hi[max(0, len(d_hi) - 3):]))
+
+    before_u = d_fh[:int(np.flatnonzero(high)[c_last]) + 1]
+    inward_2d = (float(before_u.max()) - c_dist) if len(before_u) >= 2 else 0.0
+    started_above_fh = bool(float(np.min(tip_hi[:c_last + 1, 1] - fh_hi[:c_last + 1, 1])) <= -0.05)
+
+    entry_id = None
+    if (away_frames >= 2 or zoom_frames >= 2) and tail_d >= c_dist + 0.09:
+        if allow_chao:
+            entry_id = "q-chao"
+    elif away_frames <= 1 and zoom_frames <= 1 and tail_d <= 0.22 and (
+        started_above_fh or inward_2d >= 0.10 or len(contacts) >= 4
+    ):
+        if allow_tuan_lenh:
+            entry_id = "q-tuan-lenh"
+
+    if entry_id is None:
+        return None
+    return _match_result(0.24, entry_id, method="hand_shape")
+
+
+def corroborate_sstcn_entry(frames, aspect_ratio, entry_id):
+    """Reject out-of-distribution SSTCN guesses (e.g. 'Em gái' on 'chúng tôi', 'Xin chào' on 'tuân lệnh')
+    when the predicted entry exists in the QIPEDC live index and the actual motion disagrees."""
+    if not entry_id:
+        return True
+    idx = _active_index()
+    if idx is None or entry_id not in idx["id_set"]:
+        return True
+    if entry_id == "q-chao":
+        salute = _match_head_salute(frames, aspect_ratio)
+        if salute is not None and salute.get("entry_id") == "q-tuan-lenh":
+            return False
+    if entry_id == "q-em-gai":
+        try:
+            clip, _ = _visible_clip(frames)
+            clip = _fill_short_gaps(clip)
+            clip[..., 1] /= aspect_ratio
+            obs = _tracked_hands(clip)
+            body = normalize_sequence_tjc_v2(clip)
+            min_tip_y = np.inf
+            for side in (0, 1):
+                if obs[:, side].any():
+                    j0 = 33 + 21 * side
+                    tips_y = body[obs[:, side], j0 + 8:j0 + 21:4, 1].mean(axis=1)
+                    min_tip_y = min(min_tip_y, float(tips_y.min()))
+            # Genuine 'em gái' raises fingers to ear/cheek level (y <= -0.05); chest-only signs stay > +0.02.
+            if min_tip_y > 0.02:
+                return False
+        except ValueError:
+            return False
+
+    recording = _variants(frames, aspect_ratio)
+    if recording is None:
+        return False
+    hands = recording[0].shape[2]
+    bucket = idx["buckets"].get(hands)
+    if bucket is None or entry_id not in bucket["ids"]:
+        return False
+    pos = bucket["ids"].index(entry_id)
+    st, en = bucket["slices"][pos]
+    ref = (
+        bucket["features"][st:en].astype(np.float32, copy=False),
+        bucket["observed"][st:en],
+        bucket["penalties"][st:en],
+    )
+    min_dist = float(_variant_distances(recording, ref).min())
+    return min_dist <= (0.50 if hands == 1 else 0.60)
 
 
 def _effective_unilateral_separation(best_distance):
@@ -1009,6 +1191,7 @@ def _evaluate_tier(
     *,
     allowed_set=None,
     is_rare_tier=False,
+    allow_rare_salute=True,
     trace=None,
 ):
     hands = recording[0].shape[2]
@@ -1058,6 +1241,11 @@ def _evaluate_tier(
             for dist, eid in ranked[:5]
         ],
     }
+    salute_override = (
+        _match_head_salute(frames, aspect_ratio, allowed_set, allow_rare=allow_rare_salute)
+        if (not bilateral and not is_rare_tier and idx is not None)
+        else None
+    )
     if in_range and (len(ranked) == 1 or ranked[1][0] - ranked[0][0] >= min_separation):
         # Require >=10/24 paired resampled frames AND >=10 raw frames of the weaker hand (scaled for
         # short clips) for loose (>0.35) or rare bilateral trajectory matches, preventing brief 5-8 frame
@@ -1073,10 +1261,20 @@ def _evaluate_tier(
         if weak_overlap:
             tier_info["verdict"] = "bilateral_too_few_paired_frames" if bilateral else "unilateral_rare_too_short"
         else:
+            if ranked[0][1] in ("q-chao", "q-tuan-lenh") and salute_override is not None:
+                tier_info["verdict"] = "head_salute_directional_matched"
+                if trace is not None:
+                    trace.update(tier_info)
+                return salute_override, tier_info
             tier_info["verdict"] = "trajectory_matched"
             if trace is not None:
                 trace.update(tier_info)
             return _match_result(*ranked[0]), tier_info
+    if salute_override is not None:
+        tier_info["verdict"] = "head_salute_matched"
+        if trace is not None:
+            trace.update(tier_info)
+        return salute_override, tier_info
     if not bilateral and not is_rare_tier:
         if (chung_toi := _match_chung_toi_family(frames, aspect_ratio, allowed_set)) is not None:
             tier_info["verdict"] = "chung_toi_family_matched"
@@ -1140,11 +1338,12 @@ def match_live_words(frames, aspect_ratio, entries, *, allowed_ids=None, vocab_s
     full_bucket = idx["buckets"][hands] if idx is not None else None
     priority_bucket = full_bucket.get("priority_sub") if full_bucket is not None else None
 
+    allow_rare_salute = vocab_scope != "common"
     # Single-tier path only when no priority sub-bucket exists or allowed_set is already a tiny subset (<=40).
     if priority_bucket is None or (allowed_set is not None and len(allowed_set) <= 40):
         res, info = _evaluate_tier(
             frames, aspect_ratio, recording, full_bucket, entries, idx,
-            allowed_set=allowed_set, is_rare_tier=False, trace=trace,
+            allowed_set=allowed_set, is_rare_tier=False, allow_rare_salute=allow_rare_salute, trace=trace,
         )
         if trace is not None and (res is None or res.get("status") == "ambiguous_word"):
             trace.update(info)
@@ -1153,7 +1352,7 @@ def match_live_words(frames, aspect_ratio, entries, *, allowed_ids=None, vocab_s
     # Tier 1: Fast priority (common + builtin + user-pinned entries, respecting word_scope allowed_set)
     res_t1, info_t1 = _evaluate_tier(
         frames, aspect_ratio, recording, priority_bucket, entries, idx,
-        allowed_set=allowed_set, is_rare_tier=False, trace=trace,
+        allowed_set=allowed_set, is_rare_tier=False, allow_rare_salute=allow_rare_salute, trace=trace,
     )
     if res_t1 and res_t1.get("status") == "word_matched":
         return res_t1

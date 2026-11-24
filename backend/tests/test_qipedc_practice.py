@@ -694,3 +694,80 @@ def test_chung_toi_family_recognized_for_1_to_5_fingers_and_not_confused_with_co
             }).json()["data"]
             assert resp["entry_id"] == expected_id, f"Expected {expected_id}, got {resp}"
             assert resp["sign"] != "con sâu"
+
+
+def test_head_salute_distinguishes_chao_outward_from_tuan_lenh_inward_and_blocks_em_gai_on_chest():
+    def make_salute_clip(*, outward: bool):
+        t_len = 20
+        seq = np.zeros((t_len, 75, 3), dtype=np.float32)
+        seq[:, 2] = [0.54, 0.25, 0.0]   # left eye
+        seq[:, 5] = [0.46, 0.25, 0.0]   # right eye
+        seq[:, 9] = [0.48, 0.34, 0.0]
+        seq[:, 10] = [0.52, 0.34, 0.0]
+        seq[:, 11] = [0.64, 0.46, 0.0]
+        seq[:, 12] = [0.36, 0.46, 0.0]
+
+        # Right temple/forehead in image coords is roughly (0.44, 0.22)
+        for t in range(t_len):
+            u = t / (t_len - 1)
+            if outward:
+                # "xin chào / chào": start touching forehead (t=0..6), then salute outward & slightly up
+                prog = np.clip((u - 0.30) / 0.55, 0.0, 1.0)
+                tip_target = np.array([0.44 - 0.11 * prog, 0.22 - 0.06 * prog, 0.0], dtype=np.float32)
+            else:
+                # "tuân lệnh": start above head (y=0.11) and bring hand down/inward onto forehead and hold
+                prog = np.clip(u / 0.45, 0.0, 1.0)
+                tip_target = np.array([0.38 + 0.06 * prog, 0.11 + 0.11 * prog, 0.0], dtype=np.float32)
+
+            # Build flat adducted salute right hand (54..74) whose I/M tips land at tip_target
+            blade_vec = np.array([0.05, -0.09, 0.0], dtype=np.float32)
+            w = tip_target - blade_vec * 1.85
+            seq[t, 54] = w
+            offsets = [-0.014, -0.005, 0.005, 0.014]
+            for off, (mi, pi, di, ti) in zip(offsets, ((5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16), (17, 18, 19, 20))):
+                lat = np.array([off, off * 0.4, 0.0], dtype=np.float32)
+                mcp = w + blade_vec * 0.85 + lat
+                seq[t, 54 + mi] = mcp
+                seq[t, 54 + pi] = mcp + blade_vec * 0.40
+                seq[t, 54 + di] = mcp + blade_vec * 0.72
+                seq[t, 54 + ti] = mcp + blade_vec * 1.00
+            seq[t, 54 + 2] = w + blade_vec * 0.45
+            seq[t, 54 + 3] = w + blade_vec * 0.70
+            seq[t, 54 + 4] = w + blade_vec * 0.95
+        return seq
+
+    # Chest-only partial arc (should NEVER be misclassified as SSTCN 'Em gái')
+    chest_arc = np.zeros((30, 75, 3), dtype=np.float32)
+    chest_arc[:, 9] = [0.48, 0.30, 0.0]
+    chest_arc[:, 10] = [0.52, 0.30, 0.0]
+    chest_arc[:, 11] = [0.64, 0.46, 0.0]
+    chest_arc[:, 12] = [0.36, 0.46, 0.0]
+    for t in range(30):
+        w = np.array([0.42 + 0.08 * (t / 29.0), 0.58, 0.0], dtype=np.float32)
+        chest_arc[t, 54:75] = w + np.linspace(0.0, 0.04, 21)[:, None] * np.array([1.0, -0.4, 0.0])
+
+    with TestClient(app) as client:
+        out_chao = client.post("/api/recognize_sequence", json={
+            "sequence": make_salute_clip(outward=True).tolist(),
+            "mode": "words", "live_words": True, "aspect_ratio": 4 / 3,
+        }).json()["data"]
+        assert out_chao["entry_id"] == "q-chao"
+
+        in_tl = client.post("/api/recognize_sequence", json={
+            "sequence": make_salute_clip(outward=False).tolist(),
+            "mode": "words", "live_words": True, "aspect_ratio": 4 / 3,
+        }).json()["data"]
+        assert in_tl["entry_id"] == "q-tuan-lenh"
+
+        # Even if SSTCN tries to predict 'Em gái' on a chest-only gesture, corroboration blocks it.
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(recognizer, "predict_sequence", lambda **kw: {
+                "success": True, "sign": "Em gái", "label": "Em gái", "index": 86,
+                "entry_id": "q-em-gai", "confidence": 0.95, "top_k": [],
+            })
+            chest_resp = client.post("/api/recognize_sequence", json={
+                "sequence": chest_arc.tolist(),
+                "mode": "words", "live_words": True, "aspect_ratio": 4 / 3,
+            }).json()["data"]
+            assert chest_resp["sign"] != "Em gái"
+            assert chest_resp["sign"] == "NEUTRAL"
