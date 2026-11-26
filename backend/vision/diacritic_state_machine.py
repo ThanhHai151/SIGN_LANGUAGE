@@ -208,6 +208,8 @@ class BaselineSnapshot:
     middle_dy: float = 0.0
     d_thumb_wrist_norm: float = 1.0
     d_thumb_index_mcp_norm: float = 0.3
+    d_thumb_index_tip_norm: float = 0.2
+    d_thumb_middle_tip_norm: float = 0.25
     sample_count: int = 1
 
 @dataclass
@@ -227,6 +229,7 @@ class MotionFrame:
     index_pip_angle: float
     index_curl: float
     d_pinky_wrist_norm: float = 1.0
+    d_ring_wrist_norm: float = 1.0
     middle_pip_angle: float = 0.0
     middle_dy: float = 0.0
     d_thumb_wrist_norm: float = 1.0
@@ -427,6 +430,8 @@ class DiacriticStateMachine:
             middle_dy=self._median_value([f.middle_dy for f in frames]),
             d_thumb_wrist_norm=self._median_value([f.d_thumb_wrist_norm for f in frames]),
             d_thumb_index_mcp_norm=self._median_value([f.d_thumb_index_mcp_norm for f in frames]),
+            d_thumb_index_tip_norm=self._median_value([f.d_thumb_index_tip_norm for f in frames]),
+            d_thumb_middle_tip_norm=self._median_value([f.d_thumb_middle_tip_norm for f in frames]),
             sample_count=len(frames),
         )
 
@@ -492,6 +497,7 @@ class DiacriticStateMachine:
         d_im_norm = calculate_distance(shifted[8], shifted[12]) / palm_scale
         d_pi_norm = calculate_distance(shifted[20], shifted[8]) / palm_scale
         d_pw_norm = calculate_distance(shifted[20], shifted[0]) / palm_scale
+        d_rw_norm = calculate_distance(shifted[16], shifted[0]) / palm_scale
         d_tw_norm = calculate_distance(shifted[4], shifted[0]) / palm_scale
         d_t5_norm = calculate_distance(shifted[4], shifted[5]) / palm_scale
         d_t8_norm = calculate_distance(shifted[4], shifted[8]) / palm_scale
@@ -517,6 +523,7 @@ class DiacriticStateMachine:
             index_pip_angle=pip_angle,
             index_curl=fstates.get("index_curl", 0.0),
             d_pinky_wrist_norm=d_pw_norm,
+            d_ring_wrist_norm=d_rw_norm,
             middle_pip_angle=mid_pip_angle,
             middle_dy=mid_dy,
             d_thumb_wrist_norm=d_tw_norm,
@@ -643,15 +650,44 @@ class DiacriticStateMachine:
                 curr_frame.d_pinky_wrist_norm <= 0.90):
                 return "Ô", f"Tạo nón trỏ-giữa (d_IM={curr_frame.d_index_middle_norm:.2f} >= 0.15, PIP={curr_frame.index_pip_angle:.1f}° <= 125.0°)"
 
-            # Ưu tiên 2: Chữ Ơ (QIPEDC D0508N: Móc râu ngón út, ngón cái không bung ngang thành Shaka Y)
-            is_o_horn = (
-                not is_y_shaka and (
-                    (curr_frame.d_pinky_index_norm >= self.o_horn_dist_threshold and curr_frame.d_pinky_wrist_norm >= 0.80) or
-                    (curr_frame.d_pinky_wrist_norm >= 1.25 and curr_frame.pinky_curl <= 0.30)
+            # Ưu tiên 2: Chữ Ơ (QIPEDC D0508N: Móc râu ngón út, bảo toàn vòng O và chặn mở cả bàn tay / Shaka Y)
+            d_pi_gain = curr_frame.d_pinky_index_norm - baseline.d_pinky_index_norm
+            d_pw_gain = curr_frame.d_pinky_wrist_norm - baseline.d_pinky_wrist_norm
+            pinky_uncurl = baseline.pinky_curl - curr_frame.pinky_curl
+            pinky_ring_sep = curr_frame.d_pinky_wrist_norm - curr_frame.d_ring_wrist_norm
+            max_allowed_d_ti = max(0.38, baseline.d_thumb_index_tip_norm + 0.05)
+            max_allowed_d_tm = max(0.34, baseline.d_thumb_middle_tip_norm + 0.08)
+
+            has_o_horn_motion = (
+                d_pi_gain >= 0.30
+                or (d_pw_gain >= 0.25 and pinky_uncurl >= 0.15)
+            )
+            has_pinky_horn_separation = (
+                curr_frame.d_pinky_wrist_norm >= 1.15
+                and pinky_ring_sep >= 0.25
+                and (
+                    curr_frame.d_pinky_index_norm >= self.o_horn_dist_threshold
+                    or curr_frame.pinky_curl <= 0.30
                 )
             )
+            is_base_o_loop_preserved = (
+                curr_frame.d_thumb_index_tip_norm <= max_allowed_d_ti
+                and curr_frame.d_thumb_middle_tip_norm <= max_allowed_d_tm
+                and curr_frame.d_ring_wrist_norm >= 0.66
+                and d_im_growth <= 0.35
+            )
+            is_o_horn = (
+                not is_y_shaka
+                and has_o_horn_motion
+                and has_pinky_horn_separation
+                and is_base_o_loop_preserved
+            )
             if is_o_horn:
-                return "Ơ", f"Bật râu ngón út (dist={curr_frame.d_pinky_index_norm:.2f} >= {self.o_horn_dist_threshold:.2f}, d_PW={curr_frame.d_pinky_wrist_norm:.2f})"
+                return "Ơ", (
+                    f"Bật râu ngón út (dist={curr_frame.d_pinky_index_norm:.2f}, "
+                    f"d_PI_gain={d_pi_gain:+.2f}, d_PW={curr_frame.d_pinky_wrist_norm:.2f}, "
+                    f"d_PW_RW={pinky_ring_sep:+.2f}, d_TI={curr_frame.d_thumb_index_tip_norm:.2f})"
+                )
 
         # 4. Nhóm U -> {Ư}
         elif base == "U":

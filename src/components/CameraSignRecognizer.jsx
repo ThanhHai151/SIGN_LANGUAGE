@@ -8,6 +8,8 @@ import {
   sendLandmarksForRecognition,
   clearCurrentSentence,
   speakVietnamese,
+  cancelVietnameseSpeech,
+  initSpeechSynthesisVoices,
   mediaUrl,
   mediaId,
   requestQipedcPractice,
@@ -16,6 +18,7 @@ import {
   saveCalibrationSample,
   fetchCalibrationSummary
 } from '../services/api';
+import { createTtsOrchestrator } from '../utils/ttsOrchestrator';
 import WordDebugPanel from './WordDebugPanel';
 import CameraDiagnostic from './CameraDiagnostic';
 import { useCameraDiagnostic } from './useCameraDiagnostic';
@@ -401,7 +404,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
             if (data.top_k) setTopKPredictions(sanitizeWordTopK(data.top_k));
             if (data.confirmed && data.new_token && data.sign !== 'NEUTRAL') {
               setSentence((prev) => (prev ? `${prev} ${data.new_token}` : data.new_token));
-              if (ttsEnabled) speakVietnamese(data.new_token);
+              if (ttsEnabledRef.current) speakVietnamese(data.new_token);
             }
           }
         }
@@ -451,13 +454,34 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
   const isFrameBusyRef = useRef(false); // Frame-dropping lock chống nghẽn luồng xử lý
   const lastMotionUpdateRef = useRef(0);
 
-  // Đồng bộ mode thời gian thực chống Stale Closure & Out-of-Order In-Flight Requests
+  // Đồng bộ mode & TTS thời gian thực chống Stale Closure & Out-of-Order In-Flight Requests
   const conversionModeRef = useRef(conversionMode);
   const recognitionModeRef = useRef(recognitionMode);
+  const ttsEnabledRef = useRef(ttsEnabled);
   const requestGenRef = useRef(0);
-  const pendingTtsTimerRef = useRef(null);
+  const instantHadHandsRef = useRef(false);
+  const instantNoHandCountRef = useRef(0);
+  const instantReleasePendingRef = useRef(false);
+  const ttsOrchestratorRef = useRef(null);
+  if (!ttsOrchestratorRef.current) {
+    ttsOrchestratorRef.current = createTtsOrchestrator({
+      speakFn: speakVietnamese,
+      cancelFn: cancelVietnameseSpeech,
+    });
+  }
   const monotonicTsGenRef = useRef(createMonotonicTimestampGenerator());
   const lastPilotTrialKeyRef = useRef(null);
+
+  useEffect(() => {
+    initSpeechSynthesisVoices();
+  }, []);
+
+  useEffect(() => {
+    ttsEnabledRef.current = ttsEnabled;
+    if (!ttsEnabled) {
+      ttsOrchestratorRef.current?.reset({ cancelAudio: true });
+    }
+  }, [ttsEnabled]);
 
   useEffect(() => {
     conversionModeRef.current = conversionMode;
@@ -871,6 +895,12 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
     setCameraActive(false);
     cameraActiveRef.current = false;
     isFrameBusyRef.current = false;
+    isInferringRef.current = false;
+    requestGenRef.current += 1;
+    instantHadHandsRef.current = false;
+    instantNoHandCountRef.current = 0;
+    instantReleasePendingRef.current = false;
+    ttsOrchestratorRef.current?.reset({ cancelAudio: true });
     sequenceBufferRef.current = [];
     windowTimestampsRef.current = [];
     liveWordsRef.current = newLiveWordState();
@@ -1000,6 +1030,10 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
     recognitionModeRef.current = newRecMode;
     requestGenRef.current += 1; // Vô hiệu hoá tất cả response đang bay (in-flight) của mode cũ
     isInferringRef.current = false;
+    instantHadHandsRef.current = false;
+    instantNoHandCountRef.current = 0;
+    instantReleasePendingRef.current = false;
+    ttsOrchestratorRef.current?.reset({ cancelAudio: true });
     monotonicTsGenRef.current.reset(0);
     lastPilotTrialKeyRef.current = null;
 
@@ -1886,7 +1920,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
                     { token, confidence: data.confidence, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) },
                   ]);
 
-                  if (ttsEnabled) {
+                  if (ttsEnabledRef.current) {
                     let textToSpeak = data.tts_text;
                     if (!textToSpeak) {
                       if (data.type === 'digit' || requestMode === 'digits') {
@@ -1949,9 +1983,75 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
       }
     }
 
-    // 3. CHẾ ĐỘ 2: ĐÁNH VẦN CHỮ CÁI TỨC THÌ (<5ms)
+    // 3. CHẾ ĐỘ 2: ĐÁNH VẦN CHỮ CÁI & CHỮ SỐ TỨC THÌ (<5ms)
     else if (currentRecognitionMode === 'instant') {
-      if (!hasHands && !pilotMetadataProviderRef.current) return;
+      const dispatchInstantRelease = (releaseMode, releaseGen) => {
+        if (!cameraActiveRef.current) return;
+        isInferringRef.current = true;
+        const releaseTs = monotonicTsGenRef.current.next(getEpochSecondsNow());
+        sendLandmarksForRecognition([], [], 'Right', releaseMode, {
+          timestamp: releaseTs,
+          landmark_extract_ts: releaseTs,
+          request_send_ts: releaseTs,
+        })
+          .then((relResp) => {
+            if (releaseGen !== requestGenRef.current || conversionModeRef.current !== releaseMode) {
+              return;
+            }
+            if (relResp && !relResp.backend_error && relResp.success && relResp.data) {
+              const relData = relResp.data;
+              if (relData.tts_speak) {
+                ttsOrchestratorRef.current?.speakConfirmedEvent({
+                  enabled: ttsEnabledRef.current,
+                  eventId: relData.tts_event_id || relData.confirm_event_id || null,
+                  text: relData.tts_speak,
+                  mode: releaseMode,
+                  digitMap: DIGIT_TTS_MAP,
+                });
+              }
+              setCurrentResult({
+                sign: 'NEUTRAL',
+                label: releaseMode === 'digits' ? 'Chờ cử chỉ chữ số...' : 'Chờ cử chỉ chữ cái...',
+                confidence: 0,
+                type: '',
+                description: '',
+                category: releaseMode === 'digits' ? 'Chữ số VSL' : 'Bảng chữ cái VSL',
+                video_url: '',
+              });
+            }
+          })
+          .catch(() => {
+            // Ignore transient release network error
+          })
+          .finally(() => {
+            if (releaseGen === requestGenRef.current) {
+              isInferringRef.current = false;
+            }
+          });
+      };
+
+      if (!hasHands && !pilotMetadataProviderRef.current) {
+        if (!instantHadHandsRef.current) return;
+        instantNoHandCountRef.current += 1;
+        // Sau 2 frame liên tiếp mất bàn tay (~60ms): gửi ngay 1 bản tin release để Backend xả TTS chữ nền đang chờ (A/D/E/O/U)
+        if (instantNoHandCountRef.current >= 2) {
+          instantHadHandsRef.current = false;
+          instantNoHandCountRef.current = 0;
+          if (!isInferringRef.current) {
+            instantReleasePendingRef.current = false;
+            dispatchInstantRelease(currentConversionMode, requestGenRef.current);
+          } else {
+            instantReleasePendingRef.current = true;
+          }
+        }
+        return;
+      }
+
+      if (hasHands) {
+        instantHadHandsRef.current = true;
+        instantNoHandCountRef.current = 0;
+        instantReleasePendingRef.current = false;
+      }
 
       if (!isInferringRef.current) {
         isInferringRef.current = true;
@@ -2107,16 +2207,15 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
                 video_url: ''
               });
 
-              // Xử lý phát âm TTS commit theo vòng đời cử chỉ từ backend (Task Master Final Token & TTS)
-              if (ttsEnabled && data.tts_speak) {
-                if (pendingTtsTimerRef.current) {
-                  clearTimeout(pendingTtsTimerRef.current);
-                  pendingTtsTimerRef.current = null;
-                }
-                const speakText = (requestMode === 'digits' && typeof data.tts_speak === 'string')
-                  ? (DIGIT_TTS_MAP[data.tts_speak] || data.tts_speak.replace(/^Số\s*/, ''))
-                  : data.tts_speak;
-                speakVietnamese(speakText);
+              // Nguồn điều phối TTS duy nhất trên Frontend dựa trên sự kiện xác nhận từ Backend (Checkpoint 5)
+              if (data.tts_speak) {
+                ttsOrchestratorRef.current?.speakConfirmedEvent({
+                  enabled: ttsEnabledRef.current,
+                  eventId: data.tts_event_id || data.confirm_event_id || null,
+                  text: data.tts_speak,
+                  mode: requestMode,
+                  digitMap: DIGIT_TTS_MAP,
+                });
               }
 
               if (data.confirmed && data.new_token && data.sign !== 'NEUTRAL') {
@@ -2176,41 +2275,6 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
                     }
                   ]);
                 }
-
-                // Fallback TTS: Chỉ kích hoạt nếu backend không trả về trường tts_speak
-                if (ttsEnabled && !data.tts_speak) {
-                  let textToSpeak = data.tts_text;
-                  if (!textToSpeak) {
-                    if (data.type === 'digit' || requestMode === 'digits') {
-                      textToSpeak = DIGIT_TTS_MAP[cleanToken] || cleanToken;
-                    } else {
-                      textToSpeak = cleanToken;
-                    }
-                  }
-
-                  const BASE_LETTERS = ['A', 'D', 'E', 'O', 'U'];
-                  if (data.replaced_token) {
-                    if (pendingTtsTimerRef.current) {
-                      clearTimeout(pendingTtsTimerRef.current);
-                      pendingTtsTimerRef.current = null;
-                    }
-                    speakVietnamese(textToSpeak);
-                  } else if (BASE_LETTERS.includes(cleanToken)) {
-                    if (pendingTtsTimerRef.current) {
-                      clearTimeout(pendingTtsTimerRef.current);
-                    }
-                    pendingTtsTimerRef.current = setTimeout(() => {
-                      speakVietnamese(textToSpeak);
-                      pendingTtsTimerRef.current = null;
-                    }, 1200);
-                  } else {
-                    if (pendingTtsTimerRef.current) {
-                      clearTimeout(pendingTtsTimerRef.current);
-                      pendingTtsTimerRef.current = null;
-                    }
-                    speakVietnamese(textToSpeak);
-                  }
-                }
               }
             }
           })
@@ -2230,6 +2294,10 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
           .finally(() => {
             if (currentGen === requestGenRef.current) {
               isInferringRef.current = false;
+              if (instantReleasePendingRef.current) {
+                instantReleasePendingRef.current = false;
+                dispatchInstantRelease(conversionModeRef.current, currentGen);
+              }
             }
           });
       }
@@ -2269,6 +2337,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
   };
 
   const handleClearSentence = async () => {
+    ttsOrchestratorRef.current?.reset({ cancelAudio: true });
     await clearCurrentSentence();
     setSentence('');
     setRecognizedTokens([]);
@@ -2284,6 +2353,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
   useEffect(() => {
     return () => {
       stopCamera();
+      ttsOrchestratorRef.current?.reset({ cancelAudio: true, clearHistory: true });
     };
   }, []);
 
@@ -2609,7 +2679,7 @@ export default function CameraSignRecognizer({ ttsEnabled, practiceEntry, liveQi
               <div className="workspace-inspector-heading">
                 <h2 id="camera-subtitles-title">Phụ đề</h2>
                 <div className="caption-actions">
-                  <button type="button" onClick={() => speakVietnamese(formatSentenceForTTS(sentence))}
+                  <button type="button" onClick={() => ttsOrchestratorRef.current?.speakManualSubtitle({ text: formatSentenceForTTS(sentence) })}
                     disabled={!sentence} className="icon-button" aria-label="Đọc phụ đề" title="Đọc phụ đề"><Volume2 size={16} /></button>
                   <button type="button" onClick={handleCopySentence} disabled={!sentence} className="icon-button"
                     aria-label={copied ? 'Đã chép phụ đề' : 'Chép phụ đề'} title={copied ? 'Đã chép' : 'Chép phụ đề'}><Copy size={16} /></button>

@@ -504,27 +504,149 @@ export async function clearCurrentSentence() {
   }
 }
 
-/**
- * Phát âm tiếng Việt (Text-to-Speech) sử dụng Web Speech API
- */
-export function speakVietnamese(text) {
-  if (!window.speechSynthesis || !text) return;
+let cachedVietnameseVoice = null;
+let speechVoicesInitialized = false;
+let activeUtteranceCount = 0;
+let lastTtsTelemetry = {
+  text: null,
+  callEpochMs: null,
+  onstartLatencyMs: null,
+  voiceName: null,
+  localService: null,
+};
 
-  window.speechSynthesis.cancel(); // Dừng câu trước nếu đang nói
+function pickBestVietnameseVoice(voices) {
+  if (!Array.isArray(voices) || voices.length === 0) return null;
+  const viVoices = voices.filter(
+    (v) =>
+      v &&
+      typeof v.lang === 'string' &&
+      (/^vi([-_]|$)/i.test(v.lang) || v.lang.toUpperCase().includes('VN'))
+  );
+  if (viVoices.length === 0) return null;
+  // Ưu tiên giọng nội bộ trên máy (localService) để triệt tiêu độ trễ mạng trước khi phát âm
+  return viVoices.find((v) => v.localService) || viVoices[0];
+}
+
+export function initSpeechSynthesisVoices() {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return null;
+  const synth = window.speechSynthesis;
+  const refreshVoices = () => {
+    try {
+      const voices = synth.getVoices();
+      const selected = pickBestVietnameseVoice(voices);
+      if (selected) {
+        cachedVietnameseVoice = selected;
+      }
+    } catch {
+      // Bỏ qua lỗi truy vấn danh sách giọng đọc của trình duyệt
+    }
+  };
+
+  refreshVoices();
+  if (!speechVoicesInitialized) {
+    speechVoicesInitialized = true;
+    if (typeof synth.addEventListener === 'function') {
+      synth.addEventListener('voiceschanged', refreshVoices);
+    } else if ('onvoiceschanged' in synth) {
+      synth.onvoiceschanged = refreshVoices;
+    }
+  }
+  return cachedVietnameseVoice;
+}
+
+if (typeof window !== 'undefined' && window.speechSynthesis) {
+  initSpeechSynthesisVoices();
+}
+
+export function cancelVietnameseSpeech() {
+  activeUtteranceCount = 0;
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  try {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+      window.speechSynthesis.cancel();
+    }
+  } catch {
+    // Bỏ qua lỗi hủy speechSynthesis
+  }
+}
+
+export function getLastTtsTelemetry() {
+  return { ...lastTtsTelemetry };
+}
+
+/**
+ * Phát âm tiếng Việt (Text-to-Speech) sử dụng Web Speech API.
+ * - Không gọi cancel() vô điều kiện khi hàng đợi rỗng để tránh độ trễ khởi động lại audio pipeline.
+ * - Tự động dùng giọng tiếng Việt đã nạp sẵn qua voiceschanged.
+ */
+export function speakVietnamese(text, options = {}) {
+  if (typeof window === 'undefined' || !window.speechSynthesis || !text) return null;
+
+  const synth = window.speechSynthesis;
+  const { interrupt = false, onStart = null } = options || {};
+
+  if (interrupt) {
+    if (synth.speaking || synth.pending) {
+      synth.cancel();
+    }
+    activeUtteranceCount = 0;
+  } else {
+    if (synth.paused) {
+      try { synth.resume(); } catch { /* ignore */ }
+    }
+    // Chỉ dọn hàng đợi nếu bị ứ đọng >= 2 câu chờ chưa đọc xong; không hủy khi đang rảnh hoặc chỉ có 1 âm tiết ngắn
+    if ((synth.speaking || synth.pending) && activeUtteranceCount >= 2) {
+      synth.cancel();
+      activeUtteranceCount = 0;
+    }
+  }
 
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = 'vi-VN';
   utterance.rate = 1.0;
   utterance.pitch = 1.0;
 
-  // Cố gắng tìm giọng đọc tiếng Việt nếu có trong trình duyệt
-  const voices = window.speechSynthesis.getVoices();
-  const viVoice = voices.find(v => v.lang.includes('vi') || v.lang.includes('VN'));
+  const viVoice = cachedVietnameseVoice || initSpeechSynthesisVoices();
   if (viVoice) {
     utterance.voice = viVoice;
   }
 
-  window.speechSynthesis.speak(utterance);
+  const callPerfNow = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  const callEpochMs = Date.now();
+  lastTtsTelemetry = {
+    text,
+    callEpochMs,
+    onstartLatencyMs: null,
+    voiceName: viVoice?.name || null,
+    localService: typeof viVoice?.localService === 'boolean' ? viVoice.localService : null,
+  };
+
+  activeUtteranceCount += 1;
+  let settled = false;
+  const markSettled = () => {
+    if (!settled) {
+      settled = true;
+      activeUtteranceCount = Math.max(0, activeUtteranceCount - 1);
+    }
+  };
+
+  utterance.onstart = () => {
+    const startPerfNow = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const latencyMs = Math.max(0, Math.round((startPerfNow - callPerfNow) * 10) / 10);
+    lastTtsTelemetry = {
+      ...lastTtsTelemetry,
+      onstartLatencyMs: latencyMs,
+    };
+    if (typeof onStart === 'function') {
+      try { onStart(latencyMs); } catch { /* ignore */ }
+    }
+  };
+  utterance.onend = markSettled;
+  utterance.onerror = markSettled;
+
+  synth.speak(utterance);
+  return utterance;
 }
 
 /**
