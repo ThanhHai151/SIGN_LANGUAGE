@@ -1,4 +1,4 @@
-"""Compare a webcam recording with the selected QIPEDC video."""
+"""Compare a webcam recording with a QIPEDC reference video and gate live sign motion."""
 
 from functools import lru_cache
 import os
@@ -14,8 +14,6 @@ from backend.vision.skeleton_norm import normalize_sequence_tjc_v2
 
 FRAMES = 30
 LIMIT = 0.28
-TIME_SIGN_ENTRY = "q-may-gio"
-TIME_SIGN_VIDEO = "W02196"
 _prepare_lock = Lock()
 
 
@@ -78,7 +76,20 @@ def _visible_clip(frames):
     return frames[valid[0]:valid[-1] + 1], int(valid[0])
 
 
-def _fill_short_gaps(clip):
+def _rotate_hand_2d(shape, angle_rad):
+    if abs(angle_rad) < 1e-4:
+        return shape
+    c = float(np.cos(angle_rad))
+    s = float(np.sin(angle_rad))
+    out = shape.copy()
+    rx, ry = shape[:, 0], shape[:, 1]
+    out[:, 0] = rx * c - ry * s
+    out[:, 1] = rx * s + ry * c
+    return out
+
+
+def _fill_short_gaps(clip, *, allow_extended_pose_bridge=False):
+    """Interpolate short landmark dropouts and optionally reconstruct pose-corroborated hand occlusion."""
     clip = clip.copy()
     for joints in (slice(11, 12), slice(12, 13)):
         points = clip[:, joints]
@@ -88,18 +99,34 @@ def _fill_short_gaps(clip):
             if 0 < gap <= 3:
                 scale = np.arange(1, gap + 1, dtype=np.float32)[:, None, None] / (gap + 1)
                 points[left + 1:right] = points[left] + scale * (points[right] - points[left])
-    for joints, pose_wrist_idx in ((slice(33, 54), 15), (slice(54, 75), 16)):
+
+    shoulders_ok = np.all(np.any(clip[:, [11, 12], :2] != 0, axis=2), axis=1)
+    sw_arr = np.linalg.norm(clip[:, 11, :2] - clip[:, 12, :2], axis=1)
+    sw_med = float(np.median(sw_arr[shoulders_ok])) if shoulders_ok.any() else 0.25
+    sw_med = max(sw_med, 0.08)
+    sh_y = np.where(shoulders_ok, clip[:, [11, 12], 1].mean(axis=1), 0.45)
+    max_raised_y = sh_y + 0.90 * sw_med
+    max_internal_pose_gap = 12 if allow_extended_pose_bridge else 2
+
+    for joints, pose_wrist_idx, pose_index_idx in ((slice(33, 54), 15, 19), (slice(54, 75), 16, 20)):
         points = clip[:, joints]
         pose_wrist = clip[:, pose_wrist_idx]
+        pose_index = clip[:, pose_index_idx]
         valid = np.flatnonzero(np.any(points, axis=(1, 2)))
+        if len(valid) == 0:
+            continue
+
+        # 1. Internal gaps bounded by two real hand observations
         for left, right in zip(valid, valid[1:]):
             gap = right - left - 1
             if gap <= 0:
                 continue
             scale = np.arange(1, gap + 1, dtype=np.float32)[:, None, None] / (gap + 1)
-            # Bridge 1-2 frame fast-motion/rotation dropouts along the tracked pose wrist curve
-            # when Holistic pose wrist is continuously present across the gap.
-            if gap <= 2 and np.all(np.any(pose_wrist[left:right + 1] != 0, axis=1)):
+            pw_span = pose_wrist[left:right + 1]
+            pw_valid = np.all(np.any(pw_span[:, :2] != 0, axis=1)) and np.all(
+                pw_span[:, 1] <= max_raised_y[left:right + 1]
+            )
+            if gap <= max_internal_pose_gap and pw_valid:
                 err_l = points[left, 0] - pose_wrist[left]
                 err_r = points[right, 0] - pose_wrist[right]
                 wrist_path = pose_wrist[left + 1:right] + err_l + scale[:, 0, :] * (err_r - err_l)
@@ -108,6 +135,49 @@ def _fill_short_gaps(clip):
                 points[left + 1:right] = wrist_path[:, None, :] + shape_l + scale * (shape_r - shape_l)
             elif gap <= 2:
                 points[left + 1:right] = points[left] + scale * (points[right] - points[left])
+
+        # 1.5 Repair physically impossible single-fingertip tracking spikes (>0.65 shoulder widths from MCP)
+        valid_frames = np.flatnonzero(np.any(points, axis=(1, 2)))
+        if len(valid_frames):
+            max_finger_len = 0.65 * sw_med
+            for mcp_i, pip_i, dip_i, tip_i in ((5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16), (17, 18, 19, 20)):
+                seg_vec = points[valid_frames, tip_i, :2] - points[valid_frames, mcp_i, :2]
+                bad = np.linalg.norm(seg_vec, axis=1) > max_finger_len
+                if np.any(bad):
+                    bad_idx = valid_frames[bad]
+                    points[bad_idx, tip_i] = points[bad_idx, dip_i] + (points[bad_idx, dip_i] - points[bad_idx, pip_i])
+
+        if not allow_extended_pose_bridge or len(valid) < 2:
+            continue
+
+        # 2. Stationary passive-hand support (e.g., passive wrist/palm held still in signing space
+        # while the active hand taps/slides over it and temporarily occludes its finger landmarks).
+        first_v, last_v = int(valid[0]), int(valid[-1])
+        pw_ok = np.any(pose_wrist[:, :2] != 0, axis=1) & (pose_wrist[:, 1] <= max_raised_y)
+        if first_v > 0 and np.all(pw_ok[:first_v + 1]):
+            lead_ptp = float(np.linalg.norm(np.ptp(pose_wrist[:first_v + 1, :2], axis=0)))
+            anchor_err = float(np.linalg.norm(points[first_v, 0, :2] - pose_wrist[first_v, :2]))
+            if lead_ptp <= 0.12 * sw_med and anchor_err <= 0.22 * sw_med:
+                offset = points[first_v] - pose_wrist[first_v:first_v + 1]
+                points[:first_v] = pose_wrist[:first_v, None, :] + offset[None, :, :]
+        if last_v < len(clip) - 1 and np.all(pw_ok[last_v:]):
+            tail_ptp = float(np.linalg.norm(np.ptp(pose_wrist[last_v:, :2], axis=0)))
+            anchor_err = float(np.linalg.norm(points[last_v, 0, :2] - pose_wrist[last_v, :2]))
+            if tail_ptp <= 0.12 * sw_med and anchor_err <= 0.22 * sw_med:
+                base_shape = points[last_v] - points[last_v, :1]
+                base_err = points[last_v, 0] - pose_wrist[last_v]
+                pi_anchor_ok = np.any(pose_index[last_v, :2] != 0)
+                base_ang = (
+                    float(np.arctan2(pose_index[last_v, 1] - pose_wrist[last_v, 1], pose_index[last_v, 0] - pose_wrist[last_v, 0]))
+                    if pi_anchor_ok else None
+                )
+                for t in range(last_v + 1, len(clip)):
+                    rot_shape = base_shape
+                    if base_ang is not None and np.any(pose_index[t, :2] != 0):
+                        cur_ang = float(np.arctan2(pose_index[t, 1] - pose_wrist[t, 1], pose_index[t, 0] - pose_wrist[t, 0]))
+                        delta = (cur_ang - base_ang + np.pi) % (2 * np.pi) - np.pi
+                        rot_shape = _rotate_hand_2d(base_shape, float(np.clip(delta * 0.5, -0.40, 0.40)))
+                    points[t] = (pose_wrist[t] + base_err)[None, :] + rot_shape
     return clip
 
 
@@ -179,51 +249,9 @@ def compare_recording(video_id, frames, aspect_ratio=1.0, mirror=False, either_h
     return {"matched": distance <= LIMIT, "similarity": round(max(0.0, 1.0 - distance), 3), "reason": None}
 
 
-def _time_sign_with_occlusion(body, hands, times, side, taps):
-    """Verify wrist contact and the opening hand when the supporting hand drops out."""
-    start = (33, 54)[side]
-    hand = body[:, start:start + 21]
-    fingers = hand[:, [8, 12, 16, 20]] - hand[:, :1]
-    palm = np.maximum(np.linalg.norm(hand[:, 9] - hand[:, 0], axis=1), 1e-4)
-    extension = np.linalg.norm(fingers, axis=2).mean(axis=1) / palm
-    spread = np.linalg.norm(hand[:, 8] - hand[:, 20], axis=1) / palm
-    # Check contact against at least one detected hand. The pose wrist can
-    # corroborate nearby frames when the hand tracker loses the supporting hand.
-    support_wrist = body[:, (54, 33)[side], :2]
-    elbow = body[:, (14, 13)[side], :2]
-    forearm = support_wrist - elbow
-    contact = np.linalg.norm(hand[:, 8, :2] - support_wrist, axis=1)
-    pose_wrist = body[:, (16, 15)[side], :2]
-    pose_forearm = pose_wrist - elbow
-    pose_contact = (hands[:, side] & np.any(pose_wrist != 0, axis=1) & np.any(elbow != 0, axis=1) &
-                    (np.abs(pose_forearm[:, 0]) >= np.abs(pose_forearm[:, 1])) &
-                    (np.linalg.norm(hand[:, 8, :2] - pose_wrist, axis=1) <= 0.50))
-    for tap in taps:
-        if contact[tap] > 0.30 or not elbow[tap].any() or abs(forearm[tap, 0]) < abs(forearm[tap, 1]):
-            continue
-        nearby = np.abs(times - times[tap]) <= 0.2
-        if nearby[taps].sum() < 2 and (nearby & pose_contact).sum() < 2:
-            continue
-        elapsed = times - times[tap]
-        tip_rise = hand[tap, 8, 1] - hand[:, 8, 1]
-        opened = (hands[:, side] & (elapsed >= 0.18) & (elapsed <= 1.60) &
-                  (tip_rise > 0.28) & (extension >= 1.55) &
-                  (extension - extension[tap] >= 0.4) & (spread >= 1.2))
-        pair_ends = np.flatnonzero(opened[:-1] & opened[1:]) + 1
-        candidate_ends = list(pair_ends)
-        # At low webcam FPS (~10-12 FPS, dt >= 0.075s), a crisp open-hand peak can span a single frame.
-        if not candidate_ends and len(times) >= 2 and float(np.median(np.diff(times))) >= 0.075:
-            strong_open = opened & (elapsed <= 1.45) & (extension >= 1.75) & (spread >= 1.40) & (tip_rise >= 0.35)
-            candidate_ends = np.flatnonzero(strong_open).tolist()
-        for end in candidate_ends:
-            tracked = hands[tap:end + 1, side]
-            if tracked.mean() >= 0.75 and np.diff(times[tap:end + 1][tracked]).max() <= 0.3:
-                return int(tap), int(end)
-    return None
-
-
-def analyze_live_words(frames, aspect_ratio, enable_time_sign, timestamps=None, trace=None):
-    """Analyze a rolling window before the closed-set classifier guesses a word."""
+def analyze_live_words(frames, aspect_ratio, timestamps=None, trace=None, **_kwargs):
+    """Sign-agnostic motion and landmark quality gate for rolling webcam windows."""
+    del timestamps, _kwargs
     raw_len = len(frames) if frames is not None else 0
     try:
         clip, first_frame = _visible_clip(frames)
@@ -245,10 +273,8 @@ def analyze_live_words(frames, aspect_ratio, enable_time_sign, timestamps=None, 
     hands = _tracked_hands(clip)
     body = normalize_sequence_tjc_v2(clip)
 
-    # Check hand motion relative to the shoulders, using [5, 95] percentiles so isolated
+    # Check hand motion relative to the shoulders using [5, 95] percentiles so isolated
     # single-frame jitter is ignored while fast round-trip signs still pass the motion gate.
-    # For small chest/face-level signs (e.g. "bực mình"), allow a lower threshold (0.08) when
-    # the wrist is clearly raised above waist level, while keeping 0.16 for lower resting hands.
     motion = False
     side_extents = [0.0, 0.0]
     effective_threshold = 0.16
@@ -285,58 +311,6 @@ def analyze_live_words(frames, aspect_ratio, enable_time_sign, timestamps=None, 
         if trace is not None:
             trace["status"] = "no_motion"
         return {"motion_detected": False, "status": "no_motion"}
-    if not enable_time_sign:
-        if trace is not None:
-            trace["status"] = "topic_excluded"
-        return {"motion_detected": True, "status": "topic_excluded"}
-    if not reference_path(TIME_SIGN_VIDEO).is_file():
-        if trace is not None:
-            trace["status"] = "reference_unavailable"
-        return {"motion_detected": True, "status": "reference_unavailable"}
-
-    times = np.arange(len(clip), dtype=np.float64) / 15
-    if timestamps is not None and len(timestamps) == len(frames):
-        observed = np.asarray(timestamps[first_frame:first_frame + len(clip)], dtype=np.float64) / 1000
-        if np.isfinite(observed).all() and (np.diff(observed) > 0).all():
-            times = observed
-
-    # The QIPEDC sign first points at the opposite wrist, then lifts the same hand.
-    # Requiring their order rejects a held pose and either phase performed alone.
-    first_tap = None
-    phase_result = None
-    for side, (tip, opposite_wrist) in enumerate(((41, 54), (62, 33))):
-        index = body[:, tip, :2]
-        other_tips = [tip + 4, tip + 8, tip + 12]
-        fingers_visible = np.any(clip[:, other_tips, :] != 0, axis=2).all(axis=1)
-        finger_height = np.median(body[:, other_tips, 1], axis=1)
-        taps = np.flatnonzero(hands.all(axis=1) & (np.linalg.norm(index - body[:, opposite_wrist, :2], axis=1) < 0.50))
-        for tap in taps:
-            if first_tap is None or tap < first_tap:
-                first_tap = tap
-            after = slice(tap + 2, None)
-            lifts = hands[after, side] & (index[tap, 1] - index[after, 1] > 0.28)
-            # A frozen index tip can hide the lift even while the other fingers track correctly.
-            if fingers_visible[tap] and len(lifts) >= 3:
-                other_lifts = (hands[after, side] & fingers_visible[after] &
-                               (finger_height[tap] - finger_height[after] > 0.28))
-                lifts[:-2] |= other_lifts[:-2] & other_lifts[1:-1] & other_lifts[2:]
-            if lifts.any():
-                if phase_result is None:
-                    match = compare_recording(TIME_SIGN_VIDEO, frames, aspect_ratio, either_hand=True)
-                    phase_result = {"motion_detected": True,
-                                    "status": "matched" if match["matched"] else match["reason"] or "low_similarity",
-                                    "similarity": match["similarity"], "tap_frame": int(first_frame + tap),
-                                    "lift_frame": int(first_frame + tap + 2 + np.flatnonzero(lifts)[0])}
-                    if match["matched"]:
-                        return phase_result
-                recovered = _time_sign_with_occlusion(body, raw_hands, times, side, taps[raw_hands[taps].all(axis=1)])
-                if recovered is not None:
-                    contact, opened = recovered
-                    return {"motion_detected": True, "status": "matched", "match_method": "phases",
-                            "similarity": None, "tap_frame": first_frame + contact, "lift_frame": first_frame + opened}
-                break
-    if phase_result is not None:
-        return phase_result
-    if first_tap is not None:
-        return {"motion_detected": True, "status": "lift_not_seen", "tap_frame": int(first_frame + first_tap)}
-    return {"motion_detected": True, "status": "wrist_not_seen"}
+    if trace is not None:
+        trace["status"] = "motion_detected"
+    return {"motion_detected": True, "status": "motion_detected"}

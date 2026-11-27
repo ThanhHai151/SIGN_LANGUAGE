@@ -13,6 +13,7 @@ import time
 import threading
 import collections
 import math
+from copy import copy
 from typing import Optional, Any, Dict, List
 import numpy as np
 import torch
@@ -163,6 +164,7 @@ class VSLRecognizer:
         self.alphabet_classifier = alphabet_classifier
         from backend.vision.digit_10_detector import VSL10GestureDetector
         self.digit_10_detector = VSL10GestureDetector()
+        self._last_digit_hand_at = None
 
         # 3. Mô-đun bổ sung 10 chữ cái tĩnh VSL (VSLStaticAlphabetHead - Task 6B/6C)
         self.supplemental_thresholds = dict(DEFAULT_SUPPLEMENTAL_THRESHOLDS)
@@ -204,6 +206,10 @@ class VSLRecognizer:
         self.prediction_history = collections.deque(maxlen=self.smoothing_window)
         self._pilot_temporal_lock = threading.RLock()
         self._pilot_temporal_states = {}
+        self._camera_temporal_states = collections.OrderedDict()
+        self._is_camera_stream = False
+        self._camera_shape = None
+        self._camera_shape_since = 0.0
         
         # 4. Quản lý câu và từ
         self.last_confirmed_sign = None
@@ -214,6 +220,7 @@ class VSLRecognizer:
         self._neutral_release_count = 0
         self._digit_seen_release = True
         self._digit_neutral_count = 0
+        self._neutral_since = None
         self._last_base_token_time = 0.0
         self._uncommitted_base_time = 0.0
         self._pending_tts_token = None
@@ -871,7 +878,6 @@ class VSLRecognizer:
 
         num_classes = int(getattr(self.sstcn_model, "num_classes", 102))
         class_names = getattr(self.sstcn_model, "class_names", None)
-        word_indices = getattr(self.sstcn_model, "word_class_indices", list(range(39, num_classes)))
         topic_map = getattr(self.sstcn_model, "topic_map", {}) or {}
         prep_ver = int(getattr(self.sstcn_model, "preprocessing_version", 1))
 
@@ -1048,16 +1054,7 @@ class VSLRecognizer:
                     allowed_indices = [int(i) for i in topic_map[topic_id] if 0 <= int(i) < logits.shape[1]]
 
                 if allowed_indices:
-                    # Tính softmax trên toàn bộ lớp từ (63 lớp) rồi mới lọc allowed_indices,
-                    # tránh việc ép các lớp ngoài phạm vi về -inf làm phồng nhiễu 47% lên 99%.
-                    word_denom = [int(i) for i in (word_indices or range(logits.shape[1])) if 0 <= int(i) < logits.shape[1]]
-                    if word_denom and set(allowed_indices).issubset(word_denom):
-                        denom_logits = torch.full_like(logits, -float('inf'))
-                        denom_tensor = torch.tensor(word_denom, dtype=torch.long, device=logits.device)
-                        denom_logits[:, denom_tensor] = logits[:, denom_tensor]
-                        probs = torch.softmax(denom_logits, dim=1).squeeze(0)
-                    else:
-                        probs = torch.softmax(logits, dim=1).squeeze(0)
+                    probs = torch.softmax(logits, dim=1).squeeze(0)
                     idx_tensor = torch.tensor(allowed_indices, dtype=torch.long, device=logits.device)
                     sub_probs = probs[idx_tensor]
                     k = min(5, len(allowed_indices))
@@ -1072,6 +1069,7 @@ class VSLRecognizer:
 
                 max_prob = float(top_k_probs[0])
                 pred_idx = int(top_k_indices[0])
+                is_global_winner = mode != "words" or pred_idx == int(logits[0].argmax())
 
             inference_latency_ms = round((time.time() - t_infer_start) * 1000, 2)
 
@@ -1085,7 +1083,7 @@ class VSLRecognizer:
             word_scope_valid = True
 
             # Kiểm tra ngưỡng tin cậy
-            if max_prob >= threshold and pred_idx < num_classes:
+            if is_global_winner and max_prob >= threshold and pred_idx < num_classes:
                 sign_info = self._resolve_sstcn_sign_info(pred_idx)
                 pred_term = sign_info["term"]
 
@@ -1185,7 +1183,7 @@ class VSLRecognizer:
                 "sign": sign_info["term"],
                 "label": sign_info.get("label", sign_info["term"]),
                 "index": pred_idx,
-                "confidence": 0.0 if scope_rejected else round(max_prob, 2),
+                "confidence": 0.0 if scope_rejected else round(max_prob, 6 if mode == "words" else 2),
                 "category": sign_info.get("category", ""),
                 "description": sign_info.get("description", ""),
                 "video_url": sign_info.get("video_url", ""),
@@ -1502,6 +1500,45 @@ class VSLRecognizer:
                 self.last_confirmed_sign = previous_confirmed_sign
                 self.last_confirmed_time = previous_confirmed_time
 
+    def predict_camera_frames(self, session_id, mode, frames):
+        """Process ordered webcam frames without mixing caption state between cameras."""
+        with self._pilot_temporal_lock:
+            sessions = self._camera_temporal_states
+            camera = sessions.get(session_id)
+            if camera is None:
+                # The loaded classifiers are shared, while each camera owns its mutable gesture state.
+                camera = copy(self)
+                if camera._explicit_smoothing_window is None:
+                    camera.smoothing_window = 10
+                camera.prediction_history = collections.deque(maxlen=camera.smoothing_window)
+                camera.digit_10_detector = type(self.digit_10_detector)()
+                camera.diacritic_fsms = {}
+                camera._exit_trackers = {}
+                camera._session_last_modes = {}
+                camera.pilot_logging_enabled = False
+                camera._is_camera_stream = True
+                camera.reset()
+                sessions[session_id] = camera
+                if len(sessions) > 64:
+                    sessions.popitem(last=False)
+            sessions.move_to_end(session_id)
+            return [
+                camera._predict_landmarks_impl(
+                    frame["landmarks"], multi_hands=frame["multi_hands"],
+                    session_id=session_id, mode=mode, timestamp=frame["timestamp"],
+                )
+                for frame in frames
+            ]
+
+    def _camera_shape_stable(self, sign, confidence, timestamp, min_hold=0.21):
+        if not self._is_camera_stream:
+            return True
+        shape = sign if confidence >= self.confidence_threshold else None
+        if shape != self._camera_shape:
+            self._camera_shape = shape
+            self._camera_shape_since = timestamp
+        return shape is not None and timestamp - self._camera_shape_since >= min_hold
+
     def _predict_landmarks_impl(
         self,
         landmarks_list,
@@ -1581,11 +1618,14 @@ class VSLRecognizer:
             self._replaceable_base_token = None
             self._seen_neutral_release = True
             self._neutral_release_count = 0
+            self._neutral_since = None
+            self._camera_shape_stable("NEUTRAL", 0.0, current_time)
             self._digit_seen_release = True
             self._digit_neutral_count = 0
             self._session_last_modes[session_key] = mode
             if hasattr(self, "digit_10_detector"):
                 self.digit_10_detector.reset()
+                self._last_digit_hand_at = None
             if fsm_key in self.diacritic_fsms:
                 self.diacritic_fsms[fsm_key].reset()
 
@@ -1604,11 +1644,15 @@ class VSLRecognizer:
                 p_sec = landmarks_secondary
 
         if not p_prim or len(p_prim) < 21:
+            self._camera_shape_stable("NEUTRAL", 0.0, current_time)
             self.prediction_history.append(("NEUTRAL", 0.0))
             self._digit_seen_release = True
             self._digit_neutral_count = 0
             if is_digits_mode and hasattr(self, "digit_10_detector"):
                 self.digit_10_detector.reset()
+                if self._last_digit_hand_at is not None and current_time - self._last_digit_hand_at >= 0.16:
+                    self.prediction_history.clear()
+                    self.last_confirmed_sign = None
             if fsm_key in self.diacritic_fsms:
                 self.diacritic_fsms[fsm_key].reset()
             _, tts_speak_token = self._update_gesture_release_and_tts(
@@ -1786,28 +1830,37 @@ class VSLRecognizer:
         # Độc lập từng ký hiệu, không ghép chuỗi số liên tiếp
         # -------------------------------------------------------------
         if is_digits_mode:
-            # 1. ƯU TIÊN 1: Nhận diện cử chỉ động riêng cho Số 10 VSL
-            det10_res = self.digit_10_detector.update(p_prim, timestamp=current_time)
-            if det10_res["detected"]:
+            if self._last_digit_hand_at is not None and current_time - self._last_digit_hand_at >= 0.60:
+                self.prediction_history.clear()
+                self.last_confirmed_sign = None
+                self.digit_10_detector.reset()
+                self._digit_seen_release = True
+                self._digit_neutral_count = 0
+                self._camera_shape_stable("NEUTRAL", 0.0, current_time)
+            self._last_digit_hand_at = current_time
+            from backend.vision.digit_classifier import digit_classifier
+            digit_res = digit_classifier.classify_detailed(p_prim)
+            # The outstretched thumb of a recognized 7 is distinct from 10.
+            if digit_res.get("digit") == "7":
+                self.digit_10_detector.reset()
+                det10_res = self.digit_10_detector.update(None, timestamp=current_time)
+            else:
+                det10_res = self.digit_10_detector.update(p_prim, timestamp=current_time)
+            if det10_res["detected"] and (self.last_confirmed_sign != "10" or self._digit_seen_release):
                 self.prediction_history.clear()
                 label_token = "10"
                 tts_text = DIGIT_TTS_MAP["10"]
                 replaced_10_token = None
-
-                # Chỉ thay thế "1" nếu "1" vừa phát sinh trong cùng cử chỉ chưa thả tay (tránh ghi đè số 1 độc lập trước đó)
                 if (
                     self.sentence_tokens
                     and self.sentence_tokens[-1] in ("1", "Số 1")
-                    and not getattr(self, "_digit_seen_release", True)
-                    and (current_time - self.last_confirmed_time <= 1.5)
+                    and self.last_confirmed_sign == "1"
+                    and not self._digit_seen_release
+                    and current_time - self.last_confirmed_time <= self.digit_10_detector.config.max_duration
                 ):
                     replaced_10_token = self.sentence_tokens[-1]
                     self.sentence_tokens[-1] = label_token
-                elif not (
-                    self.sentence_tokens
-                    and self.sentence_tokens[-1] == label_token
-                    and not getattr(self, "_digit_seen_release", True)
-                ):
+                else:
                     self.sentence_tokens.append(label_token)
 
                 self.last_confirmed_sign = "10"
@@ -1853,14 +1906,10 @@ class VSLRecognizer:
                 }
 
             # Kiểm tra thời gian cooldown sau khi vừa chốt Số 10
-            is_in_10_cooldown = (
-                current_time - self.digit_10_detector.last_detected_time
-                < self.digit_10_detector.config.cooldown_sec
-            )
+            last_10_time = self.digit_10_detector.last_detected_time
+            is_in_10_cooldown = last_10_time > 0 and current_time - last_10_time < self.digit_10_detector.config.cooldown_sec
 
             # 2. Phân loại hình học đơn frame cho chữ số 0-9 độc lập
-            from backend.vision.digit_classifier import digit_classifier
-            digit_res = digit_classifier.classify_detailed(p_prim)
             if (not is_in_10_cooldown) and digit_res["status"] == "MATCH" and digit_res["digit"] in DIGITS_MODE_SIGNS:
                 raw_digit = digit_res["digit"]
                 raw_conf = digit_res["confidence"]
@@ -1874,19 +1923,21 @@ class VSLRecognizer:
                 raw_conf = 0.0
 
             # Theo dõi trạng thái hạ tay / thả tay ở chế độ chữ số để chống lặp khi giữ yên 5s+
-            digit_exit_info = self._get_exit_tracker(f"digit_{session_key}").update(p_prim, current_time)
-            if digit_exit_info["is_exit"]:
-                self._digit_seen_release = True
-                self._digit_neutral_count = 0
-                self.prediction_history.clear()
-            elif raw_digit == "NEUTRAL":
-                self._digit_neutral_count = getattr(self, "_digit_neutral_count", 0) + 1
-                if self._digit_neutral_count >= 3:
+            if not self._is_camera_stream:
+                digit_exit_info = self._get_exit_tracker(f"digit_{session_key}").update(p_prim, current_time)
+                if digit_exit_info["is_exit"]:
                     self._digit_seen_release = True
-            else:
-                self._digit_neutral_count = 0
+                    self._digit_neutral_count = 0
+                    self.prediction_history.clear()
+                elif raw_digit == "NEUTRAL":
+                    self._digit_neutral_count = getattr(self, "_digit_neutral_count", 0) + 1
+                    if self._digit_neutral_count >= 3:
+                        self._digit_seen_release = True
+                else:
+                    self._digit_neutral_count = 0
 
             self.prediction_history.append((raw_digit, raw_conf))
+            stable_camera_digit = self._camera_shape_stable(raw_digit, raw_conf, current_time, min_hold=0.28)
 
             # Smoothing cho chữ số đơn tức thời (cửa sổ 7 frame, yêu cầu 4 phiếu hợp lệ)
             vote_req = self._vote_threshold(eff_window)
@@ -1910,11 +1961,13 @@ class VSLRecognizer:
                 smoothed_conf = raw_conf if count >= vote_req else 0.0
                 if count >= vote_req and smoothed_digit in DIGITS_MODE_SIGNS:
                     should_defer_one = (smoothed_digit == "1" and is_observing_10)
-                    if not should_defer_one:
+                    camera_ready = not self._is_camera_stream or (stable_camera_digit and raw_digit == smoothed_digit)
+                    if not should_defer_one and camera_ready:
                         is_new_digit = (smoothed_digit != self.last_confirmed_sign)
                         is_repeated_digit = (
                             smoothed_digit == self.last_confirmed_sign
-                            and getattr(self, "_digit_seen_release", True)
+                            and not self._is_camera_stream
+                            and self._digit_seen_release
                             and (current_time - self.last_confirmed_time > 0.30)
                         )
                         if is_new_digit or is_repeated_digit:
@@ -2163,6 +2216,7 @@ class VSLRecognizer:
                 self.diacritic_fsms[fsm_key] = DiacriticStateMachine(
                     min_base_stable_frames=3,
                     min_base_stable_sec=0.10,
+                    circumflex_lift_threshold=0.032 if self._is_camera_stream else 0.020,
                     max_diacritic_search_sec=1.50,
                     max_diacritic_search_frames=35
                 )
@@ -2455,6 +2509,7 @@ class VSLRecognizer:
 
             # Smoothing cho chữ cái (cửa sổ 7 frame, yêu cầu 4 phiếu hợp lệ; dùng chung mốc current_time nhất quán)
             current_time_clock = current_time
+            stable_camera_letter = self._camera_shape_stable(final_sign, final_conf, current_time_clock)
             vote_req = self._vote_threshold(eff_window)
             recent_signs = [
                 s for s, c in self.prediction_history
@@ -2486,7 +2541,10 @@ class VSLRecognizer:
 
             if len(recent_signs) >= vote_req:
                 most_common, count = collections.Counter(recent_signs).most_common(1)[0]
-                if count >= vote_req and most_common in ALLOWED_LETTERS:
+                camera_ready = not self._is_camera_stream or (
+                    final_sign == most_common and (stable_camera_letter or most_common in DIACRITIC_SIGNS_META)
+                )
+                if camera_ready and count >= (vote_req) and most_common in ALLOWED_LETTERS:
                     # Exit Guard (Checkpoint C & Task Master): Ngăn ký tự phát sinh ngoài ý muốn sau khi vừa xác nhận chữ có dấu khi chưa có release cử chỉ
                     is_spurious_exit = False
                     last_diac = getattr(self, "_last_confirmed_diacritic", None)
@@ -3201,13 +3259,17 @@ class VSLRecognizer:
         fsm: Optional[Any] = None,
     ):
         """
-        Đồng bộ logic kết thúc cử chỉ (mất bàn tay, >= 8 frame NEUTRAL, hoặc EXIT toàn bàn tay)
+        Đồng bộ logic kết thúc cử chỉ theo thời gian không rõ nhãn, mất bàn tay hoặc hạ toàn bàn tay.
         giữa FSM dấu và gesture/TTS lifecycle của Recognizer.
         """
+        camera_stream = getattr(self, "_is_camera_stream", False)
         if final_sign in ("NEUTRAL", "UNKNOWN"):
             self._neutral_release_count = getattr(self, "_neutral_release_count", 0) + 1
+            if getattr(self, "_neutral_since", None) is None:
+                self._neutral_since = current_clk
         else:
             self._neutral_release_count = 0
+            self._neutral_since = None
 
         is_no_hand = (not p_prim or len(p_prim) < 21)
         is_drop = False
@@ -3222,18 +3284,24 @@ class VSLRecognizer:
             )
 
         tts_speak_token = None
-        if is_no_hand or is_drop or getattr(self, "_neutral_release_count", 0) >= 8:
+        physically_released = is_no_hand or is_drop
+        if camera_stream:
+            sustained_neutral = (
+                self._neutral_since is not None and current_clk - self._neutral_since >= 0.55
+            )
+        else:
+            sustained_neutral = self._neutral_release_count >= 8
+        if physically_released or sustained_neutral:
             if not getattr(self, "_seen_neutral_release", True):
                 self.prediction_history.clear()
                 recent_signs = []
             self._seen_neutral_release = True
             self._last_confirmed_diacritic = None
-            # Commit TTS ngay cho chữ nền đang chờ khi người dùng hạ tay / rời khung và khóa quyền thay thế token cũ
-            if getattr(self, "_pending_tts_token", None) is not None:
+            if physically_released or not camera_stream:
                 tts_speak_token = self._pending_tts_token
                 self._pending_tts_token = None
-            self._replaceable_base_token = None
-        elif getattr(self, "_pending_tts_token", None) is not None:
+                self._replaceable_base_token = None
+        if getattr(self, "_pending_tts_token", None) is not None:
             # Người dùng giữ tĩnh chữ nền quá thời gian chờ dấu (~0.85s cho A/E/O/U; 1.18s cho D)
             # mà không làm cử chỉ dấu -> Commit TTS chữ nền.
             # Nếu FSM đang ở DIACRITIC_CANDIDATE, vừa chạm DIACRITIC_CONFIRMED, hoặc đang có chuyển động tạo dấu,
@@ -3258,22 +3326,27 @@ class VSLRecognizer:
 
     def clear_sentence(self):
         """Xóa trắng câu hiện tại"""
-        self.sentence_tokens = []
-        self.prediction_history.clear()
-        self.last_confirmed_sign = None
-        self._pending_tts_token = None
-        self._replaceable_base_token = None
-        self._seen_neutral_release = True
-        self._neutral_release_count = 0
-        self._digit_seen_release = True
-        self._digit_neutral_count = 0
-        if hasattr(self, "digit_10_detector"):
-            self.digit_10_detector.reset()
+        with self._pilot_temporal_lock:
+            self.sentence_tokens = []
+            self.prediction_history.clear()
+            self.last_confirmed_sign = None
+            self._pending_tts_token = None
+            self._replaceable_base_token = None
+            self._seen_neutral_release = True
+            self._neutral_release_count = 0
+            self._neutral_since = None
+            self._digit_seen_release = True
+            self._digit_neutral_count = 0
+            if hasattr(self, "digit_10_detector"):
+                self.digit_10_detector.reset()
+                self._last_digit_hand_at = None
         return {"sentence": ""}
 
     def reset(self):
         """Reset toàn bộ trạng thái bộ nhận diện"""
         self.prediction_history.clear()
+        self._camera_shape = None
+        self._camera_shape_since = 0.0
         self.last_confirmed_sign = None
         self.last_confirmed_time = 0
         self.sentence_tokens = []
@@ -3282,12 +3355,14 @@ class VSLRecognizer:
         self._neutral_release_count = 0
         self._digit_seen_release = True
         self._digit_neutral_count = 0
+        self._neutral_since = None
         self._last_base_token_time = 0.0
         self._uncommitted_base_time = 0.0
         self._pending_tts_token = None
         self._replaceable_base_token = None
         if hasattr(self, "digit_10_detector"):
             self.digit_10_detector.reset()
+            self._last_digit_hand_at = None
         self.reset_diacritic_fsm()
 
     def reset_diacritic_fsm(self, session_id=None):

@@ -15,8 +15,9 @@ import base64
 import cv2
 import numpy as np
 import torch
+from urllib.parse import urlsplit
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -26,18 +27,16 @@ from typing import List, Optional, Union, Dict, Any, Literal
 from backend.models.sign_model import CLASSES
 from backend.models.vsl_dictionary import ALL_SIGNS, VSL_ALPHABET, VSL_VOCABULARY
 from backend.vision.recognizer import VSLRecognizer
-from backend.vision import qipedc_live
+from backend.vision import personal_words, qipedc_live
 from backend.vision.qipedc_live import (
     BUILTIN_WORDS, DEFAULT_WORDS, MAX_EXTRA_WORDS,
     indexed_entry_ids, lost_hand_during_interaction, prepare_live_reference,
 )
-from backend.vision.qipedc_practice import TIME_SIGN_ENTRY, TIME_SIGN_VIDEO
 from backend.vision.word_scope import (
     allowed_live_word_ids,
     approved_live_word_ids,
     validate_extra_qipedc_word,
     validate_word_result_scope,
-    verify_reference_video_id,
 )
 from backend.vision.alphabet_classifier import O_D_TI_MAX, O_IDX_STRAIGHT_MAX
 from backend.nlp.text_to_vsl import text_to_vsl_glosses
@@ -68,9 +67,16 @@ recognizer = VSLRecognizer()
 
 # Feature flag & cấu hình nhận diện cử chỉ ngắn (< 30 frame)
 FEATURE_ALLOW_SHORT_SEQUENCES = os.environ.get("VSL_ALLOW_SHORT_SEQUENCES", "1").lower() in ("1", "true", "yes")
+SSTCN_UNCORROBORATED_CONFIDENCE = 0.999
 MIN_GESTURE_FRAMES = 12
 
 # Pydantic Request Models
+class CameraLandmarkFrame(BaseModel):
+    timestamp: float
+    landmarks: List[List[float]] = Field(max_length=21)
+    multi_hands: List[dict] = Field(default_factory=list, max_length=2)
+
+
 class LandmarkRequest(BaseModel):
     landmarks: Optional[List[List[float]]] = None
     multi_hands: Optional[List[dict]] = None
@@ -95,6 +101,8 @@ class LandmarkRequest(BaseModel):
     video_pts_sec: Optional[Union[float, str]] = None
     video_frame_idx: Optional[Union[int, str]] = None
     phase: Optional[Literal["PRE_IDLE", "ENTRY", "STABLE_HOLD", "EXIT", "POST_IDLE"]] = None
+    camera_frames: Optional[List[CameraLandmarkFrame]] = Field(default=None, min_length=1, max_length=16)
+    camera_session_id: Optional[str] = Field(default=None, pattern=r"^[A-Za-z0-9_-]{12,64}$")
 
 class FrameRequest(BaseModel):
     image_base64: str
@@ -136,6 +144,9 @@ class SequenceRequest(BaseModel):
     vocab_scope: Literal["all", "common"] = "all"
     qipedc_entries: List[str] = Field(default_factory=list, max_length=MAX_EXTRA_WORDS)
     include_diagnostic: bool = False
+    include_word_candidates: bool = False
+    gesture_complete: bool = False
+    calibration_profile: Optional[str] = Field(default=None, pattern=r"^[a-f0-9]{32}$")
     aspect_ratio: float = Field(default=1.0, ge=0.25, le=4.0)
     allow_short_sequences: Optional[bool] = None
 
@@ -145,6 +156,8 @@ class CalibrationSampleRequest(BaseModel):
     sequence: List[List[List[float]]]
     timestamps: Optional[List[float]] = None
     signer_id: Optional[str] = "personal"
+    calibration_profile: Optional[str] = Field(default=None, pattern=r"^[a-f0-9]{32}$")
+    aspect_ratio: float = Field(default=1.0, ge=0.25, le=4.0)
 
 class QipedcPracticeRequest(BaseModel):
     sequence: List[List[List[float]]] = Field(min_length=4, max_length=180)
@@ -301,8 +314,6 @@ def _live_qipedc_entries(extra_ids=(), allowed_ids=None):
     lex = load_lexicon()
     entries = []
     for entry_id in dict.fromkeys((*DEFAULT_WORDS, *extra_ids)):
-        if entry_id == TIME_SIGN_ENTRY:
-            continue
         if allowed_ids is not None and entry_id not in allowed_ids:
             continue
         validation = validate_extra_qipedc_word(entry_id, lex)
@@ -510,6 +521,15 @@ def recognize_landmarks(req: LandmarkRequest, request: Request):
                 status_code=400,
                 detail=f"Chế độ nhận diện không hợp lệ: '{mode}'. Hỗ trợ: 'letters', 'digits', 'words', 'sentence', 'letters_numbers'."
             )
+        if req.camera_frames is not None:
+            if mode not in ("letters", "digits") or not req.camera_session_id:
+                raise HTTPException(status_code=400, detail="Lô khung cần một phiên camera Chữ cái hoặc Chữ số.")
+            frames = [frame.model_dump() for frame in req.camera_frames]
+            times = [frame["timestamp"] for frame in frames]
+            if not np.isfinite(times).all() or any(next_time <= prior for prior, next_time in zip(times, times[1:])):
+                raise HTTPException(status_code=400, detail="Mốc thời gian của lô khung phải tăng dần.")
+            results = recognizer.predict_camera_frames(req.camera_session_id, mode, frames)
+            return {"success": True, "data": results[-1], "results": results}
 
         client_capture_ts = req.client_capture_ts
         if client_capture_ts is None and request.headers.get("x-client-capture-ts"):
@@ -1007,6 +1027,33 @@ def _annotate_qipedc_candidates(qipedc_trace, by_id):
                 item["common"] = bool(entry.get("common"))
 
 
+def _manual_word_candidates(scored, *, lex, allowed_ids):
+    candidates = {}
+    for item, source in scored:
+        entry_id = item.get("entry_id")
+        score = item.get("similarity") if source == "qipedc_template" else item.get("confidence")
+        if not isinstance(score, (int, float)) or not 0.60 <= score <= 1.0:
+            continue
+        check = validate_word_result_scope(entry_id, source=source, lex=lex, allowed_ids=allowed_ids)
+        if not check["valid"]:
+            continue
+        word = lex["by_id"][entry_id]["word"]
+        candidate = {
+            "entry_id": entry_id,
+            "word": word,
+            "confidence": score,
+            "video_url": check["selected_video_url"],
+            "region": check["region"],
+            "source": source,
+            "match_method": item.get("match_method"),
+        }
+        key = word.strip().casefold()
+        current = candidates.get(key)
+        if current is None or score > current["confidence"]:
+            candidates[key] = candidate
+    return sorted(candidates.values(), key=lambda item: -item["confidence"])[:5]
+
+
 def _build_sequence_explanation(
     *,
     final_sign,
@@ -1032,6 +1079,10 @@ def _build_sequence_explanation(
     if status in ("missing_both_hands", "tracking_gaps"):
         return f"Dữ liệu bám tay bị đứt đoạn ({status}), chưa đủ để xác nhận."
     if status in ("matched", "word_matched"):
+        if qipedc_trace and qipedc_trace.get("verdict") == "personal_template_matched":
+            return f"Động tác “{final_label}” gần với mẫu đã lưu trong hồ sơ cá nhân."
+        if qipedc_trace and qipedc_trace.get("verdict") == "unilateral_core_matched":
+            return f"Khớp dáng ngón tay và quỹ đạo một tay sau khi hoàn tất động tác “{final_label}”."
         if qipedc_trace and qipedc_trace.get("top_candidates"):
             top1 = qipedc_trace["top_candidates"][0]
             top2 = qipedc_trace["top_candidates"][1] if len(qipedc_trace["top_candidates"]) > 1 else None
@@ -1097,6 +1148,9 @@ def recognize_sequence(req: SequenceRequest, request: Request):
         sequence, timestamps = req.sequence, req.timestamps
         raw_len = len(sequence)
         diag_enabled = bool(req.include_diagnostic)
+        include_candidates = req.include_word_candidates and mode == "words"
+        qipedc_candidate_scores = [] if include_candidates else None
+        word_candidates = {}
         motion_trace = {} if diag_enabled else None
         qipedc_trace = {} if diag_enabled else None
         timings_ms = {}
@@ -1121,9 +1175,54 @@ def recognize_sequence(req: SequenceRequest, request: Request):
                 **diagnostic,
             }}
 
-        if live_words:
+        if mode == "words":
             from backend.vision.qipedc_practice import analyze_live_words
 
+            window = sequence[-120:] if live_words else sequence
+            window_timestamps = timestamps[-len(window):] if timestamps is not None and len(timestamps) == raw_len else None
+            t0 = time.perf_counter()
+            details = analyze_live_words(window, req.aspect_ratio, timestamps=window_timestamps, trace=motion_trace)
+            timings_ms["analyze_ms"] = round((time.perf_counter() - t0) * 1000, 1)
+            if diag_enabled:
+                pipeline_steps.append({
+                    "step": "1_motion_gate",
+                    "ms": timings_ms["analyze_ms"],
+                    "motion_detected": details.get("motion_detected"),
+                    "status": details.get("status"),
+                    "max_extent": motion_trace.get("max_extent"),
+                    "threshold": motion_trace.get("motion_threshold"),
+                })
+            if not live_words and not details["motion_detected"]:
+                label = "Đang chờ động tác từ vựng…"
+                if diag_enabled:
+                    diagnostic = {"diagnostic": {
+                        **details,
+                        "raw_frames": raw_len,
+                        "topic_id": req.topic_id,
+                        "motion_gate": motion_trace,
+                        "sstcn": {"called": False, "skip_reason": details["status"]},
+                        "timings_ms": timings_ms,
+                        "pipeline_steps": pipeline_steps,
+                        "decision": {
+                            "final_sign": "NEUTRAL",
+                            "final_label": label,
+                            "source": "qipedc_gate",
+                            "confidence": 0.0,
+                            "reason_code": details["status"],
+                            "explanation": _build_sequence_explanation(
+                                final_sign="NEUTRAL", final_label=label, source="qipedc_gate",
+                                confidence=0.0, status=details["status"], motion_trace=motion_trace,
+                                qipedc_trace=None, sstcn_result=None, raw_len=raw_len, threshold=req.threshold,
+                            ),
+                        },
+                    }}
+                return {"success": True, "data": {
+                    "success": True, "sign": "NEUTRAL", "label": label,
+                    "confidence": 0.0, "top_k": [], "confirmed": False, "new_token": None,
+                    "motion_detected": False, **diagnostic,
+                }}
+
+        if live_words:
             valid_extra_ids = []
             rejected_extra_words = []
             for extra_id in req.qipedc_entries or ():
@@ -1141,40 +1240,26 @@ def recognize_sequence(req: SequenceRequest, request: Request):
                 topic_id=req.topic_id,
                 allowed_override=approved_scope,
             )
-            enable_time_sign = (
-                TIME_SIGN_ENTRY in allowed_live_ids
-                and req.topic_id in (None, "", "Bài 2 - Số đếm và Thời gian")
-                and verify_reference_video_id(TIME_SIGN_VIDEO)["eligible"]
-            )
-
-            window = sequence[-120:]
-            t0 = time.perf_counter()
-            analyze_kwargs = {
-                "enable_time_sign": enable_time_sign,
-                "timestamps": timestamps[-120:] if timestamps is not None and len(timestamps) == len(sequence) else None,
-            }
-            if diag_enabled:
-                analyze_kwargs["trace"] = motion_trace
-            details = analyze_live_words(window, req.aspect_ratio, **analyze_kwargs)
-            timings_ms["analyze_ms"] = round((time.perf_counter() - t0) * 1000, 1)
-            if diag_enabled:
-                pipeline_steps.append({
-                    "step": "1_motion_and_time_gate",
-                    "ms": timings_ms["analyze_ms"],
-                    "motion_detected": details.get("motion_detected"),
-                    "status": details.get("status"),
-                    "max_extent": motion_trace.get("max_extent"),
-                    "threshold": motion_trace.get("motion_threshold"),
-                })
             if details["motion_detected"]:
                 if allowed_live_ids:
                     entries = _live_qipedc_entries(valid_extra_ids, allowed_ids=allowed_live_ids)
-                    if details["status"] == "matched" and TIME_SIGN_ENTRY in allowed_live_ids:
-                        entries.append((TIME_SIGN_ENTRY, TIME_SIGN_VIDEO))
                     t1 = time.perf_counter()
                     match_kwargs = {"allowed_ids": allowed_live_ids, "vocab_scope": req.vocab_scope}
                     if diag_enabled:
                         match_kwargs["trace"] = qipedc_trace
+                    if include_candidates:
+                        match_kwargs["candidate_scores"] = qipedc_candidate_scores
+                    if req.gesture_complete:
+                        match_kwargs["completed"] = True
+                        if req.calibration_profile:
+                            personal_ids = allowed_live_ids
+                            if req.vocab_scope == "common":
+                                personal_ids = personal_ids & {
+                                    eid for eid in personal_ids if lex["by_id"][eid].get("common") or eid in BUILTIN_WORDS
+                                }
+                            match_kwargs["personal_examples"] = personal_words.load_references(
+                                _personal_profile_dir(req.calibration_profile), personal_ids,
+                            )
                     generic = qipedc_live.match_live_words(window, req.aspect_ratio, entries, **match_kwargs)
                     timings_ms["qipedc_match_ms"] = round((time.perf_counter() - t1) * 1000, 1)
                     if diag_enabled:
@@ -1190,22 +1275,13 @@ def recognize_sequence(req: SequenceRequest, request: Request):
                             "gap_top1_top2": qipedc_trace.get("gap_top1_top2"),
                             "top1": (qipedc_trace.get("top_candidates") or [None])[0],
                         })
-                    # Preserve a confirmed two-phase "mấy giờ?" match against weak hand_shape overrides
-                    # (only allow a direct trajectory match to disambiguate it).
-                    can_override_time = (
-                        generic is not None
-                        and generic.get("status") == "word_matched"
-                        and generic.get("match_method") == "trajectory"
-                    )
-                    if generic and generic.get("entry_id") != TIME_SIGN_ENTRY and (
-                        details["status"] != "matched" or can_override_time
-                    ):
+                    if generic is not None:
                         details = generic
-                elif details["status"] != "matched":
+                else:
                     details = {"motion_detected": True, "status": "no_eligible_candidates"}
             if rejected_extra_words:
                 details = {**details, "rejected_extra_words": rejected_extra_words}
-            if details["motion_detected"] and details["status"] not in ("matched", "word_matched", "ambiguous_word", "no_eligible_candidates"):
+            if details["motion_detected"] and details["status"] not in ("word_matched", "ambiguous_word", "no_eligible_candidates"):
                 t2 = time.perf_counter()
                 lost = lost_hand_during_interaction(window, req.aspect_ratio)
                 timings_ms["lost_hand_ms"] = round((time.perf_counter() - t2) * 1000, 1)
@@ -1218,8 +1294,8 @@ def recognize_sequence(req: SequenceRequest, request: Request):
                         "lost_hand_during_interaction": bool(lost),
                     })
             active = details["motion_detected"]
-            if details["status"] in ("matched", "word_matched"):
-                matched_entry_id = details.get("entry_id", TIME_SIGN_ENTRY)
+            if details["status"] == "word_matched":
+                matched_entry_id = details["entry_id"]
                 scope_check = validate_word_result_scope(
                     matched_entry_id,
                     source="qipedc_template",
@@ -1261,6 +1337,11 @@ def recognize_sequence(req: SequenceRequest, request: Request):
                         **diagnostic,
                     }}
                 entry = lex["by_id"][matched_entry_id]
+                if include_candidates:
+                    word_candidates["word_candidates"] = _manual_word_candidates(
+                        [(details, "qipedc_template"), *((item, "qipedc_template") for item in qipedc_candidate_scores)],
+                        lex=lex, allowed_ids=allowed_live_ids,
+                    )
                 if diag_enabled:
                     timings_ms["total_ms"] = round((time.perf_counter() - t_req_start) * 1000, 1)
                     explanation = _build_sequence_explanation(
@@ -1297,7 +1378,10 @@ def recognize_sequence(req: SequenceRequest, request: Request):
                     "scope_rejected": False,
                     "top_k": [],
                     "match_method": details.get("match_method"),
+                    "hand_count": details.get("hand_count"),
+                    "requires_user_confirmation": bool(details.get("requires_user_confirmation")),
                     "confirmed": False, "new_token": None,
+                    **word_candidates,
                     **diagnostic,
                 }}
             missing_tracking = details["status"] in ("missing_both_hands", "tracking_gaps", "lost_hand_during_interaction")
@@ -1356,11 +1440,17 @@ def recognize_sequence(req: SequenceRequest, request: Request):
                                 "distance": item.get("distance"),
                                 "video_url": e.get("video_url", ""),
                             })
+                if include_candidates and active and not missing_tracking:
+                    word_candidates["word_candidates"] = _manual_word_candidates(
+                        ((item, "qipedc_template") for item in qipedc_candidate_scores),
+                        lex=lex, allowed_ids=allowed_live_ids,
+                    )
                 return {"success": True, "data": {
                     "success": True, "sign": "NEUTRAL", "label": label,
                     "confidence": 0.0, "top_k": [], "suggestions": suggestions,
                     "confirmed": False, "new_token": None,
                     "motion_detected": active,
+                    **word_candidates,
                     **diagnostic,
                 }}
             if len(sequence) >= 30:
@@ -1389,6 +1479,7 @@ def recognize_sequence(req: SequenceRequest, request: Request):
         )
         timings_ms["sstcn_ms"] = round((time.perf_counter() - t3) * 1000, 1)
         scope_rejected_diag = None
+        blocked_prediction = None
         if mode == "words" and isinstance(result, dict) and result.get("success", True):
             raw_top_k = result.get("top_k") or []
             filtered_top_k = []
@@ -1448,33 +1539,47 @@ def recognize_sequence(req: SequenceRequest, request: Request):
                     }
                 else:
                     checked_entry_id = scope_check.get("entry_id") or result.get("entry_id")
-                    if live_words and not req.topic_id and not qipedc_live.corroborate_sstcn_entry(
-                        window, req.aspect_ratio, checked_entry_id
-                    ):
-                        result = {
-                            **result,
-                            "sign": "NEUTRAL",
-                            "label": "Đang chờ động tác từ vựng…",
-                            "confidence": 0.0,
-                            "confirmed": False,
-                            "new_token": None,
-                            "replaced_token": None,
-                            "tts_speak": None,
-                            "top_k": [],
-                            "entry_id": None,
-                            "video_url": "",
-                            "fallback_blocked": True,
-                            "blocked_reason": "sstcn_uncorroborated_by_qipedc",
-                            "word_scope_valid": True,
-                            "scope_rejected": False,
-                        }
-                    else:
-                        result["word_scope_valid"] = True
-                        result["scope_rejected"] = False
+                    result["word_scope_valid"] = True
+                    result["scope_rejected"] = False
+                    if live_words and not qipedc_live.corroborate_sstcn_entry(window, req.aspect_ratio, checked_entry_id):
+                        # Overlapping camera windows are not independent corroboration.
+                        # Keep a strong prediction available for explicit selection.
+                        if result.get("confidence", 0.0) >= SSTCN_UNCORROBORATED_CONFIDENCE:
+                            result["requires_live_consensus"] = True
+                            result["requires_user_confirmation"] = True
+                        else:
+                            blocked_prediction = {
+                                "sign": result.get("sign"), "confidence": result.get("confidence"), "top_k": filtered_top_k,
+                            }
+                            result = {
+                                **result,
+                                "sign": "NEUTRAL",
+                                "label": "Đang chờ động tác từ vựng…",
+                                "confidence": 0.0,
+                                "confirmed": False,
+                                "new_token": None,
+                                "replaced_token": None,
+                                "tts_speak": None,
+                                "top_k": [],
+                                "entry_id": None,
+                                "video_url": "",
+                                "fallback_blocked": True,
+                                "blocked_reason": "sstcn_uncorroborated_by_qipedc",
+                            }
+        if include_candidates and result.get("success", True) and not result.get("scope_rejected"):
+            candidates_scope = allowed_live_ids if live_words else approved_scope
+            model_candidates = (blocked_prediction or {}).get("top_k") or result.get("top_k") or ()
+            word_candidates["word_candidates"] = _manual_word_candidates(
+                [
+                    *((item, "qipedc_template") for item in qipedc_candidate_scores),
+                    *((item, "sstcn") for item in model_candidates),
+                ],
+                lex=lex, allowed_ids=candidates_scope,
+            )
         if diag_enabled:
             timings_ms["total_ms"] = round((time.perf_counter() - t_req_start) * 1000, 1)
             pipeline_steps.append({
-                "step": "4_sstcn_fallback" if live_words else "1_sstcn_predict",
+                "step": "4_sstcn_fallback" if live_words else ("2_sstcn_predict" if mode == "words" else "1_sstcn_predict"),
                 "ms": timings_ms["sstcn_ms"],
                 "sign": result.get("sign"),
                 "confidence": result.get("confidence"),
@@ -1482,7 +1587,7 @@ def recognize_sequence(req: SequenceRequest, request: Request):
                 "blocked_reason": result.get("blocked_reason") or result.get("reject_reason"),
                 "top1": (result.get("top_k") or [None])[0],
             })
-            base_details = {**(details if live_words else {}), **(scope_rejected_diag or {})}
+            base_details = {**(details if mode == "words" else {}), **(scope_rejected_diag or {})}
             explanation = _build_sequence_explanation(
                 final_sign=result.get("sign"), final_label=result.get("label"), source="sstcn",
                 confidence=result.get("confidence"), status=base_details.get("status"),
@@ -1503,6 +1608,7 @@ def recognize_sequence(req: SequenceRequest, request: Request):
                     "blocked_reason": result.get("blocked_reason") or result.get("reject_reason"),
                     "inference_time_ms": result.get("inference_time_ms"),
                     "top_k": result.get("top_k") or [],
+                    "blocked_prediction": blocked_prediction,
                 },
                 "timings_ms": timings_ms,
                 "pipeline_steps": pipeline_steps,
@@ -1518,6 +1624,7 @@ def recognize_sequence(req: SequenceRequest, request: Request):
                 },
             }}
         result.update(diagnostic)
+        result.update(word_candidates)
         return {"success": True, "data": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -1539,6 +1646,36 @@ def _calibration_dir() -> str:
     return base
 
 
+def _personal_profile_dir(profile_id):
+    return os.path.join(_calibration_dir(), ".live", profile_id)
+
+
+@app.get("/api/calibration/workspace-profile")
+def get_workspace_calibration_profile(request: Request):
+    loopback = {"localhost", "127.0.0.1", "::1"}
+    origin = request.headers.get("origin")
+    try:
+        origin_host = urlsplit(origin).hostname if origin else None
+    except ValueError as exc:
+        raise HTTPException(status_code=404) from exc
+    if (
+        request.client is None or request.client.host not in loopback
+        or request.url.hostname not in loopback
+        or (origin and origin_host not in loopback)
+        or request.headers.get("x-vsl-workspace-profile") != "1"
+    ):
+        raise HTTPException(status_code=404)
+    path = os.path.join(_calibration_dir(), ".live", ".workspace-profile")
+    try:
+        with open(path, encoding="ascii") as file:
+            profile = file.read(33).strip()
+    except OSError as exc:
+        raise HTTPException(status_code=404) from exc
+    if not re.fullmatch(r"[a-f0-9]{32}", profile):
+        raise HTTPException(status_code=404)
+    return JSONResponse({"calibration_profile": profile}, headers={"Cache-Control": "no-store"})
+
+
 def _safe_slug(text: str) -> str:
     cleaned = re.sub(r"[^a-zA-Z0-9_\-]+", "_", norm_key(text).replace(" ", "_")).strip("_")
     return cleaned or "sign"
@@ -1556,6 +1693,21 @@ def save_calibration_sample(req: CalibrationSampleRequest):
         arr = np.asarray(req.sequence, dtype=np.float32)
         if arr.ndim != 3 or arr.shape[1:] != (75, 3) or len(arr) < 4:
             raise HTTPException(status_code=400, detail=f"Kích thước chuỗi không hợp lệ: {arr.shape}")
+        if req.calibration_profile:
+            lex = load_lexicon()
+            entry = lex["by_id"].get(req.entry_id) if req.entry_id else lex["by_key"].get(norm_key(label))
+            entry_id = entry["id"] if entry else None
+            scope = approved_live_word_ids(lex, indexed_ids=indexed_entry_ids(), builtin_ids=BUILTIN_WORDS)
+            match = validate_word_result_scope(entry_id, source="qipedc_template", lex=lex, allowed_ids=scope)
+            if not match["valid"]:
+                raise HTTPException(status_code=400, detail="Hãy nhập đúng tên từ có trong từ điển camera.")
+            try:
+                count = personal_words.save_reference(
+                    _personal_profile_dir(req.calibration_profile), entry_id, arr, req.aspect_ratio,
+                )
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
+            return {"success": True, "label": entry["word"], "sample_count": count, "available_live": True}
         if not np.all(np.isfinite(arr)):
             arr = np.nan_to_num(arr, nan=0.0, posinf=0.0, neginf=0.0)
         if not np.any(arr):
@@ -1602,9 +1754,23 @@ def save_calibration_sample(req: CalibrationSampleRequest):
 
 
 @app.get("/api/calibration/summary")
-def get_calibration_summary():
+def get_calibration_summary(request: Request):
     """Thống kê số lượng mẫu Personal Calibration đã ghi theo từng nhãn."""
     cal_root = _calibration_dir()
+    profile = request.headers.get("x-vsl-calibration-profile")
+    if profile and re.fullmatch(r"[a-f0-9]{32}", profile):
+        lex = load_lexicon()
+        folder = _personal_profile_dir(profile)
+        items = []
+        if os.path.isdir(folder):
+            for entry_id in sorted(os.listdir(folder)):
+                item = lex["by_id"].get(entry_id)
+                sub = os.path.join(folder, entry_id)
+                if item and os.path.isdir(sub):
+                    count = sum(name.endswith(".npz") and not name.startswith(".") for name in os.listdir(sub))
+                    if count:
+                        items.append({"entry_id": entry_id, "label": item["word"], "count": count})
+        return {"success": True, "total_samples": sum(item["count"] for item in items), "labels": items}
     items = []
     total = 0
     for slug in sorted(os.listdir(cal_root)):

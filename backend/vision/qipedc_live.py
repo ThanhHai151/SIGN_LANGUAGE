@@ -1,4 +1,4 @@
-"""Compare webcam motion with a library of prepared QIPEDC references."""
+"""Compare webcam motion with a library of prepared QIPEDC references using generic kinematics."""
 
 from functools import lru_cache
 import os
@@ -9,8 +9,6 @@ import numpy as np
 
 from backend.models import video_cache
 from backend.vision.qipedc_practice import (
-    TIME_SIGN_ENTRY,
-    TIME_SIGN_VIDEO,
     _fill_short_gaps,
     _tracked_hands,
     _visible_clip,
@@ -22,37 +20,83 @@ from backend.vision.word_scope import verify_reference_video_id
 
 
 DEFAULT_WORDS = (
+    "q-may-gio",
     "q-an-du", "q-an-vua", "q-an-it", "q-com-2", "q-nem", "q-lau-mieng", "q-thom",
     "q-nan-ni", "q-cau-nguyen", "q-vai-lay",
     "q-xin-loi", "q-ky-nang", "q-kha-nang", "q-khong-co",
 )
-BUILTIN_WORDS = (TIME_SIGN_ENTRY, *DEFAULT_WORDS)
-_CHUNG_TOI_IDS = (
-    "q-chung-toi-dai-tu",
-    "q-chung-toi-2-nguoi-dai-tu",
-    "q-chung-toi-3-nguoi-dai-tu",
-    "q-chung-toi-4-nguoi-dai-tu",
-    "q-chung-toi-5-nguoi-dai-tu",
-)
+BUILTIN_WORDS = DEFAULT_WORDS
 MAX_EXTRA_WORDS = 12
 FRAMES = 24
 COARSE_BINS = 6
-STAGE1_TOP_K = 18
+FEATURE_DIM = 28
+LEGACY_FEATURE_DIM = 14
+STAGE1_TOP_K = 24
 DTW_REFERENCE_BATCH_SIZE = 6
-MAX_DISTANCE = 0.35
-MAX_RARE_DISTANCE = 0.28
-MIN_SEPARATION = 0.05
+MAX_DISTANCE = 0.36
+MAX_RARE_DISTANCE = 0.29
+MIN_SEPARATION = 0.045
 MAX_BILATERAL_DISTANCE = 0.52
 MAX_RARE_BILATERAL_DISTANCE = 0.44
-MIN_BILATERAL_SEPARATION = 0.08
-MAX_HAND_SHAPE_DISTANCE = 0.35
-MIN_HAND_SHAPE_SEPARATION = 0.05
+MIN_BILATERAL_SEPARATION = 0.075
+MAX_HAND_SHAPE_DISTANCE = 0.36
+MIN_HAND_SHAPE_SEPARATION = 0.045
+MAX_UNI_CONTOUR_DISTANCE = 0.31
+MIN_UNI_CONTOUR_SEPARATION = 0.040
+MAX_BILATERAL_SHAPE_TRAJECTORY_DISTANCE = 0.60
+MAX_UNILATERAL_SHAPE_TRAJECTORY_DISTANCE = 0.50
+MAX_SINGLE_HAND_CORE_DISTANCE = 0.18
+MIN_SINGLE_HAND_CORE_SEPARATION = 0.050
+MAX_SINGLE_HAND_CORE_HINT_DISTANCE = 0.29
+MAX_CORROBORATED_CORE_HINT_DISTANCE = 0.35
+MAX_SIGNING_HEIGHT_SHIFT = 0.55
 HAND_MISMATCH_PENALTY = 0.10
-RAISED_WRIST_MAX_Y = 0.68
-REFLECT_X = np.tile([-1, 1], 7).astype(np.float32)
-HAND_SHAPE_WEIGHTS = np.repeat(np.array([0.6, 0.3, 2.0], dtype=np.float32), [2, 2, 10])
-WRIST_WEIGHT = 0.60
-FINGERTIP_WEIGHT = 0.95
+RAISED_WRIST_MAX_Y = 0.70
+
+# 28-dim per-hand layout:
+#  [0..1]   body-anchored wrist (wx, wy)
+#  [2..3]   body-anchored fingertip centroid (tx, ty)
+#  [4..7]   window-centered contour (dwx, dwy, dtx, dty)
+#  [8..11]  signed temporal velocity (vwx, vwy, vtx, vty)
+#  [12..21] normalized 2D 5-fingertip offsets from wrist (10 dims)
+#  [22..27] mirror-invariant finger extension & thumb/spread scalars (6 dims: I, M, R, P, thumb, spread)
+REFLECT_X = np.array(
+    [*([-1.0, 1.0] * 11), 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+    dtype=np.float32,
+)
+WRIST_WEIGHT = 0.48
+FINGERTIP_WEIGHT = 0.72
+CONTOUR_WEIGHT = 0.42
+VELOCITY_WEIGHT = 1.15
+TIP_SHAPE_WEIGHT = 0.18
+FINGER_STATE_WEIGHT = 0.28
+
+HAND_SHAPE_WEIGHTS = 0.78 * np.array(
+    [
+        0.55, 0.30,  # wrist (wx, wy)
+        0.55, 0.30,  # tip centroid (tx, ty)
+        0.75, 0.75, 0.85, 0.85,  # centered contour
+        0.95, 0.95, 1.05, 1.05,  # signed velocity
+        *([2.0] * 10),           # 5-tip 2D hand shape
+        *([1.65] * 6),           # invariant finger extension/thumb/spread
+    ],
+    dtype=np.float32,
+)
+
+UNI_CONTOUR_WEIGHTS = 0.62 * np.array(
+    [
+        0.24, 0.48,  # attenuate lateral X arm-width offset while preserving head vs chest Y zone
+        0.26, 0.52,
+        1.45, 1.45, 1.55, 1.55,  # emphasize trajectory loop/arc contour
+        1.35, 1.35, 1.45, 1.45,  # emphasize movement direction
+        *([0.90] * 10),
+        *([1.65] * 6),           # strongly discriminate 1/2/3/4/5 finger configurations
+    ],
+    dtype=np.float32,
+)
+
+UNI_CORE_WEIGHTS = np.repeat(np.array([0.40, 0.50, 0.20, 1.0], dtype=np.float32), [4, 4, 4, 16])
+
 WARP_DIAGONALS = []
 for _diagonal in range(2, 2 * FRAMES + 1):
     _i = np.arange(max(1, _diagonal - FRAMES), min(FRAMES, _diagonal - 1) + 1)
@@ -81,15 +125,18 @@ def lost_hand_during_interaction(raw, aspect_ratio):
     shoulder_width = np.linalg.norm(shoulder_offset, axis=1)
     close_pair = hands.all(axis=1) & (np.linalg.norm(pair_offset, axis=1) <= 0.85 * shoulder_width)
 
-    # The pose wrists can corroborate that both arms remain raised when the
-    # hand model loses finger landmarks. They do not stand in for hidden fingers.
     shoulder_y = clip[:, [11, 12], 1].mean(axis=1)
+    max_y = shoulder_y + 0.80 * shoulder_width * aspect_ratio
     pose_wrists = clip[:, [15, 16], :]
-    raised = np.any(pose_wrists != 0, axis=2).all(axis=1) & (
-        pose_wrists[..., 1] < (shoulder_y + 0.80 * shoulder_width * aspect_ratio)[:, None]
-    ).all(axis=1)
-    # A release ends the interaction so a later single-hand sign can be read normally.
-    released = ~raised
+    pw_seen = np.any(pose_wrists != 0, axis=2)
+    both_pw_seen = pw_seen.all(axis=1)
+    pose_dropped = both_pw_seen & (pose_wrists[..., 1] >= max_y[:, None]).any(axis=1)
+    hand_wrists = clip[:, [33, 54], :]
+    any_raised = (
+        (hands & (hand_wrists[..., 1] < max_y[:, None])).any(axis=1)
+        | (both_pw_seen & (pose_wrists[..., 1] < max_y[:, None]).all(axis=1))
+    )
+    released = pose_dropped | ~any_raised
     breaks = np.flatnonzero(released[:-2] & released[1:-1] & released[2:])
     start = int(breaks[-1] + 3) if breaks.size else 0
     if start > end or close_pair[start:].sum() < 2:
@@ -101,6 +148,96 @@ def lost_hand_during_interaction(raw, aspect_ratio):
     return bool(visible.sum() >= 8 and tracked[visible].all(axis=1).mean() < 0.60)
 
 
+def _masked_velocity(seq, obs):
+    """Compute smoothed central-difference velocity [U, H, D] respecting per-hand observation masks."""
+    u, h, d = seq.shape
+    vel = np.zeros((u, h, d), dtype=np.float32)
+    if u < 2:
+        return vel
+    # Forward/backward adjacent differences where consecutive frames are observed
+    adj_ok = obs[:-1] & obs[1:]
+    step_diff = np.where(adj_ok[..., None], seq[1:] - seq[:-1], 0.0)
+    vel[:-1] += step_diff
+    vel[1:] += step_diff
+    counts = np.zeros((u, h, 1), dtype=np.float32)
+    counts[:-1] += adj_ok[..., None]
+    counts[1:] += adj_ok[..., None]
+    vel = np.where(counts > 0, vel / np.maximum(counts, 1.0), 0.0)
+    if u >= 3:
+        sm = vel.copy()
+        sm[1:-1] = 0.25 * vel[:-2] + 0.50 * vel[1:-1] + 0.25 * vel[2:]
+        vel = np.where(obs[..., None], sm, 0.0)
+    return np.clip(vel, -0.30, 0.30)
+
+
+def _compute_hand_features(hands_u, mouth_u, obs_u):
+    """Build generic [U, H, 28] position + contour + velocity + 2D shape + invariant finger state."""
+    u_len, n_hands, _, _ = hands_u.shape
+    wrist_xy = hands_u[:, :, 0, :2]
+    tips_xy = hands_u[:, :, [4, 8, 12, 16, 20], :2]
+    wrist_rel = wrist_xy - mouth_u[:, None, :]
+    # Use median across fingertips so a single noisy/frozen finger tip never corrupts hand trajectory
+    tip_mean_rel = np.median(tips_xy, axis=2) - mouth_u[:, None, :]
+
+    # Window-centered trajectory contour per hand
+    w_contour = np.zeros_like(wrist_rel)
+    t_contour = np.zeros_like(tip_mean_rel)
+    for h_i in range(n_hands):
+        seen_idx = obs_u[:, h_i]
+        if seen_idx.any():
+            w_med = np.median(wrist_rel[seen_idx, h_i], axis=0)
+            t_med = np.median(tip_mean_rel[seen_idx, h_i], axis=0)
+            w_contour[seen_idx, h_i] = wrist_rel[seen_idx, h_i] - w_med
+            t_contour[seen_idx, h_i] = tip_mean_rel[seen_idx, h_i] - t_med
+
+    vel_wt = _masked_velocity(np.concatenate((wrist_rel, tip_mean_rel), axis=-1), obs_u)
+
+    raw_palm = np.linalg.norm(hands_u[:, :, 9] - hands_u[:, :, 0], axis=-1)
+    med_tip_span = np.median(np.linalg.norm(tips_xy - wrist_xy[:, :, None, :], axis=-1), axis=2)
+    palm_size = np.maximum(0.04, np.maximum(raw_palm, 0.55 * med_tip_span))
+    shape_10 = np.clip(
+        (tips_xy - wrist_xy[:, :, None, :]) / palm_size[:, :, None, None],
+        -2.0,
+        2.0,
+    ).reshape(u_len, n_hands, 10)
+
+    # Mirror- and rotation-invariant 5-finger extension + spread ratios
+    finger_exts = []
+    for ti, pi in ((8, 6), (12, 10), (16, 14), (20, 18)):
+        d_tip = np.linalg.norm(hands_u[:, :, ti, :2] - wrist_xy, axis=-1) / palm_size
+        d_pip = np.linalg.norm(hands_u[:, :, pi, :2] - wrist_xy, axis=-1) / palm_size
+        finger_exts.append(np.clip(d_tip - d_pip, -0.60, 0.90))
+
+    lat = hands_u[:, :, 5, :2] - hands_u[:, :, 17, :2]
+    lat_unit = lat / np.maximum(np.linalg.norm(lat, axis=-1, keepdims=True), 1e-4)
+    thumb_lat = np.sum((hands_u[:, :, 4, :2] - hands_u[:, :, 5, :2]) * lat_unit, axis=-1) / palm_size
+    d_t9 = np.linalg.norm(hands_u[:, :, 4, :2] - hands_u[:, :, 9, :2], axis=-1) / palm_size
+    thumb_open = np.clip(0.55 * thumb_lat + 0.45 * (d_t9 - 0.55), -0.60, 1.00)
+    adj_gaps = np.stack(
+        (
+            np.linalg.norm(hands_u[:, :, 8, :2] - hands_u[:, :, 12, :2], axis=-1),
+            np.linalg.norm(hands_u[:, :, 12, :2] - hands_u[:, :, 16, :2], axis=-1),
+            np.linalg.norm(hands_u[:, :, 16, :2] - hands_u[:, :, 20, :2], axis=-1),
+        ),
+        axis=-1,
+    )
+    spread = 0.80 * np.clip(np.median(adj_gaps, axis=-1) / palm_size, 0.0, 1.50)
+    finger_state_6 = np.stack((*finger_exts, thumb_open, spread), axis=-1)
+
+    feats = np.concatenate(
+        (
+            WRIST_WEIGHT * wrist_rel,
+            FINGERTIP_WEIGHT * tip_mean_rel,
+            CONTOUR_WEIGHT * np.concatenate((w_contour, t_contour), axis=-1),
+            VELOCITY_WEIGHT * vel_wt,
+            TIP_SHAPE_WEIGHT * shape_10,
+            FINGER_STATE_WEIGHT * finger_state_6,
+        ),
+        axis=-1,
+    )
+    return np.where(obs_u[..., None], feats, 0.0).astype(np.float32)
+
+
 def _variants(raw, aspect_ratio, *, reference=False, trace=None):
     try:
         clip, _ = _visible_clip(raw)
@@ -109,17 +246,24 @@ def _variants(raw, aspect_ratio, *, reference=False, trace=None):
             trace["variants_reject_reason"] = f"visible_clip_failed: {exc}"
         return None
 
-    clip = _fill_short_gaps(clip)
+    measured = _tracked_hands(clip)
+    # Use pose-corroborated gap & passive-wrist bridging on live queries so self-occluded
+    # two-hand signs remain bilaterally tracked without per-sign special cases.
+    clip = _fill_short_gaps(clip, allow_extended_pose_bridge=not reference)
     clip[..., 1] /= aspect_ratio
     observed = _tracked_hands(clip)
     body = normalize_sequence_tjc_v2(clip)
-    if reference:
-        # Studio QIPEDC videos include waist-level arm raises/drops that stay outside webcam framing.
-        raised = observed & (body[:, [33, 54], 1] <= RAISED_WRIST_MAX_Y)
-        raised_idx = np.flatnonzero(raised.any(axis=1))
-        if len(raised_idx) >= 7:
-            sl = slice(int(raised_idx[0]), int(raised_idx[-1]) + 1)
-            clip, observed, body = clip[sl], observed[sl], body[sl]
+
+    # Trim symmetric rest->sign->rest waist transitions (>0.70 at both ends); otherwise trim only deep hip drops (>1.12).
+    w_min_y = np.where(observed, body[:, [33, 54], 1], np.inf).min(axis=1)
+    both_ends_low = bool(len(w_min_y) >= 8 and w_min_y[0] > RAISED_WRIST_MAX_Y and w_min_y[-1] > RAISED_WRIST_MAX_Y)
+    trim_thr = RAISED_WRIST_MAX_Y if both_ends_low else 1.12
+    raised = observed & (body[:, [33, 54], 1] <= trim_thr)
+    raised_idx = np.flatnonzero(raised.any(axis=1))
+    if len(raised_idx) >= 7:
+        sl = slice(int(raised_idx[0]), int(raised_idx[-1]) + 1)
+        clip, observed, body, measured = clip[sl], observed[sl], body[sl], measured[sl]
+
     hands = body[:, 33:].reshape(len(body), 2, 21, 3)
     movement = np.zeros(2)
     wrist_y_med = np.full(2, np.inf)
@@ -128,92 +272,94 @@ def _variants(raw, aspect_ratio, *, reference=False, trace=None):
         if len(points) >= 1:
             wrist_y_med[side] = float(np.median(points[:, 0, 1]))
         if len(points) >= 5:
-            low, high = np.percentile(points, [5, 95] if not reference else [10, 90], axis=0)
+            low, high = np.percentile(points, [5, 95], axis=0)
             movement[side] = np.linalg.norm(high - low, axis=-1).mean()
 
-    # Allow smaller chest/face-level movements (>=0.065) on live webcam when wrist is clearly raised;
-    # keep calibrated 0.075 baseline otherwise.
-    min_move = np.array([
-        0.065 if (not reference and wrist_y_med[side] <= 0.55) else 0.075
-        for side in (0, 1)
-    ], dtype=np.float32)
+    min_move = np.array(
+        [0.065 if wrist_y_med[side] <= 0.55 else 0.075 for side in (0, 1)],
+        dtype=np.float32,
+    )
     active = (movement >= min_move) & (movement >= 0.23 * max(movement.max(), 1e-6))
+    # Ignore hip-hanging passive hand sway when the dominant hand is clearly signing above waist level
+    if wrist_y_med.min() <= RAISED_WRIST_MAX_Y:
+        active &= wrist_y_med <= 0.85
     obs_counts = observed.sum(axis=0)
+    measured_pair = measured.all(axis=1)
+    if not reference and active.all() and measured_pair.sum() < 3:
+        # A short secondary track is not evidence of a two-hand sign. Keep two
+        # sustained tracks when there may be real alternating/occluded hands.
+        measured_counts = measured.sum(axis=0)
+        if measured_counts.min() < max(5, int(np.ceil(0.20 * measured_counts.max()))):
+            active[int(measured_counts.argmin())] = False
+    if reference and not active.any():
+        active = (obs_counts >= 5) & (wrist_y_med <= 0.82)
     forced_bilateral = False
     if not active.all() and (obs_counts >= 2).all():
-        if reference:
-            # Retain bilateral structure when studio reference has one occluded raised hand (e.g. "năn nỉ"),
-            # without turning 1-hand signs whose idle hand hangs down at the waist into 2-hand templates.
-            if float(wrist_y_med.max()) <= 0.82:
-                forced_bilateral = True
-                active[:] = True
-        else:
-            # On live webcam, avoid letting 2-5 stray frames or a waist-level resting hand poison a 1-hand sign.
-            # Only force bilateral when the weaker hand is raised (<= RAISED_WRIST_MAX_Y) with sustained presence
-            # OR genuine close interaction/clasp (>=4 frames with wrists within 0.72 shoulder widths).
-            min_obs = int(obs_counts.min())
-            sustained = (
-                min_obs >= max(6, int(0.24 * len(clip)))
-                and float(wrist_y_med.max()) <= RAISED_WRIST_MAX_Y
-            )
-            paired_mask = observed.all(axis=1)
-            close_clasp = False
-            if min_obs >= 4 and paired_mask.sum() >= 3:
-                wrist_gap = np.linalg.norm(hands[paired_mask, 0, 0, :2] - hands[paired_mask, 1, 0, :2], axis=-1)
-                close_clasp = bool((wrist_gap <= 0.72).sum() >= 3)
-            if sustained or close_clasp:
-                forced_bilateral = True
-                active[:] = True
+        min_obs = int(obs_counts.min())
+        sustained = (
+            min_obs >= max(6, int(0.24 * len(clip)))
+            and float(wrist_y_med.max()) <= RAISED_WRIST_MAX_Y
+        )
+        paired_mask = observed.all(axis=1) if reference else measured_pair
+        close_clasp = False
+        if min_obs >= 4 and paired_mask.sum() >= 3:
+            wrist_gap = np.linalg.norm(hands[paired_mask, 0, 0, :2] - hands[paired_mask, 1, 0, :2], axis=-1)
+            close_clasp = bool((wrist_gap <= 0.72).sum() >= 3)
+        if (sustained or close_clasp) and (reference or measured_pair.sum() >= 2):
+            forced_bilateral = True
+            active[:] = True
+
     if trace is not None:
         trace.update({
             "left_movement": round(float(movement[0]), 4),
             "right_movement": round(float(movement[1]), 4),
             "movement_threshold": float(min_move.min()),
             "observed_counts": [int(obs_counts[0]), int(obs_counts[1])],
+            "measured_pair_frames": int(measured_pair.sum()),
             "active_hands": "both" if active.all() else ("left" if active[0] else ("right" if active[1] else "none")),
             "bilateral_forced_by_2frame_rule": forced_bilateral,
         })
     observed = observed[:, active]
     tracked = np.flatnonzero(observed.any(axis=1))
     coverage = float(observed[tracked[0]:tracked[-1] + 1].any(axis=1).mean()) if len(tracked) else 0.0
-    if len(tracked) < 7 or coverage < 0.70:
+    min_tracked = 4 if reference else 7
+    min_cov = 0.35 if reference else 0.70
+    if len(tracked) < min_tracked or coverage < min_cov:
         if trace is not None:
             trace.update({
                 "tracked_frames": int(len(tracked)),
                 "tracking_coverage": round(coverage, 3),
                 "variants_reject_reason": (
                     "no_active_hand_below_0.09" if not active.any()
-                    else ("too_few_tracked_frames_<7" if len(tracked) < 7 else "low_tracking_coverage_<0.70")
+                    else ("too_few_tracked_frames_<7" if len(tracked) < min_tracked else "low_tracking_coverage_<0.70")
                 ),
             })
         return None
     bilateral = active.all()
 
-    # Use the mouth as a landmark on the upper body and use palm size for hand shape.
-    # In image coordinates y is scaled to the width before normalization.
     mouth = body[:, [9, 10], :2].mean(axis=1)
-    hands = hands[:, active]
-    tips = hands[:, :, [4, 8, 12, 16, 20], :2]
-    wrist = hands[:, :, 0, :2]
-    palm_size = np.maximum(0.04, np.linalg.norm(hands[:, :, 9] - hands[:, :, 0], axis=-1))
-    shape = (tips - wrist[:, :, None]) / palm_size[:, :, None, None]
-    features = np.concatenate((
-        WRIST_WEIGHT * (wrist - mouth[:, None]),
-        FINGERTIP_WEIGHT * (tips.mean(axis=2) - mouth[:, None]),
-        0.22 * shape.reshape(len(clip), -1, 10),
-    ), axis=-1)
-    if not bilateral and active[0]:
-        features *= REFLECT_X
-
+    hands_act = hands[:, active]
     usable = slice(tracked[0], tracked[-1] + 1) if bilateral else tracked
-    features, observed = features[usable], observed[usable]
-    cuts = sorted({0, len(features) // 6})
-    trims = [(start, end) for start in cuts for end in cuts]
+    hands_u = hands_act[usable].copy()
+    mouth_u = mouth[usable].copy()
+    obs_u = observed[usable]
+
+    if not bilateral and active[0]:
+        hands_u[..., 0] *= -1.0
+        mouth_u[:, 0] *= -1.0
+
+    features = _compute_hand_features(hands_u, mouth_u, obs_u)
+    observed = obs_u
+
+    cut_div = 12 if reference else 6
+    cuts = sorted({0, len(features) // cut_div})
+    end_cuts = [0] if reference else cuts
+    trims = [(start, end) for start in cuts for end in end_cuts if len(features) - start - end >= 4]
     penalty_list = [0.025 if start or end else 0.0 for start, end in trims]
     active_trim = None
     if not reference:
         active_trim = _active_motion_trim(features, observed)
-        if active_trim is not None and active_trim not in trims:
+        if active_trim is not None and active_trim not in trims and len(features) - active_trim[0] - active_trim[1] >= 4:
             trims.append(active_trim)
             penalty_list.append(0.015)
     if trace is not None:
@@ -247,9 +393,9 @@ def _active_motion_trim(features, observed, min_frames=8):
     diff = np.linalg.norm(pos[1:] - pos[:-1], axis=-1)
     speed = np.where(both, diff, 0.0).max(axis=1)
     peak = float(speed.max()) if len(speed) else 0.0
-    if peak < 0.025:
+    if peak < 0.020:
         return None
-    active = np.flatnonzero(speed >= max(0.020, 0.14 * peak))
+    active = np.flatnonzero(speed >= max(0.016, 0.14 * peak))
     if len(active) < 2:
         return None
     start = max(0, int(active[0]) - 1)
@@ -275,15 +421,14 @@ def prepare_live_reference(video_id):
     if not info["eligible"]:
         raise ValueError(f"Video không thuộc vùng miền cho phép ({info['reason']})")
     prepare_reference(video_id)
-    return video_id == TIME_SIGN_VIDEO or _reference_variants(reference_path(video_id)) is not None
+    return _reference_variants(reference_path(video_id)) is not None
 
 
-def _variant_distances(recording, reference):
+def _variant_distances(recording, reference, *, phase_mode="full"):
     sample, sample_hands, cut = recording
     template, template_hands, ref_cut = reference
     n_sample, sample_frames, hands, feature_count = sample.shape
     n_template, template_frames, _, _ = template.shape
-    # Compute squared Euclidean distances without allocating a feature vector for each frame pair.
     source = sample.transpose(2, 0, 1, 3).reshape(hands, -1, feature_count)
     target = template.transpose(2, 0, 1, 3).reshape(hands, -1, feature_count)
     source_seen = sample_hands.transpose(2, 0, 1).reshape(hands, -1, 1)
@@ -299,36 +444,46 @@ def _variant_distances(recording, reference):
     cost /= np.maximum(1, shared)
     cost += 0.7 * (shared == 0)
     cost = cost.reshape(n_sample, sample_frames, n_template, template_frames).transpose(0, 2, 1, 3)
-    # Score all short endpoint trims together. Restrict the temporal warp
-    # so that matching a single pose cannot explain the entire trajectory.
     dp = np.full((FRAMES + 1, FRAMES + 1, len(sample), len(template)), np.inf, dtype=np.float32)
     dp[0, 0] = 0
     for i, j in WARP_DIAGONALS:
         dt = cost[:, :, i - 1, j - 1].transpose(2, 0, 1)
         dp[i, j] = np.minimum(dp[i - 1, j - 1] + dt, np.minimum(dp[i - 1, j], dp[i, j - 1])) + dt
-    return dp[-1, -1] / (2 * FRAMES) + cut[:, None] + ref_cut
+    phase_penalty = 0.0
+    if phase_mode == "full":
+        per_hand = np.where(together, np.minimum(delta, 3), 0.0).reshape(
+            hands, n_sample, sample_frames, n_template, template_frames
+        )
+        max_hand_cost = per_hand.max(axis=0).transpose(0, 2, 1, 3)
+        start_mismatch = max_hand_cost[:, :, :2, :2].min(axis=(2, 3))
+        end_mismatch = max_hand_cost[:, :, -2:, -2:].min(axis=(2, 3))
+        phase_penalty = 0.85 * (np.maximum(0.0, start_mismatch - 0.28) + np.maximum(0.0, end_mismatch - 0.28))
+    elif phase_mode == "finger_end":
+        s_end = sample[:, -2:, :, 12:]
+        t_end = template[:, -3:, :, 12:]
+        s_ok = sample_hands[:, -2:, :]
+        t_ok = template_hands[:, -3:, :]
+        # Compare terminal intrinsic finger configuration (dims 12..28), invariant to signing height
+        f_diff = np.linalg.norm(s_end[:, :, None, None, :, :] - t_end[None, None, :, :, :, :], axis=-1)
+        both_ok = s_ok[:, :, None, None, :] & t_ok[None, None, :, :, :]
+        masked_f = np.where(both_ok, f_diff, 0.0).max(axis=-1)
+        end_finger_mismatch = masked_f.min(axis=(1, 3))
+        phase_penalty = 0.70 * np.maximum(0.0, end_finger_mismatch - 0.55)
+    return dp[-1, -1] / (2 * FRAMES) + phase_penalty + cut[:, None] + ref_cut
 
 
-def _score_templates(recording, references):
+def _score_templates(recording, references, *, phase_mode="full"):
     hands = recording[0].shape[2]
-    usable = []
-    for entry, ref in references.items():
-        if ref[0].shape[2] == hands:
-            usable.append((entry, ref))
-        elif hands == 1 and ref[0].shape[2] == 2 and entry in ("q-khong-co",):
-            # Cử chỉ đối xứng hai tay có biến thể thực tế một tay
-            # Trích xuất tay phải (index 1) và tay trái (index 0) tạo thành template 1 tay
-            ref_r = (ref[0][:, :, 1:2, :], ref[1][:, :, 1:2], ref[2])
-            ref_l = (ref[0][:, :, :1, :], ref[1][:, :, :1], ref[2])
-            usable.append((entry, ref_r))
-            usable.append((entry, ref_l))
+    usable = [(entry, ref) for entry, ref in references.items() if ref[0].shape[2] == hands]
     scores = {}
     for offset in range(0, len(usable), DTW_REFERENCE_BATCH_SIZE):
         batch = usable[offset:offset + DTW_REFERENCE_BATCH_SIZE]
         ids, templates = zip(*batch)
         combined = tuple(np.concatenate(parts, axis=0) for parts in zip(*templates))
         first_variant = np.cumsum([0, *(len(ref[0]) for ref in templates[:-1])])
-        distances = np.minimum.reduceat(_variant_distances(recording, combined), first_variant, axis=1)
+        distances = np.minimum.reduceat(
+            _variant_distances(recording, combined, phase_mode=phase_mode), first_variant, axis=1
+        )
         for entry_id, dist in zip(ids, distances.T):
             if entry_id not in scores or dist.min() < scores[entry_id].min():
                 scores[entry_id] = dist
@@ -336,16 +491,29 @@ def _score_templates(recording, references):
 
 
 def _relative_hand_features(features, observed):
-    """Emphasize how the wrists and finger shapes differ between the two hands."""
+    """Emphasize how the wrists, trajectories, and finger shapes relate between the two hands."""
     seen = observed[..., None]
     center = (features * seen).sum(axis=2, keepdims=True) / np.maximum(1, seen.sum(axis=2, keepdims=True))
-    return (features - 0.8 * center.astype(features.dtype)) * HAND_SHAPE_WEIGHTS
+    rel = features.copy()
+    # Subtract inter-hand center only on body-anchored coordinates [0..3]; keep contour/velocity/shape intact!
+    rel[..., :4] = features[..., :4] - 0.85 * center[..., :4].astype(features.dtype)
+    return rel * HAND_SHAPE_WEIGHTS
+
+
+def _unilateral_contour_features(features, observed):
+    """Attenuate static lateral arm-width offset while emphasizing loop/arc contour, velocity, and 5-finger state."""
+    return np.where(observed[..., None], features * UNI_CONTOUR_WEIGHTS, 0.0)
+
+
+def _unilateral_core_features(features, observed):
+    # Finger configuration is generally more stable than the speed of the
+    # wrist or its exact distance from the camera between different signers.
+    return np.where(observed[..., None], features * UNI_CORE_WEIGHTS, 0.0)
 
 
 def _duplicate_hand_fraction(features, observed):
-    # Holistic can return the same outline as both hand tracks when palms overlap.
-    gap = np.linalg.norm(features[:, :, 0] - features[:, :, 1], axis=-1)
-    return float((observed.all(axis=2) & (gap < 0.09)).mean())
+    gap = np.linalg.norm(features[:, :, 0, :4] - features[:, :, 1, :4], axis=-1)
+    return float((observed.all(axis=2) & (gap < 0.08)).mean())
 
 
 def _coarse_pool(features, observed):
@@ -372,20 +540,18 @@ def index_path():
     return None
 
 
-def _relative_coarse_chunked(features, observed, chunk_size=1024):
-    """Compute relative_coarse in small chunks to avoid a ~200 MB temporary RAM spike on Render Free."""
+def _transform_coarse_chunked(features, observed, transform_fn, chunk_size=1024):
     total, _, hands, dims = features.shape
     out = np.empty((total, COARSE_BINS, hands, dims), dtype=np.float32)
     for start in range(0, total, chunk_size):
         end = min(start + chunk_size, total)
         f_chunk = features[start:end].astype(np.float32, copy=False)
         o_chunk = observed[start:end]
-        out[start:end] = _coarse_pool(_relative_hand_features(f_chunk, o_chunk), o_chunk)
+        out[start:end] = _coarse_pool(transform_fn(f_chunk, o_chunk), o_chunk)
     return out
 
 
 def _slice_sub_bucket(bucket, keep_set):
-    """Build a compact pre-sliced bucket view for fast Stage-1 priority search (~4x fewer variants)."""
     keep_entries = [i for i, eid in enumerate(bucket["ids"]) if eid in keep_set]
     if not keep_entries or len(keep_entries) == len(bucket["ids"]):
         return None
@@ -412,9 +578,10 @@ def _slice_sub_bucket(bucket, keep_set):
         "coarse_squared": bucket["coarse_squared"][v_idx],
         "slices": sub_slices,
     }
-    if "relative_coarse" in bucket:
-        sub["relative_coarse"] = bucket["relative_coarse"][v_idx]
-        sub["relative_coarse_squared"] = bucket["relative_coarse_squared"][v_idx]
+    for key in ("relative_coarse", "contour_coarse", "core_coarse"):
+        if key in bucket:
+            sub[key] = bucket[key][v_idx]
+            sub[key + "_squared"] = bucket[key + "_squared"][v_idx]
     return sub
 
 
@@ -428,8 +595,8 @@ def _default_priority_ids():
     ) | frozenset(BUILTIN_WORDS)
 
 
-def _project_idle_waist_bilateral_to_uni(uni_bucket, bi_bucket):
-    """Rescue 1-hand studio signs in bi_bucket whose idle hand merely hung down at the hip/waist."""
+def _project_idle_waist_bilateral_to_uni(uni_bucket, bi_bucket, *, max_idle_range=0.18):
+    """Generic unilateral projection for studio 2-hand entries whose passive hand hangs idle near the waist."""
     existing = set(uni_bucket["ids"])
     bi_feats = bi_bucket["features"]
     bi_obs = bi_bucket["observed"]
@@ -442,9 +609,8 @@ def _project_idle_waist_bilateral_to_uni(uni_bucket, bi_bucket):
     next_entry_idx = len(uni_bucket["ids"])
     next_var_offset = len(uni_bucket["features"])
 
-    target_ids = frozenset(_CHUNG_TOI_IDS) - existing
     for ei, eid in enumerate(bi_bucket["ids"]):
-        if eid not in target_ids:
+        if eid in existing:
             continue
         st, en = bi_bucket["slices"][ei]
         half = (en - st) // 2
@@ -457,14 +623,14 @@ def _project_idle_waist_bilateral_to_uni(uni_bucket, bi_bucket):
         w_rng = [0.0, 0.0]
         for s in (0, 1):
             if obs_n[s] >= 4:
-                pts = f0[o0[:, s], s, :2].astype(np.float32)
+                pts = f0[o0[:, s], s, :2].astype(np.float32) / WRIST_WEIGHT
                 wy_med[s] = float(np.median(pts[:, 1]))
                 w_rng[s] = float(np.linalg.norm(np.ptp(pts, axis=0)))
         act = 0 if wy_med[0] < wy_med[1] else 1
         idle = 1 - act
-        if not (obs_n[act] >= 12 and wy_med[act] <= 0.72):
+        if not (obs_n[act] >= 12 and wy_med[act] <= 1.30):
             continue
-        if not (obs_n[idle] < 4 or (wy_med[idle] >= 0.92 and w_rng[idle] <= 0.16)):
+        if not (obs_n[idle] < 4 or (wy_med[idle] >= 1.42 and w_rng[idle] <= max_idle_range)):
             continue
 
         f_sub = bi_feats[st:st + half, :, act:act + 1, :]
@@ -491,6 +657,42 @@ def _project_idle_waist_bilateral_to_uni(uni_bucket, bi_bucket):
         uni_bucket["var_to_entry"] = np.concatenate([uni_bucket["var_to_entry"], *v2e_parts], axis=0)
 
 
+def _expand_legacy_features(features):
+    # The published index stores wrist position, mean fingertip position, and
+    # five palm-normalized fingertip offsets. Recover the median centroid and
+    # estimate palm scale from the two means. Joint-dependent channels are absent.
+    expanded = np.zeros((*features.shape[:-1], FEATURE_DIM), dtype=np.float16)
+    for start in range(0, len(features), 1024):
+        old = features[start:start + 1024].astype(np.float32)
+        wrist = old[..., :2] / 0.60
+        mean_tip = old[..., 2:4] / 0.95
+        tips = old[..., 4:].reshape(*old.shape[:-1], 5, 2) / 0.22
+        mean_offset = tips.mean(axis=-2)
+        palm = np.clip(
+            ((mean_tip - wrist) * mean_offset).sum(axis=-1)
+            / np.maximum(1e-5, (mean_offset * mean_offset).sum(axis=-1)),
+            0.04, 1.5,
+        )
+        palm_correction = np.maximum(1.0, 0.55 * np.median(np.linalg.norm(tips, axis=-1), axis=-1))
+        out = expanded[start:start + len(old)]
+        out[..., :2] = WRIST_WEIGHT * wrist
+        out[..., 2:4] = FINGERTIP_WEIGHT * (wrist + np.median(tips, axis=-2) * palm[..., None])
+        out[..., 12:22] = TIP_SHAPE_WEIGHT * np.clip(
+            tips.reshape(*old.shape[:-1], 10) / palm_correction[..., None], -2.0, 2.0,
+        )
+    return expanded
+
+
+def _index_feature_view(reference, index):
+    if index is None or not index["legacy"]:
+        return reference
+    features, observed, penalties = reference
+    comparable = features.copy()
+    comparable[..., 4:12] = 0
+    comparable[..., 22:] = 0
+    return comparable, observed, penalties
+
+
 @lru_cache(maxsize=2)
 def _load_index_cached(path_str, mtime_ns):
     del mtime_ns
@@ -498,36 +700,51 @@ def _load_index_cached(path_str, mtime_ns):
     with np.load(path_str, allow_pickle=False) as data:
         buckets = {}
         all_ids = []
+        feature_dim = data["uni_features"].shape[-1]
+        legacy = feature_dim == LEGACY_FEATURE_DIM
         for hands, prefix in ((1, "uni"), (2, "bi")):
             ids = [str(x) for x in data[f"{prefix}_ids"].tolist()]
-            all_ids.extend(ids)
-            # Keep Stage-2 features in compact float16 (~28 MB vs ~57 MB); cast only top-K slices to float32.
             feats = data[f"{prefix}_features"]
+            if feats.shape[-1] != feature_dim or feature_dim not in (LEGACY_FEATURE_DIM, FEATURE_DIM):
+                raise ValueError(f"Incompatible live_index feature layout: {feats.shape[-1]}")
+            all_ids.extend(ids)
             obs = data[f"{prefix}_observed"].astype(bool)
+            if legacy:
+                feats = _expand_legacy_features(feats)
             pens = data[f"{prefix}_penalties"].astype(np.float32)
             v2e = data[f"{prefix}_var_to_entry"].astype(np.int32)
-            coarse = data[f"{prefix}_coarse"].astype(np.float32)
+            coarse = _coarse_pool(feats, obs) if legacy else data[f"{prefix}_coarse"].astype(np.float32)
             slices = []
             if len(ids):
                 boundaries = np.flatnonzero(np.diff(v2e)) + 1
                 starts = np.r_[0, boundaries]
                 ends = np.r_[boundaries, len(v2e)]
                 slices = list(zip(starts.tolist(), ends.tolist()))
-            bucket = buckets[hands] = {
+            buckets[hands] = {
                 "ids": ids, "features": feats, "observed": obs,
                 "penalties": pens, "var_to_entry": v2e, "coarse": coarse, "slices": slices,
             }
-            if hands == 2:
-                bucket["relative_coarse"] = _relative_coarse_chunked(feats, obs)
-        _project_idle_waist_bilateral_to_uni(buckets[1], buckets[2])
+        # The previous index includes more of the lead-in and has a wider
+        # calibrated range for the passive hand than the newer clipped index.
+        _project_idle_waist_bilateral_to_uni(
+            buckets[1], buckets[2], max_idle_range=0.16 / 0.60 if legacy else 0.18,
+        )
+        buckets[1]["contour_coarse"] = _transform_coarse_chunked(
+            buckets[1]["features"], buckets[1]["observed"], _unilateral_contour_features
+        )
+        buckets[1]["core_coarse"] = _transform_coarse_chunked(
+            buckets[1]["features"], buckets[1]["observed"], _unilateral_core_features
+        )
+        buckets[2]["relative_coarse"] = _transform_coarse_chunked(
+            buckets[2]["features"], buckets[2]["observed"], _relative_hand_features
+        )
         for hands in (1, 2):
             bucket = buckets[hands]
-            for key in ("coarse", "relative_coarse"):
+            for key in ("coarse", "relative_coarse", "contour_coarse", "core_coarse"):
                 if key in bucket:
                     bucket[key + "_squared"] = np.einsum("vthd,vthd->vth", bucket[key], bucket[key])
-            # Pre-slice common+builtin sub-bucket so Tier-1 search skips ~80% of rare variants.
             bucket["priority_sub"] = _slice_sub_bucket(bucket, priority_set)
-    return {"buckets": buckets, "all_ids": tuple(all_ids), "id_set": frozenset(all_ids)}
+    return {"buckets": buckets, "all_ids": tuple(all_ids), "id_set": frozenset(all_ids), "legacy": legacy}
 
 
 _INDEX_LOAD_LOCK = threading.Lock()
@@ -565,7 +782,7 @@ def _stage1_candidates(recording, bucket, top_k=STAGE1_TOP_K, *, coarse_key="coa
             return list(range(n_entries))
 
     sample_f, sample_o, sample_cut = recording
-    sample_coarse = _coarse_pool(sample_f, sample_o)  # [V_s, 6, H, 14]
+    sample_coarse = _coarse_pool(sample_f, sample_o)
     slice_allowed = allowed_idx is not None and len(allowed_idx) < (n_entries // 2)
     if slice_allowed:
         slices = bucket["slices"]
@@ -585,9 +802,9 @@ def _stage1_candidates(recording, bucket, top_k=STAGE1_TOP_K, *, coarse_key="coa
         num_pool = len(allowed_idx)
     else:
         sub_v2e = bucket["var_to_entry"]
-        tmpl_coarse = bucket[coarse_key]                    # [N_v, 6, H, 14]
+        tmpl_coarse = bucket[coarse_key]
         tmpl_squared = bucket[coarse_key + "_squared"]
-        tmpl_pen = bucket["penalties"]                    # [N_v]
+        tmpl_pen = bucket["penalties"]
         num_pool = n_entries
 
     best_var = np.full(len(tmpl_coarse), np.inf, dtype=np.float32)
@@ -598,12 +815,9 @@ def _stage1_candidates(recording, bucket, top_k=STAGE1_TOP_K, *, coarse_key="coa
         np.minimum(best_var, diff, out=best_var)
     entry_best = np.full(num_pool, np.inf, dtype=np.float32)
     np.minimum.at(entry_best, sub_v2e, best_var)
-    if slice_allowed:
-        chosen = np.argpartition(entry_best, top_k)[:top_k]
-        return [allowed_idx[int(k)] for k in chosen]
-    if allowed_idx is not None:
-        sub = entry_best[allowed_idx]
-        chosen = np.argpartition(sub, top_k)[:top_k]
+    if slice_allowed or allowed_idx is not None:
+        arr = entry_best if slice_allowed else entry_best[allowed_idx]
+        chosen = np.argpartition(arr, top_k)[:top_k]
         return [allowed_idx[int(k)] for k in chosen]
     return np.argpartition(entry_best, top_k)[:top_k].tolist()
 
@@ -619,8 +833,13 @@ def _indexed_references(recording, bucket, *, coarse_key="coarse", allowed_ids=N
 
 
 def _match_result(score, entry_id, method="trajectory"):
-    return {"motion_detected": True, "status": "word_matched", "entry_id": entry_id, "match_method": method,
-            "similarity": round(1.0 - score, 3)}
+    return {
+        "motion_detected": True,
+        "status": "word_matched",
+        "entry_id": entry_id,
+        "match_method": method,
+        "similarity": round(max(0.0, 1.0 - score), 3),
+    }
 
 
 def _bilateral_tip_gap(features, observed):
@@ -634,12 +853,32 @@ def _bilateral_tip_gap(features, observed):
     return tgap, tip_above_wrist
 
 
+def _shape_trajectory_distance(recording, reference):
+    # A signer may perform a two-handed gesture higher or lower. Align only the shared
+    # height, keeping horizontal placement, the spacing of the hands, and motion direction.
+    sample, seen, penalties = recording
+    ref_sample, ref_seen, ref_penalties = reference
+    sample_height = sample[..., 1].sum(axis=(1, 2)) / np.maximum(1, seen.sum(axis=(1, 2)))
+    ref_height = ref_sample[..., 1].sum(axis=(1, 2)) / np.maximum(1, ref_seen.sum(axis=(1, 2)))
+    max_shift = MAX_SIGNING_HEIGHT_SHIFT * WRIST_WEIGHT
+    distances = []
+    for target, target_seen, penalty, height in zip(ref_sample, ref_seen, ref_penalties, ref_height):
+        shift = np.clip(height - sample_height, -max_shift, max_shift)[:, None, None] * seen
+        aligned = sample.copy()
+        aligned[..., 1] += shift
+        aligned[..., 3] += shift * (FINGERTIP_WEIGHT / WRIST_WEIGHT)
+        distances.append(float(_variant_distances(
+            (aligned, seen, penalties), (target[None], target_seen[None], np.asarray([penalty])),
+        ).min()))
+    return min(distances)
+
+
 def _bilateral_shape_match(frames, aspect_ratio, recording, bucket, references, *, allowed_ids=None, is_rare_tier=False, trace=None):
+    """Sign-agnostic inter-hand relative trajectory & shape matcher for 2-hand signs."""
     f, o, p = recording
     paired = o[0].all(axis=1)
     paired_n = int(paired.sum())
     sample_tgap, sample_up = _bilateral_tip_gap(f, o)
-    # Upright clasped-palm signs (e.g. "năn nỉ") frequently occlude one hand during contact.
     clasped_upright = (
         not is_rare_tier
         and paired_n >= 7
@@ -648,8 +887,6 @@ def _bilateral_shape_match(frames, aspect_ratio, recording, bucket, references, 
         and sample_up >= 0.18
         and lost_hand_during_interaction(frames, aspect_ratio)
     )
-    # Require >=50% (12/24) two-hand frames unless palms are genuinely clasped upright:
-    # when only one hand is visible, _relative_hand_features shrinks features by 5x toward zero.
     if paired_n < 12 and not clasped_upright:
         if trace is not None:
             trace["bilateral_shape"] = {"skipped": "paired_frames_lt_12", "paired_frames": paired_n}
@@ -659,10 +896,8 @@ def _bilateral_shape_match(frames, aspect_ratio, recording, bucket, references, 
 
     def adapt(reference):
         feat, observed, penalties = reference
-        duplicates = max(0, _duplicate_hand_fraction(feat, observed) - sample_duplicates)
+        duplicates = max(0.0, _duplicate_hand_fraction(feat, observed) - sample_duplicates)
         gap_penalty = 0.0
-        # When the live hands are clasped/touching (tgap <= 0.22), penalize separated-hand templates
-        # (e.g. "công bằng", "lửa") without penalizing natural arm-width variance on wide signs.
         if sample_tgap is not None and sample_tgap <= 0.22:
             ref_tgap, _ = _bilateral_tip_gap(feat, observed)
             if ref_tgap is not None and ref_tgap > sample_tgap:
@@ -670,26 +905,21 @@ def _bilateral_shape_match(frames, aspect_ratio, recording, bucket, references, 
         return _relative_hand_features(feat, observed), observed, penalties + 0.20 * duplicates + gap_penalty
 
     candidates = dict(references)
-    if bucket is not None:
+    if bucket is not None and "relative_coarse" in bucket:
         candidates.update(_indexed_references(sample, bucket, coarse_key="relative_coarse", allowed_ids=allowed_ids))
     if allowed_ids is not None:
         candidates = {key: ref for key, ref in candidates.items() if key in allowed_ids}
-    scores = _score_templates(sample, {key: adapt(ref) for key, ref in candidates.items() if ref[0].shape[2] == 2})
-
-    # A closer view of the public năn nỉ sample preserves fingertips during contact.
-    if (allowed_ids is None or "q-nan-ni" in allowed_ids) and verify_reference_video_id("D0261_close")["eligible"]:
-        alternate = reference_path("D0261_close")
-        if not alternate.is_file() and (archive := index_path()) is not None:
-            alternate = archive.with_name(alternate.name)
-        if alternate.is_file() and (ref := _reference_variants(alternate)) is not None and ref[0].shape[2] == 2:
-            alternate_scores = _variant_distances(sample, adapt(ref)).min(axis=1)
-            scores["q-nan-ni"] = np.minimum(scores.get("q-nan-ni", np.inf), alternate_scores)
+    scores = _score_templates(
+        sample,
+        {key: adapt(ref) for key, ref in candidates.items() if ref[0].shape[2] == 2},
+        phase_mode="finger_end",
+    )
 
     ranked = sorted((float(distances.min()), entry_id) for entry_id, distances in scores.items())
     shape_trace = None
     if trace is not None:
         shape_trace = {
-            "paired_frames": int(paired.sum()),
+            "paired_frames": paired_n,
             "paired_ratio": round(float(paired.mean()), 3),
             "sample_duplicates": round(float(sample_duplicates), 3),
             "max_distance": MAX_HAND_SHAPE_DISTANCE,
@@ -700,33 +930,36 @@ def _bilateral_shape_match(frames, aspect_ratio, recording, bucket, references, 
             "gap_top1_top2": round(ranked[1][0] - ranked[0][0], 4) if len(ranked) > 1 else None,
         }
         trace["bilateral_shape"] = shape_trace
-    max_shape_dist = 0.28 if is_rare_tier else MAX_HAND_SHAPE_DISTANCE
-    # When fewer than 15/24 frames have both hands visible, single-hand frames shrink 5x in
-    # _relative_hand_features, so require a tight match (<=0.22) unless palms are clasped upright.
+
+    max_shape_dist = 0.29 if is_rare_tier else MAX_HAND_SHAPE_DISTANCE
     if paired_n < 15 and not clasped_upright:
-        max_shape_dist = min(max_shape_dist, 0.22)
+        max_shape_dist = min(max_shape_dist, 0.24)
     if not ranked or ranked[0][0] > max_shape_dist:
         if shape_trace is not None:
             shape_trace["verdict"] = "out_of_range"
         return None
+
     distance, entry_id = ranked[0]
-    if clasped_upright and paired_n < 12 and entry_id != "q-nan-ni":
-        if shape_trace is not None:
-            shape_trace["verdict"] = "clasped_low_paired_non_nanni"
-        return None
+    best_ref = candidates.get(entry_id)
+    if clasped_upright and paired_n < 12 and best_ref is not None:
+        best_ref_tgap, _ = _bilateral_tip_gap(best_ref[0], best_ref[1])
+        if best_ref_tgap is not None and best_ref_tgap > 0.26:
+            if shape_trace is not None:
+                shape_trace["verdict"] = "clasped_low_paired_wide_template"
+            return None
+
     separation = MIN_HAND_SHAPE_SEPARATION
     if distance <= 0.30 and paired.mean() >= 0.80 and sample_duplicates <= 0.05:
-        separation = 0.035
-    elif entry_id == "q-nan-ni" and (clasped_upright or (sample_tgap is not None and sample_tgap <= 0.16 and sample_up >= 0.25)):
-        separation = 0.018
+        separation = 0.032
+    elif clasped_upright or (sample_tgap is not None and sample_tgap <= 0.16 and sample_up >= 0.22):
+        separation = 0.020
     if shape_trace is not None:
         shape_trace["separation_required"] = separation
     if len(ranked) > 1 and ranked[1][0] - distance < separation:
         if shape_trace is not None:
             shape_trace["verdict"] = "ambiguous"
         return None
-    # Two different endpoint trims can corroborate the same motion in one window.
-    # This lets the camera use a stable match even if the next request is slow.
+
     first = scores[entry_id]
     rivals = [value for key, value in scores.items() if key != entry_id]
     runner_up = np.min(rivals, axis=0) if rivals else np.full_like(first, np.inf)
@@ -736,6 +969,13 @@ def _bilateral_shape_match(frames, aspect_ratio, recording, bucket, references, 
             shape_trace["verdict"] = "rare_shape_uncorroborated"
             shape_trace["agreed_trims"] = int(agreed.sum())
         return None
+    full_distance = _shape_trajectory_distance(recording, best_ref)
+    if shape_trace is not None:
+        shape_trace["trajectory_distance"] = round(full_distance, 4)
+    if full_distance > MAX_BILATERAL_SHAPE_TRAJECTORY_DISTANCE:
+        if shape_trace is not None:
+            shape_trace["verdict"] = "trajectory_out_of_range"
+        return None
     method = "hand_shape" if agreed.sum() >= 2 else "trajectory"
     if shape_trace is not None:
         shape_trace["verdict"] = "matched"
@@ -744,422 +984,196 @@ def _bilateral_shape_match(frames, aspect_ratio, recording, bucket, references, 
     return _match_result(distance, entry_id, method)
 
 
-def _match_kha_nang_with_occlusion(frames, aspect_ratio):
-    """Recover 'khả năng' (D0096) when the vertical edge-on hand drops out behind the horizontal flat hand.
-
-    In 'khả năng', one flat open hand sits horizontally across the chest while the other flat hand
-    stands vertically perpendicular ('⊥') behind/against it. Turning the vertical hand edge-on to
-    a webcam frequently hides its 21 hand landmarks while Holistic pose wrists/indices (pose[15..20])
-    remain tracked continuously.
-    """
-    try:
-        clip, _ = _visible_clip(frames)
-    except ValueError:
+def _unilateral_contour_match(recording, bucket, references, *, allowed_ids=None, is_rare_tier=False):
+    """Sign-agnostic contour + velocity + 5-finger configuration matcher for 1-hand signs across camera framings."""
+    f, o, p = recording
+    seen0 = o[0, :, 0]
+    if int(seen0.sum()) < 16:
         return None
-    clip = _fill_short_gaps(clip)
-    clip[..., 1] /= aspect_ratio
-    hands = _tracked_hands(clip)
-    body = normalize_sequence_tjc_v2(clip)
-    if len(body) < 8:
+    # Require clear contour excursion so micro-twitches do not match via lateral offset attenuation
+    contour_xy = f[0, seen0, 0, 4:8] / CONTOUR_WEIGHT
+    excursion = float(max(np.linalg.norm(np.ptp(contour_xy[:, :2], axis=0)), np.linalg.norm(np.ptp(contour_xy[:, 2:4], axis=0))))
+    if excursion < 0.16:
         return None
 
-    best_score = None
-    for horiz_side in (0, 1):
-        vert_side = 1 - horiz_side
-        h_start = 33 if horiz_side == 0 else 54
-        v_start = 54 if horiz_side == 0 else 33
-        h_pw_idx = 15 if horiz_side == 0 else 16
-        v_pw_idx = 16 if horiz_side == 0 else 15
-        v_pi_idx = 20 if horiz_side == 0 else 19
+    sample = (_unilateral_contour_features(f, o), o, p)
+    candidates = dict(references)
+    if bucket is not None and "contour_coarse" in bucket:
+        candidates.update(_indexed_references(sample, bucket, coarse_key="contour_coarse", allowed_ids=allowed_ids))
+    if allowed_ids is not None:
+        candidates = {key: ref for key, ref in candidates.items() if key in allowed_ids}
+    adapted = {
+        key: (_unilateral_contour_features(ref[0], ref[1]), ref[1], ref[2])
+        for key, ref in candidates.items()
+        if ref[0].shape[2] == 1
+    }
+    scores = _score_templates(sample, adapted)
+    ranked = sorted((float(distances.min()), entry_id) for entry_id, distances in scores.items())
+    max_dist = 0.25 if is_rare_tier else MAX_UNI_CONTOUR_DISTANCE
+    if not ranked or ranked[0][0] > max_dist:
+        return None
+    distance, entry_id = ranked[0]
+    sep = 0.026 if distance <= 0.22 else MIN_UNI_CONTOUR_SEPARATION
+    if len(ranked) > 1 and ranked[1][0] - distance < sep:
+        return None
+    first = scores[entry_id]
+    rivals = [value for key, value in scores.items() if key != entry_id]
+    runner_up = np.min(rivals, axis=0) if rivals else np.full_like(first, np.inf)
+    if is_rare_tier and int(((first <= max_dist) & (runner_up - first >= sep)).sum()) < 2:
+        return None
+    if float(_variant_distances(recording, candidates[entry_id]).min()) > MAX_UNILATERAL_SHAPE_TRAJECTORY_DISTANCE:
+        return None
+    return _match_result(distance, entry_id, method="hand_shape")
 
-        h_ok = hands[:, horiz_side]
-        if h_ok.sum() < 6 or h_ok.mean() < 0.45:
-            continue
 
-        h_hand = body[:, h_start:h_start + 21, :2]
-        h_wrist = h_hand[:, 0]
-        h_palm = np.maximum(np.linalg.norm(h_hand[:, 9] - h_wrist, axis=1), 1e-4)
-        h_tips = h_hand[:, [8, 12, 16, 20]] - h_wrist[:, None, :]
-        h_ext = np.linalg.norm(h_tips, axis=2).mean(axis=1) / h_palm
-        h_vec = h_hand[:, 12] - h_wrist
-        h_len = np.maximum(np.linalg.norm(h_vec, axis=1), 1e-4)
-        h_horiz = np.abs(h_vec[:, 0]) / h_len
-        h_spread = np.linalg.norm(h_hand[:, 8] - h_hand[:, 20], axis=1) / h_palm
-        horiz_frame = h_ok & (h_wrist[:, 1] <= 0.72) & (h_ext >= 1.35) & (h_horiz >= 0.78) & (h_spread <= 1.25)
-        if horiz_frame.sum() < 5:
-            continue
+def _signing_hand_observations(frames, aspect_ratio):
+    """Return real hand observations within signing space, excluding hands at rest."""
+    frames = np.asarray(frames, dtype=np.float32).copy()
+    measured = _tracked_hands(frames)
+    frames[..., 1] /= aspect_ratio
+    normalized = normalize_sequence_tjc_v2(frames)
+    return measured & (normalized[:, [33, 54], 1] <= 0.90)
 
-        v_ok = hands[:, vert_side]
-        v_pw = body[:, v_pw_idx, :2]
-        v_pi = body[:, v_pi_idx, :2]
-        v_pose_ok = np.any(v_pw != 0, axis=1) & np.any(v_pi != 0, axis=1) & (v_pw[:, 1] <= 0.75)
 
-        v_pos = np.where(v_ok[:, None], body[:, v_start, :2], v_pw)
-        v_dir_hand = body[:, v_start + 12, :2] - body[:, v_start, :2]
-        v_dir_pose = v_pi - v_pw
-        v_dir = np.where(v_ok[:, None], v_dir_hand, v_dir_pose)
-        v_present = v_ok | v_pose_ok
+def _unilateral_core_rank(frames, aspect_ratio, recording, bucket, allowed_ids):
+    """Rank a well-observed single hand with weaker position and speed assumptions."""
+    if bucket is None:
+        return [], {}
+    measured = _signing_hand_observations(frames, aspect_ratio)
+    dominant = int(measured.sum(axis=0).max())
+    if dominant < 10 or measured.all(axis=1).sum() > max(3, 0.15 * dominant):
+        return [], {}
+    features, observed, penalties = recording
+    sample = (_unilateral_core_features(features, observed), observed, penalties)
+    references = dict(_indexed_references(sample, bucket, coarse_key="core_coarse", allowed_ids=allowed_ids))
+    scaled = {
+        key: (_unilateral_core_features(feat, seen), seen, cut)
+        for key, (feat, seen, cut) in references.items()
+    }
+    scores = _score_templates(sample, scaled, phase_mode="none")
+    return sorted((float(score.min()), key) for key, score in scores.items()), references
 
-        v_len = np.maximum(np.linalg.norm(v_dir, axis=1), 1e-4)
-        v_up = (-v_dir[:, 1]) / v_len
-        cos_theta = np.abs((h_vec[:, 0] * v_dir[:, 0] + h_vec[:, 1] * v_dir[:, 1]) / (h_len * v_len))
 
-        h_mid = 0.5 * (h_wrist + h_hand[:, 9])
-        h_pw = body[:, h_pw_idx, :2]
-        dist_hand = np.minimum(
-            np.linalg.norm(v_pos - h_wrist, axis=1),
-            np.linalg.norm(v_pos - h_mid, axis=1),
+def _with_unilateral_core(result, frames, aspect_ratio, recording, bucket, allowed_ids, completed, candidate_scores, trace):
+    if not completed:
+        return result
+    if result and result["status"] == "word_matched":
+        if result["match_method"] == "hand_shape":
+            # Contour alone can match the common first movement of two signs.
+            # Require independent trajectory and finger evidence to commit it.
+            result = {**result, "requires_user_confirmation": True}
+        elif result["similarity"] >= 0.78:
+            return result
+    ranked, references = _unilateral_core_rank(frames, aspect_ratio, recording, bucket, allowed_ids)
+    if not ranked:
+        return result
+    distance, entry_id = ranked[0]
+    margin = ranked[1][0] - distance if len(ranked) > 1 else np.inf
+    path_distance = float(_variant_distances(recording, references[entry_id]).min())
+    if candidate_scores is not None:
+        # A near miss can still be useful for manual selection when the relative
+        # shape and the absolute trajectory both support the same candidate.
+        hint_limit = MAX_SINGLE_HAND_CORE_HINT_DISTANCE
+        if margin >= 0.012 and path_distance <= 0.68:
+            hint_limit = MAX_CORROBORATED_CORE_HINT_DISTANCE
+        candidate_scores.extend({
+            "entry_id": key, "similarity": round(1.0 - score, 3), "distance": round(score, 4),
+            "match_method": "unilateral_core",
+        } for score, key in ranked[:5]
+            if score <= MAX_SINGLE_HAND_CORE_HINT_DISTANCE or (key == entry_id and score <= hint_limit))
+    if trace is not None:
+        trace["unilateral_core"] = {
+            "entry_id": entry_id, "distance": round(distance, 4),
+            "margin": round(margin, 4) if np.isfinite(margin) else None,
+        }
+    if (distance > MAX_SINGLE_HAND_CORE_DISTANCE or margin < MIN_SINGLE_HAND_CORE_SEPARATION or
+            (result and result["status"] == "word_matched" and result["entry_id"] != entry_id)):
+        return result
+    # Keep corroboration of absolute path and its beginning/end for auto commit.
+    if path_distance > 0.47:
+        return result
+    if trace is not None:
+        trace["verdict"] = "unilateral_core_matched"
+    return _match_result(distance, entry_id, method="unilateral_core")
+
+
+def _with_personal_examples(result, recording, examples, candidate_scores, trace):
+    if not examples:
+        return result
+    hands = recording[0].shape[2]
+    ranked = []
+    for entry_id, samples in examples.items():
+        sample_scores = sorted(
+            float(_variant_distances(recording, ref).min())
+            for ref in samples if ref[0].shape[2] == hands
         )
-        dist_pose = np.where(
-            np.any(h_pw != 0, axis=1) & np.any(v_pw != 0, axis=1),
-            np.linalg.norm(v_pw - h_pw, axis=1),
-            np.inf,
+        if sample_scores:
+            ranked.append((sample_scores[0], entry_id, sum(score <= 0.22 for score in sample_scores)))
+    ranked.sort()
+    if not ranked or ranked[0][0] > 0.40:
+        return result
+    if candidate_scores is not None:
+        candidate_scores.extend(
+            _match_result(distance, entry_id, method="personal_template")
+            for distance, entry_id, _ in ranked[:3] if distance <= 0.40
         )
-        pair_dist = np.minimum(dist_hand, dist_pose)
-        perp_frame = horiz_frame & v_present & (pair_dist <= 0.55) & (v_up >= 0.42) & (cos_theta <= 0.75)
-        perp_n = int(perp_frame.sum())
-        if perp_n < 6 or perp_frame.mean() < 0.28:
-            continue
-
-        # Vertical hand must have been tracked pointing upward at least twice so 1-hand signs never match.
-        v_hand_len = np.maximum(np.linalg.norm(v_dir_hand, axis=1), 1e-4)
-        v_hand_up_n = int((v_ok & ((-v_dir_hand[:, 1]) / v_hand_len >= 0.45)).sum())
-        if v_hand_up_n < 2:
-            continue
-
-        dist_med = float(np.median(pair_dist[perp_frame]))
-        h_spread_med = float(np.median(h_spread[horiz_frame]))
-        h_ext_med = float(np.median(h_ext[horiz_frame]))
-        if dist_med > 0.35 or h_spread_med > 0.95 or h_ext_med < 1.50:
-            continue
-
-        # Require real gesture motion (hands converging into contact or sliding horizontally during contact).
-        valid_dists = pair_dist[np.isfinite(pair_dist)]
-        converged = float(valid_dists.max() - valid_dists.min()) >= 0.12 if len(valid_dists) >= 4 else False
-        slid = float(np.ptp(h_wrist[perp_frame, 0])) >= 0.12
-        if not (converged or slid):
-            continue
-
-        cos_med = float(np.median(cos_theta[perp_frame]))
-        distance = min(0.32, 0.14 + 0.18 * dist_med + 0.12 * cos_med)
-        if best_score is None or distance < best_score:
-            best_score = distance
-
-    if best_score is None:
-        return None
-    return _match_result(best_score, "q-kha-nang", method="hand_shape")
-
-
-def _match_chung_toi_family(frames, aspect_ratio, allowed_set=None):
-    """Recognize 'chúng tôi' and 'chúng tôi (2/3/4/5 người)' across studio and close-up webcam framing.
-
-    In QIPEDC studio videos (D0130-D0134), the signer performs a chest-level horizontal circular sweep
-    with 1, 2, 3, 4, or 5 extended fingers while holding the arm outside the shoulder (which falls outside
-    a 4:3 webcam frame, so webcam users naturally circle in front of the chest). Requiring a closed/bidirectional
-    horizontal loop rejects one-way crawls (e.g. 'con sâu') and vertical taps (e.g. 'ăn đủ', 'bực mình').
-    """
-    if allowed_set is not None and not any(eid in allowed_set for eid in _CHUNG_TOI_IDS):
-        return None
-    try:
-        clip, _ = _visible_clip(frames)
-    except ValueError:
-        return None
-    clip = _fill_short_gaps(clip)
-    clip[..., 1] /= aspect_ratio
-    obs = _tracked_hands(clip)
-    body = normalize_sequence_tjc_v2(clip)
-    if len(body) < 10:
-        return None
-
-    mov = np.zeros(2)
-    ymed = np.full(2, 9.9)
-    for side in (0, 1):
-        pts = body[obs[:, side], 33 + 21 * side:33 + 21 * (side + 1), :2]
-        if len(pts) >= 5:
-            low, high = np.percentile(pts, [5, 95], axis=0)
-            mov[side] = float(np.linalg.norm(high - low, axis=-1).mean())
-            ymed[side] = float(np.median(pts[:, 0, 1]))
-    s = int(np.argmax(mov))
-    other = 1 - s
-    if mov[s] < 0.10:
-        return None
-    if obs[:, other].sum() >= 6 and ymed[other] <= 0.65 and mov[other] >= max(0.08, 0.28 * mov[s]):
-        return None
-    other_pw = 16 if s == 0 else 15
-    pw_ok = np.any(body[:, other_pw, :2] != 0, axis=1)
-    if float((pw_ok & (body[:, other_pw, 1] <= 0.65)).mean()) > 0.25:
-        return None
-
-    j0 = 33 + 21 * s
-    ok_idx = np.flatnonzero(obs[:, s] & (body[:, j0, 1] <= RAISED_WRIST_MAX_Y))
-    if len(ok_idx) < 8:
-        return None
-    h_all = body[ok_idx, j0:j0 + 21, :2].copy()
-    if s == 0:
-        h_all[..., 0] *= -1
-    trim = len(ok_idx) // 6 if len(ok_idx) >= 14 else 0
-    h = h_all[trim:len(h_all) - trim] if trim else h_all
-
-    w = h[:, 0]
-    psize = np.maximum(np.linalg.norm(h[:, 9] - w, axis=1), 1e-4)
-    d_vals = {}
-    st_vals = {}
-    mixed_transition = False
-    for fn, ti, pi, mi in (("I", 8, 6, 5), ("M", 12, 10, 9), ("R", 16, 14, 13), ("P", 20, 18, 17)):
-        dt = np.linalg.norm(h[:, ti] - w, axis=1) / psize
-        dp = np.linalg.norm(h[:, pi] - w, axis=1) / psize
-        diff_tp = dt - dp
-        if fn == "M":
-            p15, p75 = np.percentile(diff_tp, [15, 75])
-            mixed_transition = bool(p15 < -0.05 and p75 > 0.22)
-        seg = np.linalg.norm(h[:, ti] - h[:, pi], axis=1) + np.linalg.norm(h[:, pi] - h[:, mi], axis=1)
-        st = np.linalg.norm(h[:, ti] - h[:, mi], axis=1) / np.maximum(seg, 1e-4)
-        d_vals[fn] = float(np.median(diff_tp))
-        st_vals[fn] = float(np.median(st))
-    if mixed_transition:
-        return None
-
-    mrp_curled = all(d_vals[k] <= -0.08 and st_vals[k] <= 0.72 for k in ("M", "R", "P"))
-    is_one_finger = mrp_curled and (
-        st_vals["I"] >= 0.65 or d_vals["I"] >= max(d_vals["M"], d_vals["R"], d_vals["P"]) + 0.04
-    )
-
-    wrist_y = float(np.median(h[:, 0, 1]))
-    tips_y = float(np.median(h[:, [8, 12, 16, 20], 1].mean(axis=1)))
-    if is_one_finger:
-        if wrist_y < -0.04 or wrist_y > 0.65 or tips_y < -0.02:
-            return None
-    elif len(ok_idx) < 10 or wrist_y < 0.01 or wrist_y > 0.62 or tips_y < 0.04:
-        return None
-
-    palm_c = h_all[:, 9]
-    idx_tip = h_all[:, 8]
-    dx_p = np.diff(palm_c[:, 0])
-    dx_i = np.diff(idx_tip[:, 0])
-    pos_p, neg_p = float(dx_p[dx_p > 0].sum()), float((-dx_p[dx_p < 0]).sum())
-    pos_i, neg_i = float(dx_i[dx_i > 0].sum()), float((-dx_i[dx_i < 0]).sum())
-    xp_p = float(np.ptp(palm_c[:, 0]))
-    xp_i = float(np.ptp(idx_tip[:, 0]))
-    path_h = float(np.linalg.norm(np.diff(h[:, 8], axis=0), axis=1).sum())
-    net_h = float(np.linalg.norm(h[-1, 8] - h[0, 8]))
-    if is_one_finger:
-        has_loop = (
-            xp_i >= 0.24
-            and xp_p >= 0.14
-            and min(pos_i, neg_i) >= 0.36
-            and min(pos_p, neg_p) >= 0.20
-            and path_h / max(net_h, 0.05) >= 1.5
-        )
-    else:
-        has_loop = (
-            xp_i >= 0.38
-            and xp_p >= 0.22
-            and min(pos_i, neg_i) >= 0.72
-            and min(pos_p, neg_p) >= 0.42
-            and path_h / max(net_h, 0.05) >= 1.8
-        )
-    if not has_loop:
-        return None
-
-    entry_id = None
-    if is_one_finger:
-        entry_id = "q-chung-toi-dai-tu"
-    else:
-        max_d = max(d_vals.values())
-        if max_d < 0.25:
-            return None
-        t_p20 = float(np.median(np.linalg.norm(h[:, 4] - h[:, 20], axis=1) / psize))
-        t_i6 = float(np.median(np.linalg.norm(h[:, 4] - h[:, 6], axis=1) / psize))
-        lat = h[:, 5] - h[:, 17]
-        lat_unit = lat / np.maximum(np.linalg.norm(lat, axis=1, keepdims=True), 1e-4)
-        thumb_out = float(np.median(np.sum((h[:, 4] - h[:, 5]) * lat_unit, axis=1) / psize))
-
-        ext_4 = [fn for fn in ("I", "M", "R", "P") if d_vals[fn] >= 0.18 and st_vals[fn] >= 0.82]
-        if "P" in ext_4 and t_p20 <= 1.05 and d_vals["P"] <= 0.55 * max_d:
-            ext_4.remove("P")
-        if len(ext_4) == 2 and "I" in ext_4 and "M" in ext_4:
-            entry_id = "q-chung-toi-3-nguoi-dai-tu" if (thumb_out >= 0.28 and t_i6 >= 0.75) else "q-chung-toi-2-nguoi-dai-tu"
-        elif len(ext_4) == 3:
-            entry_id = "q-chung-toi-3-nguoi-dai-tu"
-        elif len(ext_4) == 4:
-            entry_id = "q-chung-toi-5-nguoi-dai-tu" if (thumb_out >= 0.22 and t_p20 >= 1.80) else "q-chung-toi-4-nguoi-dai-tu"
-
-    if entry_id is None or (allowed_set is not None and entry_id not in allowed_set):
-        return None
-    return _match_result(0.27, entry_id, method="hand_shape")
-
-
-def _match_head_salute(frames, aspect_ratio, allowed_set=None, *, allow_rare=True):
-    """Distinguish forehead-outward salute ('chào' / 'xin chào') from above-head-into-forehead ('tuân lệnh')."""
-    allow_chao = allowed_set is None or "q-chao" in allowed_set
-    allow_tuan_lenh = allow_rare and (allowed_set is None or "q-tuan-lenh" in allowed_set)
-    if not (allow_chao or allow_tuan_lenh):
-        return None
-    try:
-        clip, _ = _visible_clip(frames)
-    except ValueError:
-        return None
-    clip = _fill_short_gaps(clip)
-    clip[..., 1] /= aspect_ratio
-    obs = _tracked_hands(clip)
-    body = normalize_sequence_tjc_v2(clip)
-    if len(body) < 8:
-        return None
-
-    mov = np.zeros(2)
-    ymed = np.full(2, 9.9)
-    for side in (0, 1):
-        pts = body[obs[:, side], 33 + 21 * side:33 + 21 * (side + 1), :2]
-        if len(pts) >= 4:
-            low, high = np.percentile(pts, [5, 95], axis=0)
-            mov[side] = float(np.linalg.norm(high - low, axis=-1).mean())
-            ymed[side] = float(np.median(pts[:, 0, 1]))
-    s = int(np.argmax(mov))
-    other = 1 - s
-    if mov[s] < 0.08:
-        return None
-    if obs[:, other].sum() >= 6 and ymed[other] <= 0.65 and mov[other] >= max(0.08, 0.28 * mov[s]):
-        return None
-    other_pw = 16 if s == 0 else 15
-    pw_ok = np.any(body[:, other_pw, :2] != 0, axis=1)
-    if float((pw_ok & (body[:, other_pw, 1] <= 0.65)).mean()) > 0.25:
-        return None
-
-    eye_idx = 2 if s == 0 else 5
-    eye_ok = np.any(body[:, eye_idx, :2] != 0, axis=1)
-    if eye_ok.mean() < 0.70:
-        return None
-
-    ok = np.flatnonzero(obs[:, s] & eye_ok)
-    if len(ok) < 7:
-        return None
-    h = body[ok, 33 + 21 * s:33 + 21 * (s + 1), :2].copy()
-    eye = body[ok, eye_idx, :2].copy()
-    if s == 0:
-        h[..., 0] *= -1
-        eye[:, 0] *= -1
-
-    fh = eye + np.array([-0.04, -0.10], dtype=np.float32)
-    tip = 0.5 * (h[:, 8] + h[:, 12])
-    wrist = h[:, 0]
-    if float(np.max(tip[:, 0])) > 0.22 or float(np.min(wrist[:, 1])) > 0.06:
-        return None
-
-    upper = tip[:, 1] <= (eye[:, 1] + 0.16)
-    if int(upper.sum()) < 5:
-        return None
-    h_u, tip_u, fh_u, eye_u = h[upper], tip[upper], fh[upper], eye[upper]
-    d_fh = np.linalg.norm(tip_u - fh_u, axis=1)
-    if float(d_fh.min()) > 0.24:
-        return None
-
-    # Flat adducted salute blade (I, M, R straight & extended, I-M held close together unlike open-5 shake)
-    w_u = h_u[:, 0]
-    psize = np.maximum(np.linalg.norm(h_u[:, 9] - w_u, axis=1), 1e-4)
-    im_gap = float(np.median(np.linalg.norm(h_u[:, 8] - h_u[:, 12], axis=1) / psize))
-    if im_gap > 0.46:
-        return None
-    for ti, pi, mi in ((8, 6, 5), (12, 10, 9), (16, 14, 13)):
-        dt = np.linalg.norm(h_u[:, ti] - w_u, axis=1) / psize
-        dp = np.linalg.norm(h_u[:, pi] - w_u, axis=1) / psize
-        seg = np.linalg.norm(h_u[:, ti] - h_u[:, pi], axis=1) + np.linalg.norm(h_u[:, pi] - h_u[:, mi], axis=1)
-        st = np.linalg.norm(h_u[:, ti] - h_u[:, mi], axis=1) / np.maximum(seg, 1e-4)
-        if float(np.median(dt - dp)) < 0.12 or float(np.median(st)) < 0.80:
-            return None
-
-    high = tip_u[:, 1] <= (eye_u[:, 1] + 0.06)
-    if int(high.sum()) < 4:
-        return None
-    d_hi, tip_hi, fh_hi, ps_hi = d_fh[high], tip_u[high], fh_u[high], psize[high]
-
-    contact_thr = min(0.24, float(d_hi.min()) + 0.06)
-    contacts = np.flatnonzero(d_hi <= contact_thr)
-    if not len(contacts):
-        return None
-    c_first, c_last = int(contacts[0]), int(contacts[-1])
-    c_dist = float(d_hi[contacts].min())
-    c_palm = float(np.median(ps_hi[contacts]))
-
-    after = d_hi[c_first + 1:]
-    after_ps = ps_hi[c_first + 1:]
-    away_frames = int((after >= c_dist + 0.11).sum())
-    zoom_frames = int((after_ps >= c_palm * 1.18).sum())
-    tail_d = float(np.median(d_hi[max(0, len(d_hi) - 3):]))
-
-    before_u = d_fh[:int(np.flatnonzero(high)[c_last]) + 1]
-    inward_2d = (float(before_u.max()) - c_dist) if len(before_u) >= 2 else 0.0
-    started_above_fh = bool(float(np.min(tip_hi[:c_last + 1, 1] - fh_hi[:c_last + 1, 1])) <= -0.05)
-
-    entry_id = None
-    if (away_frames >= 2 or zoom_frames >= 2) and tail_d >= c_dist + 0.09:
-        if allow_chao:
-            entry_id = "q-chao"
-    elif away_frames <= 1 and zoom_frames <= 1 and tail_d <= 0.22 and (
-        started_above_fh or inward_2d >= 0.10 or len(contacts) >= 4
-    ):
-        if allow_tuan_lenh:
-            entry_id = "q-tuan-lenh"
-
-    if entry_id is None:
-        return None
-    return _match_result(0.24, entry_id, method="hand_shape")
+    distance, entry_id, support = ranked[0]
+    margin = ranked[1][0] - distance if len(ranked) > 1 else np.inf
+    if trace is not None:
+        trace["personal"] = {"entry_id": entry_id, "distance": round(distance, 4), "supporting_samples": support}
+    if distance > 0.22 or margin < 0.075:
+        return result
+    if (result and result["status"] == "word_matched" and result["entry_id"] != entry_id
+            and result["similarity"] >= 0.85 and not result.get("requires_user_confirmation")):
+        return result
+    if result and result["status"] == "word_matched" and result["entry_id"] == entry_id:
+        return result
+    matched = _match_result(distance, entry_id, method="personal_template")
+    matched["requires_user_confirmation"] = support < 2
+    if trace is not None:
+        trace["verdict"] = "personal_template_matched"
+    return matched
 
 
 def corroborate_sstcn_entry(frames, aspect_ratio, entry_id):
-    """Reject out-of-distribution SSTCN guesses (e.g. 'Em gái' on 'chúng tôi', 'Xin chào' on 'tuân lệnh')
-    when the predicted entry exists in the QIPEDC live index and the actual motion disagrees."""
+    """Generic QIPEDC template corroboration for SSTCN predictions without any per-sign hardcoding."""
     if not entry_id:
-        return True
+        return False
     idx = _active_index()
     if idx is None or entry_id not in idx["id_set"]:
-        return True
-    if entry_id == "q-chao":
-        salute = _match_head_salute(frames, aspect_ratio)
-        if salute is not None and salute.get("entry_id") == "q-tuan-lenh":
-            return False
-    if entry_id == "q-em-gai":
-        try:
-            clip, _ = _visible_clip(frames)
-            clip = _fill_short_gaps(clip)
-            clip[..., 1] /= aspect_ratio
-            obs = _tracked_hands(clip)
-            body = normalize_sequence_tjc_v2(clip)
-            min_tip_y = np.inf
-            for side in (0, 1):
-                if obs[:, side].any():
-                    j0 = 33 + 21 * side
-                    tips_y = body[obs[:, side], j0 + 8:j0 + 21:4, 1].mean(axis=1)
-                    min_tip_y = min(min_tip_y, float(tips_y.min()))
-            # Genuine 'em gái' raises fingers to ear/cheek level (y <= -0.05); chest-only signs stay > +0.02.
-            if min_tip_y > 0.02:
-                return False
-        except ValueError:
-            return False
+        return False
 
     recording = _variants(frames, aspect_ratio)
     if recording is None:
         return False
+    recording = _index_feature_view(recording, idx)
     hands = recording[0].shape[2]
     bucket = idx["buckets"].get(hands)
     if bucket is None or entry_id not in bucket["ids"]:
         return False
     pos = bucket["ids"].index(entry_id)
     st, en = bucket["slices"][pos]
-    ref = (
-        bucket["features"][st:en].astype(np.float32, copy=False),
-        bucket["observed"][st:en],
-        bucket["penalties"][st:en],
-    )
-    min_dist = float(_variant_distances(recording, ref).min())
-    return min_dist <= (0.50 if hands == 1 else 0.60)
+    ref_f = bucket["features"][st:en].astype(np.float32, copy=False)
+    ref_o = bucket["observed"][st:en]
+    ref_p = bucket["penalties"][st:en]
+
+    # Generic vertical signing-zone check: if the template reaches head/face level, a chest-only clip cannot corroborate it.
+    sample_o = recording[1][0]
+    if sample_o.any() and ref_o[0].any():
+        sample_min_tip_y = float((recording[0][0, :, :, 3][sample_o] / FINGERTIP_WEIGHT).min())
+        ref_min_tip_y = float((ref_f[0, :, :, 3][ref_o[0]] / FINGERTIP_WEIGHT).min())
+        if sample_min_tip_y - ref_min_tip_y > 0.22:
+            return False
+
+    min_dist = float(_variant_distances(recording, (ref_f, ref_o, ref_p)).min())
+    return min_dist <= (0.44 if hands == 1 else 0.54)
 
 
 def _effective_unilateral_separation(best_distance):
-    """Scale separation for very tight 1-hand matches (e.g. dist 0.12-0.18 in crowded chest signs)."""
     if best_distance <= 0.18:
-        return 0.016
-    if best_distance <= 0.22:
-        return 0.028
+        return 0.015
+    if best_distance <= 0.24:
+        return 0.026
     return MIN_SEPARATION
 
 
@@ -1178,7 +1192,7 @@ def _collect_extra_references(entries, references, allowed_set, idx, *, include_
             continue
         reference = _reference_variants(path)
         if reference is not None:
-            references[entry_id] = reference
+            references[entry_id] = _index_feature_view(reference, idx)
 
 
 def _evaluate_tier(
@@ -1191,14 +1205,12 @@ def _evaluate_tier(
     *,
     allowed_set=None,
     is_rare_tier=False,
-    allow_rare_salute=True,
     trace=None,
 ):
     hands = recording[0].shape[2]
     bilateral = hands == 2
     references = dict(_indexed_references(recording, bucket, allowed_ids=allowed_set)) if bucket is not None else {}
     _collect_extra_references(entries, references, allowed_set, idx, include_indexed=False)
-    # Ensure user-pinned entries that exist in the main index are also evaluated in Tier 1.
     if bucket is not None and idx is not None and entries:
         main_bucket = idx["buckets"][hands]
         if main_bucket is not bucket:
@@ -1220,7 +1232,7 @@ def _evaluate_tier(
     ranked = sorted((float(distances.min()), entry_id) for entry_id, distances in _score_templates(recording, references).items())
     if bilateral:
         max_distance = MAX_RARE_BILATERAL_DISTANCE if is_rare_tier else MAX_BILATERAL_DISTANCE
-        min_separation = MIN_BILATERAL_SEPARATION
+        min_separation = MIN_BILATERAL_SEPARATION if (not ranked or ranked[0][0] > 0.24) else 0.035
     else:
         max_distance = MAX_RARE_DISTANCE if is_rare_tier else MAX_DISTANCE
         min_separation = _effective_unilateral_separation(ranked[0][0]) if ranked else MIN_SEPARATION
@@ -1241,54 +1253,34 @@ def _evaluate_tier(
             for dist, eid in ranked[:5]
         ],
     }
-    salute_override = (
-        _match_head_salute(frames, aspect_ratio, allowed_set, allow_rare=allow_rare_salute)
-        if (not bilateral and not is_rare_tier and idx is not None)
-        else None
-    )
+
     if in_range and (len(ranked) == 1 or ranked[1][0] - ranked[0][0] >= min_separation):
-        # Require >=10/24 paired resampled frames AND >=10 raw frames of the weaker hand (scaled for
-        # short clips) for loose (>0.35) or rare bilateral trajectory matches, preventing brief 5-8 frame
-        # overlaps (e.g. wrist-tap of "mấy giờ?", transition into "kỹ năng") from false-matching.
         paired_n = int(recording[1][0].all(axis=1).sum()) if bilateral else 24
         weak_overlap = False
         if bilateral and (is_rare_tier or ranked[0][0] > 0.35):
-            raw_obs = _tracked_hands(np.asarray(frames, dtype=np.float32)).sum(axis=0)
-            weak_overlap = paired_n < 10 or int(raw_obs.min()) < 10
+            filled_clip = _fill_short_gaps(np.asarray(frames, dtype=np.float32), allow_extended_pose_bridge=True)
+            obs_counts = _tracked_hands(filled_clip).sum(axis=0)
+            weak_overlap = paired_n < 10 or int(obs_counts.min()) < 10
         elif not bilateral and is_rare_tier and ranked[0][0] > 0.22:
             raw_obs = _tracked_hands(np.asarray(frames, dtype=np.float32)).sum(axis=0)
             weak_overlap = int(raw_obs.max()) < 12
         if weak_overlap:
             tier_info["verdict"] = "bilateral_too_few_paired_frames" if bilateral else "unilateral_rare_too_short"
         else:
-            if ranked[0][1] in ("q-chao", "q-tuan-lenh") and salute_override is not None:
-                tier_info["verdict"] = "head_salute_directional_matched"
-                if trace is not None:
-                    trace.update(tier_info)
-                return salute_override, tier_info
             tier_info["verdict"] = "trajectory_matched"
             if trace is not None:
                 trace.update(tier_info)
             return _match_result(*ranked[0]), tier_info
-    if salute_override is not None:
-        tier_info["verdict"] = "head_salute_matched"
-        if trace is not None:
-            trace.update(tier_info)
-        return salute_override, tier_info
-    if not bilateral and not is_rare_tier:
-        if (chung_toi := _match_chung_toi_family(frames, aspect_ratio, allowed_set)) is not None:
-            tier_info["verdict"] = "chung_toi_family_matched"
+
+    if not bilateral:
+        if (uni_shape := _unilateral_contour_match(
+            recording, bucket, references, allowed_ids=allowed_set, is_rare_tier=is_rare_tier
+        )) is not None:
+            tier_info["verdict"] = "unilateral_contour_matched"
             if trace is not None:
                 trace.update(tier_info)
-            return chung_toi, tier_info
-    if bilateral and not is_rare_tier and (allowed_set is None or "q-kha-nang" in allowed_set):
-        if (kha_nang := _match_kha_nang_with_occlusion(frames, aspect_ratio)) is not None:
-            tier_info["verdict"] = "kha_nang_occlusion_matched"
-            if trace is not None:
-                trace.update(tier_info)
-            return kha_nang, tier_info
-    # On rare 2-hand tier, skip bilateral_shape unless trajectory is already reasonably close (<=0.45),
-    # preventing weak transition clips (e.g. dist=0.515 "bữa cơm") from false-matching rare templates.
+            return uni_shape, tier_info
+
     run_shape = bilateral and (not is_rare_tier or (ranked and ranked[0][0] <= 0.45))
     if run_shape:
         shape_trace = {} if trace is not None else None
@@ -1304,6 +1296,7 @@ def _evaluate_tier(
             return recovered, tier_info
         if shape_trace:
             tier_info.update(shape_trace)
+
     if in_range:
         tier_info["verdict"] = "ambiguous_word"
         return {
@@ -1315,15 +1308,11 @@ def _evaluate_tier(
     return None, tier_info
 
 
-def match_live_words(frames, aspect_ratio, entries, *, allowed_ids=None, vocab_scope="all", trace=None):
-    """Accept a reference only when the absolute match and lead over rivals are sufficient.
-
-    Uses a 2-tier search whenever the eligible pool is large (full index or regional word_scope):
-    - Tier 1 searches common + builtin (+ user-pinned) words within allowed_ids (~4x faster
-      and prevents rare words from hijacking or causing false ambiguity against common words).
-    - Tier 2 (when vocab_scope == "all") searches the full allowed index so less-common signs
-      (e.g. "bực mình") remain recognized out of the box.
-    """
+def match_live_words(
+    frames, aspect_ratio, entries, *, allowed_ids=None, vocab_scope="all", trace=None, candidate_scores=None,
+    completed=False, personal_examples=None,
+):
+    """Two-tier generic QIPEDC kinematic & hand-configuration matcher."""
     allowed_set = frozenset(allowed_ids) if allowed_ids is not None else None
     if allowed_set is not None and not allowed_set:
         if trace is not None:
@@ -1335,45 +1324,74 @@ def match_live_words(frames, aspect_ratio, entries, *, allowed_ids=None, vocab_s
         return None
     hands = recording[0].shape[2]
     idx = _active_index()
+    personal_recording = recording
+    recording = _index_feature_view(recording, idx)
     full_bucket = idx["buckets"][hands] if idx is not None else None
     priority_bucket = full_bucket.get("priority_sub") if full_bucket is not None else None
 
-    allow_rare_salute = vocab_scope != "common"
-    # Single-tier path only when no priority sub-bucket exists or allowed_set is already a tiny subset (<=40).
+    def finish(result, *, bucket=full_bucket):
+        if hands == 1:
+            result = _with_unilateral_core(
+                result, frames, aspect_ratio, recording, bucket, allowed_set, completed, candidate_scores, trace,
+            )
+        result = _with_personal_examples(result, personal_recording, personal_examples, candidate_scores, trace)
+        if result and result["status"] == "word_matched":
+            result["hand_count"] = hands
+        return result
+
     if priority_bucket is None or (allowed_set is not None and len(allowed_set) <= 40):
         res, info = _evaluate_tier(
             frames, aspect_ratio, recording, full_bucket, entries, idx,
-            allowed_set=allowed_set, is_rare_tier=False, allow_rare_salute=allow_rare_salute, trace=trace,
+            allowed_set=allowed_set, is_rare_tier=False, trace=trace,
         )
+        if candidate_scores is not None:
+            candidate_scores.extend(info["top_candidates"])
         if trace is not None and (res is None or res.get("status") == "ambiguous_word"):
             trace.update(info)
-        return res
+        return finish(res)
 
-    # Tier 1: Fast priority (common + builtin + user-pinned entries, respecting word_scope allowed_set)
     res_t1, info_t1 = _evaluate_tier(
         frames, aspect_ratio, recording, priority_bucket, entries, idx,
-        allowed_set=allowed_set, is_rare_tier=False, allow_rare_salute=allow_rare_salute, trace=trace,
+        allowed_set=allowed_set, is_rare_tier=False, trace=trace,
     )
-    if res_t1 and res_t1.get("status") == "word_matched":
-        return res_t1
+    if candidate_scores is not None:
+        candidate_scores.extend(info_t1["top_candidates"])
+    t1_matched = bool(res_t1 and res_t1.get("status") == "word_matched")
+    t1_dist = (
+        float(info_t1["top_candidates"][0]["distance"])
+        if info_t1.get("top_candidates")
+        else (1.0 - float(res_t1.get("similarity", 0.0)) if t1_matched else np.inf)
+    )
+    if t1_matched and (vocab_scope == "common" or t1_dist <= 0.14):
+        return finish(res_t1, bucket=priority_bucket if vocab_scope == "common" else full_bucket)
 
     if vocab_scope == "common":
         if trace is not None:
             trace.update(info_t1)
-        return res_t1
+        return finish(res_t1, bucket=priority_bucket)
 
-    # Tier 2: Fallback to full eligible index for less-common signs (e.g. "bực mình")
     res_t2, info_t2 = _evaluate_tier(
         frames, aspect_ratio, recording, full_bucket, entries, idx,
         allowed_set=allowed_set, is_rare_tier=True, trace=trace,
     )
+    if candidate_scores is not None:
+        candidate_scores.extend(info_t2["top_candidates"])
     if res_t2 and res_t2.get("status") == "word_matched":
-        return res_t2
+        t2_dist = (
+            float(info_t2["top_candidates"][0]["distance"])
+            if info_t2.get("top_candidates")
+            else (1.0 - float(res_t2.get("similarity", 0.0)))
+        )
+        if not t1_matched or t2_dist <= t1_dist - 0.05:
+            return finish(res_t2)
+    if t1_matched:
+        if trace is not None:
+            trace.update(info_t1)
+        return finish(res_t1)
 
-    # Prefer whichever tier had an in-range candidate for ambiguity/suggestions reporting.
     chosen_res = res_t2 if res_t2 is not None else res_t1
     chosen_info = info_t2 if res_t2 is not None else (info_t1 if res_t1 is not None else info_t2)
     if trace is not None:
         trace.update(chosen_info)
         trace["tier1_top1"] = (info_t1.get("top_candidates") or [None])[0]
-    return chosen_res
+    return finish(chosen_res)

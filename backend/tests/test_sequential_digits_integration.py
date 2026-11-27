@@ -162,6 +162,55 @@ class TestSequentialDigitsIntegration(unittest.TestCase):
         self.assertEqual(self.rec.sentence_tokens, ["1", "1"])
         self.assertNotIn("11", self.rec.sentence_tokens)
 
+    def test_holding_a_digit_does_not_repeat_without_release(self):
+        landmarks = self.samples_by_digit["6"][0]
+        for frame in range(60):
+            self.rec.predict_landmarks(landmarks, mode="digits", timestamp=5000 + frame * 0.05)
+        self.assertEqual(self.rec.sentence_tokens, ["6"])
+
+        # No frames may be posted by the camera while the hand leaves the view.
+        for frame in range(10):
+            self.rec.predict_landmarks(landmarks, mode="digits", timestamp=5003.7 + frame * 0.05)
+        self.assertEqual(self.rec.sentence_tokens, ["6", "6"])
+
+    def test_camera_batches_preserve_votes_and_isolate_caption_sessions(self):
+        def frames(digit, start):
+            return [
+                {"landmarks": self.samples_by_digit[digit][0], "timestamp": start + frame * 0.06}
+                for frame in range(3)
+            ]
+
+        def post(session, camera_frames):
+            return self.client.post("/api/recognize_landmarks", json={
+                "mode": "digits", "camera_session_id": session, "camera_frames": camera_frames,
+            })
+
+        first = post("digit-camera-test-a", frames("6", 6000))
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(first.json()["data"]["sentence"], "")
+        other = post("digit-camera-test-b", frames("7", 6000) + frames("7", 6000.18))
+        self.assertEqual(other.status_code, 200)
+        self.assertEqual(other.json()["data"]["sentence"], "7")
+        invalid = post("digit-camera-test-a", list(reversed(frames("6", 6000.18))))
+        self.assertEqual(invalid.status_code, 400)
+        result = post("digit-camera-test-a", frames("6", 6000.18))
+        self.assertEqual(result.status_code, 200)
+        payload = result.json()
+        self.assertEqual(len(payload["results"]), 3)
+        self.assertEqual([row["new_token"] for row in payload["results"]], [None, None, "6"])
+        self.assertEqual(payload["data"]["sentence"], "6")
+
+    def test_camera_does_not_confirm_a_brief_transition_between_digits(self):
+        frames = []
+        for digit, start, count in (("6", 6100, 5), ("8", 6100.15, 11)):
+            for frame in range(count):
+                frames.append({
+                    "landmarks": self.samples_by_digit[digit][0], "multi_hands": [],
+                    "timestamp": start + frame * 0.03,
+                })
+        results = self.rec.predict_camera_frames("transition-test", "digits", frames)
+        self.assertEqual([row["new_token"] for row in results if row["confirmed"]], ["8"])
+
     def test_06_tts_text_has_no_so_prefix(self):
         """TTS đọc số không có tiền tố 'số', chỉ đọc tên số ('không', 'một', ..., 'chín')."""
         expected_tts = {

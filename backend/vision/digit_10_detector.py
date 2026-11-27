@@ -109,7 +109,7 @@ class VSL10GestureDetector:
         self.last_timestamp = now
 
         # Kiểm tra cooldown
-        in_cooldown = (now - self.last_detected_time < self.config.cooldown_sec)
+        in_cooldown = self.last_detected_time > 0 and now - self.last_detected_time < self.config.cooldown_sec
 
         # Trích xuất đặc trưng
         feat = self._extract_frame_features(landmarks) if landmarks else None
@@ -127,7 +127,16 @@ class VSL10GestureDetector:
             }
 
         # Nếu 3 ngón ngoài không gập (ví dụ xòe 5 ngón hoặc mở ngón giữa) -> Không phải cử chỉ số 10
-        if not feat["other_tucked"]:
+        # A bent index can finish a sweep that has already started. A single
+        # release after a static held sign cannot start a sweep on its own.
+        index_departing = False
+        if not feat["is_index_active"]:
+            start = self.buffer[0]["angle"] if self.buffer else feat["angle_deg"]
+            index_departing = not any(
+                abs((frame["angle"] - start + 180.0) % 360.0 - 180.0) >= self.config.observing_span_deg
+                for frame in self.buffer
+            )
+        if not feat["other_tucked"] or index_departing:
             # Cử chỉ của bàn tay khác loại -> xóa bộ đệm
             self.buffer.clear()
             return {
@@ -162,16 +171,17 @@ class VSL10GestureDetector:
         angles = [f["angle"] for f in self.buffer]
         duration = self.buffer[-1]["ts"] - self.buffer[0]["ts"]
 
-        # Tính biên độ góc quét (angular span) có tính đến vòng tròn 360 độ
-        # Chuyển đổi sang vector đơn vị trung bình để đo độ phân tán hoặc cực trị góc
-        rads = [math.radians(a) for a in angles]
-        xs = [math.cos(r) for r in rads]
-        ys = [math.sin(r) for r in rads]
-
-        # Khoảng biến thiên góc đơn giản (max - min)
-        min_ang = min(angles)
-        max_ang = max(angles)
-        span_deg = max_ang - min_ang
+        # Unwrap across ±180°. Reject a discontinuity from a departing hand or a
+        # new landmark track rather than counting it as a 10 sweep.
+        unwrapped = [angles[0]]
+        for previous, current in zip(angles, angles[1:]):
+            step = (current - previous + 180.0) % 360.0 - 180.0
+            if abs(step) > 130.0:
+                self.buffer.clear()
+                return {"detected": False, "confidence": 0.0, "is_observing": False,
+                        "angular_span_deg": 0.0, "num_frames": 0}
+            unwrapped.append(unwrapped[-1] + step)
+        span_deg = max(unwrapped) - min(unwrapped)
 
         # Phát hiện trạng thái đang quan sát chuyển động (chưa đủ span hoặc duration)
         is_observing = (span_deg >= self.config.observing_span_deg)

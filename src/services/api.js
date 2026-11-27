@@ -5,6 +5,35 @@
 
 import { API_BASE_URL } from './apiBase';
 
+const CALIBRATION_STORAGE_KEY = 'vsl_live_calibration_profile';
+let workspaceProfileRequest;
+
+async function calibrationProfile(create = false) {
+  let existing;
+  try {
+    existing = globalThis.localStorage?.getItem(CALIBRATION_STORAGE_KEY);
+  } catch {
+    if (create) throw new Error('Trình duyệt đang chặn bộ nhớ dành cho mẫu cá nhân.');
+  }
+  if (/^[a-f0-9]{32}$/.test(existing || '')) return existing;
+  if (['localhost', '127.0.0.1', '[::1]'].includes(globalThis.location?.hostname)) {
+    workspaceProfileRequest ??= fetch(`${API_BASE_URL}/api/calibration/workspace-profile`, {
+      headers: { 'X-VSL-Workspace-Profile': '1' },
+    }).then(async (response) => response.ok ? (await response.json()).calibration_profile : null)
+      .catch(() => {
+        workspaceProfileRequest = undefined;
+        return null;
+      });
+    const workspaceProfile = await workspaceProfileRequest;
+    if (/^[a-f0-9]{32}$/.test(workspaceProfile || '')) return workspaceProfile;
+  }
+  if (!create) return null;
+  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
+  const profile = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  globalThis.localStorage.setItem(CALIBRATION_STORAGE_KEY, profile);
+  return profile;
+}
+
 export async function fetchLetters() {
   const response = await fetch(`${API_BASE_URL}/api/letters`);
   return response.ok ? response.json() : null;
@@ -141,13 +170,21 @@ export async function sendSequenceForRecognition(sequence, threshold = 0.65, mod
     if (options && Array.isArray(options.timestamps) && options.timestamps.length === sequence.length) {
       payload.timestamps = options.timestamps;
     }
+    if (Number.isFinite(options?.aspect_ratio)) {
+      payload.aspect_ratio = options.aspect_ratio;
+    }
     if (options?.live_words) {
       payload.live_words = true;
-      payload.aspect_ratio = options.aspect_ratio;
+      if (options.gesture_complete) {
+        payload.gesture_complete = true;
+        const profile = await calibrationProfile();
+        if (profile) payload.calibration_profile = profile;
+      }
       if (options.vocab_scope) payload.vocab_scope = options.vocab_scope;
       if (options.qipedc_entries?.length) payload.qipedc_entries = options.qipedc_entries;
     }
     if (options?.include_diagnostic) payload.include_diagnostic = true;
+    if (options?.include_word_candidates) payload.include_word_candidates = true;
     if (typeof options?.allow_short_sequences === 'boolean') {
       payload.allow_short_sequences = options.allow_short_sequences;
     }
@@ -198,16 +235,16 @@ export async function fetchSSTCNTopics() {
   }
 }
 
-export async function saveCalibrationSample({ label, entry_id = null, sequence, timestamps = null, signer_id = 'personal' }) {
+export async function saveCalibrationSample({ label, entry_id = null, sequence, timestamps = null, aspect_ratio = 1 }) {
   try {
     const res = await fetch(`${API_BASE_URL}/api/calibration/save_sample`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ label, entry_id, sequence, timestamps, signer_id })
+      body: JSON.stringify({ label, entry_id, sequence, timestamps, aspect_ratio, calibration_profile: await calibrationProfile(true) })
     });
     if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || 'Failed to save calibration sample');
+      const result = await res.json().catch(() => null);
+      throw new Error(typeof result?.detail === 'string' ? result.detail : 'Không lưu được mẫu.');
     }
     return await res.json();
   } catch (err) {
@@ -218,7 +255,11 @@ export async function saveCalibrationSample({ label, entry_id = null, sequence, 
 
 export async function fetchCalibrationSummary() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/calibration/summary`);
+    const profile = await calibrationProfile();
+    if (!profile) return { success: true, total_samples: 0, labels: [] };
+    const res = await fetch(`${API_BASE_URL}/api/calibration/summary`, {
+      headers: { 'X-VSL-Calibration-Profile': profile },
+    });
     if (!res.ok) throw new Error('Cannot load calibration summary');
     return await res.json();
   } catch (err) {
@@ -251,6 +292,10 @@ export async function sendLandmarksForRecognition(
       multi_hands,
       handedness,
       mode,
+      ...(metadata?.camera_frames?.length ? {
+        camera_frames: metadata.camera_frames,
+        camera_session_id: metadata.camera_session_id,
+      } : {}),
       ...(resolvedTimestamp !== null && Number.isFinite(resolvedTimestamp) ? { timestamp: resolvedTimestamp } : {}),
       ...(metadata?.expected_sign ? { expected_sign: metadata.expected_sign } : {}),
       ...(metadata?.session_id ? { session_id: metadata.session_id } : {}),

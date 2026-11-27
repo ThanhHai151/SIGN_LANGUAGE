@@ -138,6 +138,17 @@ class TestDigit10Integration(unittest.TestCase):
         self.assertNotIn("1", tokens)
         self.assertNotIn("11", tokens)
 
+    def test_two_digit_10_gestures_separated_by_release(self):
+        start = self.d10_samples[0]["timestamp_sec"]
+        duration = self.d10_samples[-1]["timestamp_sec"] - start
+        for offset in (100, 101 + duration):
+            for sample in self.d10_samples:
+                self.recognizer.predict_landmarks(
+                    sample["landmarks"], mode="digits", timestamp=offset + sample["timestamp_sec"] - start,
+                )
+            self.recognizer.predict_landmarks([], mode="digits", timestamp=offset + duration + 0.2)
+        self.assertEqual(self.recognizer.sentence_tokens, ["10", "10"])
+
     # -------------------------------------------------------------
     # Kịch bản 4: Xử lý độc lập số 1 và số 1 (KHÔNG tự ghép thành 11)
     # -------------------------------------------------------------
@@ -318,6 +329,7 @@ class TestDigit10Integration(unittest.TestCase):
     # Kịch bản 12: Tích hợp API FastAPI /api/recognize_landmarks
     # -------------------------------------------------------------
     def test_scenario_12_fastapi_endpoint_recognize_landmarks(self):
+        self.client.post("/api/clear_sentence")
         detected_api = False
         api_res = None
         for s in self.d10_samples:

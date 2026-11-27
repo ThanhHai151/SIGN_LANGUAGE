@@ -555,6 +555,17 @@ class DiacriticStateMachine:
             and (curr_frame.d_thumb_index_tip_norm >= 0.40 or curr_frame.d_thumb_middle_tip_norm >= 0.45)
             and (curr_frame.d_thumb_wrist_norm >= 1.15 or curr_frame.d_thumb_index_tip_norm >= 0.50)
         )
+        palm_lift = baseline.palm_center_y - curr_frame.palm_center_y
+        hand_is_lowering = palm_lift < -0.45 * baseline.palm_scale
+        wrist_lift = baseline.wrist_y - curr_frame.wrist_y
+        # A lift within the hand's scale is distinct from bringing the whole
+        # hand into signing position or jumping to a new track.
+        lift_limit = 1.15 * baseline.palm_scale
+        has_circumflex_lift = (
+            self.circumflex_lift_threshold <= wrist_lift <= lift_limit
+            and palm_lift <= lift_limit
+            and curr_frame.vy <= self.circumflex_vy_threshold
+        )
 
         # 1. Nhóm A -> {Ă, Â}
         if base == "A":
@@ -606,14 +617,13 @@ class DiacriticStateMachine:
                 and middle_lifted
                 and middle_opened_from_base
                 and pinky_folded
+                and not hand_is_lowering
             )
-            lift = baseline.wrist_y - curr_frame.wrist_y
-            is_a_lift = (lift >= self.circumflex_lift_threshold and curr_frame.vy <= self.circumflex_vy_threshold and curr_frame.d_index_middle_norm < 0.35)
 
             if is_a_claw:
                 return "Â", f"Tạo dấu mũ trỏ-giữa chữ Â (d_IM={curr_frame.d_index_middle_norm:.2f}, growth={d_im_growth:.2f}, m_dy={curr_frame.middle_dy:+.2f})"
-            elif is_a_lift:
-                return "Â", f"Đẩy nón lên đỉnh (lift={lift:.3f} >= {self.circumflex_lift_threshold:.3f})"
+            elif has_circumflex_lift and curr_frame.d_index_middle_norm < 0.35:
+                return "Â", f"Đẩy nón lên đỉnh (lift={wrist_lift:.3f})"
 
         # 2. Nhóm E -> {Ê}
         elif base == "E":
@@ -630,15 +640,14 @@ class DiacriticStateMachine:
                 d_im_growth >= 0.05 and
                 curr_frame.index_curl <= 0.65 and
                 mid_curl <= 0.65 and
-                pinky_folded
+                pinky_folded and
+                not hand_is_lowering
             )
-            lift = baseline.wrist_y - curr_frame.wrist_y
-            is_e_lift = (lift >= self.circumflex_lift_threshold and curr_frame.vy <= self.circumflex_vy_threshold)
 
             if is_e_claw:
                 return "Ê", f"Tạo dấu mũ trỏ-giữa chữ Ê (d_IM={curr_frame.d_index_middle_norm:.2f} >= 0.18, growth={d_im_growth:.2f})"
-            elif is_e_lift:
-                return "Ê", f"Đẩy nón lên đỉnh (lift={lift:.3f} >= {self.circumflex_lift_threshold:.3f})"
+            elif has_circumflex_lift:
+                return "Ê", f"Đẩy nón lên đỉnh (lift={wrist_lift:.3f})"
 
         # 3. Nhóm O -> {Ô, Ơ}
         elif base == "O":
@@ -647,7 +656,8 @@ class DiacriticStateMachine:
             if (curr_frame.d_index_middle_norm >= 0.15 and
                 d_im_growth >= 0.04 and
                 curr_frame.index_pip_angle <= 125.0 and
-                curr_frame.d_pinky_wrist_norm <= 0.90):
+                curr_frame.d_pinky_wrist_norm <= 0.90 and
+                not hand_is_lowering):
                 return "Ô", f"Tạo nón trỏ-giữa (d_IM={curr_frame.d_index_middle_norm:.2f} >= 0.15, PIP={curr_frame.index_pip_angle:.1f}° <= 125.0°)"
 
             # Ưu tiên 2: Chữ Ơ (QIPEDC D0508N: Móc râu ngón út, bảo toàn vòng O và chặn mở cả bàn tay / Shaka Y)

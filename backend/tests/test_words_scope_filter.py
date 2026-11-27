@@ -36,6 +36,188 @@ def _sample_sequence(length=30):
     return seq
 
 
+def test_sstcn_word_scope_does_not_promote_a_word_over_a_letter(monkeypatch):
+    def predict_letter(tensor):
+        logits = torch.zeros((len(tensor), 102), device=tensor.device)
+        logits[:, 0] = 20.0
+        logits[:, 52] = 15.0
+        return logits
+
+    monkeypatch.setattr(recognizer.sstcn_model, "forward", predict_letter)
+    data = recognizer.predict_sequence(_sample_sequence(), mode="words", confirm=False)
+    assert data["sign"] == "NEUTRAL"
+    assert data["top_k"][0]["entry_id"] == "q-chao"
+    assert data["top_k"][0]["confidence"] < 0.01
+
+
+def test_recorded_word_without_motion_never_reaches_sstcn(monkeypatch):
+    def unexpected_prediction(**kwargs):
+        pytest.fail("SSTCN cannot confirm a word from a held hand pose")
+
+    monkeypatch.setattr(recognizer, "predict_sequence", unexpected_prediction)
+    held = np.repeat(_sample_sequence()[15:16], 30, axis=0)
+    with TestClient(app) as client:
+        data = client.post("/api/recognize_sequence", json={
+            "sequence": held.tolist(), "mode": "words", "include_diagnostic": True,
+        }).json()["data"]
+    assert data["sign"] == "NEUTRAL"
+    assert data["new_token"] is None
+    assert data["diagnostic"]["sstcn"] == {"called": False, "skip_reason": "no_motion"}
+
+
+def test_manual_candidates_include_unconfirmed_words_without_committing(monkeypatch):
+    monkeypatch.setattr(
+        qipedc_practice, "analyze_live_words", lambda *a, **kw: {"motion_detected": True, "status": "motion_detected"},
+    )
+
+    def collect_templates(*args, candidate_scores=None, **kwargs):
+        if candidate_scores is not None:
+            candidate_scores.extend([
+                {"entry_id": "q-muon", "similarity": 0.65},
+                {"entry_id": "q-chi", "similarity": 0.6},
+                {"entry_id": "q-an-it", "similarity": 0.599},
+                {"entry_id": "gt-unverified", "similarity": 0.99},
+            ])
+
+    monkeypatch.setattr(qipedc_live, "match_live_words", collect_templates)
+    monkeypatch.setattr(qipedc_live, "corroborate_sstcn_entry", lambda *a: False)
+    monkeypatch.setattr(recognizer, "predict_sequence", lambda **kw: {
+        "success": True, "sign": "Chào", "entry_id": "q-chao", "confidence": 0.93,
+        "top_k": [{"entry_id": "q-chao", "term": "Chào", "confidence": 0.93}],
+    })
+    payload = {"sequence": _sample_sequence().tolist(), "mode": "words", "live_words": True}
+    with TestClient(app) as client:
+        data = client.post("/api/recognize_sequence", json=payload).json()["data"]
+        assert "word_candidates" not in data
+        data = client.post("/api/recognize_sequence", json={**payload, "include_word_candidates": True}).json()["data"]
+
+    assert data["sign"] == "NEUTRAL"
+    assert data["new_token"] is None
+    assert data["top_k"] == []
+    assert "diagnostic" not in data
+    assert [(item["entry_id"], item["confidence"]) for item in data["word_candidates"]] == [
+        ("q-chao", 0.93), ("q-muon", 0.65), ("q-chi", 0.6),
+    ]
+
+
+def test_sstcn_single_hand_does_not_auto_commit_without_template_agreement(monkeypatch):
+    monkeypatch.setattr(qipedc_live, "match_live_words", lambda *a, **kw: None)
+    monkeypatch.setattr(qipedc_live, "corroborate_sstcn_entry", lambda *a: False)
+    monkeypatch.setattr(recognizer, "predict_sequence", lambda **kw: {
+        "success": True, "sign": "Chào", "entry_id": "q-chao", "confidence": 0.9995,
+        "top_k": [{"entry_id": "q-chao", "term": "Chào", "confidence": 0.9995}],
+    })
+    sequence = _sample_sequence()
+    # A visible hand hanging below the signing space isn't a second signing hand.
+    sequence[:, 54:75, 1] += 0.33
+    payload = {
+        "sequence": sequence.tolist(), "mode": "words", "live_words": True,
+        "include_word_candidates": True, "gesture_complete": True,
+    }
+    with TestClient(app) as client:
+        data = client.post("/api/recognize_sequence", json=payload).json()["data"]
+    assert data["requires_user_confirmation"] is True
+    assert data["word_candidates"][0]["entry_id"] == "q-chao"
+
+
+def test_single_hand_contour_alone_is_only_a_suggestion(monkeypatch):
+    hand_shape = qipedc_live._match_result(0.20, "q-ma-hong", method="hand_shape")
+    monkeypatch.setattr(qipedc_live, "_unilateral_core_rank", lambda *args: ([], {}))
+    result = qipedc_live._with_unilateral_core(
+        hand_shape, _sample_sequence(), 1.0, None, None, None, True, [], None,
+    )
+    assert result["requires_user_confirmation"] is True
+    assert result["entry_id"] == "q-ma-hong"
+
+
+def test_calibration_profile_matches_only_its_own_explicitly_labelled_sample(tmp_path, monkeypatch):
+    monkeypatch.setattr("backend.app._calibration_dir", lambda: str(tmp_path))
+    profile = "a" * 32
+    other_profile = "b" * 32
+    sequence = _sample_sequence(44)
+    sequence[:, 54:] = 0
+    sequence[:, 33:54, 0] += (0.04 * np.sin(np.linspace(0, np.pi, len(sequence))))[:, None]
+    with TestClient(app) as client:
+        sample = {"label": "chỉ", "entry_id": "q-chi", "sequence": sequence.tolist(), "calibration_profile": profile}
+        for _ in range(2):
+            saved = client.post("/api/calibration/save_sample", json=sample)
+            assert saved.status_code == 200, saved.json()
+            assert saved.json()["sample_count"] == 1
+        assert client.post("/api/calibration/save_sample", json={
+            **sample, "sequence": np.repeat(sequence[:1], len(sequence), axis=0).tolist(),
+        }).status_code == 400
+        request = {**sample, "mode": "words", "live_words": True, "gesture_complete": True,
+                   "allow_short_sequences": True, "include_word_candidates": True}
+        for tested in (profile, other_profile):
+            reply = client.post("/api/recognize_sequence", json={**request, "calibration_profile": tested}).json()["data"]
+            personal = [item for item in reply.get("word_candidates", []) if item["match_method"] == "personal_template"]
+            if tested == profile:
+                assert personal[0]["entry_id"] == "q-chi"
+                assert reply["requires_user_confirmation"] is True
+            else:
+                assert not personal
+        second = sequence.copy()
+        second[:, 33:54, 1] += 0.008
+        saved = client.post("/api/calibration/save_sample", json={**sample, "sequence": second.tolist()})
+        assert saved.json()["sample_count"] == 2
+        reply = client.post("/api/recognize_sequence", json=request).json()["data"]
+        assert reply["entry_id"] == "q-chi"
+        assert reply["requires_user_confirmation"] is False
+
+
+def test_workspace_profile_bootstrap_is_loopback_only(tmp_path, monkeypatch):
+    from starlette.requests import Request
+    from backend.app import get_workspace_calibration_profile
+    from fastapi import HTTPException
+
+    monkeypatch.setattr("backend.app._calibration_dir", lambda: str(tmp_path))
+    folder = tmp_path / ".live"
+    folder.mkdir()
+    (folder / ".workspace-profile").write_text("a" * 32, encoding="ascii")
+    local_header = (b"x-vsl-workspace-profile", b"1")
+    local_host = (b"host", b"localhost:8000")
+    local_origin = (b"origin", b"http://localhost:5173")
+
+    def make_request(host, origin, client="127.0.0.1"):
+        return Request({"type": "http", "path": "/", "headers": [host, origin, local_header],
+                        "client": (client, 55000)})
+
+    response = get_workspace_calibration_profile(make_request(local_host, local_origin))
+    assert response.headers["cache-control"] == "no-store"
+    for request in (
+        make_request(local_host, (b"origin", b"https://example.org")),
+        make_request((b"host", b"example.org"), local_origin),
+        make_request(local_host, local_origin, "192.0.2.1"),
+    ):
+        with pytest.raises(HTTPException) as rejected:
+            get_workspace_calibration_profile(request)
+        assert rejected.value.status_code == 404
+
+
+@pytest.mark.parametrize("topic", [None, "Bài 3 - Giao tiếp cơ bản và Cảm xúc"])
+@pytest.mark.parametrize("confidence", [0.98, 0.9995])
+def test_uncorroborated_sstcn_uses_same_gate_with_or_without_topic(monkeypatch, topic, confidence):
+    monkeypatch.setattr(
+        qipedc_practice, "analyze_live_words", lambda *a, **kw: {"motion_detected": True, "status": "motion_detected"},
+    )
+    monkeypatch.setattr(qipedc_live, "match_live_words", lambda *a, **kw: None)
+    monkeypatch.setattr(qipedc_live, "corroborate_sstcn_entry", lambda *a: False)
+    monkeypatch.setattr(recognizer, "predict_sequence", lambda **kw: {
+        "success": True, "sign": "Chào", "entry_id": "q-chao", "confidence": confidence,
+    })
+    with TestClient(app) as client:
+        data = client.post("/api/recognize_sequence", json={
+            "sequence": _sample_sequence().tolist(), "mode": "words", "live_words": True,
+            "topic_id": topic, "include_diagnostic": True,
+        }).json()["data"]
+    if confidence >= 0.999:
+        assert data["sign"] == "Chào"
+        assert data["requires_live_consensus"] is True
+    else:
+        assert data["sign"] == "NEUTRAL"
+        assert data["diagnostic"]["sstcn"]["blocked_prediction"]["sign"] == "Chào"
+
+
 def _make_fake_lexicon():
     entries = [
         {
@@ -250,16 +432,16 @@ def test_08_extra_words_and_prepare_cannot_bypass_filter(monkeypatch):
     for forbidden in ("q-1", "q-a", "q-choi", "gt-toi", "does-not-exist"):
         assert forbidden not in eids
 
-    # Exact approved QIPEDC Live scope count = 3,231
+    # Approved QIPEDC Live scope covers all extracted Southern/Nationwide word videos (>= 3,231)
     real_lex = load_lexicon()
-    approved_3231 = approved_live_word_ids(
+    approved_scope = approved_live_word_ids(
         real_lex,
         indexed_ids=qipedc_live.indexed_entry_ids(),
         builtin_ids=qipedc_live.BUILTIN_WORDS,
     )
-    assert len(approved_3231) == 3231
-    # Unindexed QIPEDC entry (outside 3,231) cannot bypass filter
-    assert "q-bat-dong" not in approved_3231
+    assert len(approved_scope) >= 3231
+    # Unindexed handless QIPEDC entry (outside approved scope) cannot bypass filter
+    assert "q-bat-dong" not in approved_scope
     assert validate_extra_qipedc_word("q-only-north", _make_fake_lexicon())["allowed"] is False
 
     with TestClient(app) as client:

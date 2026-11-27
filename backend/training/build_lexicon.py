@@ -159,8 +159,8 @@ def commonness(word, freq, proper):
 
 
 # ---------------------------------------------------------------- dựng dữ liệu
-def build():
-    with open(os.path.join(SRC_DIR, "qipedc_dictionary.json"), encoding="utf-8") as f:
+def build(*, dictionary_path=None, output_path=None):
+    with open(dictionary_path or os.path.join(SRC_DIR, "qipedc_dictionary.json"), encoding="utf-8") as f:
         rows = json.load(f)
     freq = load_syllable_freq()
     pose_keys = load_pose_keys()
@@ -418,7 +418,7 @@ def build():
             },
         },
     }
-    with open(OUT_PATH, "w", encoding="utf-8") as f:
+    with open(output_path or OUT_PATH, "w", encoding="utf-8") as f:
         json.dump({"meta": meta, "entries": entries}, f, ensure_ascii=False, separators=(",", ":"))
     return meta
 

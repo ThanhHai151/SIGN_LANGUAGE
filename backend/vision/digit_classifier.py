@@ -204,7 +204,7 @@ class VSLDigitClassifier:
 
         # --- QUY TẮC SỐ 7 (Ngón trỏ + Cái mở rộng chữ L) ---
         # Điều kiện: Trỏ duỗi; Giữa, áp út, út gập VÀ ngón cái mở rộng L
-        if i_ext and not m_ext and not r_ext and not p_ext:
+        if t_ext and i_ext and not m_ext and not r_ext and not p_ext:
             if thumb_lat > THUMB_LATERAL_THRESHOLD and ang_ti >= ANGLE_TI_THRESHOLD:
                 matches.append(("7", f"Trỏ+Cái mở rộng L: thumb_lat={thumb_lat:.2f}>{THUMB_LATERAL_THRESHOLD}, ang_TI={ang_ti:.1f}>={ANGLE_TI_THRESHOLD}", 0.90))
 

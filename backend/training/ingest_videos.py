@@ -31,16 +31,35 @@ _VIEW_RE = re.compile(r"(front|left|right|cam0|cam1|cam2|v1|v2|v3)", re.IGNORECA
 _SIGNER_RE = re.compile(r"(?:signer|s|p|user)[_\-]?(\d+)", re.IGNORECASE)
 
 
+def _import_mediapipe_holistic():
+    """Import MediaPipe Holistic without requiring unused matplotlib for drawing_utils."""
+    import sys
+    import types
+
+    try:
+        import matplotlib  # noqa: F401
+    except ModuleNotFoundError:
+        mpl = types.ModuleType("matplotlib")
+        pyplot = types.ModuleType("matplotlib.pyplot")
+        mpl.pyplot = pyplot
+        sys.modules.setdefault("matplotlib", mpl)
+        sys.modules.setdefault("matplotlib.pyplot", pyplot)
+    import mediapipe as mp
+
+    return mp.solutions.holistic
+
+
 def extract_video_to_75_joints(
     video_path: Path,
     target_len: Optional[int] = 30,
     frame_stride: int = 2,
     active_window: Optional[Tuple[float, float]] = None,
     webcam_profile: bool = False,
+    holistic_instance=None,
 ) -> np.ndarray:
     """Extract [target_len, 75, 3] MediaPipe Holistic keypoints (33 pose + 21 lh + 21 rh)."""
+    from contextlib import nullcontext
     import cv2
-    import mediapipe as mp
 
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
@@ -56,13 +75,19 @@ def extract_video_to_75_joints(
         end_frame = max(start_frame + 4, int(active_window[1] * fps))
 
     frames_kps = []
-    mp_holistic = mp.solutions.holistic
-    options = dict(static_image_mode=False, model_complexity=1, min_detection_confidence=0.5,
-                   min_tracking_confidence=0.5)
-    if webcam_profile:
-        options.update(model_complexity=0, smooth_landmarks=False, min_detection_confidence=0.35,
-                       min_tracking_confidence=0.30)
-    with mp_holistic.Holistic(**options) as holistic:
+    if holistic_instance is not None:
+        if hasattr(holistic_instance, "reset"):
+            holistic_instance.reset()
+        ctx = nullcontext(holistic_instance)
+    else:
+        mp_holistic = _import_mediapipe_holistic()
+        options = dict(static_image_mode=False, model_complexity=1, min_detection_confidence=0.5,
+                       min_tracking_confidence=0.5)
+        if webcam_profile:
+            options.update(model_complexity=0, smooth_landmarks=False, min_detection_confidence=0.35,
+                           min_tracking_confidence=0.30)
+        ctx = mp_holistic.Holistic(**options)
+    with ctx as holistic:
         frame_idx = 0
         if start_frame > 0:
             cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
