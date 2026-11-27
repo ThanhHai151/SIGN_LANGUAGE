@@ -50,6 +50,9 @@ export default function TextToSignVisualizer({ requestText }) {
   const [sourceSequence, setSequence] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  // Tăng mỗi lần người dùng chủ động phát (nút Phát, chọn từ, phát lại) → robot diễn lại ký hiệu từ đầu
+  const [playKey, setPlayKey] = useState(0);
+  const endedRef = useRef(false); // đã diễn hết câu (dừng ở ký hiệu cuối)
   const [playbackSpeed, setPlaybackSpeed] = useState(1.25); // mặc định nhanh hơn một chút cho câu liền mạch
   const [isListening, setIsListening] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -68,6 +71,18 @@ export default function TextToSignVisualizer({ requestText }) {
   const alphabetDialogRef = useRef(null);
   const detailsDialogRef = useRef(null);
   const phrasesDialogRef = useRef(null);
+
+  // Phát từ một ký hiệu cụ thể: luôn diễn lại ký hiệu đó từ đầu rồi mới chuyển sang ký hiệu sau
+  const playFrom = (index) => {
+    endedRef.current = false;
+    setCurrentIndex(index);
+    setIsPlaying(true);
+    setPlayKey((k) => k + 1);
+  };
+  const goToStep = (index) => {
+    endedRef.current = false;
+    setCurrentIndex(index);
+  };
 
   const timerRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -108,8 +123,7 @@ export default function TextToSignVisualizer({ requestText }) {
       if (resp && resp.success && resp.sequence) {
         setSequence(resp.sequence);
         setTranslationId((n) => n + 1);
-        setCurrentIndex(0);
-        setIsPlaying(true);
+        playFrom(0);
       }
     } catch (err) {
       console.error('Error translating text to VSL:', err);
@@ -208,6 +222,7 @@ export default function TextToSignVisualizer({ requestText }) {
       if (currentIndex < sequence.length - 1) {
         setCurrentIndex(prev => prev + 1);
       } else {
+        endedRef.current = true;
         setIsPlaying(false);
       }
     }, duration);
@@ -215,7 +230,7 @@ export default function TextToSignVisualizer({ requestText }) {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isPlaying, currentIndex, sequence, playbackSpeed, viewModel]);
+  }, [isPlaying, currentIndex, sequence, playbackSpeed, viewModel, playKey]);
 
   // Tải trước chuyển động robot của cả câu để robot bắt đầu ngay khi tới lượt
   useEffect(() => {
@@ -249,8 +264,7 @@ export default function TextToSignVisualizer({ requestText }) {
     }))).then(() => {
       if (seqVersionRef.current !== version || firstLearned === null) return;
       // diễn lại từ ký hiệu đầu tiên vừa học được
-      setCurrentIndex(firstLearned);
-      setIsPlaying(true);
+      playFrom(firstLearned);
     });
     return () => { seqVersionRef.current += 1; };
   }, [translationId, viewModel]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -315,6 +329,7 @@ export default function TextToSignVisualizer({ requestText }) {
     currentIndex,
     activeLetter,
     controlsTarget,
+    playKey,
   };
 
   // Phân tích trạng thái giải phẫu 5 ngón tay cho bước hiện tại
@@ -571,17 +586,22 @@ export default function TextToSignVisualizer({ requestText }) {
 
   const playback = (
     <div className="playback-controls">
-      <button type="button" onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
+      <button type="button" onClick={() => goToStep(Math.max(0, currentIndex - 1))}
         disabled={currentIndex === 0} className="icon-button" aria-label="Ký hiệu trước" title="Ký hiệu trước"><SkipBack size={16} /></button>
       <button type="button" disabled={!sequence.length} onClick={() => {
-        if (isPlaying) setDirectSelectedLetter('');
-        setIsPlaying(!isPlaying);
+        if (isPlaying) {
+          setDirectSelectedLetter('');
+          setIsPlaying(false);
+        } else {
+          // Đã diễn hết câu → phát lại từ đầu; còn lại → diễn đúng ký hiệu đang chọn từ đầu
+          playFrom(endedRef.current ? 0 : currentIndex);
+        }
       }} className="btn btn-primary play-signs">
         {isPlaying ? <Pause size={15} /> : <Play size={15} />} {isPlaying ? 'Tạm dừng' : 'Phát'}
       </button>
-      <button type="button" onClick={() => setCurrentIndex(Math.min(sequence.length - 1, currentIndex + 1))}
+      <button type="button" onClick={() => goToStep(Math.min(sequence.length - 1, currentIndex + 1))}
         disabled={currentIndex >= sequence.length - 1} className="icon-button" aria-label="Ký hiệu tiếp theo" title="Ký hiệu tiếp theo"><SkipForward size={16} /></button>
-      <button type="button" disabled={!sequence.length} onClick={() => { setCurrentIndex(0); setIsPlaying(true); }}
+      <button type="button" disabled={!sequence.length} onClick={() => playFrom(0)}
         className="icon-button" aria-label="Phát lại từ đầu" title="Phát lại từ đầu"><RotateCcw size={16} /></button>
     </div>
   );
@@ -687,7 +707,7 @@ export default function TextToSignVisualizer({ requestText }) {
                 {sequence.map((step, index) => (
                   <li key={index}>
                     <button type="button" aria-current={index === currentIndex ? 'step' : undefined}
-                      onClick={() => { setCurrentIndex(index); setIsPlaying(true); }}>
+                      onClick={() => playFrom(index)}>
                       <span>{index + 1}</span>{stepLabel(step)}
                     </button>
                   </li>

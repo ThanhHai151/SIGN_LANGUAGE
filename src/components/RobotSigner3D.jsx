@@ -114,7 +114,7 @@ function applyKeyframe(cur, kf) {
   });
 }
 
-export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, sequence = [], currentIndex = 0, freezeAt, videoElRef, controlsTarget }) {
+export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, sequence = [], currentIndex = 0, freezeAt, videoElRef, controlsTarget, playKey = 0 }) {
   const mountRef = useRef(null);
   const rigRef = useRef({});
   if (import.meta.env.DEV && typeof window !== 'undefined') window.__rigRef = rigRef; // kiểm thử tự động (chỉ khi phát triển)
@@ -847,7 +847,8 @@ export default function RobotSigner3D({ currentStep, isPlaying, speed = 1.0, seq
     rig.currentPose.smoothTime = 0.12;
     applyStatic(poseData);
     return () => { cancelled = true; };
-  }, [currentStep, speed]);
+    // playKey: mỗi lần bấm Phát / chọn một từ → diễn lại ký hiệu hiện tại từ đầu (không tiếp tục vòng lặp cũ)
+  }, [currentStep, speed, playKey]);
 
   // Tự cuộn phụ đề tới từ đang diễn (chỉ cuộn trong khung phụ đề, không cuộn cả trang)
   useEffect(() => {
